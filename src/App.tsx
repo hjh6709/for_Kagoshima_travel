@@ -4,26 +4,23 @@ import {
   CheckCircle2,
   Copy,
   Home,
-  Info,
   Map,
   MapPin,
   Phone,
   Route,
   Shield,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { checklist, emergencies, places, routes, schedules, trip } from "./data/sampleTrip";
 import type { ScheduleItem } from "./types/travel";
 
-type Tab = "home" | "schedule" | "map" | "info" | "check" | "emergency";
+type Tab = "today" | "schedule" | "map" | "concierge";
 
 const tabs: Array<{ id: Tab; label: string; icon: typeof Home }> = [
-  { id: "home", label: "홈", icon: Home },
-  { id: "schedule", label: "일정", icon: CalendarDays },
+  { id: "today", label: "오늘", icon: Home },
+  { id: "schedule", label: "전체 일정", icon: CalendarDays },
   { id: "map", label: "지도", icon: Map },
-  { id: "info", label: "정보", icon: Info },
-  { id: "check", label: "체크", icon: CheckCircle2 },
-  { id: "emergency", label: "긴급", icon: Shield },
+  { id: "concierge", label: "긴급", icon: Shield },
 ];
 
 const scheduleTypeLabels: Record<ScheduleItem["type"], string> = {
@@ -44,8 +41,20 @@ function getMapUrl(place?: ReturnType<typeof getPlace>) {
   return place?.googleMapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fallback)}`;
 }
 
+function formatKoreanDate(dateStr: string): string {
+  const date = new Date(`${dateStr}T00:00:00`);
+  const days = ["일", "월", "화", "수", "목", "금", "토"];
+  return `${date.getMonth() + 1}월 ${date.getDate()}일(${days[date.getDay()]})`;
+}
+
+function calcTripNights(start: string, end: string): string {
+  const diff = Math.round((new Date(end).getTime() - new Date(start).getTime()) / 86400000);
+  return `${diff}박 ${diff + 1}일`;
+}
+
 function App() {
-  const [activeTab, setActiveTab] = useState<Tab>("home");
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [activeTab, setActiveTab] = useState<Tab>("today");
   const [selectedDate, setSelectedDate] = useState(schedules[0]?.date ?? trip.startDate);
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>(() => {
     const saved = window.localStorage.getItem("kagoshima-checklist");
@@ -61,6 +70,11 @@ function App() {
   const nextSchedule = schedules[0];
   const completedCount = Object.values(checkedItems).filter(Boolean).length;
 
+  useEffect(() => {
+    contentRef.current?.scrollTo({ top: 0 });
+    window.scrollTo({ top: 0 });
+  }, [activeTab]);
+
   function toggleCheck(id: string) {
     const next = { ...checkedItems, [id]: !checkedItems[id] };
     setCheckedItems(next);
@@ -70,21 +84,23 @@ function App() {
   return (
     <main className="app-shell">
       <section className="phone-frame">
-        <div className="content">
-          {activeTab === "home" && (
+        <div className="content" ref={contentRef}>
+          {activeTab === "today" && (
             <section className="screen">
-              <p className="eyebrow">부모님 여행 도우미</p>
-              <h1>{trip.title}</h1>
-              <p className="muted">
-                {trip.startDate} - {trip.endDate}
-              </p>
+              <div className="trip-header">
+                <span className="eyebrow">가고시마 여행</span>
+                <p className="trip-dates">
+                  {formatKoreanDate(trip.startDate)} ~ {formatKoreanDate(trip.endDate)}
+                  &nbsp;·&nbsp;{calcTripNights(trip.startDate, trip.endDate)}
+                </p>
+              </div>
 
               <article className="hero-card">
                 <div>
                   <span className="pill">다음 일정</span>
                   <h2>{nextSchedule.title}</h2>
                   <p>
-                    {nextSchedule.date} {nextSchedule.time}
+                    {formatKoreanDate(nextSchedule.date)} {nextSchedule.time}
                   </p>
                   <p className="muted">{nextSchedule.parentMemo}</p>
                 </div>
@@ -104,7 +120,7 @@ function App() {
                   <CalendarDays size={22} />
                   일정 보기
                 </button>
-                <button className="quick-button danger" onClick={() => setActiveTab("emergency")}>
+                <button className="quick-button danger" onClick={() => setActiveTab("concierge")}>
                   <AlertTriangle size={22} />
                   긴급 연락
                 </button>
@@ -135,7 +151,7 @@ function App() {
                     key={date}
                     onClick={() => setSelectedDate(date)}
                   >
-                    {date.slice(5).replace("-", "/")}
+                    {formatKoreanDate(date)}
                   </button>
                 ))}
               </div>
@@ -164,6 +180,21 @@ function App() {
                   );
                 })}
               </div>
+
+              <section className="section-block">
+                <h2>준비 체크리스트</h2>
+                <p className="muted">
+                  {checklist.length}개 중 {completedCount}개 완료
+                </p>
+                <div className="card-stack">
+                  {checklist.map((item) => (
+                    <button className="check-row" key={item.id} onClick={() => toggleCheck(item.id)}>
+                      <CheckCircle2 className={checkedItems[item.id] ? "checked" : ""} size={24} />
+                      <span>{item.title}</span>
+                    </button>
+                  ))}
+                </div>
+              </section>
             </section>
           )}
 
@@ -208,9 +239,29 @@ function App() {
             </section>
           )}
 
-          {activeTab === "info" && (
+          {activeTab === "concierge" && (
             <section className="screen">
-              <h1>여행 정보</h1>
+              <h1>긴급과 여행 정보</h1>
+              <section className="section-block compact">
+                <h2>긴급 연락</h2>
+                <div className="card-stack">
+                  {emergencies.map((item) => (
+                    <article className="emergency-card" key={item.id}>
+                      <h2>{item.title}</h2>
+                      <p>{item.description}</p>
+                      {item.phone && (
+                        <a className="primary-button" href={`tel:${item.phone}`}>
+                          <Phone size={18} />
+                          전화하기
+                        </a>
+                      )}
+                    </article>
+                  ))}
+                </div>
+              </section>
+
+              <section className="section-block">
+                <h2>여행 정보</h2>
               <article className="info-card">
                 <h2>항공편</h2>
                 <p>출국/귀국 항공편 정보를 입력할 자리입니다.</p>
@@ -227,43 +278,7 @@ function App() {
                 <h2>일본어 문장</h2>
                 <p>この住所までお願いします。</p>
               </article>
-            </section>
-          )}
-
-          {activeTab === "check" && (
-            <section className="screen">
-              <h1>체크리스트</h1>
-              <p className="muted">
-                {checklist.length}개 중 {completedCount}개 완료
-              </p>
-              <div className="card-stack">
-                {checklist.map((item) => (
-                  <button className="check-row" key={item.id} onClick={() => toggleCheck(item.id)}>
-                    <CheckCircle2 className={checkedItems[item.id] ? "checked" : ""} size={24} />
-                    <span>{item.title}</span>
-                  </button>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {activeTab === "emergency" && (
-            <section className="screen">
-              <h1>긴급</h1>
-              <div className="card-stack">
-                {emergencies.map((item) => (
-                  <article className="emergency-card" key={item.id}>
-                    <h2>{item.title}</h2>
-                    <p>{item.description}</p>
-                    {item.phone && (
-                      <a className="primary-button" href={`tel:${item.phone}`}>
-                        <Phone size={18} />
-                        전화하기
-                      </a>
-                    )}
-                  </article>
-                ))}
-              </div>
+              </section>
             </section>
           )}
         </div>
