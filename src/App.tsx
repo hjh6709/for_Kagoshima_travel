@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { checklist, emergencies, places, routes, schedules, trip } from "./data/sampleTrip";
-import type { Place, ScheduleItem } from "./types/travel";
+import type { ScheduleItem } from "./types/travel";
 
 type Tab = "home" | "schedule" | "map" | "info" | "check" | "emergency";
 
@@ -39,13 +39,9 @@ function getPlace(placeId?: string) {
   return places.find((place) => place.id === placeId);
 }
 
-function openMap(place?: Place) {
+function getMapUrl(place?: ReturnType<typeof getPlace>) {
   const fallback = place?.address || place?.name || "Kagoshima";
-  window.open(
-    place?.googleMapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fallback)}`,
-    "_blank",
-    "noopener,noreferrer"
-  );
+  return place?.googleMapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fallback)}`;
 }
 
 function App() {
@@ -92,10 +88,15 @@ function App() {
                   </p>
                   <p className="muted">{nextSchedule.parentMemo}</p>
                 </div>
-                <button className="primary-button" onClick={() => openMap(getPlace(nextSchedule.placeId))}>
+                <a
+                  className="primary-button"
+                  href={getMapUrl(getPlace(nextSchedule.placeId))}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
                   <MapPin size={20} />
                   지도 열기
-                </button>
+                </a>
               </article>
 
               <div className="grid-two">
@@ -149,10 +150,15 @@ function App() {
                         <h2>{item.title}</h2>
                         {place && <p className="muted">{place.name}</p>}
                         {item.parentMemo && <p>{item.parentMemo}</p>}
-                        <button className="secondary-button" onClick={() => openMap(place)}>
+                        <a
+                          className="secondary-button"
+                          href={getMapUrl(place)}
+                          rel="noopener noreferrer"
+                          target="_blank"
+                        >
                           <MapPin size={18} />
                           지도
-                        </button>
+                        </a>
                       </div>
                     </article>
                   );
@@ -166,14 +172,16 @@ function App() {
               <h1>지도와 추천 장소</h1>
               <div className="map-preview">
                 {places.map((place, index) => (
-                  <button
+                  <a
                     className={`map-pin pin-${index + 1}`}
+                    href={getMapUrl(place)}
                     key={place.id}
-                    onClick={() => openMap(place)}
+                    rel="noopener noreferrer"
+                    target="_blank"
                     title={place.name}
                   >
                     <MapPin size={18} />
-                  </button>
+                  </a>
                 ))}
               </div>
               <div className="card-stack">
@@ -185,10 +193,15 @@ function App() {
                       <p>{place.recommendedReason}</p>
                       {place.address && <p className="muted">{place.address}</p>}
                     </div>
-                    <button className="secondary-button" onClick={() => openMap(place)}>
+                    <a
+                      className="secondary-button"
+                      href={getMapUrl(place)}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
                       <MapPin size={18} />
                       보기
-                    </button>
+                    </a>
                   </article>
                 ))}
               </div>
