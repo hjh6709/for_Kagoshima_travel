@@ -1,8 +1,9 @@
-export type ScheduleType = "move" | "meal" | "sightseeing" | "hotel" | "shopping" | "etc";
+export type ScheduleType = "move" | "meal" | "golf" | "sightseeing" | "hotel" | "shopping" | "etc";
 
 export type PlaceCategory =
   | "hotel"
   | "meal"
+  | "golf"
   | "cafe"
   | "sightseeing"
   | "shopping"
@@ -66,4 +67,3 @@ export type EmergencyInfo = {
   phone?: string;
   address?: string;
 };
-

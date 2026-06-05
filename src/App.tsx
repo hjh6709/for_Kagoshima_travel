@@ -26,11 +26,30 @@ const tabs: Array<{ id: Tab; label: string; icon: typeof Home }> = [
 const scheduleTypeLabels: Record<ScheduleItem["type"], string> = {
   move: "이동",
   meal: "식사",
+  golf: "골프",
   sightseeing: "관광",
   hotel: "숙소",
   shopping: "쇼핑",
   etc: "기타",
 };
+
+const placeCategoryLabels = {
+  hotel: "숙소",
+  meal: "식사",
+  golf: "골프",
+  cafe: "카페",
+  sightseeing: "관광",
+  shopping: "쇼핑",
+  transport: "이동",
+  etc: "기타",
+} as const;
+
+const checklistCategoryLabels = {
+  before: "출발 전",
+  airport: "공항",
+  daily: "여행 중",
+  return: "귀국 전",
+} as const;
 
 function getPlace(placeId?: string) {
   return places.find((place) => place.id === placeId);
@@ -45,6 +64,12 @@ function formatKoreanDate(dateStr: string): string {
   const date = new Date(`${dateStr}T00:00:00`);
   const days = ["일", "월", "화", "수", "목", "금", "토"];
   return `${date.getMonth() + 1}월 ${date.getDate()}일(${days[date.getDay()]})`;
+}
+
+function formatShortDate(dateStr: string): string {
+  const date = new Date(`${dateStr}T00:00:00`);
+  const days = ["일", "월", "화", "수", "목", "금", "토"];
+  return `${date.getMonth() + 1}/${date.getDate()}(${days[date.getDay()]})`;
 }
 
 function calcTripNights(start: string, end: string): string {
@@ -69,6 +94,17 @@ function App() {
   const selectedSchedules = schedules.filter((item) => item.date === selectedDate);
   const nextSchedule = schedules[0];
   const completedCount = Object.values(checkedItems).filter(Boolean).length;
+  const groupedChecklist = useMemo(
+    () =>
+      Object.entries(checklistCategoryLabels)
+        .map(([category, label]) => ({
+          category,
+          label,
+          items: checklist.filter((item) => item.category === category),
+        }))
+        .filter((group) => group.items.length > 0),
+    []
+  );
 
   useEffect(() => {
     contentRef.current?.scrollTo({ top: 0 });
@@ -151,7 +187,7 @@ function App() {
                     key={date}
                     onClick={() => setSelectedDate(date)}
                   >
-                    {formatKoreanDate(date)}
+                    {formatShortDate(date)}
                   </button>
                 ))}
               </div>
@@ -161,11 +197,25 @@ function App() {
                   return (
                     <article className="schedule-card" key={item.id}>
                       <span className="time">{item.time}</span>
-                      <div>
-                        <p className="pill subtle">{scheduleTypeLabels[item.type]}</p>
+                      <div className="schedule-content">
+                        <div className="schedule-meta">
+                          <span className="pill subtle">{scheduleTypeLabels[item.type]}</span>
+                          {place && <span className="place-label">{place.name}</span>}
+                        </div>
                         <h2>{item.title}</h2>
-                        {place && <p className="muted">{place.name}</p>}
-                        {item.parentMemo && <p>{item.parentMemo}</p>}
+                        {item.transportMemo && (
+                          <p className="schedule-detail">
+                            <strong>이동</strong>
+                            {item.transportMemo}
+                          </p>
+                        )}
+                        {item.reservationMemo && (
+                          <p className="schedule-detail">
+                            <strong>예약</strong>
+                            {item.reservationMemo}
+                          </p>
+                        )}
+                        {item.parentMemo && <p className="muted">{item.parentMemo}</p>}
                         <a
                           className="secondary-button"
                           href={getMapUrl(place)}
@@ -186,12 +236,19 @@ function App() {
                 <p className="muted">
                   {checklist.length}개 중 {completedCount}개 완료
                 </p>
-                <div className="card-stack">
-                  {checklist.map((item) => (
-                    <button className="check-row" key={item.id} onClick={() => toggleCheck(item.id)}>
-                      <CheckCircle2 className={checkedItems[item.id] ? "checked" : ""} size={24} />
-                      <span>{item.title}</span>
-                    </button>
+                <div className="check-groups">
+                  {groupedChecklist.map((group) => (
+                    <section className="check-group" key={group.category}>
+                      <h3>{group.label}</h3>
+                      <div className="card-stack">
+                        {group.items.map((item) => (
+                          <button className="check-row" key={item.id} onClick={() => toggleCheck(item.id)}>
+                            <CheckCircle2 className={checkedItems[item.id] ? "checked" : ""} size={24} />
+                            <span>{item.title}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </section>
                   ))}
                 </div>
               </section>
@@ -219,20 +276,24 @@ function App() {
                 {places.map((place) => (
                   <article className="place-card" key={place.id}>
                     <div>
-                      <span className="pill subtle">{place.category}</span>
+                      <span className="pill subtle">{placeCategoryLabels[place.category]}</span>
                       <h2>{place.name}</h2>
                       <p>{place.recommendedReason}</p>
                       {place.address && <p className="muted">{place.address}</p>}
+                      {place.cautionMemo && <p className="schedule-detail danger-note">{place.cautionMemo}</p>}
                     </div>
-                    <a
-                      className="secondary-button"
-                      href={getMapUrl(place)}
-                      rel="noopener noreferrer"
-                      target="_blank"
-                    >
-                      <MapPin size={18} />
-                      보기
-                    </a>
+                    <div className="card-footer">
+                      <span>{placeCategoryLabels[place.category]}</span>
+                      <a
+                        className="secondary-button compact-button"
+                        href={getMapUrl(place)}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      >
+                        <MapPin size={18} />
+                        보기
+                      </a>
+                    </div>
                   </article>
                 ))}
               </div>
