@@ -78,6 +78,34 @@ button {
   font-weight: 700;
 }
 
+.date-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.date-form label {
+  display: grid;
+  gap: 6px;
+  color: var(--c-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.date-form input {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid rgba(36, 48, 47, 0.12);
+  border-radius: 10px;
+  background: var(--c-surface);
+  color: var(--c-text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  padding: 8px 10px;
+}
+
 .eyebrow {
   color: var(--c-gold);
   font-weight: 800;
