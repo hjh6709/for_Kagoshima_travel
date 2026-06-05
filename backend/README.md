@@ -1,0 +1,69 @@
+# Go Backend
+
+가고시마 여행 앱의 API 서버입니다.
+
+현재는 2차 확장 준비물이며, 1차 Vercel 정적 PWA 배포에는 사용하지 않습니다.
+
+## 실행
+
+```bash
+go run ./cmd/api
+```
+
+기본 포트는 `8080`입니다.
+
+## 환경변수
+
+```bash
+cp .env.example .env
+```
+
+주요 값:
+
+- `APP_ENV`: `development`, `test`, `production`
+- `PORT`: API 서버 포트
+- `DATABASE_URL`: PostgreSQL 연결 문자열
+- `JWT_SECRET`: JWT 서명 비밀키
+- `ALLOWED_ORIGINS`: CORS 허용 origin
+
+실제 `.env` 파일은 커밋하지 않습니다.
+
+## 빌드
+
+```bash
+go build -o bin/api ./cmd/api
+```
+
+Go 백엔드는 Spring Boot의 executable jar처럼 단독 실행 바이너리로 배포합니다. 별도 WAS는 사용하지 않습니다.
+
+## 현재 엔드포인트
+
+- `GET /healthz`
+- `GET /api/trips/{tripID}`
+- `GET /api/trips/{tripID}/schedules`
+- `GET /api/trips/{tripID}/places`
+- `GET /api/trips/{tripID}/routes`
+
+초기에는 샘플 응답을 반환하고, 이후 PostgreSQL 연결과 관리자 CRUD를 추가합니다.
+
+## 구조
+
+스프링 부트의 전형적인 계층 구조를 Go 방식으로 옮겼습니다.
+
+```text
+handler     표현 계층: HTTP 요청/응답 처리
+service     서비스 계층: 비즈니스 로직과 DTO 변환
+repository  영속성 계층: 데이터 조회/저장
+model       DB 저장 기준 도메인 모델
+dto         API 요청/응답 모델
+```
+
+## 인증/인가 방향
+
+스프링 시큐리티의 인증/인가 개념을 Go에서는 middleware로 구현합니다.
+
+- 인증: 이메일/비밀번호 로그인 후 JWT 발급
+- 비밀번호: bcrypt 해시 저장
+- 인가: JWT에 포함된 역할을 middleware에서 확인
+- 관리자 API: `admin` 역할만 접근
+- 가족 공유: 로그인 대신 공유 토큰 기반 읽기 전용 접근

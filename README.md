@@ -18,4 +18,24 @@
 - [기능명세서 (Features)](docs/FEATURES.md)
 - [유저 플로우 (User Flow)](docs/USER_FLOW.md)
 - [와이어프레임 (Wireframe)](docs/WIREFRAME.md)
+- [기술 설계서 (Tech Design)](docs/TECH_DESIGN.md)
+- [배포 가이드](docs/DEPLOYMENT.md)
+- [디자인 워크플로우](docs/DESIGN_WORKFLOW.md)
 - [초기 앱 기획서](docs/APP_PLANNING.md)
+
+## 실행
+
+```bash
+npm install
+npm run dev
+```
+
+## 빌드
+
+```bash
+npm run build
+```
+
+## 1차 배포
+
+Vercel Hobby 무료 플랜에 정적 PWA로 배포합니다. 백엔드와 PostgreSQL은 2차 확장 범위로 둡니다.

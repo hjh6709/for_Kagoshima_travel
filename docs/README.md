@@ -8,6 +8,9 @@ Manyfast 방식처럼 아래 순서로 기획 산출물을 나눕니다.
 2. [기능명세서 (Features)](./FEATURES.md)
 3. [유저 플로우 (User Flow)](./USER_FLOW.md)
 4. [와이어프레임 (Wireframe)](./WIREFRAME.md)
+5. [기술 설계서 (Tech Design)](./TECH_DESIGN.md)
+6. [배포 가이드](./DEPLOYMENT.md)
+7. [디자인 워크플로우](./DESIGN_WORKFLOW.md)
 
 ## 프로젝트 한 줄 정의
 
@@ -19,6 +22,7 @@ Manyfast 방식처럼 아래 순서로 기획 산출물을 나눕니다.
 - 부모님은 갤럭시 안드로이드를 사용한다.
 - 제작자는 iPhone에서 사전 테스트한다.
 - 앱스토어 배포보다 빠른 공유와 설치가 중요하다.
+- 1차 MVP는 비용을 줄이기 위해 Vercel Hobby 정적 PWA로 배포한다.
 - 여행 중 인터넷이 불안정할 수 있으므로 핵심 정보는 오프라인 확인이 가능해야 한다.
 - 복잡한 입력보다 보기 쉬운 정보 제공이 우선이다.
-
+- Claude Code와 Gemini Pro는 디자인 보조 도구로 쓰되, 부모님용 실용성과 가독성을 최우선으로 둔다.
