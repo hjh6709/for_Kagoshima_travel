@@ -2,16 +2,31 @@
 
 부모님 가고시마 여행을 위한 모바일 여행 도우미 앱의 제품 기획 문서입니다.
 
-Manyfast 방식처럼 아래 순서로 기획 산출물을 나눕니다.
+Manyfast 방식처럼 기획 산출물을 단계별로 나누고, 아래 카테고리로 묶어 둡니다.
+이 문서가 전체 문서의 단일 진입점입니다 (루트 `README.md`는 이 문서로 연결만 합니다).
+
+### 1. 기획 (무엇을 만들 것인가)
 
 1. [프로덕트 요구사항 문서 (PRD)](./PRD.md)
 2. [기능명세서 (Features)](./FEATURES.md)
 3. [유저 플로우 (User Flow)](./USER_FLOW.md)
 4. [와이어프레임 (Wireframe)](./WIREFRAME.md)
+
+### 2. 설계와 운영 (어떻게 만들고 배포할 것인가)
+
 5. [기술 설계서 (Tech Design)](./TECH_DESIGN.md)
 6. [배포 가이드](./DEPLOYMENT.md)
 7. [디자인 워크플로우](./DESIGN_WORKFLOW.md)
+
+### 3. 확장 전략 (2차 백엔드 준비물)
+
 8. [인증과 공유 전략](./AUTH_AND_SHARING_PLAN.md)
+9. [백엔드 포트폴리오 로드맵](./BACKEND_PORTFOLIO_ROADMAP.md)
+
+### 4. 보관 (대체된 초기 자료, 참고용)
+
+- [초기 앱 기획서](./archive/APP_PLANNING.md) — PRD/Features/User Flow/Wireframe로 내용이 분리·대체됨
+- [Figma 컴포넌트 감사 노트](./archive/FIGMA_COMPONENT_AUDIT.md) — 디자인 참고 자료 1회성 분석 기록
 
 ## 프로젝트 한 줄 정의
 
@@ -26,6 +41,7 @@ Manyfast 방식처럼 아래 순서로 기획 산출물을 나눕니다.
 - 1차 MVP는 비용을 줄이기 위해 Vercel Hobby 정적 PWA로 배포한다.
 - 사용자 입력형 Beta부터는 Go 백엔드, PostgreSQL, 로그인, 공유 링크를 붙인다.
 - 부모님용 화면은 로그인보다 읽기 전용 공유 링크를 우선한다.
+- 백엔드 포트폴리오 관점에서는 REST API, PostgreSQL, 인증/인가, 배포 흐름을 설명할 수 있어야 한다.
 - 여행 중 인터넷이 불안정할 수 있으므로 핵심 정보는 오프라인 확인이 가능해야 한다.
 - 복잡한 입력보다 보기 쉬운 정보 제공이 우선이다.
 - Claude Code와 Gemini Pro는 디자인 보조 도구로 쓰되, 부모님용 실용성과 가독성을 최우선으로 둔다.

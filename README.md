@@ -13,15 +13,7 @@
 
 ## 문서
 
-- [제품 기획 문서 인덱스](docs/README.md)
-- [프로덕트 요구사항 문서 (PRD)](docs/PRD.md)
-- [기능명세서 (Features)](docs/FEATURES.md)
-- [유저 플로우 (User Flow)](docs/USER_FLOW.md)
-- [와이어프레임 (Wireframe)](docs/WIREFRAME.md)
-- [기술 설계서 (Tech Design)](docs/TECH_DESIGN.md)
-- [배포 가이드](docs/DEPLOYMENT.md)
-- [디자인 워크플로우](docs/DESIGN_WORKFLOW.md)
-- [초기 앱 기획서](docs/APP_PLANNING.md)
+기획·설계·배포 문서는 [`docs/README.md`](docs/README.md)에서 카테고리별로 모아 관리합니다.
 
 ## 실행
 
