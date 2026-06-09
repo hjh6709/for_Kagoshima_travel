@@ -8,7 +8,11 @@ import (
 	"github.com/hanjeonghyun/for-kagoshima-travel/backend/internal/repository"
 )
 
-var ErrTripNotFound = errors.New("trip not found")
+var (
+	ErrTripNotFound = errors.New("trip not found")
+	ErrForbidden    = errors.New("forbidden")
+	ErrInvalidTrip  = errors.New("invalid trip input")
+)
 
 type TripService struct {
 	tripRepository repository.TripRepository
@@ -63,6 +67,77 @@ func (s *TripService) ListRoutes(tripID string) ([]dto.RouteResponse, error) {
 		responses = append(responses, mapRouteResponse(route))
 	}
 	return responses, nil
+}
+
+func (s *TripService) CreateTrip(ownerID string, req dto.CreateTripRequest) (dto.TripResponse, error) {
+	if req.Title == "" || req.StartDate == "" || req.EndDate == "" {
+		return dto.TripResponse{}, ErrInvalidTrip
+	}
+	trip := model.Trip{
+		ID:        newID(),
+		OwnerID:   ownerID,
+		Title:     req.Title,
+		StartDate: req.StartDate,
+		EndDate:   req.EndDate,
+		Travelers: req.Travelers,
+		Memo:      req.Memo,
+	}
+	if err := s.tripRepository.Save(trip); err != nil {
+		return dto.TripResponse{}, err
+	}
+	return mapTripResponse(trip), nil
+}
+
+func (s *TripService) ListMyTrips(ownerID string) ([]dto.TripResponse, error) {
+	trips, err := s.tripRepository.FindByOwner(ownerID)
+	if err != nil {
+		return nil, err
+	}
+	responses := make([]dto.TripResponse, 0, len(trips))
+	for _, trip := range trips {
+		responses = append(responses, mapTripResponse(trip))
+	}
+	return responses, nil
+}
+
+func (s *TripService) UpdateTrip(id, ownerID string, req dto.UpdateTripRequest) (dto.TripResponse, error) {
+	trip, err := s.tripRepository.FindTrip(id)
+	if err != nil {
+		return dto.TripResponse{}, mapRepositoryError(err)
+	}
+	if trip.OwnerID != ownerID {
+		return dto.TripResponse{}, ErrForbidden
+	}
+	if req.Title != nil {
+		trip.Title = *req.Title
+	}
+	if req.StartDate != nil {
+		trip.StartDate = *req.StartDate
+	}
+	if req.EndDate != nil {
+		trip.EndDate = *req.EndDate
+	}
+	if req.Travelers != nil {
+		trip.Travelers = req.Travelers
+	}
+	if req.Memo != nil {
+		trip.Memo = *req.Memo
+	}
+	if err := s.tripRepository.Update(trip); err != nil {
+		return dto.TripResponse{}, mapRepositoryError(err)
+	}
+	return mapTripResponse(trip), nil
+}
+
+func (s *TripService) DeleteTrip(id, ownerID string) error {
+	trip, err := s.tripRepository.FindTrip(id)
+	if err != nil {
+		return mapRepositoryError(err)
+	}
+	if trip.OwnerID != ownerID {
+		return ErrForbidden
+	}
+	return s.tripRepository.Delete(id)
 }
 
 func mapRepositoryError(err error) error {

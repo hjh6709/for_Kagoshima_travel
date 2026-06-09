@@ -1,5 +1,21 @@
 package dto
 
+type CreateTripRequest struct {
+	Title     string   `json:"title"`
+	StartDate string   `json:"startDate"`
+	EndDate   string   `json:"endDate"`
+	Travelers []string `json:"travelers"`
+	Memo      string   `json:"memo"`
+}
+
+type UpdateTripRequest struct {
+	Title     *string  `json:"title"`
+	StartDate *string  `json:"startDate"`
+	EndDate   *string  `json:"endDate"`
+	Travelers []string `json:"travelers"`
+	Memo      *string  `json:"memo"`
+}
+
 type TripResponse struct {
 	ID        string   `json:"id"`
 	Title     string   `json:"title"`

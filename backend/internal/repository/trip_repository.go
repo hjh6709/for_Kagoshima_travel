@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"sync"
 
 	"github.com/hanjeonghyun/for-kagoshima-travel/backend/internal/model"
 )
@@ -13,12 +14,17 @@ var (
 
 type TripRepository interface {
 	FindTrip(id string) (model.Trip, error)
+	FindByOwner(ownerID string) ([]model.Trip, error)
 	FindSchedules(tripID string) ([]model.Schedule, error)
 	FindPlaces(tripID string) ([]model.Place, error)
 	FindRoutes(tripID string) ([]model.Route, error)
+	Save(trip model.Trip) error
+	Update(trip model.Trip) error
+	Delete(id string) error
 }
 
 type MemoryTripRepository struct {
+	mu        sync.RWMutex
 	trips     []model.Trip
 	schedules []model.Schedule
 	places    []model.Place
@@ -97,6 +103,8 @@ func NewMemoryTripRepository() *MemoryTripRepository {
 }
 
 func (r *MemoryTripRepository) FindTrip(id string) (model.Trip, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 	for _, trip := range r.trips {
 		if trip.ID == id {
 			return trip, nil
@@ -105,7 +113,21 @@ func (r *MemoryTripRepository) FindTrip(id string) (model.Trip, error) {
 	return model.Trip{}, ErrNotFound
 }
 
+func (r *MemoryTripRepository) FindByOwner(ownerID string) ([]model.Trip, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	result := make([]model.Trip, 0)
+	for _, trip := range r.trips {
+		if trip.OwnerID == ownerID {
+			result = append(result, trip)
+		}
+	}
+	return result, nil
+}
+
 func (r *MemoryTripRepository) FindSchedules(tripID string) ([]model.Schedule, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 	schedules := make([]model.Schedule, 0)
 	for _, schedule := range r.schedules {
 		if schedule.TripID == tripID {
@@ -116,6 +138,8 @@ func (r *MemoryTripRepository) FindSchedules(tripID string) ([]model.Schedule, e
 }
 
 func (r *MemoryTripRepository) FindPlaces(tripID string) ([]model.Place, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 	places := make([]model.Place, 0)
 	for _, place := range r.places {
 		if place.TripID == tripID {
@@ -126,6 +150,8 @@ func (r *MemoryTripRepository) FindPlaces(tripID string) ([]model.Place, error) 
 }
 
 func (r *MemoryTripRepository) FindRoutes(tripID string) ([]model.Route, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 	routes := make([]model.Route, 0)
 	for _, route := range r.routes {
 		if route.TripID == tripID {
@@ -133,4 +159,35 @@ func (r *MemoryTripRepository) FindRoutes(tripID string) ([]model.Route, error) 
 		}
 	}
 	return routes, nil
+}
+
+func (r *MemoryTripRepository) Save(trip model.Trip) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.trips = append(r.trips, trip)
+	return nil
+}
+
+func (r *MemoryTripRepository) Update(trip model.Trip) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for i, t := range r.trips {
+		if t.ID == trip.ID {
+			r.trips[i] = trip
+			return nil
+		}
+	}
+	return ErrNotFound
+}
+
+func (r *MemoryTripRepository) Delete(id string) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for i, trip := range r.trips {
+		if trip.ID == id {
+			r.trips = append(r.trips[:i], r.trips[i+1:]...)
+			return nil
+		}
+	}
+	return ErrNotFound
 }

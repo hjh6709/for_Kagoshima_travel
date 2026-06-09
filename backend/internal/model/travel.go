@@ -2,6 +2,7 @@ package model
 
 type Trip struct {
 	ID        string   `json:"id"`
+	OwnerID   string   `json:"ownerId"`
 	Title     string   `json:"title"`
 	StartDate string   `json:"startDate"`
 	EndDate   string   `json:"endDate"`

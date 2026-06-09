@@ -14,3 +14,7 @@ backend/tmp/
 backend/bin/
 
 test-results/
+
+.agents/
+.claude/
+skills-lock.json
