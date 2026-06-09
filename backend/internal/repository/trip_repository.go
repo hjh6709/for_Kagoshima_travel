@@ -6,7 +6,10 @@ import (
 	"github.com/hanjeonghyun/for-kagoshima-travel/backend/internal/model"
 )
 
-var ErrNotFound = errors.New("not found")
+var (
+	ErrNotFound       = errors.New("not found")
+	ErrDuplicateEmail = errors.New("email already exists")
+)
 
 type TripRepository interface {
 	FindTrip(id string) (model.Trip, error)

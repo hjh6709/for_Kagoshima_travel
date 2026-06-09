@@ -12,3 +12,7 @@ func Write(w http.ResponseWriter, status int, value any) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
+
+func WriteError(w http.ResponseWriter, status int, message string) {
+	Write(w, status, map[string]string{"error": message})
+}
