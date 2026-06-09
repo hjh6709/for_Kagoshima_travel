@@ -1,10 +1,13 @@
 import type {
+  AccommodationInfo,
   ChecklistItem,
   EmergencyInfo,
+  FlightInfo,
   Place,
   RecommendedRoute,
   ScheduleItem,
   Trip,
+  UsefulPhrase,
 } from "../types/travel";
 
 export const trip: Trip = {
@@ -14,6 +17,50 @@ export const trip: Trip = {
   travelers: ["아버지", "어머니"],
   memo: "샘플 데이터입니다. 실제 항공편, 숙소, 예약 정보로 교체하세요.",
 };
+
+export const flights: FlightInfo[] = [
+  {
+    id: "flight-departure",
+    label: "출국",
+    airline: "항공사 입력 예정",
+    flightNumber: "편명 입력 예정",
+    date: "출발일 확인 필요",
+    time: "출발 시간 확인 필요",
+    memo: "공항 도착은 출발 2시간 전을 권장합니다.",
+  },
+  {
+    id: "flight-return",
+    label: "귀국",
+    airline: "항공사 입력 예정",
+    flightNumber: "편명 입력 예정",
+    date: "귀국일 확인 필요",
+    time: "출발 시간 확인 필요",
+  },
+];
+
+export const accommodation: AccommodationInfo = {
+  name: "숙소 이름 입력 예정",
+  address: "가고시마 숙소 주소 입력 예정",
+  phone: "+81-00-0000-0000",
+  checkIn: "체크인 시간 확인 필요",
+  checkOut: "체크아웃 시간 확인 필요",
+  memo: "예약 확인서의 예약자명과 바우처 번호를 출발 전 다시 확인하세요.",
+};
+
+export const phrases: UsefulPhrase[] = [
+  {
+    id: "phrase-address",
+    situation: "택시나 기사님께 목적지를 보여줄 때",
+    korean: "이 주소까지 가주세요",
+    japanese: "この住所までお願いします。",
+  },
+  {
+    id: "phrase-help",
+    situation: "도움이 필요할 때",
+    korean: "도와주세요",
+    japanese: "助けてください。",
+  },
+];
 
 export const places: Place[] = [
   {

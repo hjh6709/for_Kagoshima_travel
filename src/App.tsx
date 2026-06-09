@@ -11,7 +11,17 @@ import {
   Shield,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { checklist, emergencies, places, routes, schedules, trip } from "./data/sampleTrip";
+import {
+  accommodation,
+  checklist,
+  emergencies,
+  flights,
+  phrases,
+  places,
+  routes,
+  schedules,
+  trip,
+} from "./data/sampleTrip";
 import type { ScheduleItem } from "./types/travel";
 
 type Tab = "today" | "schedule" | "map" | "concierge";
@@ -109,6 +119,7 @@ function App() {
   const [activeTab, setActiveTab] = useState<Tab>("today");
   const [tripDates, setTripDates] = useState<TripDates>(getSavedTripDates);
   const [selectedDate, setSelectedDate] = useState(schedules[0]?.date ?? trip.startDate);
+  const [addressCopied, setAddressCopied] = useState(false);
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>(() => {
     const saved = window.localStorage.getItem("kagoshima-checklist");
     try {
@@ -151,6 +162,16 @@ function App() {
     }
     setTripDates(next);
     window.localStorage.setItem("kagoshima-trip-dates", JSON.stringify(next));
+  }
+
+  function copyAccommodationAddress() {
+    navigator.clipboard
+      ?.writeText(accommodation.address)
+      .then(() => {
+        setAddressCopied(true);
+        window.setTimeout(() => setAddressCopied(false), 2000);
+      })
+      .catch(() => {});
   }
 
   function toggleCheck(id: string) {
@@ -382,22 +403,40 @@ function App() {
 
               <section className="section-block">
                 <h2>여행 정보</h2>
-              <article className="info-card">
-                <h2>항공편</h2>
-                <p>출국/귀국 항공편 정보를 입력할 자리입니다.</p>
-              </article>
-              <article className="info-card">
-                <h2>숙소</h2>
-                <p>숙소 이름, 주소, 전화번호, 체크인 시간을 입력하세요.</p>
-                <button className="secondary-button">
-                  <Copy size={18} />
-                  주소 복사
-                </button>
-              </article>
-              <article className="info-card">
-                <h2>일본어 문장</h2>
-                <p>この住所までお願いします。</p>
-              </article>
+                <article className="info-card">
+                  <h2>항공편</h2>
+                  {flights.map((flight) => (
+                    <p key={flight.id}>
+                      <strong>{flight.label}</strong> {flight.airline} {flight.flightNumber}
+                      <br />
+                      {flight.date} {flight.time}
+                      {flight.memo && <span className="muted"> · {flight.memo}</span>}
+                    </p>
+                  ))}
+                </article>
+                <article className="info-card">
+                  <h2>숙소</h2>
+                  <p>{accommodation.name}</p>
+                  <p className="muted">{accommodation.address}</p>
+                  <p>
+                    체크인 {accommodation.checkIn} · 체크아웃 {accommodation.checkOut}
+                  </p>
+                  {accommodation.memo && <p className="muted">{accommodation.memo}</p>}
+                  <button className="secondary-button" onClick={copyAccommodationAddress}>
+                    <Copy size={18} />
+                    {addressCopied ? "복사됨" : "주소 복사"}
+                  </button>
+                </article>
+                <article className="info-card">
+                  <h2>일본어 문장</h2>
+                  {phrases.map((phrase) => (
+                    <p key={phrase.id}>
+                      <strong>{phrase.situation}</strong>
+                      <br />
+                      {phrase.korean} · {phrase.japanese}
+                    </p>
+                  ))}
+                </article>
               </section>
             </section>
           )}

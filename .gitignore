@@ -12,3 +12,5 @@ dist/
 
 backend/tmp/
 backend/bin/
+
+test-results/

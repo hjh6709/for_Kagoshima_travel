@@ -18,6 +18,32 @@ export type Trip = {
   memo?: string;
 };
 
+export type FlightInfo = {
+  id: string;
+  label: string;
+  airline?: string;
+  flightNumber?: string;
+  date?: string;
+  time?: string;
+  memo?: string;
+};
+
+export type AccommodationInfo = {
+  name: string;
+  address: string;
+  phone?: string;
+  checkIn?: string;
+  checkOut?: string;
+  memo?: string;
+};
+
+export type UsefulPhrase = {
+  id: string;
+  situation: string;
+  korean: string;
+  japanese: string;
+};
+
 export type ScheduleItem = {
   id: string;
   date: string;
