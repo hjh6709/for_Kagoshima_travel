@@ -163,26 +163,24 @@ src/
 
 1차 MVP에서는 여행 데이터를 프론트엔드에 두고 화면을 완성한다. Go API 연결 시 `data` 계층을 API 호출 계층으로 교체한다.
 
-## 3-1. 백엔드 구조 초안
+## 3-1. 백엔드 구조
 
 ```text
 backend/
-  cmd/
-    api/
-      main.go
+  cmd/api/main.go
   internal/
-    config/
-    server/
+    auth/         # JWT 생성/검증, bcrypt 비밀번호 해시
+    dto/          # 요청/응답 데이터 구조체
+    handler/      # HTTP 핸들러 (auth, trip)
+    httpjson/     # JSON 응답 헬퍼
+    middleware/   # JWT 인증 미들웨어
+    model/        # 도메인 모델 (Trip, Schedule, Place, Route, User)
+    repository/   # 데이터 접근 계층 (현재 in-memory, PostgreSQL 예정)
+    server/       # 라우트 등록, CORS, 서버 초기화
+    service/      # 비즈니스 로직 (auth, trip)
+  schema.sql      # PostgreSQL 스키마
   go.mod
 ```
-
-Go 서버는 2차 확장 시 아래 역할을 담당한다.
-
-- 헬스 체크
-- 여행 데이터 조회 API
-- 관리자 CRUD API
-- 가족 공유 조회 API
-- 추후 PostgreSQL 연결
 
 ## 4. 데이터 모델 초안
 
@@ -249,23 +247,36 @@ Go 서버는 2차 확장 시 아래 역할을 담당한다.
 | place_id | uuid | 장소 ID |
 | sort_order | int | 루트 내 순서 |
 
-## 5. API 설계 초안
+## 5. API 설계
+
+### 구현 완료
 
 | Method | Path | 설명 | 권한 |
 | --- | --- | --- | --- |
 | GET | `/healthz` | 서버 상태 확인 | 공개 |
-| GET | `/api/trips/:tripId` | 여행 기본 정보 조회 | 공유 사용자 |
-| GET | `/api/trips/:tripId/schedules` | 일정 목록 조회 | 공유 사용자 |
-| GET | `/api/trips/:tripId/places` | 장소와 맛집 목록 조회 | 공유 사용자 |
-| GET | `/api/trips/:tripId/routes` | 추천 루트 조회 | 공유 사용자 |
-| GET | `/api/trips/:tripId/emergencies` | 긴급 정보 조회 | 공유 사용자 |
-| POST | `/api/admin/login` | 관리자 로그인 | 공개 |
-| POST | `/api/admin/trips/:tripId/schedules` | 일정 생성 | 관리자 |
-| PATCH | `/api/admin/schedules/:scheduleId` | 일정 수정 | 관리자 |
-| DELETE | `/api/admin/schedules/:scheduleId` | 일정 삭제 | 관리자 |
-| POST | `/api/admin/trips/:tripId/places` | 장소 생성 | 관리자 |
-| PATCH | `/api/admin/places/:placeId` | 장소 수정 | 관리자 |
-| DELETE | `/api/admin/places/:placeId` | 장소 삭제 | 관리자 |
+| POST | `/api/auth/register` | 회원가입 | 공개 |
+| POST | `/api/auth/login` | 로그인 (JWT 발급) | 공개 |
+| GET | `/api/trips` | 내 여행 목록 조회 | 로그인 |
+| POST | `/api/trips` | 여행 생성 | 로그인 |
+| GET | `/api/trips/{tripID}` | 여행 기본 정보 조회 | 로그인 |
+| PATCH | `/api/trips/{tripID}` | 여행 수정 (소유자만) | 로그인 |
+| DELETE | `/api/trips/{tripID}` | 여행 삭제 (소유자만) | 로그인 |
+| GET | `/api/trips/{tripID}/schedules` | 일정 목록 조회 | 로그인 |
+| GET | `/api/trips/{tripID}/places` | 장소와 맛집 목록 조회 | 로그인 |
+| GET | `/api/trips/{tripID}/routes` | 추천 루트 조회 | 로그인 |
+
+### 예정 (2차 확장)
+
+| Method | Path | 설명 | 권한 |
+| --- | --- | --- | --- |
+| POST | `/api/trips/{tripID}/schedules` | 일정 생성 | 로그인 |
+| PATCH | `/api/schedules/{scheduleID}` | 일정 수정 | 로그인 |
+| DELETE | `/api/schedules/{scheduleID}` | 일정 삭제 | 로그인 |
+| POST | `/api/trips/{tripID}/places` | 장소 생성 | 로그인 |
+| PATCH | `/api/places/{placeID}` | 장소 수정 | 로그인 |
+| DELETE | `/api/places/{placeID}` | 장소 삭제 | 로그인 |
+| POST | `/api/trips/{tripID}/share` | 공유 링크 생성 | 로그인 |
+| GET | `/api/share/{token}` | 공유 링크로 여행 조회 | 공개 |
 
 ## 6. 인증과 인가 설계
 
