@@ -1,9 +1,12 @@
 package server
 
 import (
+	"context"
+	"log"
 	"net/http"
 	"os"
 
+	"github.com/hanjeonghyun/for-kagoshima-travel/backend/internal/db"
 	"github.com/hanjeonghyun/for-kagoshima-travel/backend/internal/handler"
 	"github.com/hanjeonghyun/for-kagoshima-travel/backend/internal/middleware"
 	"github.com/hanjeonghyun/for-kagoshima-travel/backend/internal/repository"
@@ -22,10 +25,27 @@ func New() *Server {
 		jwtSecret = "dev-secret-replace-in-production"
 	}
 
-	tripRepository := repository.NewMemoryTripRepository()
-	tripService := service.NewTripService(tripRepository)
+	var tripRepository repository.TripRepository
+	var userRepository repository.UserRepository
 
-	userRepository := repository.NewMemoryUserRepository()
+	if dbURL := os.Getenv("DATABASE_URL"); dbURL != "" {
+		pool, err := db.NewPool(dbURL)
+		if err != nil {
+			log.Fatalf("DB 연결 실패: %v", err)
+		}
+		if err := pool.Ping(context.Background()); err != nil {
+			log.Fatalf("DB ping 실패: %v", err)
+		}
+		log.Println("PostgreSQL 연결됨")
+		tripRepository = repository.NewPostgresTripRepository(pool)
+		userRepository = repository.NewPostgresUserRepository(pool)
+	} else {
+		log.Println("in-memory 리포지토리 사용 (DATABASE_URL 미설정)")
+		tripRepository = repository.NewMemoryTripRepository()
+		userRepository = repository.NewMemoryUserRepository()
+	}
+
+	tripService := service.NewTripService(tripRepository)
 	authService := service.NewAuthService(userRepository, jwtSecret)
 
 	s := &Server{
@@ -46,6 +66,8 @@ func (s *Server) registerRoutes(jwtSecret string) {
 
 	// 공개 엔드포인트
 	s.mux.HandleFunc("GET /healthz", handler.Health)
+	s.mux.HandleFunc("GET /docs", handler.DocsUI)
+	s.mux.HandleFunc("GET /openapi.json", handler.OpenAPISpec)
 	s.mux.HandleFunc("POST /api/auth/register", s.authHandler.Register)
 	s.mux.HandleFunc("POST /api/auth/login", s.authHandler.Login)
 

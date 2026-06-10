@@ -1,0 +1,226 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "가고시마 여행 API",
+    "version": "2.0.0",
+    "description": "가고시마 여행 앱 백엔드 API"
+  },
+  "servers": [
+    { "url": "http://localhost:8080", "description": "로컬 개발" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "RegisterRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": { "type": "string", "example": "user@example.com" },
+          "password": { "type": "string", "minLength": 8, "example": "password123" }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": { "type": "string", "example": "user@example.com" },
+          "password": { "type": "string", "example": "password123" }
+        }
+      },
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "accessToken": { "type": "string" },
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "email": { "type": "string" }
+            }
+          }
+        }
+      },
+      "TripResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "ownerId": { "type": "string" },
+          "title": { "type": "string" },
+          "startDate": { "type": "string", "example": "2026-06-27" },
+          "endDate": { "type": "string", "example": "2026-06-30" },
+          "travelers": { "type": "array", "items": { "type": "string" } },
+          "memo": { "type": "string" }
+        }
+      },
+      "CreateTripRequest": {
+        "type": "object",
+        "required": ["title", "startDate", "endDate"],
+        "properties": {
+          "title": { "type": "string", "example": "가고시마 여행" },
+          "startDate": { "type": "string", "example": "2026-06-27" },
+          "endDate": { "type": "string", "example": "2026-06-30" },
+          "travelers": { "type": "array", "items": { "type": "string" }, "example": ["아버지", "어머니"] },
+          "memo": { "type": "string" }
+        }
+      },
+      "UpdateTripRequest": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "startDate": { "type": "string" },
+          "endDate": { "type": "string" },
+          "travelers": { "type": "array", "items": { "type": "string" } },
+          "memo": { "type": "string" }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string" }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/healthz": {
+      "get": {
+        "summary": "서버 상태 확인",
+        "tags": ["헬스"],
+        "responses": {
+          "200": { "description": "정상" }
+        }
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "summary": "회원가입",
+        "tags": ["인증"],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RegisterRequest" } } }
+        },
+        "responses": {
+          "201": { "description": "가입 성공", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthResponse" } } } },
+          "400": { "description": "입력 오류", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "409": { "description": "이미 사용 중인 이메일", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "로그인",
+        "tags": ["인증"],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginRequest" } } }
+        },
+        "responses": {
+          "200": { "description": "로그인 성공", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthResponse" } } } },
+          "401": { "description": "인증 실패", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/trips": {
+      "get": {
+        "summary": "내 여행 목록",
+        "tags": ["여행"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "성공", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/TripResponse" } } } } },
+          "401": { "description": "인증 필요" }
+        }
+      },
+      "post": {
+        "summary": "여행 생성",
+        "tags": ["여행"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateTripRequest" } } }
+        },
+        "responses": {
+          "201": { "description": "생성 성공", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TripResponse" } } } },
+          "400": { "description": "입력 오류" },
+          "401": { "description": "인증 필요" }
+        }
+      }
+    },
+    "/api/trips/{tripID}": {
+      "parameters": [
+        { "name": "tripID", "in": "path", "required": true, "schema": { "type": "string" } }
+      ],
+      "get": {
+        "summary": "여행 상세 조회",
+        "tags": ["여행"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "성공", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TripResponse" } } } },
+          "404": { "description": "없음" }
+        }
+      },
+      "patch": {
+        "summary": "여행 수정",
+        "tags": ["여행"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UpdateTripRequest" } } }
+        },
+        "responses": {
+          "200": { "description": "수정 성공", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TripResponse" } } } },
+          "403": { "description": "권한 없음" },
+          "404": { "description": "없음" }
+        }
+      },
+      "delete": {
+        "summary": "여행 삭제",
+        "tags": ["여행"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "204": { "description": "삭제 성공" },
+          "403": { "description": "권한 없음" },
+          "404": { "description": "없음" }
+        }
+      }
+    },
+    "/api/trips/{tripID}/schedules": {
+      "parameters": [
+        { "name": "tripID", "in": "path", "required": true, "schema": { "type": "string" } }
+      ],
+      "get": {
+        "summary": "일정 목록",
+        "tags": ["일정"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "성공" } }
+      }
+    },
+    "/api/trips/{tripID}/places": {
+      "parameters": [
+        { "name": "tripID", "in": "path", "required": true, "schema": { "type": "string" } }
+      ],
+      "get": {
+        "summary": "장소 목록",
+        "tags": ["장소"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "성공" } }
+      }
+    },
+    "/api/trips/{tripID}/routes": {
+      "parameters": [
+        { "name": "tripID", "in": "path", "required": true, "schema": { "type": "string" } }
+      ],
+      "get": {
+        "summary": "추천 루트 목록",
+        "tags": ["루트"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "성공" } }
+      }
+    }
+  }
+}
