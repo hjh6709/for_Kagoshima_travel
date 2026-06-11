@@ -15,6 +15,7 @@ CREATE TABLE trips (
     title       TEXT NOT NULL,
     start_date  DATE NOT NULL,
     end_date    DATE NOT NULL,
+    travelers   TEXT[] NOT NULL DEFAULT '{}',
     memo        TEXT,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
