@@ -15,10 +15,12 @@ var (
 type TripRepository interface {
 	FindTrip(id string) (model.Trip, error)
 	FindByOwner(ownerID string) ([]model.Trip, error)
+	FindShareLinkByToken(token string) (model.ShareLink, error)
 	FindSchedules(tripID string) ([]model.Schedule, error)
 	FindPlaces(tripID string) ([]model.Place, error)
 	FindRoutes(tripID string) ([]model.Route, error)
 	Save(trip model.Trip) error
+	SaveShareLink(link model.ShareLink) error
 	Update(trip model.Trip) error
 	Delete(id string) error
 }
@@ -29,6 +31,7 @@ type MemoryTripRepository struct {
 	schedules []model.Schedule
 	places    []model.Place
 	routes    []model.Route
+	shares    []model.ShareLink
 }
 
 func NewMemoryTripRepository() *MemoryTripRepository {
@@ -125,6 +128,17 @@ func (r *MemoryTripRepository) FindByOwner(ownerID string) ([]model.Trip, error)
 	return result, nil
 }
 
+func (r *MemoryTripRepository) FindShareLinkByToken(token string) (model.ShareLink, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	for _, link := range r.shares {
+		if link.Token == token {
+			return link, nil
+		}
+	}
+	return model.ShareLink{}, ErrNotFound
+}
+
 func (r *MemoryTripRepository) FindSchedules(tripID string) ([]model.Schedule, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -165,6 +179,13 @@ func (r *MemoryTripRepository) Save(trip model.Trip) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.trips = append(r.trips, trip)
+	return nil
+}
+
+func (r *MemoryTripRepository) SaveShareLink(link model.ShareLink) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.shares = append(r.shares, link)
 	return nil
 }
 

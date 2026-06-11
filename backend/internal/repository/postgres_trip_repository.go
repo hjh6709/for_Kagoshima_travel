@@ -51,10 +51,33 @@ func (r *PostgresTripRepository) FindByOwner(ownerID string) ([]model.Trip, erro
 	return result, rows.Err()
 }
 
+func (r *PostgresTripRepository) FindShareLinkByToken(token string) (model.ShareLink, error) {
+	row := r.pool.QueryRow(context.Background(),
+		`SELECT id::text, trip_id::text, token, created_at, expires_at
+		 FROM share_links
+		 WHERE token = $1 AND (expires_at IS NULL OR expires_at > NOW())`, token)
+
+	var link model.ShareLink
+	if err := row.Scan(&link.ID, &link.TripID, &link.Token, &link.CreatedAt, &link.ExpiresAt); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return model.ShareLink{}, ErrNotFound
+		}
+		return model.ShareLink{}, err
+	}
+	return link, nil
+}
+
 func (r *PostgresTripRepository) Save(trip model.Trip) error {
 	_, err := r.pool.Exec(context.Background(),
 		`INSERT INTO trips (id, owner_id, title, start_date, end_date, travelers, memo) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
 		trip.ID, trip.OwnerID, trip.Title, trip.StartDate, trip.EndDate, trip.Travelers, trip.Memo)
+	return err
+}
+
+func (r *PostgresTripRepository) SaveShareLink(link model.ShareLink) error {
+	_, err := r.pool.Exec(context.Background(),
+		`INSERT INTO share_links (id, trip_id, token, created_at, expires_at) VALUES ($1,$2,$3,$4,$5)`,
+		link.ID, link.TripID, link.Token, link.CreatedAt, link.ExpiresAt)
 	return err
 }
 

@@ -79,6 +79,24 @@
           "memo": { "type": "string" }
         }
       },
+      "ShareLinkResponse": {
+        "type": "object",
+        "properties": {
+          "token": { "type": "string" },
+          "apiPath": { "type": "string", "example": "/api/share/share-token" },
+          "webPath": { "type": "string", "example": "/share/share-token" },
+          "expiresAt": { "type": "string" }
+        }
+      },
+      "SharedTripResponse": {
+        "type": "object",
+        "properties": {
+          "trip": { "$ref": "#/components/schemas/TripResponse" },
+          "schedules": { "type": "array", "items": { "type": "object" } },
+          "places": { "type": "array", "items": { "type": "object" } },
+          "routes": { "type": "array", "items": { "type": "object" } }
+        }
+      },
       "Error": {
         "type": "object",
         "properties": {
@@ -186,6 +204,34 @@
           "204": { "description": "삭제 성공" },
           "403": { "description": "권한 없음" },
           "404": { "description": "없음" }
+        }
+      }
+    },
+    "/api/trips/{tripID}/share": {
+      "parameters": [
+        { "name": "tripID", "in": "path", "required": true, "schema": { "type": "string" } }
+      ],
+      "post": {
+        "summary": "가족 공유 링크 생성",
+        "tags": ["공유"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "201": { "description": "공유 링크 생성 성공", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ShareLinkResponse" } } } },
+          "403": { "description": "권한 없음" },
+          "404": { "description": "여행 없음" }
+        }
+      }
+    },
+    "/api/share/{token}": {
+      "parameters": [
+        { "name": "token", "in": "path", "required": true, "schema": { "type": "string" } }
+      ],
+      "get": {
+        "summary": "공유 링크로 여행 읽기 전용 조회",
+        "tags": ["공유"],
+        "responses": {
+          "200": { "description": "성공", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SharedTripResponse" } } } },
+          "404": { "description": "공유 링크 없음" }
         }
       }
     },

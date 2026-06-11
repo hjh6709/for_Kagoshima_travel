@@ -20,7 +20,8 @@ func NewTripHandler(tripService *service.TripService) *TripHandler {
 }
 
 func (h *TripHandler) GetTrip(w http.ResponseWriter, r *http.Request) {
-	trip, err := h.tripService.GetTrip(r.PathValue("tripID"))
+	claims := middleware.GetClaims(r)
+	trip, err := h.tripService.GetOwnedTrip(r.PathValue("tripID"), claims.UserID)
 	if err != nil {
 		writeServiceError(w, err)
 		return
@@ -53,6 +54,25 @@ func (h *TripHandler) CreateTrip(w http.ResponseWriter, r *http.Request) {
 	httpjson.Write(w, http.StatusCreated, trip)
 }
 
+func (h *TripHandler) CreateShareLink(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.GetClaims(r)
+	link, err := h.tripService.CreateShareLink(r.PathValue("tripID"), claims.UserID)
+	if err != nil {
+		writeServiceError(w, err)
+		return
+	}
+	httpjson.Write(w, http.StatusCreated, link)
+}
+
+func (h *TripHandler) GetSharedTrip(w http.ResponseWriter, r *http.Request) {
+	sharedTrip, err := h.tripService.GetSharedTrip(r.PathValue("token"))
+	if err != nil {
+		writeServiceError(w, err)
+		return
+	}
+	httpjson.Write(w, http.StatusOK, sharedTrip)
+}
+
 func (h *TripHandler) UpdateTrip(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
 	var req dto.UpdateTripRequest
@@ -78,7 +98,8 @@ func (h *TripHandler) DeleteTrip(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TripHandler) ListSchedules(w http.ResponseWriter, r *http.Request) {
-	schedules, err := h.tripService.ListSchedules(r.PathValue("tripID"))
+	claims := middleware.GetClaims(r)
+	schedules, err := h.tripService.ListSchedulesForOwner(r.PathValue("tripID"), claims.UserID)
 	if err != nil {
 		writeServiceError(w, err)
 		return
@@ -87,7 +108,8 @@ func (h *TripHandler) ListSchedules(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TripHandler) ListPlaces(w http.ResponseWriter, r *http.Request) {
-	places, err := h.tripService.ListPlaces(r.PathValue("tripID"))
+	claims := middleware.GetClaims(r)
+	places, err := h.tripService.ListPlacesForOwner(r.PathValue("tripID"), claims.UserID)
 	if err != nil {
 		writeServiceError(w, err)
 		return
@@ -96,7 +118,8 @@ func (h *TripHandler) ListPlaces(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TripHandler) ListRoutes(w http.ResponseWriter, r *http.Request) {
-	routes, err := h.tripService.ListRoutes(r.PathValue("tripID"))
+	claims := middleware.GetClaims(r)
+	routes, err := h.tripService.ListRoutesForOwner(r.PathValue("tripID"), claims.UserID)
 	if err != nil {
 		writeServiceError(w, err)
 		return
@@ -108,6 +131,8 @@ func writeServiceError(w http.ResponseWriter, err error) {
 	switch {
 	case errors.Is(err, service.ErrTripNotFound):
 		httpjson.WriteError(w, http.StatusNotFound, "여행을 찾을 수 없습니다.")
+	case errors.Is(err, service.ErrShareNotFound):
+		httpjson.WriteError(w, http.StatusNotFound, "공유 링크를 찾을 수 없습니다.")
 	case errors.Is(err, service.ErrForbidden):
 		httpjson.WriteError(w, http.StatusForbidden, "권한이 없습니다.")
 	case errors.Is(err, service.ErrInvalidTrip):

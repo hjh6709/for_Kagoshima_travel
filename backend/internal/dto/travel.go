@@ -53,3 +53,17 @@ type RouteResponse struct {
 	TransportMemo     string   `json:"transportMemo,omitempty"`
 	EstimatedDuration string   `json:"estimatedDuration,omitempty"`
 }
+
+type ShareLinkResponse struct {
+	Token     string `json:"token"`
+	APIPath   string `json:"apiPath"`
+	WebPath   string `json:"webPath"`
+	ExpiresAt string `json:"expiresAt,omitempty"`
+}
+
+type SharedTripResponse struct {
+	Trip      TripResponse       `json:"trip"`
+	Schedules []ScheduleResponse `json:"schedules"`
+	Places    []PlaceResponse    `json:"places"`
+	Routes    []RouteResponse    `json:"routes"`
+}
