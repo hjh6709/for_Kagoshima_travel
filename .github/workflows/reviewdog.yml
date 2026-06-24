@@ -26,7 +26,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Review GitHub Actions workflows
-        uses: reviewdog/action-actionlint@v1
+        uses: reviewdog/action-actionlint@6fb7acc99f4a1008869fa8a0f09cfca740837d9d
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-pr-review
@@ -46,7 +46,7 @@ jobs:
           cache-dependency-path: backend/go.sum
 
       - name: Review Go code with staticcheck
-        uses: reviewdog/action-staticcheck@v1
+        uses: reviewdog/action-staticcheck@564f18c6297af36f7b10b6c7a72e814341bd813a
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           workdir: backend
