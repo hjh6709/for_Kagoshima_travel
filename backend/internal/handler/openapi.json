@@ -58,6 +58,16 @@
           "memo": { "type": "string" }
         }
       },
+      "PublicTripResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "startDate": { "type": "string", "example": "2026-06-27" },
+          "endDate": { "type": "string", "example": "2026-06-30" },
+          "travelers": { "type": "array", "items": { "type": "string" } }
+        }
+      },
       "CreateTripRequest": {
         "type": "object",
         "required": ["title", "startDate", "endDate"],
@@ -91,7 +101,7 @@
       "SharedTripResponse": {
         "type": "object",
         "properties": {
-          "trip": { "$ref": "#/components/schemas/TripResponse" },
+          "trip": { "$ref": "#/components/schemas/PublicTripResponse" },
           "schedules": { "type": "array", "items": { "type": "object" } },
           "places": { "type": "array", "items": { "type": "object" } },
           "routes": { "type": "array", "items": { "type": "object" } }

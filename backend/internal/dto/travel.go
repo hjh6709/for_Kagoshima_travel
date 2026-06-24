@@ -25,6 +25,14 @@ type TripResponse struct {
 	Memo      string   `json:"memo,omitempty"`
 }
 
+type PublicTripResponse struct {
+	ID        string   `json:"id"`
+	Title     string   `json:"title"`
+	StartDate string   `json:"startDate"`
+	EndDate   string   `json:"endDate"`
+	Travelers []string `json:"travelers"`
+}
+
 type ScheduleResponse struct {
 	ID            string `json:"id"`
 	PlaceID       string `json:"placeId,omitempty"`
@@ -62,7 +70,7 @@ type ShareLinkResponse struct {
 }
 
 type SharedTripResponse struct {
-	Trip      TripResponse       `json:"trip"`
+	Trip      PublicTripResponse `json:"trip"`
 	Schedules []ScheduleResponse `json:"schedules"`
 	Places    []PlaceResponse    `json:"places"`
 	Routes    []RouteResponse    `json:"routes"`

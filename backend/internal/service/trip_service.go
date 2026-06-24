@@ -52,10 +52,19 @@ func (s *TripService) CreateShareLink(tripID, ownerID string) (dto.ShareLinkResp
 		return dto.ShareLinkResponse{}, ErrForbidden
 	}
 
+	id, err := newID()
+	if err != nil {
+		return dto.ShareLinkResponse{}, err
+	}
+	token, err := newShareToken()
+	if err != nil {
+		return dto.ShareLinkResponse{}, err
+	}
+
 	link := model.ShareLink{
-		ID:        newID(),
+		ID:        id,
 		TripID:    tripID,
-		Token:     newShareToken(),
+		Token:     token,
 		CreatedAt: time.Now(),
 	}
 
@@ -92,7 +101,7 @@ func (s *TripService) GetSharedTrip(token string) (dto.SharedTripResponse, error
 	}
 
 	return dto.SharedTripResponse{
-		Trip:      mapTripResponse(trip),
+		Trip:      mapPublicTripResponse(trip),
 		Schedules: schedules,
 		Places:    places,
 		Routes:    routes,
@@ -163,8 +172,12 @@ func (s *TripService) CreateTrip(ownerID string, req dto.CreateTripRequest) (dto
 	if req.Title == "" || req.StartDate == "" || req.EndDate == "" {
 		return dto.TripResponse{}, ErrInvalidTrip
 	}
+	id, err := newID()
+	if err != nil {
+		return dto.TripResponse{}, err
+	}
 	trip := model.Trip{
-		ID:        newID(),
+		ID:        id,
 		OwnerID:   ownerID,
 		Title:     req.Title,
 		StartDate: req.StartDate,
@@ -256,6 +269,16 @@ func mapTripResponse(trip model.Trip) dto.TripResponse {
 		EndDate:   trip.EndDate,
 		Travelers: trip.Travelers,
 		Memo:      trip.Memo,
+	}
+}
+
+func mapPublicTripResponse(trip model.Trip) dto.PublicTripResponse {
+	return dto.PublicTripResponse{
+		ID:        trip.ID,
+		Title:     trip.Title,
+		StartDate: trip.StartDate,
+		EndDate:   trip.EndDate,
+		Travelers: trip.Travelers,
 	}
 }
 

@@ -36,8 +36,13 @@ func (s *AuthService) Register(req dto.RegisterRequest) (dto.AuthResponse, error
 		return dto.AuthResponse{}, err
 	}
 
+	id, err := newID()
+	if err != nil {
+		return dto.AuthResponse{}, err
+	}
+
 	user := model.User{
-		ID:        newID(),
+		ID:        id,
 		Email:     strings.ToLower(req.Email),
 		Password:  hashed,
 		CreatedAt: time.Now(),
