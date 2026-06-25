@@ -19,8 +19,10 @@ type TripRepository interface {
 	FindSchedules(tripID string) ([]model.Schedule, error)
 	FindPlaces(tripID string) ([]model.Place, error)
 	FindRoutes(tripID string) ([]model.Route, error)
+	FindExpenseSummaries(tripID string) ([]model.ExpenseSummary, error)
 	Save(trip model.Trip) error
 	SaveShareLink(link model.ShareLink) error
+	ReplaceExpenseSummaries(tripID string, summaries []model.ExpenseSummary) error
 	Update(trip model.Trip) error
 	Delete(id string) error
 }
@@ -31,6 +33,7 @@ type MemoryTripRepository struct {
 	schedules []model.Schedule
 	places    []model.Place
 	routes    []model.Route
+	expenses  []model.ExpenseSummary
 	shares    []model.ShareLink
 }
 
@@ -100,6 +103,28 @@ func NewMemoryTripRepository() *MemoryTripRepository {
 				PlaceIDs:          []string{"place-senganen", "place-kurobuta"},
 				TransportMemo:     "실제 숙소 위치 확정 후 이동 시간을 업데이트합니다.",
 				EstimatedDuration: "반나절",
+			},
+		},
+		expenses: []model.ExpenseSummary{
+			{
+				ID:        "expense-meals-transport",
+				TripID:    tripID,
+				Label:     "식비·교통비 예상 경비",
+				Currency:  "JPY",
+				Amount:    42000,
+				Note:      "식당, 편의점, 택시 등 현지에서 바로 확인할 기준 금액입니다.",
+				UpdatedAt: "2026-06-24T21:10:00+09:00",
+				SortOrder: 0,
+			},
+			{
+				ID:        "expense-emergency",
+				TripID:    tripID,
+				Label:     "비상 예비 경비",
+				Currency:  "JPY",
+				Amount:    10000,
+				Note:      "예상보다 이동비나 식비가 늘어날 때 쓰는 예비 금액입니다.",
+				UpdatedAt: "2026-06-24T21:10:00+09:00",
+				SortOrder: 1,
 			},
 		},
 	}
@@ -175,6 +200,18 @@ func (r *MemoryTripRepository) FindRoutes(tripID string) ([]model.Route, error) 
 	return routes, nil
 }
 
+func (r *MemoryTripRepository) FindExpenseSummaries(tripID string) ([]model.ExpenseSummary, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	summaries := make([]model.ExpenseSummary, 0)
+	for _, summary := range r.expenses {
+		if summary.TripID == tripID {
+			summaries = append(summaries, summary)
+		}
+	}
+	return summaries, nil
+}
+
 func (r *MemoryTripRepository) Save(trip model.Trip) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -186,6 +223,20 @@ func (r *MemoryTripRepository) SaveShareLink(link model.ShareLink) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.shares = append(r.shares, link)
+	return nil
+}
+
+func (r *MemoryTripRepository) ReplaceExpenseSummaries(tripID string, summaries []model.ExpenseSummary) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	next := make([]model.ExpenseSummary, 0, len(r.expenses)+len(summaries))
+	for _, summary := range r.expenses {
+		if summary.TripID != tripID {
+			next = append(next, summary)
+		}
+	}
+	next = append(next, summaries...)
+	r.expenses = next
 	return nil
 }
 

@@ -82,6 +82,8 @@ func (s *Server) registerRoutes(jwtSecret string) {
 	s.mux.Handle("GET /api/trips/{tripID}/schedules", requireAuth(http.HandlerFunc(s.tripHandler.ListSchedules)))
 	s.mux.Handle("GET /api/trips/{tripID}/places", requireAuth(http.HandlerFunc(s.tripHandler.ListPlaces)))
 	s.mux.Handle("GET /api/trips/{tripID}/routes", requireAuth(http.HandlerFunc(s.tripHandler.ListRoutes)))
+	s.mux.Handle("GET /api/trips/{tripID}/expense-summaries", requireAuth(http.HandlerFunc(s.tripHandler.ListExpenseSummaries)))
+	s.mux.Handle("PUT /api/trips/{tripID}/expense-summaries", requireAuth(http.HandlerFunc(s.tripHandler.ReplaceExpenseSummaries)))
 }
 
 func withCORS(next http.Handler) http.Handler {
@@ -92,7 +94,7 @@ func withCORS(next http.Handler) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", allowedOrigins)
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
 		if r.Method == http.MethodOptions {
