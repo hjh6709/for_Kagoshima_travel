@@ -81,28 +81,18 @@ func (r *PostgresTripRepository) SaveShareLink(link model.ShareLink) error {
 	return err
 }
 
-func (r *PostgresTripRepository) ReplaceExpenseSummaries(tripID string, summaries []model.ExpenseSummary) error {
-	tx, err := r.pool.Begin(context.Background())
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback(context.Background())
-
-	if _, err := tx.Exec(context.Background(), `DELETE FROM expense_summaries WHERE trip_id = $1`, tripID); err != nil {
-		return err
-	}
-
-	for _, summary := range summaries {
-		_, err := tx.Exec(context.Background(),
-			`INSERT INTO expense_summaries (id, trip_id, label, currency, amount, note, sort_order, updated_at)
-			 VALUES ($1,$2,$3,$4,$5,$6,$7,NOW())`,
-			summary.ID, summary.TripID, summary.Label, summary.Currency, summary.Amount, summary.Note, summary.SortOrder)
-		if err != nil {
-			return err
-		}
-	}
-
-	return tx.Commit(context.Background())
+func (r *PostgresTripRepository) UpsertTravelogBalance(balance model.TravelogBalance) error {
+	_, err := r.pool.Exec(context.Background(),
+		`INSERT INTO travelog_balances (id, trip_id, currency, amount, note, checked_at, updated_at)
+		 VALUES ($1,$2,$3,$4,$5,$6,NOW())
+		 ON CONFLICT (trip_id) DO UPDATE SET
+		   currency = EXCLUDED.currency,
+		   amount = EXCLUDED.amount,
+		   note = EXCLUDED.note,
+		   checked_at = EXCLUDED.checked_at,
+		   updated_at = NOW()`,
+		balance.ID, balance.TripID, balance.Currency, balance.Amount, balance.Note, balance.CheckedAt)
+	return err
 }
 
 func (r *PostgresTripRepository) Update(trip model.Trip) error {
@@ -151,25 +141,20 @@ func (r *PostgresTripRepository) FindSchedules(tripID string) ([]model.Schedule,
 	return result, rows.Err()
 }
 
-func (r *PostgresTripRepository) FindExpenseSummaries(tripID string) ([]model.ExpenseSummary, error) {
-	rows, err := r.pool.Query(context.Background(),
-		`SELECT id::text, trip_id::text, label, currency, amount, COALESCE(note,''), updated_at::text, sort_order
-		 FROM expense_summaries WHERE trip_id = $1 ORDER BY sort_order, label`, tripID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
+func (r *PostgresTripRepository) FindTravelogBalance(tripID string) (model.TravelogBalance, error) {
+	row := r.pool.QueryRow(context.Background(),
+		`SELECT id::text, trip_id::text, currency, amount, COALESCE(note,''), checked_at::text, updated_at::text
+		 FROM travelog_balances WHERE trip_id = $1`, tripID)
 
-	result := make([]model.ExpenseSummary, 0)
-	for rows.Next() {
-		var summary model.ExpenseSummary
-		if err := rows.Scan(&summary.ID, &summary.TripID, &summary.Label, &summary.Currency,
-			&summary.Amount, &summary.Note, &summary.UpdatedAt, &summary.SortOrder); err != nil {
-			return nil, err
+	var balance model.TravelogBalance
+	if err := row.Scan(&balance.ID, &balance.TripID, &balance.Currency, &balance.Amount,
+		&balance.Note, &balance.CheckedAt, &balance.UpdatedAt); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return model.TravelogBalance{}, ErrNotFound
 		}
-		result = append(result, summary)
+		return model.TravelogBalance{}, err
 	}
-	return result, rows.Err()
+	return balance, nil
 }
 
 func (r *PostgresTripRepository) FindPlaces(tripID string) ([]model.Place, error) {

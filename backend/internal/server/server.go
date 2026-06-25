@@ -82,8 +82,8 @@ func (s *Server) registerRoutes(jwtSecret string) {
 	s.mux.Handle("GET /api/trips/{tripID}/schedules", requireAuth(http.HandlerFunc(s.tripHandler.ListSchedules)))
 	s.mux.Handle("GET /api/trips/{tripID}/places", requireAuth(http.HandlerFunc(s.tripHandler.ListPlaces)))
 	s.mux.Handle("GET /api/trips/{tripID}/routes", requireAuth(http.HandlerFunc(s.tripHandler.ListRoutes)))
-	s.mux.Handle("GET /api/trips/{tripID}/expense-summaries", requireAuth(http.HandlerFunc(s.tripHandler.ListExpenseSummaries)))
-	s.mux.Handle("PUT /api/trips/{tripID}/expense-summaries", requireAuth(http.HandlerFunc(s.tripHandler.ReplaceExpenseSummaries)))
+	s.mux.Handle("GET /api/trips/{tripID}/travelog-balance", requireAuth(http.HandlerFunc(s.tripHandler.GetTravelogBalance)))
+	s.mux.Handle("PUT /api/trips/{tripID}/travelog-balance", requireAuth(http.HandlerFunc(s.tripHandler.UpsertTravelogBalance)))
 }
 
 func withCORS(next http.Handler) http.Handler {

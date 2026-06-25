@@ -69,14 +69,13 @@ CREATE TABLE route_places (
     sort_order  INT NOT NULL DEFAULT 0
 );
 
-CREATE TABLE expense_summaries (
+CREATE TABLE travelog_balances (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     trip_id     UUID NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
-    label       TEXT NOT NULL,
     currency    TEXT NOT NULL,
     amount      BIGINT NOT NULL DEFAULT 0,
     note        TEXT,
-    sort_order  INT NOT NULL DEFAULT 0,
+    checked_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -93,5 +92,5 @@ CREATE TABLE share_links (
 CREATE INDEX ON trips (owner_id);
 CREATE INDEX ON schedules (trip_id, date, sort_order);
 CREATE INDEX ON places (trip_id, category);
-CREATE INDEX ON expense_summaries (trip_id, sort_order);
+CREATE UNIQUE INDEX ON travelog_balances (trip_id);
 CREATE UNIQUE INDEX ON share_links (token);

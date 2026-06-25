@@ -15,7 +15,7 @@ var (
 	ErrShareNotFound  = errors.New("share link not found")
 	ErrForbidden      = errors.New("forbidden")
 	ErrInvalidTrip    = errors.New("invalid trip input")
-	ErrInvalidExpense = errors.New("invalid expense input")
+	ErrInvalidBalance = errors.New("invalid travelog balance input")
 )
 
 type TripService struct {
@@ -101,18 +101,21 @@ func (s *TripService) GetSharedTrip(token string) (dto.SharedTripResponse, error
 	if err != nil {
 		return dto.SharedTripResponse{}, err
 	}
-	expenseSummaries, err := s.ListExpenseSummaries(link.TripID)
-	if err != nil {
+	travelogBalance, err := s.GetTravelogBalance(link.TripID)
+	if err != nil && !errors.Is(err, ErrTripNotFound) {
 		return dto.SharedTripResponse{}, err
 	}
 
-	return dto.SharedTripResponse{
-		Trip:             mapPublicTripResponse(trip),
-		Schedules:        schedules,
-		Places:           places,
-		Routes:           routes,
-		ExpenseSummaries: expenseSummaries,
-	}, nil
+	response := dto.SharedTripResponse{
+		Trip:      mapPublicTripResponse(trip),
+		Schedules: schedules,
+		Places:    places,
+		Routes:    routes,
+	}
+	if !errors.Is(err, ErrTripNotFound) {
+		response.TravelogBalance = &travelogBalance
+	}
+	return response, nil
 }
 
 func (s *TripService) ListSchedules(tripID string) ([]dto.ScheduleResponse, error) {
@@ -175,70 +178,67 @@ func (s *TripService) ListRoutesForOwner(tripID, ownerID string) ([]dto.RouteRes
 	return s.ListRoutes(tripID)
 }
 
-func (s *TripService) ListExpenseSummaries(tripID string) ([]dto.ExpenseSummaryResponse, error) {
-	summaries, err := s.tripRepository.FindExpenseSummaries(tripID)
+func (s *TripService) GetTravelogBalance(tripID string) (dto.TravelogBalanceResponse, error) {
+	balance, err := s.tripRepository.FindTravelogBalance(tripID)
 	if err != nil {
-		return nil, mapRepositoryError(err)
+		return dto.TravelogBalanceResponse{}, mapRepositoryError(err)
 	}
-
-	responses := make([]dto.ExpenseSummaryResponse, 0, len(summaries))
-	for _, summary := range summaries {
-		responses = append(responses, mapExpenseSummaryResponse(summary))
-	}
-	return responses, nil
+	return mapTravelogBalanceResponse(balance), nil
 }
 
-func (s *TripService) ListExpenseSummariesForOwner(tripID, ownerID string) ([]dto.ExpenseSummaryResponse, error) {
+func (s *TripService) GetTravelogBalanceForOwner(tripID, ownerID string) (dto.TravelogBalanceResponse, error) {
 	if err := s.ensureTripOwner(tripID, ownerID); err != nil {
-		return nil, err
+		return dto.TravelogBalanceResponse{}, err
 	}
-	return s.ListExpenseSummaries(tripID)
+	return s.GetTravelogBalance(tripID)
 }
 
-func (s *TripService) ReplaceExpenseSummaries(tripID, ownerID string, req dto.ReplaceExpenseSummariesRequest) ([]dto.ExpenseSummaryResponse, error) {
+func (s *TripService) UpsertTravelogBalance(tripID, ownerID string, req dto.TravelogBalanceRequest) (dto.TravelogBalanceResponse, error) {
 	if err := s.ensureTripOwner(tripID, ownerID); err != nil {
-		return nil, err
+		return dto.TravelogBalanceResponse{}, err
+	}
+
+	currency := strings.ToUpper(strings.TrimSpace(req.Currency))
+	checkedAt := strings.TrimSpace(req.CheckedAt)
+	if checkedAt == "" {
+		checkedAt = time.Now().Format(time.RFC3339)
+	}
+	if currency == "" || req.Amount < 0 {
+		return dto.TravelogBalanceResponse{}, ErrInvalidBalance
+	}
+	if _, err := time.Parse(time.RFC3339, checkedAt); err != nil {
+		return dto.TravelogBalanceResponse{}, ErrInvalidBalance
+	}
+
+	id := ""
+	existing, err := s.tripRepository.FindTravelogBalance(tripID)
+	if err == nil {
+		id = existing.ID
+	} else if !errors.Is(err, repository.ErrNotFound) {
+		return dto.TravelogBalanceResponse{}, err
+	}
+	if id == "" {
+		generatedID, err := newID()
+		if err != nil {
+			return dto.TravelogBalanceResponse{}, err
+		}
+		id = generatedID
 	}
 
 	now := time.Now().Format(time.RFC3339)
-	summaries := make([]model.ExpenseSummary, 0, len(req.Items))
-	for index, item := range req.Items {
-		label := strings.TrimSpace(item.Label)
-		currency := strings.ToUpper(strings.TrimSpace(item.Currency))
-		if label == "" || currency == "" || item.Amount < 0 {
-			return nil, ErrInvalidExpense
-		}
-
-		id := strings.TrimSpace(item.ID)
-		if id == "" {
-			generatedID, err := newID()
-			if err != nil {
-				return nil, err
-			}
-			id = generatedID
-		}
-
-		summaries = append(summaries, model.ExpenseSummary{
-			ID:        id,
-			TripID:    tripID,
-			Label:     label,
-			Currency:  currency,
-			Amount:    item.Amount,
-			Note:      strings.TrimSpace(item.Note),
-			UpdatedAt: now,
-			SortOrder: index,
-		})
+	balance := model.TravelogBalance{
+		ID:        id,
+		TripID:    tripID,
+		Currency:  currency,
+		Amount:    req.Amount,
+		Note:      strings.TrimSpace(req.Note),
+		CheckedAt: checkedAt,
+		UpdatedAt: now,
 	}
-
-	if err := s.tripRepository.ReplaceExpenseSummaries(tripID, summaries); err != nil {
-		return nil, err
+	if err := s.tripRepository.UpsertTravelogBalance(balance); err != nil {
+		return dto.TravelogBalanceResponse{}, err
 	}
-
-	responses := make([]dto.ExpenseSummaryResponse, 0, len(summaries))
-	for _, summary := range summaries {
-		responses = append(responses, mapExpenseSummaryResponse(summary))
-	}
-	return responses, nil
+	return mapTravelogBalanceResponse(balance), nil
 }
 
 func (s *TripService) CreateTrip(ownerID string, req dto.CreateTripRequest) (dto.TripResponse, error) {
@@ -402,13 +402,13 @@ func mapRouteResponse(route model.Route) dto.RouteResponse {
 	}
 }
 
-func mapExpenseSummaryResponse(summary model.ExpenseSummary) dto.ExpenseSummaryResponse {
-	return dto.ExpenseSummaryResponse{
-		ID:        summary.ID,
-		Label:     summary.Label,
-		Currency:  summary.Currency,
-		Amount:    summary.Amount,
-		Note:      summary.Note,
-		UpdatedAt: summary.UpdatedAt,
+func mapTravelogBalanceResponse(balance model.TravelogBalance) dto.TravelogBalanceResponse {
+	return dto.TravelogBalanceResponse{
+		ID:        balance.ID,
+		Currency:  balance.Currency,
+		Amount:    balance.Amount,
+		Note:      balance.Note,
+		CheckedAt: balance.CheckedAt,
+		UpdatedAt: balance.UpdatedAt,
 	}
 }

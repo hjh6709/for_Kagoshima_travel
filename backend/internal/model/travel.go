@@ -42,13 +42,12 @@ type Route struct {
 	EstimatedDuration string   `json:"estimatedDuration,omitempty"`
 }
 
-type ExpenseSummary struct {
+type TravelogBalance struct {
 	ID        string `json:"id"`
 	TripID    string `json:"tripId"`
-	Label     string `json:"label"`
 	Currency  string `json:"currency"`
 	Amount    int64  `json:"amount"`
 	Note      string `json:"note,omitempty"`
+	CheckedAt string `json:"checkedAt"`
 	UpdatedAt string `json:"updatedAt"`
-	SortOrder int    `json:"sortOrder"`
 }

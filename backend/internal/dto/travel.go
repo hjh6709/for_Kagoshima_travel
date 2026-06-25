@@ -62,24 +62,19 @@ type RouteResponse struct {
 	EstimatedDuration string   `json:"estimatedDuration,omitempty"`
 }
 
-type ExpenseSummaryRequest struct {
-	ID       string `json:"id,omitempty"`
-	Label    string `json:"label"`
-	Currency string `json:"currency"`
-	Amount   int64  `json:"amount"`
-	Note     string `json:"note,omitempty"`
-}
-
-type ReplaceExpenseSummariesRequest struct {
-	Items []ExpenseSummaryRequest `json:"items"`
-}
-
-type ExpenseSummaryResponse struct {
-	ID        string `json:"id"`
-	Label     string `json:"label"`
+type TravelogBalanceRequest struct {
 	Currency  string `json:"currency"`
 	Amount    int64  `json:"amount"`
 	Note      string `json:"note,omitempty"`
+	CheckedAt string `json:"checkedAt,omitempty"`
+}
+
+type TravelogBalanceResponse struct {
+	ID        string `json:"id"`
+	Currency  string `json:"currency"`
+	Amount    int64  `json:"amount"`
+	Note      string `json:"note,omitempty"`
+	CheckedAt string `json:"checkedAt"`
 	UpdatedAt string `json:"updatedAt"`
 }
 
@@ -91,9 +86,9 @@ type ShareLinkResponse struct {
 }
 
 type SharedTripResponse struct {
-	Trip             PublicTripResponse       `json:"trip"`
-	Schedules        []ScheduleResponse       `json:"schedules"`
-	Places           []PlaceResponse          `json:"places"`
-	Routes           []RouteResponse          `json:"routes"`
-	ExpenseSummaries []ExpenseSummaryResponse `json:"expenseSummaries"`
+	Trip            PublicTripResponse       `json:"trip"`
+	Schedules       []ScheduleResponse       `json:"schedules"`
+	Places          []PlaceResponse          `json:"places"`
+	Routes          []RouteResponse          `json:"routes"`
+	TravelogBalance *TravelogBalanceResponse `json:"travelogBalance,omitempty"`
 }

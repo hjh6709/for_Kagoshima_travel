@@ -19,10 +19,10 @@ type TripRepository interface {
 	FindSchedules(tripID string) ([]model.Schedule, error)
 	FindPlaces(tripID string) ([]model.Place, error)
 	FindRoutes(tripID string) ([]model.Route, error)
-	FindExpenseSummaries(tripID string) ([]model.ExpenseSummary, error)
+	FindTravelogBalance(tripID string) (model.TravelogBalance, error)
 	Save(trip model.Trip) error
 	SaveShareLink(link model.ShareLink) error
-	ReplaceExpenseSummaries(tripID string, summaries []model.ExpenseSummary) error
+	UpsertTravelogBalance(balance model.TravelogBalance) error
 	Update(trip model.Trip) error
 	Delete(id string) error
 }
@@ -33,7 +33,7 @@ type MemoryTripRepository struct {
 	schedules []model.Schedule
 	places    []model.Place
 	routes    []model.Route
-	expenses  []model.ExpenseSummary
+	balances  []model.TravelogBalance
 	shares    []model.ShareLink
 }
 
@@ -105,26 +105,15 @@ func NewMemoryTripRepository() *MemoryTripRepository {
 				EstimatedDuration: "반나절",
 			},
 		},
-		expenses: []model.ExpenseSummary{
+		balances: []model.TravelogBalance{
 			{
-				ID:        "expense-meals-transport",
+				ID:        "travelog-balance-sample",
 				TripID:    tripID,
-				Label:     "식비·교통비 예상 경비",
 				Currency:  "JPY",
 				Amount:    42000,
-				Note:      "식당, 편의점, 택시 등 현지에서 바로 확인할 기준 금액입니다.",
+				Note:      "트래블로그 체크카드 잔액을 직접 확인해 입력한 참고 금액입니다.",
+				CheckedAt: "2026-06-24T21:10:00+09:00",
 				UpdatedAt: "2026-06-24T21:10:00+09:00",
-				SortOrder: 0,
-			},
-			{
-				ID:        "expense-emergency",
-				TripID:    tripID,
-				Label:     "비상 예비 경비",
-				Currency:  "JPY",
-				Amount:    10000,
-				Note:      "예상보다 이동비나 식비가 늘어날 때 쓰는 예비 금액입니다.",
-				UpdatedAt: "2026-06-24T21:10:00+09:00",
-				SortOrder: 1,
 			},
 		},
 	}
@@ -200,16 +189,15 @@ func (r *MemoryTripRepository) FindRoutes(tripID string) ([]model.Route, error) 
 	return routes, nil
 }
 
-func (r *MemoryTripRepository) FindExpenseSummaries(tripID string) ([]model.ExpenseSummary, error) {
+func (r *MemoryTripRepository) FindTravelogBalance(tripID string) (model.TravelogBalance, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	summaries := make([]model.ExpenseSummary, 0)
-	for _, summary := range r.expenses {
-		if summary.TripID == tripID {
-			summaries = append(summaries, summary)
+	for _, balance := range r.balances {
+		if balance.TripID == tripID {
+			return balance, nil
 		}
 	}
-	return summaries, nil
+	return model.TravelogBalance{}, ErrNotFound
 }
 
 func (r *MemoryTripRepository) Save(trip model.Trip) error {
@@ -226,17 +214,16 @@ func (r *MemoryTripRepository) SaveShareLink(link model.ShareLink) error {
 	return nil
 }
 
-func (r *MemoryTripRepository) ReplaceExpenseSummaries(tripID string, summaries []model.ExpenseSummary) error {
+func (r *MemoryTripRepository) UpsertTravelogBalance(balance model.TravelogBalance) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	next := make([]model.ExpenseSummary, 0, len(r.expenses)+len(summaries))
-	for _, summary := range r.expenses {
-		if summary.TripID != tripID {
-			next = append(next, summary)
+	for i, existing := range r.balances {
+		if existing.TripID == balance.TripID {
+			r.balances[i] = balance
+			return nil
 		}
 	}
-	next = append(next, summaries...)
-	r.expenses = next
+	r.balances = append(r.balances, balance)
 	return nil
 }
 

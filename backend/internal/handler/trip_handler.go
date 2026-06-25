@@ -127,29 +127,29 @@ func (h *TripHandler) ListRoutes(w http.ResponseWriter, r *http.Request) {
 	httpjson.Write(w, http.StatusOK, routes)
 }
 
-func (h *TripHandler) ListExpenseSummaries(w http.ResponseWriter, r *http.Request) {
+func (h *TripHandler) GetTravelogBalance(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
-	summaries, err := h.tripService.ListExpenseSummariesForOwner(r.PathValue("tripID"), claims.UserID)
+	balance, err := h.tripService.GetTravelogBalanceForOwner(r.PathValue("tripID"), claims.UserID)
 	if err != nil {
 		writeServiceError(w, err)
 		return
 	}
-	httpjson.Write(w, http.StatusOK, summaries)
+	httpjson.Write(w, http.StatusOK, balance)
 }
 
-func (h *TripHandler) ReplaceExpenseSummaries(w http.ResponseWriter, r *http.Request) {
+func (h *TripHandler) UpsertTravelogBalance(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
-	var req dto.ReplaceExpenseSummariesRequest
+	var req dto.TravelogBalanceRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		httpjson.WriteError(w, http.StatusBadRequest, "요청 형식이 올바르지 않습니다.")
 		return
 	}
-	summaries, err := h.tripService.ReplaceExpenseSummaries(r.PathValue("tripID"), claims.UserID, req)
+	balance, err := h.tripService.UpsertTravelogBalance(r.PathValue("tripID"), claims.UserID, req)
 	if err != nil {
 		writeServiceError(w, err)
 		return
 	}
-	httpjson.Write(w, http.StatusOK, summaries)
+	httpjson.Write(w, http.StatusOK, balance)
 }
 
 func writeServiceError(w http.ResponseWriter, err error) {
@@ -162,8 +162,8 @@ func writeServiceError(w http.ResponseWriter, err error) {
 		httpjson.WriteError(w, http.StatusForbidden, "권한이 없습니다.")
 	case errors.Is(err, service.ErrInvalidTrip):
 		httpjson.WriteError(w, http.StatusBadRequest, "필수 항목이 누락됐습니다.")
-	case errors.Is(err, service.ErrInvalidExpense):
-		httpjson.WriteError(w, http.StatusBadRequest, "경비 항목이 올바르지 않습니다.")
+	case errors.Is(err, service.ErrInvalidBalance):
+		httpjson.WriteError(w, http.StatusBadRequest, "트래블로그 잔액 정보가 올바르지 않습니다.")
 	default:
 		httpjson.WriteError(w, http.StatusInternalServerError, "서버 오류가 발생했습니다.")
 	}
