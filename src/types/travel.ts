@@ -79,6 +79,15 @@ export type RecommendedRoute = {
   estimatedDuration?: string;
 };
 
+export type ExpenseSummary = {
+  id: string;
+  label: string;
+  currency: string;
+  amount: number;
+  note?: string;
+  updatedAt: string;
+};
+
 export type ChecklistItem = {
   id: string;
   category: "before" | "airport" | "daily" | "return";
