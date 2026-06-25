@@ -9,8 +9,9 @@ import (
 )
 
 type jsonResponse struct {
-	status int
-	body   map[string]any
+	status    int
+	body      map[string]any
+	arrayBody []map[string]any
 }
 
 func TestShareSecurityBoundaries(t *testing.T) {
@@ -135,8 +136,24 @@ func doJSON(t *testing.T, method, url, token string, payload any) jsonResponse {
 		body:   map[string]any{},
 	}
 	if resp.Body != nil {
-		if err := json.NewDecoder(resp.Body).Decode(&result.body); err != nil {
+		var decoded any
+		if err := json.NewDecoder(resp.Body).Decode(&decoded); err != nil {
 			t.Fatalf("decode response body for %s %s status %d: %v", method, url, resp.StatusCode, err)
+		}
+		switch value := decoded.(type) {
+		case map[string]any:
+			result.body = value
+		case []any:
+			result.arrayBody = make([]map[string]any, 0, len(value))
+			for _, item := range value {
+				object, ok := item.(map[string]any)
+				if !ok {
+					t.Fatalf("decode response array item for %s %s status %d: %#v", method, url, resp.StatusCode, item)
+				}
+				result.arrayBody = append(result.arrayBody, object)
+			}
+		default:
+			t.Fatalf("decode response body for %s %s status %d: unexpected shape %#v", method, url, resp.StatusCode, decoded)
 		}
 	}
 	return result

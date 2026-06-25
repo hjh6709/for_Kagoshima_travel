@@ -127,6 +127,31 @@ func (h *TripHandler) ListRoutes(w http.ResponseWriter, r *http.Request) {
 	httpjson.Write(w, http.StatusOK, routes)
 }
 
+func (h *TripHandler) ListExpenseSummaries(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.GetClaims(r)
+	summaries, err := h.tripService.ListExpenseSummariesForOwner(r.PathValue("tripID"), claims.UserID)
+	if err != nil {
+		writeServiceError(w, err)
+		return
+	}
+	httpjson.Write(w, http.StatusOK, summaries)
+}
+
+func (h *TripHandler) ReplaceExpenseSummaries(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.GetClaims(r)
+	var req dto.ReplaceExpenseSummariesRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httpjson.WriteError(w, http.StatusBadRequest, "요청 형식이 올바르지 않습니다.")
+		return
+	}
+	summaries, err := h.tripService.ReplaceExpenseSummaries(r.PathValue("tripID"), claims.UserID, req)
+	if err != nil {
+		writeServiceError(w, err)
+		return
+	}
+	httpjson.Write(w, http.StatusOK, summaries)
+}
+
 func writeServiceError(w http.ResponseWriter, err error) {
 	switch {
 	case errors.Is(err, service.ErrTripNotFound):
@@ -137,6 +162,8 @@ func writeServiceError(w http.ResponseWriter, err error) {
 		httpjson.WriteError(w, http.StatusForbidden, "권한이 없습니다.")
 	case errors.Is(err, service.ErrInvalidTrip):
 		httpjson.WriteError(w, http.StatusBadRequest, "필수 항목이 누락됐습니다.")
+	case errors.Is(err, service.ErrInvalidExpense):
+		httpjson.WriteError(w, http.StatusBadRequest, "경비 항목이 올바르지 않습니다.")
 	default:
 		httpjson.WriteError(w, http.StatusInternalServerError, "서버 오류가 발생했습니다.")
 	}
