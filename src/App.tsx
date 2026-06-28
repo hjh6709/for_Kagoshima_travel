@@ -16,17 +16,17 @@ import {
   accommodation,
   checklist,
   emergencies,
-  expenseSummaries,
   flights,
   phrases,
   places,
   routes,
   schedules,
   trip,
+  travelogBalance,
 } from "./data/sampleTrip";
-import type { ExpenseSummary, ScheduleItem } from "./types/travel";
+import type { ScheduleItem, TravelogBalance } from "./types/travel";
 
-type Tab = "today" | "schedule" | "expense" | "map" | "concierge";
+type Tab = "today" | "schedule" | "balance" | "map" | "concierge";
 type TripDates = {
   startDate: string;
   endDate: string;
@@ -35,7 +35,7 @@ type TripDates = {
 const tabs: Array<{ id: Tab; label: string; icon: typeof Home }> = [
   { id: "today", label: "오늘", icon: Home },
   { id: "schedule", label: "전체 일정", icon: CalendarDays },
-  { id: "expense", label: "경비", icon: WalletCards },
+  { id: "balance", label: "잔액", icon: WalletCards },
   { id: "map", label: "지도", icon: Map },
   { id: "concierge", label: "긴급", icon: Shield },
 ];
@@ -102,15 +102,15 @@ function shiftDate(baseDate: string, offset: number): string {
   return `${year}-${month}-${day}`;
 }
 
-function formatExpenseAmount(summary: ExpenseSummary): string {
+function formatBalanceAmount(balance: TravelogBalance): string {
   try {
-    return new Intl.NumberFormat(summary.currency === "JPY" ? "ja-JP" : "ko-KR", {
+    return new Intl.NumberFormat(balance.currency === "JPY" ? "ja-JP" : "ko-KR", {
       style: "currency",
-      currency: summary.currency,
+      currency: balance.currency,
       maximumFractionDigits: 0,
-    }).format(summary.amount);
+    }).format(balance.amount);
   } catch {
-    return `${summary.currency} ${summary.amount.toLocaleString()}`;
+    return `${balance.currency} ${balance.amount.toLocaleString()}`;
   }
 }
 
@@ -361,33 +361,33 @@ function App() {
             </section>
           )}
 
-          {activeTab === "expense" && (
+          {activeTab === "balance" && (
             <section className="screen">
-              <h1>여행 경비</h1>
+              <h1>트래블로그 잔액</h1>
               <p className="muted">
-                여행 준비자가 정리해 둔 경비 현황입니다. 실제 결제 가능 금액은 마지막 확인 시각을 기준으로
-                참고하세요.
+                여행 준비자가 직접 확인해 입력한 트래블로그 체크카드 참고 잔액입니다. 실제 결제 가능 금액은
+                마지막 확인 시각을 기준으로 참고하세요.
               </p>
 
-              <div className="expense-summary">
-                {expenseSummaries.map((summary) => (
-                  <article className="expense-card" key={summary.id}>
-                    <div>
-                      <span className="pill subtle">{summary.currency}</span>
-                      <h2>{summary.label}</h2>
-                    </div>
-                    <strong className="expense-amount">{formatExpenseAmount(summary)}</strong>
-                    {summary.note && <p>{summary.note}</p>}
-                    <p className="expense-updated">마지막 정리: {formatUpdatedAt(summary.updatedAt)}</p>
-                  </article>
-                ))}
+              <div className="travelog-balance-summary">
+                <article className="travelog-balance-card">
+                  <div>
+                    <span className="pill subtle">{travelogBalance.currency}</span>
+                    <h2>트래블로그 체크카드</h2>
+                  </div>
+                  <strong className="travelog-balance-amount">{formatBalanceAmount(travelogBalance)}</strong>
+                  {travelogBalance.note && <p>{travelogBalance.note}</p>}
+                  <p className="travelog-balance-updated">
+                    마지막 확인: {formatUpdatedAt(travelogBalance.checkedAt)}
+                  </p>
+                </article>
               </div>
 
-              <article className="info-card expense-guide">
-                <h2>경비가 헷갈릴 때</h2>
+              <article className="info-card travelog-balance-guide">
+                <h2>잔액이 헷갈릴 때</h2>
                 <p>
                   금액이 부족하거나 사용 가능 여부가 애매하면 결제 전에 가족에게 먼저 연락하세요. 이 화면은
-                  금융기관 실시간 잔액이 아니라 여행 준비자가 정리한 참고 정보입니다.
+                  하나머니 실시간 조회가 아니라 여행 준비자가 직접 확인해 입력한 참고 정보입니다.
                 </p>
                 {emergencies[0]?.phone && (
                   <a className="primary-button" href={`tel:${emergencies[0].phone}`}>

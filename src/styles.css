@@ -149,7 +149,7 @@ p {
 .hero-card,
 .info-card,
 .emergency-card,
-.expense-card,
+.travelog-balance-card,
 .place-card,
 .list-card,
 .schedule-card {
@@ -400,38 +400,38 @@ p {
   margin-bottom: 12px;
 }
 
-.expense-summary {
+.travelog-balance-summary {
   display: grid;
   gap: 12px;
   margin: 20px 0;
 }
 
-.expense-card {
+.travelog-balance-card {
   display: grid;
   gap: 12px;
   padding: 24px;
   border-left: 5px solid var(--c-gold);
 }
 
-.expense-card h2 {
+.travelog-balance-card h2 {
   margin: 10px 0 0;
 }
 
-.expense-amount {
+.travelog-balance-amount {
   color: var(--c-green);
   font-size: 34px;
   line-height: 1;
   letter-spacing: -0.04em;
 }
 
-.expense-updated {
+.travelog-balance-updated {
   margin-bottom: 0;
   color: var(--c-muted);
   font-size: 13px;
   font-weight: 800;
 }
 
-.expense-guide {
+.travelog-balance-guide {
   border-top: 5px solid var(--c-green);
 }
 

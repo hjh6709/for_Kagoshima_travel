@@ -2,12 +2,12 @@ import type {
   AccommodationInfo,
   ChecklistItem,
   EmergencyInfo,
-  ExpenseSummary,
   FlightInfo,
   Place,
   RecommendedRoute,
   ScheduleItem,
   Trip,
+  TravelogBalance,
   UsefulPhrase,
 } from "../types/travel";
 
@@ -192,32 +192,14 @@ export const routes: RecommendedRoute[] = [
   },
 ];
 
-export const expenseSummaries: ExpenseSummary[] = [
-  {
-    id: "expense-meals-transport",
-    label: "식비·교통비 예상 경비",
-    currency: "JPY",
-    amount: 42000,
-    note: "식당, 편의점, 택시 등 현지에서 바로 확인할 기준 금액입니다.",
-    updatedAt: "2026-06-24T21:10:00+09:00",
-  },
-  {
-    id: "expense-emergency",
-    label: "비상 예비 경비",
-    currency: "JPY",
-    amount: 10000,
-    note: "예상보다 이동비나 식비가 늘어날 때 쓰는 예비 금액입니다.",
-    updatedAt: "2026-06-24T21:10:00+09:00",
-  },
-  {
-    id: "expense-krw",
-    label: "국내 정산 참고 금액",
-    currency: "KRW",
-    amount: 120000,
-    note: "귀국 후 정산이나 비상 연락 시 참고하는 금액입니다.",
-    updatedAt: "2026-06-24T21:10:00+09:00",
-  },
-];
+export const travelogBalance: TravelogBalance = {
+  id: "travelog-balance-sample",
+  currency: "JPY",
+  amount: 42000,
+  note: "공항에서 충전 완료. 이 금액 기준으로 사용하면 됩니다.",
+  checkedAt: "2026-06-24T21:10:00+09:00",
+  updatedAt: "2026-06-24T21:10:00+09:00",
+};
 
 export const checklist: ChecklistItem[] = [
   { id: "check-passport", category: "before", title: "여권" },

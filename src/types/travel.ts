@@ -79,13 +79,13 @@ export type RecommendedRoute = {
   estimatedDuration?: string;
 };
 
-export type ExpenseSummary = {
+export type TravelogBalance = {
   id: string;
-  label: string;
   currency: string;
   amount: number;
   note?: string;
-  updatedAt: string;
+  checkedAt: string;
+  updatedAt?: string;
 };
 
 export type ChecklistItem = {
