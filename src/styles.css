@@ -234,6 +234,18 @@ p {
   margin-top: 26px;
 }
 
+.section-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.section-title-row h2 {
+  margin-bottom: 0;
+}
+
 .card-stack {
   display: grid;
   gap: 12px;
