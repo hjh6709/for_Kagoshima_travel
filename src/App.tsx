@@ -1,10 +1,12 @@
 import {
   AlertTriangle,
+  ArrowDown,
+  ArrowUp,
   CalendarDays,
   CheckCircle2,
   Copy,
   Home,
-  Map,
+  Map as MapIcon,
   MapPin,
   Plane,
   PlusCircle,
@@ -34,12 +36,13 @@ type TripDates = {
 };
 type ChecklistCategory = ChecklistItem["category"];
 type CustomChecklistItem = ChecklistItem & { custom: true };
+type ScheduleOrderByDate = Record<string, string[]>;
 
 const tabs: Array<{ id: Tab; label: string; icon: typeof Home }> = [
   { id: "today", label: "오늘", icon: Home },
   { id: "schedule", label: "전체 일정", icon: CalendarDays },
   { id: "flight", label: "항공", icon: Plane },
-  { id: "map", label: "지도", icon: Map },
+  { id: "map", label: "지도", icon: MapIcon },
   { id: "concierge", label: "긴급", icon: Shield },
 ];
 
@@ -148,6 +151,53 @@ function getSavedCustomChecklist(): CustomChecklistItem[] {
   }
 }
 
+function getSavedScheduleCompletions(): Record<string, boolean> {
+  const saved = window.localStorage.getItem("kagoshima-schedule-completions");
+  try {
+    const parsed = saved ? JSON.parse(saved) : {};
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+
+    return Object.fromEntries(
+      Object.entries(parsed).filter((entry): entry is [string, boolean] => {
+        const [id, completed] = entry;
+        return typeof id === "string" && typeof completed === "boolean";
+      })
+    );
+  } catch {
+    return {};
+  }
+}
+
+function getSavedScheduleOrder(): ScheduleOrderByDate {
+  const saved = window.localStorage.getItem("kagoshima-schedule-order");
+  try {
+    const parsed = saved ? JSON.parse(saved) : {};
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+
+    return Object.fromEntries(
+      Object.entries(parsed).filter((entry): entry is [string, string[]] => {
+        const [date, ids] = entry;
+        return isDateValue(date) && Array.isArray(ids) && ids.every((id) => typeof id === "string");
+      })
+    );
+  } catch {
+    return {};
+  }
+}
+
+function getOrderedSchedulesForDate(date: string, orderByDate: ScheduleOrderByDate): ScheduleItem[] {
+  const baseSchedules = schedules.filter((item) => item.date === date);
+  const order = orderByDate[date];
+  if (!order) return baseSchedules;
+
+  const orderIndex = new Map(order.map((id, index) => [id, index]));
+  return [...baseSchedules].sort((left, right) => {
+    const leftIndex = orderIndex.get(left.id) ?? Number.MAX_SAFE_INTEGER;
+    const rightIndex = orderIndex.get(right.id) ?? Number.MAX_SAFE_INTEGER;
+    return leftIndex - rightIndex;
+  });
+}
+
 function App() {
   const contentRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<Tab>("today");
@@ -157,6 +207,8 @@ function App() {
   const [customChecklistItems, setCustomChecklistItems] = useState<CustomChecklistItem[]>(getSavedCustomChecklist);
   const [newChecklistTitle, setNewChecklistTitle] = useState("");
   const [newChecklistCategory, setNewChecklistCategory] = useState<ChecklistCategory>("before");
+  const [completedSchedules, setCompletedSchedules] = useState<Record<string, boolean>>(getSavedScheduleCompletions);
+  const [scheduleOrderByDate, setScheduleOrderByDate] = useState<ScheduleOrderByDate>(getSavedScheduleOrder);
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>(() => {
     const saved = window.localStorage.getItem("kagoshima-checklist");
     try {
@@ -167,8 +219,12 @@ function App() {
   });
 
   const dates = useMemo(() => Array.from(new Set(schedules.map((item) => item.date))), []);
-  const selectedSchedules = schedules.filter((item) => item.date === selectedDate);
+  const selectedSchedules = useMemo(
+    () => getOrderedSchedulesForDate(selectedDate, scheduleOrderByDate),
+    [selectedDate, scheduleOrderByDate]
+  );
   const nextSchedule = schedules[0];
+  const completedScheduleCount = selectedSchedules.filter((item) => completedSchedules[item.id]).length;
   const allChecklist = useMemo(() => [...checklist, ...customChecklistItems], [customChecklistItems]);
   const completedCount = allChecklist.filter((item) => checkedItems[item.id]).length;
   const groupedChecklist = useMemo(
@@ -243,6 +299,31 @@ function App() {
     delete nextCheckedItems[id];
     setCheckedItems(nextCheckedItems);
     window.localStorage.setItem("kagoshima-checklist", JSON.stringify(nextCheckedItems));
+  }
+
+  function saveCompletedSchedules(next: Record<string, boolean>) {
+    setCompletedSchedules(next);
+    window.localStorage.setItem("kagoshima-schedule-completions", JSON.stringify(next));
+  }
+
+  function toggleScheduleComplete(id: string) {
+    saveCompletedSchedules({ ...completedSchedules, [id]: !completedSchedules[id] });
+  }
+
+  function saveScheduleOrder(next: ScheduleOrderByDate) {
+    setScheduleOrderByDate(next);
+    window.localStorage.setItem("kagoshima-schedule-order", JSON.stringify(next));
+  }
+
+  function moveSchedule(scheduleID: string, direction: "up" | "down") {
+    const currentOrder = selectedSchedules.map((item) => item.id);
+    const currentIndex = currentOrder.indexOf(scheduleID);
+    const nextIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+    if (currentIndex < 0 || nextIndex < 0 || nextIndex >= currentOrder.length) return;
+
+    const nextOrder = [...currentOrder];
+    [nextOrder[currentIndex], nextOrder[nextIndex]] = [nextOrder[nextIndex], nextOrder[currentIndex]];
+    saveScheduleOrder({ ...scheduleOrderByDate, [selectedDate]: nextOrder });
   }
 
   return (
@@ -340,15 +421,23 @@ function App() {
                   </button>
                 ))}
               </div>
+              <div className="schedule-summary">
+                <span>
+                  {selectedSchedules.length}개 중 {completedScheduleCount}개 완료
+                </span>
+                <small>일정 순서는 날짜별로 저장됩니다.</small>
+              </div>
               <div className="card-stack">
-                {selectedSchedules.map((item) => {
+                {selectedSchedules.map((item, index) => {
                   const place = getPlace(item.placeId);
+                  const isCompleted = completedSchedules[item.id];
                   return (
-                    <article className="schedule-card" key={item.id}>
+                    <article className={`schedule-card ${isCompleted ? "completed" : ""}`} key={item.id}>
                       <span className="time">{item.time}</span>
                       <div className="schedule-content">
                         <div className="schedule-meta">
                           <span className="pill subtle">{scheduleTypeLabels[item.type]}</span>
+                          {isCompleted && <span className="pill completed-pill">완료</span>}
                           {place && <span className="place-label">{place.name}</span>}
                         </div>
                         <h2>{item.title}</h2>
@@ -365,6 +454,36 @@ function App() {
                           </p>
                         )}
                         {item.parentMemo && <p className="muted">{item.parentMemo}</p>}
+                        <div className="schedule-actions">
+                          <button
+                            className="secondary-button compact-button"
+                            onClick={() => toggleScheduleComplete(item.id)}
+                            type="button"
+                          >
+                            <CheckCircle2 size={18} />
+                            {isCompleted ? "완료 취소" : "완료"}
+                          </button>
+                          <div className="schedule-move-actions" aria-label={`${item.title} 순서 변경`}>
+                            <button
+                              aria-label={`${item.title} 위로 이동`}
+                              className="icon-button neutral"
+                              disabled={index === 0}
+                              onClick={() => moveSchedule(item.id, "up")}
+                              type="button"
+                            >
+                              <ArrowUp size={18} />
+                            </button>
+                            <button
+                              aria-label={`${item.title} 아래로 이동`}
+                              className="icon-button neutral"
+                              disabled={index === selectedSchedules.length - 1}
+                              onClick={() => moveSchedule(item.id, "down")}
+                              type="button"
+                            >
+                              <ArrowDown size={18} />
+                            </button>
+                          </div>
+                        </div>
                         <a
                           className="secondary-button"
                           href={getMapUrl(place)}
