@@ -216,6 +216,7 @@ function App() {
   const [addressCopied, setAddressCopied] = useState(false);
   const [customChecklistItems, setCustomChecklistItems] = useState<CustomChecklistItem[]>(getSavedCustomChecklist);
   const [hiddenChecklistIDs, setHiddenChecklistIDs] = useState<string[]>(getSavedHiddenChecklistIDs);
+  const [isChecklistEditing, setIsChecklistEditing] = useState(false);
   const [newChecklistTitle, setNewChecklistTitle] = useState("");
   const [newChecklistCategory, setNewChecklistCategory] = useState<ChecklistCategory>("before");
   const [completedSchedules, setCompletedSchedules] = useState<Record<string, boolean>>(getSavedScheduleCompletions);
@@ -538,14 +539,23 @@ function App() {
               </div>
 
               <section className="section-block">
-                <h2>준비 체크리스트</h2>
+                <div className="section-title-row">
+                  <h2>준비 체크리스트</h2>
+                  <button
+                    className="secondary-button compact-button"
+                    onClick={() => setIsChecklistEditing(!isChecklistEditing)}
+                    type="button"
+                  >
+                    {isChecklistEditing ? "완료" : "편집"}
+                  </button>
+                </div>
                 <div className="check-summary">
                   <p className="muted">
                     {allChecklist.length}개 중 {completedCount}개 완료
                   </p>
                   <span>{Math.round((completedCount / Math.max(allChecklist.length, 1)) * 100)}%</span>
                 </div>
-                {hiddenChecklistIDs.length > 0 && (
+                {isChecklistEditing && hiddenChecklistIDs.length > 0 && (
                   <button className="secondary-button restore-button" onClick={restoreDefaultChecklistItems} type="button">
                     기본 체크리스트 {hiddenChecklistIDs.length}개 복원
                   </button>
@@ -591,14 +601,16 @@ function App() {
                               <CheckCircle2 className={checkedItems[item.id] ? "checked" : ""} size={24} />
                               <span>{item.title}</span>
                             </button>
-                            <button
-                              aria-label={`${item.title} 삭제`}
-                              className="icon-button"
-                              onClick={() => removeChecklistItem(item)}
-                              type="button"
-                            >
-                              <Trash2 size={18} />
-                            </button>
+                            {isChecklistEditing && (
+                              <button
+                                aria-label={`${item.title} 삭제`}
+                                className="icon-button"
+                                onClick={() => removeChecklistItem(item)}
+                                type="button"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -649,14 +661,6 @@ function App() {
                         <button className="check-toggle" onClick={() => toggleCheck(item.id)} type="button">
                           <CheckCircle2 className={checkedItems[item.id] ? "checked" : ""} size={24} />
                           <span>{item.title}</span>
-                        </button>
-                        <button
-                          aria-label={`${item.title} 삭제`}
-                          className="icon-button"
-                          onClick={() => removeChecklistItem(item)}
-                          type="button"
-                        >
-                          <Trash2 size={18} />
                         </button>
                       </div>
                     ))}
