@@ -73,6 +73,7 @@ func (s *Server) registerRoutes(jwtSecret string) {
 	s.mux.HandleFunc("GET /api/share/{token}", s.tripHandler.GetSharedTrip)
 
 	// 인증 필요 엔드포인트
+	s.mux.Handle("GET /api/auth/me", requireAuth(http.HandlerFunc(s.authHandler.Me)))
 	s.mux.Handle("GET /api/trips", requireAuth(http.HandlerFunc(s.tripHandler.ListMyTrips)))
 	s.mux.Handle("POST /api/trips", requireAuth(http.HandlerFunc(s.tripHandler.CreateTrip)))
 	s.mux.Handle("GET /api/trips/{tripID}", requireAuth(http.HandlerFunc(s.tripHandler.GetTrip)))

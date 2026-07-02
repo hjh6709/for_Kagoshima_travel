@@ -15,6 +15,10 @@ type AuthResponse struct {
 	User        UserSummary `json:"user"`
 }
 
+type AuthSessionResponse struct {
+	User UserSummary `json:"user"`
+}
+
 type UserSummary struct {
 	ID    string `json:"id"`
 	Email string `json:"email"`

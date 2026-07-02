@@ -8,6 +8,8 @@ import {
   ExternalLink,
   Home,
   Languages,
+  LockKeyhole,
+  LogOut,
   Map as MapIcon,
   MapPin,
   Plane,
@@ -16,8 +18,10 @@ import {
   Route,
   Shield,
   Trash2,
+  UserRound,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { ApiError, getCurrentUser, login, register, type AuthResponse } from "./api/auth";
 import {
   accommodation,
   checklist,
@@ -39,6 +43,7 @@ type TripDates = {
 type ChecklistCategory = ChecklistItem["category"];
 type CustomChecklistItem = ChecklistItem & { custom: true };
 type ScheduleOrderByDate = Record<string, string[]>;
+type AuthMode = "login" | "register";
 
 const tabs: Array<{ id: Tab; label: string; icon: typeof Home }> = [
   { id: "today", label: "오늘", icon: Home },
@@ -76,6 +81,7 @@ const checklistCategoryLabels = {
   return: "귀국 전",
 } as const;
 const checklistCategories = Object.entries(checklistCategoryLabels) as Array<[ChecklistCategory, string]>;
+const ownerAuthStorageKey = "travel-app-owner-auth";
 
 const translationLinks = [
   {
@@ -89,6 +95,24 @@ const translationLinks = [
     href: "https://papago.naver.com/",
   },
 ] as const;
+
+function getSavedOwnerAuth(): AuthResponse | null {
+  const saved = window.localStorage.getItem(ownerAuthStorageKey);
+  try {
+    const parsed = saved ? JSON.parse(saved) : null;
+    if (
+      parsed &&
+      typeof parsed.accessToken === "string" &&
+      typeof parsed.user?.id === "string" &&
+      typeof parsed.user?.email === "string"
+    ) {
+      return parsed;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
 
 function getPlace(placeId?: string) {
   return places.find((place) => place.id === placeId);
@@ -224,8 +248,16 @@ function getOrderedSchedulesForDate(date: string, orderByDate: ScheduleOrderByDa
 }
 
 function App() {
+  const isOwnerRoute = window.location.pathname.startsWith("/owner");
   const contentRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<Tab>("today");
+  const [ownerAuth, setOwnerAuth] = useState<AuthResponse | null>(getSavedOwnerAuth);
+  const [authMode, setAuthMode] = useState<AuthMode>("login");
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authError, setAuthError] = useState("");
+  const [authChecked, setAuthChecked] = useState(!isOwnerRoute);
+  const [authSubmitting, setAuthSubmitting] = useState(false);
   const [tripDates, setTripDates] = useState<TripDates>(getSavedTripDates);
   const [selectedDate, setSelectedDate] = useState(schedules[0]?.date ?? trip.startDate);
   const [addressCopied, setAddressCopied] = useState(false);
@@ -273,6 +305,87 @@ function App() {
     contentRef.current?.scrollTo({ top: 0 });
     window.scrollTo({ top: 0 });
   }, [activeTab]);
+
+  useEffect(() => {
+    if (!isOwnerRoute) return;
+
+    const savedAuth = getSavedOwnerAuth();
+    if (!savedAuth) {
+      setAuthChecked(true);
+      return;
+    }
+
+    let cancelled = false;
+    getCurrentUser(savedAuth.accessToken)
+      .then((session) => {
+        if (cancelled) return;
+        const nextAuth = { ...savedAuth, user: session.user };
+        setOwnerAuth(nextAuth);
+        window.localStorage.setItem(ownerAuthStorageKey, JSON.stringify(nextAuth));
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        if (error instanceof ApiError && error.status === undefined) {
+          setAuthError(error.message);
+          return;
+        }
+        window.localStorage.removeItem(ownerAuthStorageKey);
+        setOwnerAuth(null);
+      })
+      .finally(() => {
+        if (!cancelled) setAuthChecked(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOwnerRoute]);
+
+  async function submitAuth(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setAuthError("");
+    setAuthSubmitting(true);
+    try {
+      const email = authEmail.trim();
+      const response = authMode === "login" ? await login(email, authPassword) : await register(email, authPassword);
+      setOwnerAuth(response);
+      setAuthPassword("");
+      window.localStorage.setItem(ownerAuthStorageKey, JSON.stringify(response));
+    } catch (error) {
+      setAuthError(error instanceof Error ? error.message : "로그인 요청을 처리하지 못했습니다.");
+    } finally {
+      setAuthSubmitting(false);
+    }
+  }
+
+  function logoutOwner() {
+    window.localStorage.removeItem(ownerAuthStorageKey);
+    setOwnerAuth(null);
+    setAuthPassword("");
+    setAuthError("");
+  }
+
+  if (isOwnerRoute) {
+    return (
+      <OwnerApp
+        auth={ownerAuth}
+        authChecked={authChecked}
+        authEmail={authEmail}
+        authError={authError}
+        authMode={authMode}
+        authPassword={authPassword}
+        authSubmitting={authSubmitting}
+        onAuthEmailChange={setAuthEmail}
+        onAuthModeChange={(mode) => {
+          setAuthMode(mode);
+          setAuthError("");
+        }}
+        onAuthPasswordChange={setAuthPassword}
+        onLogout={logoutOwner}
+        onSubmitAuth={submitAuth}
+      />
+    );
+  }
 
   function getDisplayDate(dateStr: string) {
     return shiftDate(tripDates.startDate, getDateOffset(trip.startDate, dateStr));
@@ -811,6 +924,152 @@ function App() {
             );
           })}
         </nav>
+      </section>
+    </main>
+  );
+}
+
+type OwnerAppProps = {
+  auth: AuthResponse | null;
+  authChecked: boolean;
+  authEmail: string;
+  authError: string;
+  authMode: AuthMode;
+  authPassword: string;
+  authSubmitting: boolean;
+  onAuthEmailChange: (value: string) => void;
+  onAuthModeChange: (mode: AuthMode) => void;
+  onAuthPasswordChange: (value: string) => void;
+  onLogout: () => void;
+  onSubmitAuth: (event: FormEvent<HTMLFormElement>) => void;
+};
+
+function OwnerApp({
+  auth,
+  authChecked,
+  authEmail,
+  authError,
+  authMode,
+  authPassword,
+  authSubmitting,
+  onAuthEmailChange,
+  onAuthModeChange,
+  onAuthPasswordChange,
+  onLogout,
+  onSubmitAuth,
+}: OwnerAppProps) {
+  return (
+    <main className="app-shell">
+      <section className="phone-frame owner-frame">
+        <div className="content">
+          <section className="screen owner-screen">
+            {!authChecked && (
+              <article className="info-card auth-card">
+                <span className="pill">관리자</span>
+                <h1>로그인 확인 중</h1>
+                <p className="muted">저장된 로그인 정보를 확인하고 있습니다.</p>
+              </article>
+            )}
+
+            {authChecked && !auth && (
+              <article className="info-card auth-card">
+                <span className="pill">관리자</span>
+                <h1>여행 관리 로그인</h1>
+                <p className="muted">여행 생성자는 로그인 후 여행 정보와 공유 링크를 관리합니다.</p>
+
+                <form className="auth-form" onSubmit={onSubmitAuth}>
+                  <label>
+                    이메일
+                    <input
+                      autoComplete="email"
+                      inputMode="email"
+                      onChange={(event) => onAuthEmailChange(event.target.value)}
+                      placeholder="you@example.com"
+                      required
+                      type="email"
+                      value={authEmail}
+                    />
+                  </label>
+                  <label>
+                    비밀번호
+                    <input
+                      autoComplete={authMode === "login" ? "current-password" : "new-password"}
+                      minLength={8}
+                      onChange={(event) => onAuthPasswordChange(event.target.value)}
+                      placeholder="8자 이상"
+                      required
+                      type="password"
+                      value={authPassword}
+                    />
+                  </label>
+
+                  {authError && <p className="form-error">{authError}</p>}
+
+                  <button className="primary-button" disabled={authSubmitting} type="submit">
+                    <LockKeyhole size={18} />
+                    {authSubmitting ? "처리 중" : authMode === "login" ? "로그인" : "회원가입"}
+                  </button>
+                </form>
+
+                <button
+                  className="secondary-button auth-switch-button"
+                  onClick={() => onAuthModeChange(authMode === "login" ? "register" : "login")}
+                  type="button"
+                >
+                  {authMode === "login" ? "계정이 없으면 회원가입" : "이미 계정이 있으면 로그인"}
+                </button>
+
+                <p className="auth-help">
+                  로컬 개발은 <code>VITE_API_BASE_URL=http://localhost:8080</code> 설정이 필요합니다.
+                </p>
+              </article>
+            )}
+
+            {authChecked && auth && (
+              <>
+                <div className="owner-header">
+                  <div>
+                    <span className="eyebrow">관리자 화면</span>
+                    <h1>여행 관리</h1>
+                    <p className="muted">{auth.user.email}</p>
+                  </div>
+                  <button className="icon-button neutral" onClick={onLogout} type="button" aria-label="로그아웃">
+                    <LogOut size={18} />
+                  </button>
+                </div>
+
+                <article className="hero-card">
+                  <div>
+                    <span className="pill">다음 단계</span>
+                    <h2>관리 기능 연결 준비 완료</h2>
+                    <p className="muted">
+                      로그인 세션이 준비됐습니다. 다음 PR부터 여행 목록 조회, 여행 편집, 공유 링크 생성을 붙이면 됩니다.
+                    </p>
+                  </div>
+                  <a className="primary-button" href="/">
+                    <UserRound size={18} />
+                    부모님 화면 보기
+                  </a>
+                </article>
+
+                <section className="section-block">
+                  <h2>관리 예정 기능</h2>
+                  <div className="card-stack">
+                    {["여행 정보 입력/수정", "항공편 입력/수정", "일정·체크리스트 관리", "공유 링크 생성"].map((item) => (
+                      <article className="list-card" key={item}>
+                        <CheckCircle2 size={22} />
+                        <div>
+                          <strong>{item}</strong>
+                          <p>로그인 세션을 기반으로 다음 PR에서 API와 연결합니다.</p>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </section>
+              </>
+            )}
+          </section>
+        </div>
       </section>
     </main>
   );

@@ -39,6 +39,11 @@ button {
   cursor: pointer;
 }
 
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
 .app-shell {
   min-height: 100vh;
   background: var(--c-page);
@@ -104,6 +109,77 @@ button {
   font-size: 14px;
   font-weight: 800;
   padding: 8px 10px;
+}
+
+.auth-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.auth-form label {
+  display: grid;
+  gap: 6px;
+  color: var(--c-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.auth-form input {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid rgba(36, 48, 47, 0.12);
+  border-radius: 10px;
+  background: var(--c-bg);
+  color: var(--c-text);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  padding: 10px 12px;
+}
+
+.auth-card {
+  border-top: 5px solid var(--c-green);
+}
+
+.auth-switch-button {
+  width: 100%;
+}
+
+.auth-help {
+  margin: 14px 0 0;
+  color: var(--c-muted);
+  font-size: 13px;
+}
+
+.auth-help code {
+  color: var(--c-green);
+  font-weight: 900;
+}
+
+.form-error {
+  margin: 0;
+  border-radius: 8px;
+  background: var(--c-danger-light);
+  color: var(--c-danger);
+  font-size: 14px;
+  font-weight: 800;
+  padding: 10px 12px;
+}
+
+.owner-frame {
+  grid-template-rows: 1fr;
+}
+
+.owner-screen {
+  min-height: 100%;
+}
+
+.owner-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .eyebrow {
