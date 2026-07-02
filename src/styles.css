@@ -455,6 +455,21 @@ p {
   margin: 0 0 12px;
 }
 
+.translation-actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.translation-button {
+  width: 100%;
+  margin-top: 0;
+}
+
+.translation-button .trailing-icon {
+  margin-left: auto;
+}
+
 .info-card,
 .emergency-card {
   padding: 24px;

@@ -5,7 +5,9 @@ import {
   CalendarDays,
   CheckCircle2,
   Copy,
+  ExternalLink,
   Home,
+  Languages,
   Map as MapIcon,
   MapPin,
   Plane,
@@ -74,6 +76,19 @@ const checklistCategoryLabels = {
   return: "귀국 전",
 } as const;
 const checklistCategories = Object.entries(checklistCategoryLabels) as Array<[ChecklistCategory, string]>;
+
+const translationLinks = [
+  {
+    id: "google-translate",
+    label: "Google 번역 열기",
+    href: "https://translate.google.com/?sl=auto&tl=ja&op=translate",
+  },
+  {
+    id: "papago",
+    label: "Papago 열기",
+    href: "https://papago.naver.com/",
+  },
+] as const;
 
 function getPlace(placeId?: string) {
   return places.find((place) => place.id === placeId);
@@ -759,6 +774,21 @@ function App() {
                       {phrase.korean} · {phrase.japanese}
                     </p>
                   ))}
+                  <div className="translation-actions" aria-label="번역 서비스 바로가기">
+                    {translationLinks.map((link) => (
+                      <a
+                        className="secondary-button translation-button"
+                        href={link.href}
+                        key={link.id}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      >
+                        <Languages size={18} />
+                        <span>{link.label}</span>
+                        <ExternalLink className="trailing-icon" size={16} />
+                      </a>
+                    ))}
+                  </div>
                 </article>
               </section>
             </section>
