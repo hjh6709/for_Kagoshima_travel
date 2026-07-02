@@ -277,6 +277,15 @@ p {
   padding: 20px 24px;
 }
 
+.schedule-card.completed {
+  background: var(--c-green-light);
+  opacity: 0.78;
+}
+
+.schedule-card.completed h2 {
+  text-decoration: line-through;
+}
+
 .schedule-content {
   display: grid;
   gap: 10px;
@@ -293,6 +302,42 @@ p {
   color: var(--c-muted);
   font-size: 13px;
   font-weight: 800;
+}
+
+.completed-pill {
+  background: var(--c-green);
+  color: #ffffff;
+}
+
+.schedule-summary {
+  display: grid;
+  gap: 4px;
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  background: var(--c-surface);
+  border: 1px solid rgba(36, 48, 47, 0.1);
+}
+
+.schedule-summary span {
+  font-weight: 900;
+}
+
+.schedule-summary small {
+  color: var(--c-muted);
+  font-weight: 700;
+}
+
+.schedule-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.schedule-move-actions {
+  display: flex;
+  gap: 6px;
 }
 
 .schedule-detail {
@@ -483,6 +528,16 @@ p {
   place-items: center;
 }
 
+.icon-button.neutral {
+  background: var(--c-green-light);
+  color: var(--c-green);
+}
+
+.icon-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
 .check-summary {
   display: flex;
   align-items: center;
@@ -586,6 +641,10 @@ p {
 .icon-button:active {
   transform: scale(0.97);
   transition: transform 0.1s;
+}
+
+.icon-button:disabled:active {
+  transform: none;
 }
 
 .section-block.compact {
