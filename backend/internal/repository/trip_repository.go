@@ -35,13 +35,13 @@ type MemoryTripRepository struct {
 }
 
 func NewMemoryTripRepository() *MemoryTripRepository {
-	const tripID = "kagoshima-2026"
+	const tripID = "sample-trip-2026"
 
 	return &MemoryTripRepository{
 		trips: []model.Trip{
 			{
 				ID:        tripID,
-				Title:     "가고시마 부모님 여행",
+				Title:     "부모님 여행",
 				StartDate: "2026-06-27",
 				EndDate:   "2026-06-30",
 				Travelers: []string{"아버지", "어머니"},
@@ -56,39 +56,39 @@ func NewMemoryTripRepository() *MemoryTripRepository {
 				Date:          "2026-06-27",
 				Time:          "오전",
 				Type:          "move",
-				Title:         "가고시마 도착",
+				Title:         "여행지 도착",
 				TransportMemo: "공항에서 숙소 이동 방법 확정 필요",
 				ParentMemo:    "도착 후 무리하지 말고 숙소 체크인부터 확인하세요.",
 			},
 			{
 				ID:            "schedule-2",
 				TripID:        tripID,
-				PlaceID:       "place-senganen",
+				PlaceID:       "place-sightseeing",
 				Date:          "2026-06-28",
 				Time:          "10:30",
 				Type:          "sightseeing",
-				Title:         "센간엔 관광",
+				Title:         "관광지 후보 방문",
 				TransportMemo: "숙소 기준 이동 경로 확인 필요",
 				ParentMemo:    "입장권과 운영시간은 출발 전 다시 확인하세요.",
 			},
 		},
 		places: []model.Place{
 			{
-				ID:                "place-senganen",
+				ID:                "place-sightseeing",
 				TripID:            tripID,
-				Name:              "센간엔",
+				Name:              "관광지 후보",
 				Category:          "sightseeing",
-				Address:           "9700-1 Yoshinocho, Kagoshima, 892-0871 Japan",
-				GoogleMapsURL:     "https://www.google.com/maps/search/?api=1&query=Sengan-en%20Kagoshima",
-				RecommendedReason: "사쿠라지마를 배경으로 볼 수 있는 대표 정원입니다.",
+				Address:           "관광지 주소 입력 예정",
+				GoogleMapsURL:     "https://www.google.com/maps/search/?api=1&query=sightseeing",
+				RecommendedReason: "여행 중 가볍게 들를 수 있는 관광 후보 장소입니다.",
 			},
 			{
-				ID:                "place-kurobuta",
+				ID:                "place-local-food",
 				TripID:            tripID,
-				Name:              "흑돼지 맛집 후보",
+				Name:              "현지 맛집 후보",
 				Category:          "meal",
-				GoogleMapsURL:     "https://www.google.com/maps/search/?api=1&query=Kagoshima%20kurobuta%20restaurant",
-				RecommendedReason: "가고시마 대표 음식인 흑돼지를 먹는 후보 장소입니다.",
+				GoogleMapsURL:     "https://www.google.com/maps/search/?api=1&query=local%20restaurant",
+				RecommendedReason: "여행지의 대표 음식을 먹는 후보 장소입니다.",
 			},
 		},
 		routes: []model.Route{
@@ -96,8 +96,8 @@ func NewMemoryTripRepository() *MemoryTripRepository {
 				ID:                "route-1",
 				TripID:            tripID,
 				Title:             "둘째 날 천천히 관광 루트",
-				Description:       "센간엔을 보고 흑돼지 점심을 먹는 여유 일정입니다.",
-				PlaceIDs:          []string{"place-senganen", "place-kurobuta"},
+				Description:       "관광지 후보를 보고 현지 맛집에서 식사하는 여유 일정입니다.",
+				PlaceIDs:          []string{"place-sightseeing", "place-local-food"},
 				TransportMemo:     "실제 숙소 위치 확정 후 이동 시간을 업데이트합니다.",
 				EstimatedDuration: "반나절",
 			},
