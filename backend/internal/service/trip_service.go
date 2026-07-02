@@ -2,7 +2,6 @@ package service
 
 import (
 	"errors"
-	"strings"
 	"time"
 
 	"github.com/hanjeonghyun/for-kagoshima-travel/backend/internal/dto"
@@ -11,11 +10,10 @@ import (
 )
 
 var (
-	ErrTripNotFound   = errors.New("trip not found")
-	ErrShareNotFound  = errors.New("share link not found")
-	ErrForbidden      = errors.New("forbidden")
-	ErrInvalidTrip    = errors.New("invalid trip input")
-	ErrInvalidExpense = errors.New("invalid expense input")
+	ErrTripNotFound  = errors.New("trip not found")
+	ErrShareNotFound = errors.New("share link not found")
+	ErrForbidden     = errors.New("forbidden")
+	ErrInvalidTrip   = errors.New("invalid trip input")
 )
 
 type TripService struct {
@@ -101,17 +99,11 @@ func (s *TripService) GetSharedTrip(token string) (dto.SharedTripResponse, error
 	if err != nil {
 		return dto.SharedTripResponse{}, err
 	}
-	expenseSummaries, err := s.ListExpenseSummaries(link.TripID)
-	if err != nil {
-		return dto.SharedTripResponse{}, err
-	}
-
 	return dto.SharedTripResponse{
-		Trip:             mapPublicTripResponse(trip),
-		Schedules:        schedules,
-		Places:           places,
-		Routes:           routes,
-		ExpenseSummaries: expenseSummaries,
+		Trip:      mapPublicTripResponse(trip),
+		Schedules: schedules,
+		Places:    places,
+		Routes:    routes,
 	}, nil
 }
 
@@ -173,72 +165,6 @@ func (s *TripService) ListRoutesForOwner(tripID, ownerID string) ([]dto.RouteRes
 		return nil, err
 	}
 	return s.ListRoutes(tripID)
-}
-
-func (s *TripService) ListExpenseSummaries(tripID string) ([]dto.ExpenseSummaryResponse, error) {
-	summaries, err := s.tripRepository.FindExpenseSummaries(tripID)
-	if err != nil {
-		return nil, mapRepositoryError(err)
-	}
-
-	responses := make([]dto.ExpenseSummaryResponse, 0, len(summaries))
-	for _, summary := range summaries {
-		responses = append(responses, mapExpenseSummaryResponse(summary))
-	}
-	return responses, nil
-}
-
-func (s *TripService) ListExpenseSummariesForOwner(tripID, ownerID string) ([]dto.ExpenseSummaryResponse, error) {
-	if err := s.ensureTripOwner(tripID, ownerID); err != nil {
-		return nil, err
-	}
-	return s.ListExpenseSummaries(tripID)
-}
-
-func (s *TripService) ReplaceExpenseSummaries(tripID, ownerID string, req dto.ReplaceExpenseSummariesRequest) ([]dto.ExpenseSummaryResponse, error) {
-	if err := s.ensureTripOwner(tripID, ownerID); err != nil {
-		return nil, err
-	}
-
-	now := time.Now().Format(time.RFC3339)
-	summaries := make([]model.ExpenseSummary, 0, len(req.Items))
-	for index, item := range req.Items {
-		label := strings.TrimSpace(item.Label)
-		currency := strings.ToUpper(strings.TrimSpace(item.Currency))
-		if label == "" || currency == "" || item.Amount < 0 {
-			return nil, ErrInvalidExpense
-		}
-
-		id := strings.TrimSpace(item.ID)
-		if id == "" {
-			generatedID, err := newID()
-			if err != nil {
-				return nil, err
-			}
-			id = generatedID
-		}
-
-		summaries = append(summaries, model.ExpenseSummary{
-			ID:        id,
-			TripID:    tripID,
-			Label:     label,
-			Currency:  currency,
-			Amount:    item.Amount,
-			Note:      strings.TrimSpace(item.Note),
-			UpdatedAt: now,
-			SortOrder: index,
-		})
-	}
-
-	if err := s.tripRepository.ReplaceExpenseSummaries(tripID, summaries); err != nil {
-		return nil, err
-	}
-
-	responses := make([]dto.ExpenseSummaryResponse, 0, len(summaries))
-	for _, summary := range summaries {
-		responses = append(responses, mapExpenseSummaryResponse(summary))
-	}
-	return responses, nil
 }
 
 func (s *TripService) CreateTrip(ownerID string, req dto.CreateTripRequest) (dto.TripResponse, error) {
@@ -399,16 +325,5 @@ func mapRouteResponse(route model.Route) dto.RouteResponse {
 		PlaceIDs:          route.PlaceIDs,
 		TransportMemo:     route.TransportMemo,
 		EstimatedDuration: route.EstimatedDuration,
-	}
-}
-
-func mapExpenseSummaryResponse(summary model.ExpenseSummary) dto.ExpenseSummaryResponse {
-	return dto.ExpenseSummaryResponse{
-		ID:        summary.ID,
-		Label:     summary.Label,
-		Currency:  summary.Currency,
-		Amount:    summary.Amount,
-		Note:      summary.Note,
-		UpdatedAt: summary.UpdatedAt,
 	}
 }
