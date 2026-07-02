@@ -6,6 +6,7 @@ import {
   Home,
   Map,
   MapPin,
+  Plane,
   Phone,
   Route,
   Shield,
@@ -24,7 +25,7 @@ import {
 } from "./data/sampleTrip";
 import type { ScheduleItem } from "./types/travel";
 
-type Tab = "today" | "schedule" | "map" | "concierge";
+type Tab = "today" | "schedule" | "flight" | "map" | "concierge";
 type TripDates = {
   startDate: string;
   endDate: string;
@@ -33,6 +34,7 @@ type TripDates = {
 const tabs: Array<{ id: Tab; label: string; icon: typeof Home }> = [
   { id: "today", label: "오늘", icon: Home },
   { id: "schedule", label: "전체 일정", icon: CalendarDays },
+  { id: "flight", label: "항공", icon: Plane },
   { id: "map", label: "지도", icon: Map },
   { id: "concierge", label: "긴급", icon: Shield },
 ];
@@ -236,6 +238,10 @@ function App() {
                   <CalendarDays size={22} />
                   일정 보기
                 </button>
+                <button className="quick-button" onClick={() => setActiveTab("flight")}>
+                  <Plane size={22} />
+                  항공편
+                </button>
                 <button className="quick-button danger" onClick={() => setActiveTab("concierge")}>
                   <AlertTriangle size={22} />
                   긴급 연락
@@ -335,6 +341,52 @@ function App() {
             </section>
           )}
 
+          {activeTab === "flight" && (
+            <section className="screen">
+              <h1>항공편</h1>
+              <p className="muted">공항에서 바로 확인할 수 있도록 출국·귀국 항공편을 따로 모았습니다.</p>
+
+              <div className="card-stack">
+                {flights.map((flight) => (
+                  <article className="flight-card" key={flight.id}>
+                    <div className="flight-card-header">
+                      <span className="pill">{flight.label}</span>
+                      <Plane size={28} />
+                    </div>
+                    <h2>
+                      {flight.airline} {flight.flightNumber}
+                    </h2>
+                    <dl className="flight-details">
+                      <div>
+                        <dt>날짜</dt>
+                        <dd>{flight.date}</dd>
+                      </div>
+                      <div>
+                        <dt>시간</dt>
+                        <dd>{flight.time}</dd>
+                      </div>
+                    </dl>
+                    {flight.memo && <p className="schedule-detail danger-note">{flight.memo}</p>}
+                  </article>
+                ))}
+              </div>
+
+              <section className="section-block">
+                <h2>공항에서 확인할 것</h2>
+                <div className="card-stack">
+                  {checklist
+                    .filter((item) => item.category === "airport")
+                    .map((item) => (
+                      <button className="check-row" key={item.id} onClick={() => toggleCheck(item.id)}>
+                        <CheckCircle2 className={checkedItems[item.id] ? "checked" : ""} size={24} />
+                        <span>{item.title}</span>
+                      </button>
+                    ))}
+                </div>
+              </section>
+            </section>
+          )}
+
           {activeTab === "map" && (
             <section className="screen">
               <h1>지도와 추천 장소</h1>
@@ -403,17 +455,6 @@ function App() {
 
               <section className="section-block">
                 <h2>여행 정보</h2>
-                <article className="info-card">
-                  <h2>항공편</h2>
-                  {flights.map((flight) => (
-                    <p key={flight.id}>
-                      <strong>{flight.label}</strong> {flight.airline} {flight.flightNumber}
-                      <br />
-                      {flight.date} {flight.time}
-                      {flight.memo && <span className="muted"> · {flight.memo}</span>}
-                    </p>
-                  ))}
-                </article>
                 <article className="info-card">
                   <h2>숙소</h2>
                   <p>{accommodation.name}</p>
