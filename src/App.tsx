@@ -151,6 +151,16 @@ function getSavedCustomChecklist(): CustomChecklistItem[] {
   }
 }
 
+function getSavedHiddenChecklistIDs(): string[] {
+  const saved = window.localStorage.getItem("kagoshima-hidden-checklist");
+  try {
+    const parsed = saved ? JSON.parse(saved) : [];
+    return Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
 function getSavedScheduleCompletions(): Record<string, boolean> {
   const saved = window.localStorage.getItem("kagoshima-schedule-completions");
   try {
@@ -205,6 +215,7 @@ function App() {
   const [selectedDate, setSelectedDate] = useState(schedules[0]?.date ?? trip.startDate);
   const [addressCopied, setAddressCopied] = useState(false);
   const [customChecklistItems, setCustomChecklistItems] = useState<CustomChecklistItem[]>(getSavedCustomChecklist);
+  const [hiddenChecklistIDs, setHiddenChecklistIDs] = useState<string[]>(getSavedHiddenChecklistIDs);
   const [newChecklistTitle, setNewChecklistTitle] = useState("");
   const [newChecklistCategory, setNewChecklistCategory] = useState<ChecklistCategory>("before");
   const [completedSchedules, setCompletedSchedules] = useState<Record<string, boolean>>(getSavedScheduleCompletions);
@@ -225,7 +236,10 @@ function App() {
   );
   const nextSchedule = schedules[0];
   const completedScheduleCount = selectedSchedules.filter((item) => completedSchedules[item.id]).length;
-  const allChecklist = useMemo(() => [...checklist, ...customChecklistItems], [customChecklistItems]);
+  const allChecklist = useMemo(
+    () => [...checklist.filter((item) => !hiddenChecklistIDs.includes(item.id)), ...customChecklistItems],
+    [customChecklistItems, hiddenChecklistIDs]
+  );
   const completedCount = allChecklist.filter((item) => checkedItems[item.id]).length;
   const groupedChecklist = useMemo(
     () =>
@@ -295,10 +309,34 @@ function App() {
 
   function removeCustomChecklistItem(id: string) {
     saveCustomChecklist(customChecklistItems.filter((item) => item.id !== id));
+    removeChecklistCompletion(id);
+  }
+
+  function removeChecklistCompletion(id: string) {
     const nextCheckedItems = { ...checkedItems };
     delete nextCheckedItems[id];
     setCheckedItems(nextCheckedItems);
     window.localStorage.setItem("kagoshima-checklist", JSON.stringify(nextCheckedItems));
+  }
+
+  function hideDefaultChecklistItem(id: string) {
+    const nextHiddenIDs = Array.from(new Set([...hiddenChecklistIDs, id]));
+    setHiddenChecklistIDs(nextHiddenIDs);
+    window.localStorage.setItem("kagoshima-hidden-checklist", JSON.stringify(nextHiddenIDs));
+    removeChecklistCompletion(id);
+  }
+
+  function removeChecklistItem(item: ChecklistItem) {
+    if (isCustomChecklistItem(item)) {
+      removeCustomChecklistItem(item.id);
+      return;
+    }
+    hideDefaultChecklistItem(item.id);
+  }
+
+  function restoreDefaultChecklistItems() {
+    setHiddenChecklistIDs([]);
+    window.localStorage.setItem("kagoshima-hidden-checklist", JSON.stringify([]));
   }
 
   function saveCompletedSchedules(next: Record<string, boolean>) {
@@ -507,6 +545,11 @@ function App() {
                   </p>
                   <span>{Math.round((completedCount / Math.max(allChecklist.length, 1)) * 100)}%</span>
                 </div>
+                {hiddenChecklistIDs.length > 0 && (
+                  <button className="secondary-button restore-button" onClick={restoreDefaultChecklistItems} type="button">
+                    기본 체크리스트 {hiddenChecklistIDs.length}개 복원
+                  </button>
+                )}
 
                 <form className="check-add-form" onSubmit={addChecklistItem}>
                   <label>
@@ -548,16 +591,14 @@ function App() {
                               <CheckCircle2 className={checkedItems[item.id] ? "checked" : ""} size={24} />
                               <span>{item.title}</span>
                             </button>
-                            {isCustomChecklistItem(item) && (
-                              <button
-                                aria-label={`${item.title} 삭제`}
-                                className="icon-button"
-                                onClick={() => removeCustomChecklistItem(item.id)}
-                                type="button"
-                              >
-                                <Trash2 size={18} />
-                              </button>
-                            )}
+                            <button
+                              aria-label={`${item.title} 삭제`}
+                              className="icon-button"
+                              onClick={() => removeChecklistItem(item)}
+                              type="button"
+                            >
+                              <Trash2 size={18} />
+                            </button>
                           </div>
                         ))}
                       </div>
@@ -609,16 +650,14 @@ function App() {
                           <CheckCircle2 className={checkedItems[item.id] ? "checked" : ""} size={24} />
                           <span>{item.title}</span>
                         </button>
-                        {isCustomChecklistItem(item) && (
-                          <button
-                            aria-label={`${item.title} 삭제`}
-                            className="icon-button"
-                            onClick={() => removeCustomChecklistItem(item.id)}
-                            type="button"
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        )}
+                        <button
+                          aria-label={`${item.title} 삭제`}
+                          className="icon-button"
+                          onClick={() => removeChecklistItem(item)}
+                          type="button"
+                        >
+                          <Trash2 size={18} />
+                        </button>
                       </div>
                     ))}
                 </div>
