@@ -23,7 +23,7 @@ func DocsUI(w http.ResponseWriter, r *http.Request) {
 const docsHTML = `<!DOCTYPE html>
 <html>
 <head>
-  <title>가고시마 여행 API</title>
+  <title>여행 공유 API</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 </head>

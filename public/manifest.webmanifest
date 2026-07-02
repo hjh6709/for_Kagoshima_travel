@@ -1,7 +1,7 @@
 {
-  "name": "가고시마 여행 도우미",
-  "short_name": "가고시마",
-  "description": "부모님 가고시마 여행 일정, 지도, 체크리스트, 긴급 정보를 확인하는 앱",
+  "name": "여행 도우미",
+  "short_name": "여행 도우미",
+  "description": "가족 여행 일정, 지도, 체크리스트, 긴급 정보를 확인하는 앱",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f7f5ef",

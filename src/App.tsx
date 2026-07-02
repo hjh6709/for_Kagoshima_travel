@@ -80,7 +80,7 @@ function getPlace(placeId?: string) {
 }
 
 function getMapUrl(place?: ReturnType<typeof getPlace>) {
-  const fallback = place?.address || place?.name || "Kagoshima";
+  const fallback = place?.address || place?.name || "여행지";
   return place?.googleMapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fallback)}`;
 }
 
@@ -372,7 +372,7 @@ function App() {
           {activeTab === "today" && (
             <section className="screen">
               <div className="trip-header">
-                <span className="eyebrow">가고시마 여행</span>
+                <span className="eyebrow">가족 여행</span>
                 <p className="trip-dates">
                   {formatKoreanDate(tripDates.startDate)} ~ {formatKoreanDate(tripDates.endDate)}
                 </p>

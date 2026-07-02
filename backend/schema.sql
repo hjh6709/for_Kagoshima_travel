@@ -1,4 +1,4 @@
--- 가고시마 여행 앱 PostgreSQL 스키마
+-- 여행 공유 앱 PostgreSQL 스키마
 
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 

@@ -1,9 +1,9 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "가고시마 여행 API",
+    "title": "여행 공유 API",
     "version": "2.0.0",
-    "description": "가고시마 여행 앱 백엔드 API"
+    "description": "여행 공유 앱 백엔드 API"
   },
   "servers": [
     { "url": "http://localhost:8080", "description": "로컬 개발" }
@@ -72,7 +72,7 @@
         "type": "object",
         "required": ["title", "startDate", "endDate"],
         "properties": {
-          "title": { "type": "string", "example": "가고시마 여행" },
+          "title": { "type": "string", "example": "부모님 여행" },
           "startDate": { "type": "string", "example": "2026-06-27" },
           "endDate": { "type": "string", "example": "2026-06-30" },
           "travelers": { "type": "array", "items": { "type": "string" }, "example": ["아버지", "어머니"] },
