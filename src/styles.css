@@ -450,10 +450,92 @@ p {
   background: var(--c-surface);
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px;
   text-align: left;
   font-weight: 800;
+}
+
+.check-toggle {
+  min-height: 42px;
+  border: 0;
+  background: transparent;
+  color: var(--c-text);
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 12px;
+  padding: 8px;
+  text-align: left;
+  font-weight: 800;
+}
+
+.icon-button {
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--c-danger-light);
+  color: var(--c-danger);
+  display: grid;
+  place-items: center;
+}
+
+.check-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.check-summary p {
+  margin-bottom: 0;
+}
+
+.check-summary span {
+  min-width: 54px;
+  border-radius: 999px;
+  background: var(--c-green);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 900;
+  padding: 6px 10px;
+  text-align: center;
+}
+
+.check-add-form {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 22px;
+  padding: 16px;
+  border: 1px solid rgba(36, 48, 47, 0.1);
+  border-radius: 8px;
+  background: var(--c-surface);
+}
+
+.check-add-form label {
+  display: grid;
+  gap: 6px;
+  color: var(--c-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.check-add-form input,
+.check-add-form select {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid rgba(36, 48, 47, 0.12);
+  border-radius: 10px;
+  background: var(--c-bg);
+  color: var(--c-text);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  padding: 10px 12px;
 }
 
 .check-groups {
@@ -500,7 +582,8 @@ p {
 .primary-button:active,
 .secondary-button:active,
 .quick-button:active,
-.check-row:active {
+.check-toggle:active,
+.icon-button:active {
   transform: scale(0.97);
   transition: transform 0.1s;
 }

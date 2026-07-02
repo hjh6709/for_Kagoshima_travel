@@ -7,11 +7,13 @@ import {
   Map,
   MapPin,
   Plane,
+  PlusCircle,
   Phone,
   Route,
   Shield,
+  Trash2,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import {
   accommodation,
   checklist,
@@ -23,13 +25,15 @@ import {
   schedules,
   trip,
 } from "./data/sampleTrip";
-import type { ScheduleItem } from "./types/travel";
+import type { ChecklistItem, ScheduleItem } from "./types/travel";
 
 type Tab = "today" | "schedule" | "flight" | "map" | "concierge";
 type TripDates = {
   startDate: string;
   endDate: string;
 };
+type ChecklistCategory = ChecklistItem["category"];
+type CustomChecklistItem = ChecklistItem & { custom: true };
 
 const tabs: Array<{ id: Tab; label: string; icon: typeof Home }> = [
   { id: "today", label: "오늘", icon: Home },
@@ -66,6 +70,7 @@ const checklistCategoryLabels = {
   daily: "여행 중",
   return: "귀국 전",
 } as const;
+const checklistCategories = Object.entries(checklistCategoryLabels) as Array<[ChecklistCategory, string]>;
 
 function getPlace(placeId?: string) {
   return places.find((place) => place.id === placeId);
@@ -105,6 +110,14 @@ function isDateValue(value: unknown): value is string {
   return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
 }
 
+function isChecklistCategory(value: unknown): value is ChecklistCategory {
+  return typeof value === "string" && value in checklistCategoryLabels;
+}
+
+function isCustomChecklistItem(item: ChecklistItem): item is CustomChecklistItem {
+  return "custom" in item && item.custom === true;
+}
+
 function getSavedTripDates(): TripDates {
   const fallback = { startDate: trip.startDate, endDate: trip.endDate };
   const saved = window.localStorage.getItem("kagoshima-trip-dates");
@@ -116,12 +129,34 @@ function getSavedTripDates(): TripDates {
   }
 }
 
+function getSavedCustomChecklist(): CustomChecklistItem[] {
+  const saved = window.localStorage.getItem("kagoshima-custom-checklist");
+  try {
+    const parsed = saved ? JSON.parse(saved) : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((item): item is CustomChecklistItem => {
+      return (
+        typeof item?.id === "string" &&
+        isChecklistCategory(item.category) &&
+        typeof item.title === "string" &&
+        item.title.trim().length > 0 &&
+        item.custom === true
+      );
+    });
+  } catch {
+    return [];
+  }
+}
+
 function App() {
   const contentRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<Tab>("today");
   const [tripDates, setTripDates] = useState<TripDates>(getSavedTripDates);
   const [selectedDate, setSelectedDate] = useState(schedules[0]?.date ?? trip.startDate);
   const [addressCopied, setAddressCopied] = useState(false);
+  const [customChecklistItems, setCustomChecklistItems] = useState<CustomChecklistItem[]>(getSavedCustomChecklist);
+  const [newChecklistTitle, setNewChecklistTitle] = useState("");
+  const [newChecklistCategory, setNewChecklistCategory] = useState<ChecklistCategory>("before");
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>(() => {
     const saved = window.localStorage.getItem("kagoshima-checklist");
     try {
@@ -134,17 +169,18 @@ function App() {
   const dates = useMemo(() => Array.from(new Set(schedules.map((item) => item.date))), []);
   const selectedSchedules = schedules.filter((item) => item.date === selectedDate);
   const nextSchedule = schedules[0];
-  const completedCount = Object.values(checkedItems).filter(Boolean).length;
+  const allChecklist = useMemo(() => [...checklist, ...customChecklistItems], [customChecklistItems]);
+  const completedCount = allChecklist.filter((item) => checkedItems[item.id]).length;
   const groupedChecklist = useMemo(
     () =>
-      Object.entries(checklistCategoryLabels)
+      checklistCategories
         .map(([category, label]) => ({
           category,
           label,
-          items: checklist.filter((item) => item.category === category),
+          items: allChecklist.filter((item) => item.category === category),
         }))
         .filter((group) => group.items.length > 0),
-    []
+    [allChecklist]
   );
 
   useEffect(() => {
@@ -180,6 +216,33 @@ function App() {
     const next = { ...checkedItems, [id]: !checkedItems[id] };
     setCheckedItems(next);
     window.localStorage.setItem("kagoshima-checklist", JSON.stringify(next));
+  }
+
+  function saveCustomChecklist(items: CustomChecklistItem[]) {
+    setCustomChecklistItems(items);
+    window.localStorage.setItem("kagoshima-custom-checklist", JSON.stringify(items));
+  }
+
+  function addChecklistItem(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const title = newChecklistTitle.trim();
+    if (!title) return;
+    const nextItem: CustomChecklistItem = {
+      id: `custom-check-${Date.now()}`,
+      category: newChecklistCategory,
+      title,
+      custom: true,
+    };
+    saveCustomChecklist([...customChecklistItems, nextItem]);
+    setNewChecklistTitle("");
+  }
+
+  function removeCustomChecklistItem(id: string) {
+    saveCustomChecklist(customChecklistItems.filter((item) => item.id !== id));
+    const nextCheckedItems = { ...checkedItems };
+    delete nextCheckedItems[id];
+    setCheckedItems(nextCheckedItems);
+    window.localStorage.setItem("kagoshima-checklist", JSON.stringify(nextCheckedItems));
   }
 
   return (
@@ -319,19 +382,64 @@ function App() {
 
               <section className="section-block">
                 <h2>준비 체크리스트</h2>
-                <p className="muted">
-                  {checklist.length}개 중 {completedCount}개 완료
-                </p>
+                <div className="check-summary">
+                  <p className="muted">
+                    {allChecklist.length}개 중 {completedCount}개 완료
+                  </p>
+                  <span>{Math.round((completedCount / Math.max(allChecklist.length, 1)) * 100)}%</span>
+                </div>
+
+                <form className="check-add-form" onSubmit={addChecklistItem}>
+                  <label>
+                    구분
+                    <select
+                      value={newChecklistCategory}
+                      onChange={(event) => setNewChecklistCategory(event.target.value as ChecklistCategory)}
+                    >
+                      {checklistCategories.map(([category, label]) => (
+                        <option key={category} value={category}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    추가할 항목
+                    <input
+                      placeholder="예: 여권 사본 챙기기"
+                      type="text"
+                      value={newChecklistTitle}
+                      onChange={(event) => setNewChecklistTitle(event.target.value)}
+                    />
+                  </label>
+                  <button className="primary-button" type="submit">
+                    <PlusCircle size={18} />
+                    추가
+                  </button>
+                </form>
+
                 <div className="check-groups">
                   {groupedChecklist.map((group) => (
                     <section className="check-group" key={group.category}>
                       <h3>{group.label}</h3>
                       <div className="card-stack">
                         {group.items.map((item) => (
-                          <button className="check-row" key={item.id} onClick={() => toggleCheck(item.id)}>
-                            <CheckCircle2 className={checkedItems[item.id] ? "checked" : ""} size={24} />
-                            <span>{item.title}</span>
-                          </button>
+                          <div className="check-row" key={item.id}>
+                            <button className="check-toggle" onClick={() => toggleCheck(item.id)} type="button">
+                              <CheckCircle2 className={checkedItems[item.id] ? "checked" : ""} size={24} />
+                              <span>{item.title}</span>
+                            </button>
+                            {isCustomChecklistItem(item) && (
+                              <button
+                                aria-label={`${item.title} 삭제`}
+                                className="icon-button"
+                                onClick={() => removeCustomChecklistItem(item.id)}
+                                type="button"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            )}
+                          </div>
                         ))}
                       </div>
                     </section>
@@ -374,13 +482,25 @@ function App() {
               <section className="section-block">
                 <h2>공항에서 확인할 것</h2>
                 <div className="card-stack">
-                  {checklist
+                  {allChecklist
                     .filter((item) => item.category === "airport")
                     .map((item) => (
-                      <button className="check-row" key={item.id} onClick={() => toggleCheck(item.id)}>
-                        <CheckCircle2 className={checkedItems[item.id] ? "checked" : ""} size={24} />
-                        <span>{item.title}</span>
-                      </button>
+                      <div className="check-row" key={item.id}>
+                        <button className="check-toggle" onClick={() => toggleCheck(item.id)} type="button">
+                          <CheckCircle2 className={checkedItems[item.id] ? "checked" : ""} size={24} />
+                          <span>{item.title}</span>
+                        </button>
+                        {isCustomChecklistItem(item) && (
+                          <button
+                            aria-label={`${item.title} 삭제`}
+                            className="icon-button"
+                            onClick={() => removeCustomChecklistItem(item.id)}
+                            type="button"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        )}
+                      </div>
                     ))}
                 </div>
               </section>
