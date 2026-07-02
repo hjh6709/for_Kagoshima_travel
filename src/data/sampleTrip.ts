@@ -2,7 +2,6 @@ import type {
   AccommodationInfo,
   ChecklistItem,
   EmergencyInfo,
-  ExpenseSummary,
   FlightInfo,
   Place,
   RecommendedRoute,
@@ -189,33 +188,6 @@ export const routes: RecommendedRoute[] = [
     placeIds: ["place-hotel", "place-golf"],
     transportMemo: "출발 시간과 골프장 주차/클럽하우스 위치를 확인하세요.",
     estimatedDuration: "라운딩 당일",
-  },
-];
-
-export const expenseSummaries: ExpenseSummary[] = [
-  {
-    id: "expense-meals-transport",
-    label: "식비·교통비 예상 경비",
-    currency: "JPY",
-    amount: 42000,
-    note: "식당, 편의점, 택시 등 현지에서 바로 확인할 기준 금액입니다.",
-    updatedAt: "2026-06-24T21:10:00+09:00",
-  },
-  {
-    id: "expense-emergency",
-    label: "비상 예비 경비",
-    currency: "JPY",
-    amount: 10000,
-    note: "예상보다 이동비나 식비가 늘어날 때 쓰는 예비 금액입니다.",
-    updatedAt: "2026-06-24T21:10:00+09:00",
-  },
-  {
-    id: "expense-krw",
-    label: "국내 정산 참고 금액",
-    currency: "KRW",
-    amount: 120000,
-    note: "귀국 후 정산이나 비상 연락 시 참고하는 금액입니다.",
-    updatedAt: "2026-06-24T21:10:00+09:00",
   },
 ];
 
