@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { ApiError, getCurrentUser, login, register, type AuthResponse } from "./api/auth";
+import { listMyTrips, type OwnerTrip } from "./api/trips";
 import {
   accommodation,
   checklist,
@@ -258,6 +259,9 @@ function App() {
   const [authError, setAuthError] = useState("");
   const [authChecked, setAuthChecked] = useState(!isOwnerRoute);
   const [authSubmitting, setAuthSubmitting] = useState(false);
+  const [ownerTrips, setOwnerTrips] = useState<OwnerTrip[]>([]);
+  const [ownerTripsError, setOwnerTripsError] = useState("");
+  const [ownerTripsLoading, setOwnerTripsLoading] = useState(false);
   const [tripDates, setTripDates] = useState<TripDates>(getSavedTripDates);
   const [selectedDate, setSelectedDate] = useState(schedules[0]?.date ?? trip.startDate);
   const [addressCopied, setAddressCopied] = useState(false);
@@ -341,6 +345,36 @@ function App() {
     };
   }, [isOwnerRoute]);
 
+  useEffect(() => {
+    if (!isOwnerRoute || !ownerAuth) return;
+
+    let cancelled = false;
+    setOwnerTripsLoading(true);
+    setOwnerTripsError("");
+    listMyTrips(ownerAuth.accessToken)
+      .then((trips) => {
+        if (!cancelled) setOwnerTrips(trips);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        if (error instanceof ApiError && error.status === 401) {
+          window.localStorage.removeItem(ownerAuthStorageKey);
+          setOwnerAuth(null);
+          setOwnerTrips([]);
+          setOwnerTripsError("");
+          return;
+        }
+        setOwnerTripsError(error instanceof Error ? error.message : "여행 목록을 불러오지 못했습니다.");
+      })
+      .finally(() => {
+        if (!cancelled) setOwnerTripsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOwnerRoute, ownerAuth]);
+
   async function submitAuth(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setAuthError("");
@@ -351,6 +385,7 @@ function App() {
       setOwnerAuth(response);
       setAuthPassword("");
       window.localStorage.setItem(ownerAuthStorageKey, JSON.stringify(response));
+      setOwnerTripsError("");
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : "로그인 요청을 처리하지 못했습니다.");
     } finally {
@@ -361,6 +396,8 @@ function App() {
   function logoutOwner() {
     window.localStorage.removeItem(ownerAuthStorageKey);
     setOwnerAuth(null);
+    setOwnerTrips([]);
+    setOwnerTripsError("");
     setAuthPassword("");
     setAuthError("");
   }
@@ -375,6 +412,9 @@ function App() {
         authMode={authMode}
         authPassword={authPassword}
         authSubmitting={authSubmitting}
+        ownerTrips={ownerTrips}
+        ownerTripsError={ownerTripsError}
+        ownerTripsLoading={ownerTripsLoading}
         onAuthEmailChange={setAuthEmail}
         onAuthModeChange={(mode) => {
           setAuthMode(mode);
@@ -937,6 +977,9 @@ type OwnerAppProps = {
   authMode: AuthMode;
   authPassword: string;
   authSubmitting: boolean;
+  ownerTrips: OwnerTrip[];
+  ownerTripsError: string;
+  ownerTripsLoading: boolean;
   onAuthEmailChange: (value: string) => void;
   onAuthModeChange: (mode: AuthMode) => void;
   onAuthPasswordChange: (value: string) => void;
@@ -952,6 +995,9 @@ function OwnerApp({
   authMode,
   authPassword,
   authSubmitting,
+  ownerTrips,
+  ownerTripsError,
+  ownerTripsLoading,
   onAuthEmailChange,
   onAuthModeChange,
   onAuthPasswordChange,
@@ -1040,10 +1086,10 @@ function OwnerApp({
 
                 <article className="hero-card">
                   <div>
-                    <span className="pill">다음 단계</span>
-                    <h2>관리 기능 연결 준비 완료</h2>
+                    <span className="pill">내 여행</span>
+                    <h2>관리할 여행을 선택하세요</h2>
                     <p className="muted">
-                      로그인 세션이 준비됐습니다. 다음 PR부터 여행 목록 조회, 여행 편집, 공유 링크 생성을 붙이면 됩니다.
+                      로그인한 계정으로 만든 여행 목록입니다. 다음 PR부터 새 여행 만들기와 편집 화면을 연결합니다.
                     </p>
                   </div>
                   <a className="primary-button" href="/">
@@ -1053,18 +1099,45 @@ function OwnerApp({
                 </article>
 
                 <section className="section-block">
-                  <h2>관리 예정 기능</h2>
-                  <div className="card-stack">
-                    {["여행 정보 입력/수정", "항공편 입력/수정", "일정·체크리스트 관리", "공유 링크 생성"].map((item) => (
-                      <article className="list-card" key={item}>
-                        <CheckCircle2 size={22} />
-                        <div>
-                          <strong>{item}</strong>
-                          <p>로그인 세션을 기반으로 다음 PR에서 API와 연결합니다.</p>
-                        </div>
-                      </article>
-                    ))}
+                  <div className="section-title-row">
+                    <h2>여행 목록</h2>
+                    <span className="pill subtle">{ownerTrips.length}개</span>
                   </div>
+
+                  {ownerTripsLoading && <p className="muted">여행 목록을 불러오는 중입니다.</p>}
+
+                  {ownerTripsError && <p className="form-error">{ownerTripsError}</p>}
+
+                  {!ownerTripsLoading && !ownerTripsError && ownerTrips.length === 0 && (
+                    <article className="info-card empty-state-card">
+                      <PlusCircle size={28} />
+                      <h2>아직 만든 여행이 없습니다</h2>
+                      <p className="muted">다음 단계에서 새 여행 만들기 폼을 연결합니다.</p>
+                      <button className="secondary-button" disabled type="button">
+                        새 여행 만들기 준비 중
+                      </button>
+                    </article>
+                  )}
+
+                  {!ownerTripsLoading && !ownerTripsError && ownerTrips.length > 0 && (
+                    <div className="card-stack">
+                      {ownerTrips.map((ownerTrip) => (
+                        <article className="owner-trip-card" key={ownerTrip.id}>
+                          <div>
+                            <span className="pill subtle">여행</span>
+                            <h2>{ownerTrip.title}</h2>
+                            <p className="muted">
+                              {formatKoreanDate(ownerTrip.startDate)} ~ {formatKoreanDate(ownerTrip.endDate)}
+                            </p>
+                            <p>{ownerTrip.travelers.length > 0 ? ownerTrip.travelers.join(", ") : "여행자 미입력"}</p>
+                          </div>
+                          <button className="secondary-button compact-button" disabled type="button">
+                            편집 준비 중
+                          </button>
+                        </article>
+                      ))}
+                    </div>
+                  )}
                 </section>
               </>
             )}
