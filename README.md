@@ -1,10 +1,10 @@
-# for_Kagoshima_travel
+# Travel Share App
 
-가고시마 여행을 위해 제작
+가족 여행 정보를 공유하고 관리하기 위한 모바일 우선 여행 도우미 앱입니다.
 
 ## 방향
 
-6월 말 부모님 가고시마 여행을 위한 모바일 우선 여행 도우미 앱입니다.
+부모님과 가족이 로그인 없이 공유 링크로 여행 정보를 쉽게 확인하고, 여행 생성자는 로그인 후 정보를 관리하는 서비스를 목표로 합니다.
 
 - 부모님 갤럭시 사용을 우선 고려
 - 제작자 iPhone 테스트도 가능하도록 크로스 플랫폼 구성
@@ -15,11 +15,21 @@
 
 기획·설계·배포 문서는 [`docs/README.md`](docs/README.md)에서 카테고리별로 모아 관리합니다.
 
+## 구조
+
+```text
+apps/
+  api/  Go REST API
+  web/  React + TypeScript + Vite PWA
+docs/   기획·설계·운영 문서
+```
+
 ## 실행
 
 프론트엔드 개발 서버:
 
 ```bash
+cd apps/web
 npm install
 npm run dev
 ```
@@ -36,6 +46,7 @@ go run ./cmd/api
 프론트엔드:
 
 ```bash
+cd apps/web
 npm run build
 ```
 
