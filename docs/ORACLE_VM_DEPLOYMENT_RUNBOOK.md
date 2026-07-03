@@ -172,6 +172,14 @@ sudo chmod 600 /etc/travel-api/travel-api.env
 
 `JWT_SECRET`, DB 비밀번호, 서버 IP, SSH key는 GitHub Secrets 또는 서버 전용 파일로만 관리합니다.
 
+레포에는 예시 파일만 둡니다.
+
+```bash
+sudo cp infra/oracle/env/travel-api.env.example /etc/travel-api/travel-api.env
+sudo chmod 600 /etc/travel-api/travel-api.env
+sudo nano /etc/travel-api/travel-api.env
+```
+
 ## Go API 배포 위치
 
 권장 경로:
@@ -210,8 +218,7 @@ scp /tmp/travel-api ubuntu@<ORACLE_VM_PUBLIC_IP>:/tmp/travel-api
 ```bash
 sudo mkdir -p /opt/travel-api
 sudo chown ubuntu:ubuntu /opt/travel-api
-sudo mv /tmp/travel-api /opt/travel-api/app
-sudo chmod 755 /opt/travel-api/app
+sudo bash infra/oracle/deploy-api.sh /tmp/travel-api
 ```
 
 ## systemd 서비스
@@ -222,8 +229,10 @@ Go API는 systemd로 관리합니다.
 [Unit]
 Description=Travel Share API
 After=network.target postgresql.service
+Wants=postgresql.service
 
 [Service]
+Type=simple
 User=ubuntu
 Group=ubuntu
 WorkingDirectory=/opt/travel-api
@@ -231,6 +240,11 @@ EnvironmentFile=/etc/travel-api/travel-api.env
 ExecStart=/opt/travel-api/app
 Restart=always
 RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/opt/travel-api
 
 [Install]
 WantedBy=multi-user.target
@@ -245,6 +259,7 @@ WantedBy=multi-user.target
 적용:
 
 ```bash
+sudo cp infra/oracle/systemd/travel-api.service /etc/systemd/system/travel-api.service
 sudo systemctl daemon-reload
 sudo systemctl enable travel-api
 sudo systemctl start travel-api

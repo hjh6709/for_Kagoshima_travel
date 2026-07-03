@@ -1,0 +1,22 @@
+[Unit]
+Description=Travel Share API
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/opt/travel-api
+EnvironmentFile=/etc/travel-api/travel-api.env
+ExecStart=/opt/travel-api/app
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/opt/travel-api
+
+[Install]
+WantedBy=multi-user.target
