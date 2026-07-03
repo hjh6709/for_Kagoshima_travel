@@ -151,7 +151,7 @@ Browser -> Go HTML Server -> PostgreSQL
 ## 3. 프론트엔드 구조 초안
 
 ```text
-src/
+apps/web/src/
   App.tsx
   main.tsx
   styles.css
@@ -397,8 +397,8 @@ apps/api/internal/repository
 ### 패키징 방식
 
 프론트엔드:
-- `npm run build`로 정적 파일을 만든다.
-- 결과물은 `dist/`에 생성된다.
+- `cd apps/web && npm run build`로 정적 파일을 만든다.
+- 결과물은 `apps/web/dist/`에 생성된다.
 - Vercel Hobby 플랜에 배포한다.
 
 백엔드:
@@ -461,7 +461,7 @@ ALLOWED_ORIGINS=http://localhost:5173
 
 1차 MVP:
 1. 실제 여행 데이터를 프론트 데이터 파일에 입력
-2. `npm run build`로 PWA 빌드 확인
+2. `cd apps/web && npm run build`로 PWA 빌드 확인
 3. Vercel에 정적 배포
 4. `kagoshima.hjh-dev.site` 서브도메인을 Vercel에 연결
 5. 부모님 갤럭시와 제작자 iPhone에서 접속 확인

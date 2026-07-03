@@ -35,8 +35,8 @@ main 동기화는 rebase 권장:
 ## 테스트
 ```bash
 # 해당하는 검증만 남겨주세요.
-npm run typecheck
-npm run build
+cd apps/web && npm run typecheck
+cd apps/web && npm run build
 cd apps/api && go test ./... -count=1
 cd apps/api && go test -race ./... -count=1
 cd apps/api && go vet ./...
