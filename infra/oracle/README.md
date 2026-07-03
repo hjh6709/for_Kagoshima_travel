@@ -114,3 +114,29 @@ scp -i ~/.ssh/oracle_travel_api /tmp/travel-api-linux-arm64 opc@<ORACLE_VM_PUBLI
 ```bash
 sudo bash infra/oracle/deploy-api.sh /tmp/travel-api
 ```
+
+## PostgreSQL 백업
+
+백업 스크립트는 `DATABASE_URL` 환경변수를 읽어 `pg_dump`를 실행합니다.
+
+```bash
+DATABASE_URL='postgres://travel_app:<STRONG_DB_PASSWORD>@localhost:5432/travel_app?sslmode=disable' \
+  bash infra/oracle/scripts/backup-postgres.sh
+```
+
+기본값:
+
+```text
+TRAVEL_API_BACKUP_DIR=$HOME/backups/travel-api
+TRAVEL_API_BACKUP_RETENTION_DAYS=14
+```
+
+cron 예시는 `infra/oracle/cron/travel-api-backup.cron`에 있습니다. 실제 서버 경로를 수정한 뒤 root crontab으로 등록합니다. DB 접속 정보는 `/etc/travel-api/travel-api.env`에서 읽습니다.
+
+```bash
+sudo crontab infra/oracle/cron/travel-api-backup.cron
+```
+
+cron 예시는 기본 백업 경로를 `/var/backups/travel-api`로 둡니다.
+
+실제 백업 파일은 같은 VM에만 보관하지 말고, 주기적으로 로컬 Mac 또는 Object Storage 같은 외부 위치로 복사해야 합니다.

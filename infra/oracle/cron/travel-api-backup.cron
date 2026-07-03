@@ -1,0 +1,12 @@
+# Run PostgreSQL backup every day at 03:00.
+#
+# Install example as root:
+#   sudo crontab infra/oracle/cron/travel-api-backup.cron
+#
+# Keep DATABASE_URL in /etc/travel-api/travel-api.env. Do not commit real secrets.
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+TRAVEL_API_BACKUP_DIR=/var/backups/travel-api
+TRAVEL_API_BACKUP_RETENTION_DAYS=14
+
+0 3 * * * set -a; source /etc/travel-api/travel-api.env; set +a; /path/to/for_Kagoshima_travel/infra/oracle/scripts/backup-postgres.sh >> /var/backups/travel-api/backup.log 2>&1
