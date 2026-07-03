@@ -14,6 +14,7 @@
 ## 문서
 
 기획·설계·배포 문서는 [`docs/README.md`](docs/README.md)에서 카테고리별로 모아 관리합니다.
+로컬 실행과 테스트 절차는 [`docs/LOCAL_DEVELOPMENT_RUNBOOK.md`](docs/LOCAL_DEVELOPMENT_RUNBOOK.md)를 기준으로 확인합니다.
 
 ## 구조
 
