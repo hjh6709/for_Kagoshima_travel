@@ -325,6 +325,21 @@ curl https://api.hjh-dev.site/healthz
 3. Network 탭에서 API 요청이 `https://api.hjh-dev.site`로 나가는지 확인
 4. CORS 에러가 있으면 `ALLOWED_ORIGINS`와 API 재시작 여부 확인
 
+## 배포 바이너리 빌드 검증
+
+`.github/workflows/api-release-build.yml`은 Oracle VM 배포 전에 Go API가 Linux 바이너리로 빌드 가능한지 확인합니다.
+
+검증 대상:
+
+```text
+linux/amd64
+linux/arm64
+```
+
+Oracle VM을 AMD x86_64 shape로 만들면 `linux/amd64` 산출물을 사용하고, Ampere A1 Arm shape로 만들면 `linux/arm64` 산출물을 사용합니다.
+
+이 workflow는 빌드 산출물을 artifact로 업로드하지만, 서버에 SSH 접속하거나 서비스를 재시작하지 않습니다. 실제 서버 배포는 GitHub Secrets와 Oracle VM 준비가 끝난 뒤 별도 workflow로 추가합니다.
+
 ## 백업 기준
 
 초기 백업은 `pg_dump` 기반으로 시작합니다.
