@@ -55,6 +55,7 @@ TRAVEL_API_RUN_USER=${SUDO_USER:-ubuntu}
 
 ```bash
 bash -n infra/oracle/setup-server.sh
+bash -n infra/oracle/deploy-api.sh
 ```
 
 서버에서 실행 후 확인:
@@ -64,4 +65,39 @@ ufw status numbered
 systemctl status postgresql
 systemctl status caddy
 ls -ld /opt/travel-api /etc/travel-api
+```
+
+## systemd 서비스 설정
+
+서비스 파일을 서버에 복사합니다.
+
+```bash
+sudo cp infra/oracle/systemd/travel-api.service /etc/systemd/system/travel-api.service
+sudo systemctl daemon-reload
+sudo systemctl enable travel-api
+```
+
+운영 환경변수 파일을 작성합니다.
+
+```bash
+sudo mkdir -p /etc/travel-api
+sudo cp infra/oracle/env/travel-api.env.example /etc/travel-api/travel-api.env
+sudo chmod 600 /etc/travel-api/travel-api.env
+sudo nano /etc/travel-api/travel-api.env
+```
+
+`travel-api.env`에는 실제 DB 비밀번호와 JWT secret을 입력합니다. 실제 값은 레포에 커밋하지 않습니다.
+
+## API 바이너리 배포
+
+로컬 또는 GitHub Actions에서 VM 아키텍처에 맞는 Linux binary를 만든 뒤 서버에 업로드합니다.
+
+```bash
+scp /tmp/travel-api-linux-arm64 ubuntu@<ORACLE_VM_PUBLIC_IP>:/tmp/travel-api
+```
+
+서버에서 배포 스크립트를 실행합니다.
+
+```bash
+sudo bash infra/oracle/deploy-api.sh /tmp/travel-api
 ```
