@@ -6,11 +6,11 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/hanjeonghyun/for-kagoshima-travel/backend/internal/db"
-	"github.com/hanjeonghyun/for-kagoshima-travel/backend/internal/handler"
-	"github.com/hanjeonghyun/for-kagoshima-travel/backend/internal/middleware"
-	"github.com/hanjeonghyun/for-kagoshima-travel/backend/internal/repository"
-	"github.com/hanjeonghyun/for-kagoshima-travel/backend/internal/service"
+	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/db"
+	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/handler"
+	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/middleware"
+	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/repository"
+	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/service"
 )
 
 type Server struct {

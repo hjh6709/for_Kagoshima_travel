@@ -3,7 +3,7 @@ package repository
 import (
 	"sync"
 
-	"github.com/hanjeonghyun/for-kagoshima-travel/backend/internal/model"
+	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/model"
 )
 
 type UserRepository interface {

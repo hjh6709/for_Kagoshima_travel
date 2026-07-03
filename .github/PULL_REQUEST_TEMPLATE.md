@@ -37,10 +37,10 @@ main 동기화는 rebase 권장:
 # 해당하는 검증만 남겨주세요.
 npm run typecheck
 npm run build
-cd backend && go test ./... -count=1
-cd backend && go test -race ./... -count=1
-cd backend && go vet ./...
-cd backend && test -z "$(gofmt -l .)"
+cd apps/api && go test ./... -count=1
+cd apps/api && go test -race ./... -count=1
+cd apps/api && go vet ./...
+cd apps/api && test -z "$(gofmt -l .)"
 ```
 <!-- 실행 결과, 스크린샷, 또는 GitHub Actions 결과를 붙이거나 링크합니다. -->
 

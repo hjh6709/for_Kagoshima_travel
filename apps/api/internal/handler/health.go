@@ -3,7 +3,7 @@ package handler
 import (
 	"net/http"
 
-	"github.com/hanjeonghyun/for-kagoshima-travel/backend/internal/httpjson"
+	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/httpjson"
 )
 
 func Health(w http.ResponseWriter, _ *http.Request) {

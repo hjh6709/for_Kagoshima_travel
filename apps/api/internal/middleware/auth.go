@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/hanjeonghyun/for-kagoshima-travel/backend/internal/auth"
-	"github.com/hanjeonghyun/for-kagoshima-travel/backend/internal/httpjson"
+	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/auth"
+	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/httpjson"
 )
 
 type contextKey string

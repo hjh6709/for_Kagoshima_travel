@@ -7,7 +7,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/hanjeonghyun/for-kagoshima-travel/backend/internal/model"
+	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/model"
 )
 
 type PostgresUserRepository struct {

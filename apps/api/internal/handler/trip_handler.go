@@ -5,10 +5,10 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/hanjeonghyun/for-kagoshima-travel/backend/internal/dto"
-	"github.com/hanjeonghyun/for-kagoshima-travel/backend/internal/httpjson"
-	"github.com/hanjeonghyun/for-kagoshima-travel/backend/internal/middleware"
-	"github.com/hanjeonghyun/for-kagoshima-travel/backend/internal/service"
+	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/dto"
+	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/httpjson"
+	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/middleware"
+	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/service"
 )
 
 type TripHandler struct {

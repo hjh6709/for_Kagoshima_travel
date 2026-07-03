@@ -1,4 +1,4 @@
-module github.com/hanjeonghyun/for-kagoshima-travel/backend
+module github.com/hanjeonghyun/for-kagoshima-travel/apps/api
 
 go 1.26.2
 

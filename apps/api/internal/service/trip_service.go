@@ -4,9 +4,9 @@ import (
 	"errors"
 	"time"
 
-	"github.com/hanjeonghyun/for-kagoshima-travel/backend/internal/dto"
-	"github.com/hanjeonghyun/for-kagoshima-travel/backend/internal/model"
-	"github.com/hanjeonghyun/for-kagoshima-travel/backend/internal/repository"
+	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/dto"
+	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/model"
+	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/repository"
 )
 
 var (
