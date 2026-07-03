@@ -60,3 +60,42 @@ jobs:
         run: |
           go mod tidy
           git diff --exit-code go.mod go.sum
+
+  backend-postgres:
+    name: backend postgres test
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: kagoshima_travel
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d kagoshima_travel"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: apps/api/go.mod
+          cache-dependency-path: apps/api/go.sum
+
+      - name: Apply PostgreSQL schema
+        run: |
+          docker cp schema.sql "${{ job.services.postgres.id }}:/tmp/schema.sql"
+          docker exec "${{ job.services.postgres.id }}" psql -U postgres -d kagoshima_travel -f /tmp/schema.sql
+
+      - name: Run Go tests with PostgreSQL
+        env:
+          TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/kagoshima_travel?sslmode=disable
+          JWT_SECRET: test-secret
+        run: go test ./... -count=1

@@ -3,9 +3,13 @@ package server
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"strings"
 	"testing"
+	"time"
 )
 
 type jsonResponse struct {
@@ -15,15 +19,14 @@ type jsonResponse struct {
 }
 
 func TestShareSecurityBoundaries(t *testing.T) {
-	t.Setenv("DATABASE_URL", "")
-	t.Setenv("JWT_SECRET", "test-secret")
+	setServerTestEnv(t)
 
 	srv := New()
 	httpServer := httptest.NewServer(srv.Routes())
 	defer httpServer.Close()
 
-	ownerToken := registerUser(t, httpServer.URL, "owner@example.com")
-	otherToken := registerUser(t, httpServer.URL, "other@example.com")
+	ownerToken := registerUser(t, httpServer.URL, uniqueTestEmail(t, "owner"))
+	otherToken := registerUser(t, httpServer.URL, uniqueTestEmail(t, "other"))
 
 	tripID := createTrip(t, httpServer.URL, ownerToken, map[string]any{
 		"title":     "가족 여행",
@@ -63,6 +66,25 @@ func TestShareSecurityBoundaries(t *testing.T) {
 	if missing.status != http.StatusNotFound {
 		t.Fatalf("invalid token status = %d, want %d", missing.status, http.StatusNotFound)
 	}
+}
+
+func setServerTestEnv(t *testing.T) {
+	t.Helper()
+
+	if testDatabaseURL := os.Getenv("TEST_DATABASE_URL"); testDatabaseURL != "" {
+		t.Setenv("DATABASE_URL", testDatabaseURL)
+	} else {
+		t.Setenv("DATABASE_URL", "")
+	}
+	t.Setenv("JWT_SECRET", "test-secret")
+}
+
+func uniqueTestEmail(t *testing.T, prefix string) string {
+	t.Helper()
+
+	replacer := strings.NewReplacer("/", "-", " ", "-", "_", "-")
+	name := strings.ToLower(replacer.Replace(t.Name()))
+	return fmt.Sprintf("%s-%s-%d@example.com", prefix, name, time.Now().UnixNano())
 }
 
 func registerUser(t *testing.T, baseURL, email string) string {
