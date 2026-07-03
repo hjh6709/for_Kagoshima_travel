@@ -4,7 +4,7 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/hanjeonghyun/for-kagoshima-travel/backend/internal/model"
+	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/model"
 )
 
 var (

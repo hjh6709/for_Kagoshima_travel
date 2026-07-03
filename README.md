@@ -17,15 +17,33 @@
 
 ## 실행
 
+프론트엔드 개발 서버:
+
 ```bash
 npm install
 npm run dev
 ```
 
+백엔드 API 서버:
+
+```bash
+cd apps/api
+go run ./cmd/api
+```
+
 ## 빌드
+
+프론트엔드:
 
 ```bash
 npm run build
+```
+
+백엔드:
+
+```bash
+cd apps/api
+go build -o bin/api ./cmd/api
 ```
 
 ## 1차 배포

@@ -28,6 +28,7 @@ docker compose up -d postgres
 그다음 API 서버를 실행합니다.
 
 ```bash
+cd apps/api
 go run ./cmd/api
 ```
 
@@ -36,6 +37,7 @@ go run ./cmd/api
 ## 환경변수
 
 ```bash
+cd apps/api
 cp .env.example .env
 ```
 
@@ -52,6 +54,7 @@ cp .env.example .env
 ## 빌드
 
 ```bash
+cd apps/api
 go build -o bin/api ./cmd/api
 ```
 

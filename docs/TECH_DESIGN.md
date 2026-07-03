@@ -166,7 +166,7 @@ src/
 ## 3-1. 백엔드 구조
 
 ```text
-backend/
+apps/api/
   cmd/api/main.go
   internal/
     auth/         # JWT 생성/검증, bcrypt 비밀번호 해시
@@ -349,20 +349,20 @@ backend/
 ### Go 구현 위치
 
 ```text
-backend/internal/auth
+apps/api/internal/auth
   JWT 생성/검증
   bcrypt 비밀번호 검증
   권한 middleware
 
-backend/internal/handler
+apps/api/internal/handler
   로그인 요청 처리
   관리자 API 요청 처리
 
-backend/internal/service
+apps/api/internal/service
   로그인 비즈니스 로직
   사용자 권한 확인
 
-backend/internal/repository
+apps/api/internal/repository
   사용자 조회
   공유 토큰 조회
 ```

@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/hanjeonghyun/for-kagoshima-travel/backend/internal/server"
+	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/server"
 )
 
 func main() {

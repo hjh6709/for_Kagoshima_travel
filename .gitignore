@@ -8,10 +8,10 @@ dist/
 .env
 .env.*
 !.env.example
-!backend/.env.example
+!apps/api/.env.example
 
-backend/tmp/
-backend/bin/
+apps/api/tmp/
+apps/api/bin/
 
 test-results/
 
