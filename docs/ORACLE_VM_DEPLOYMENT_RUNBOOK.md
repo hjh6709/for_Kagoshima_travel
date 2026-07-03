@@ -86,6 +86,16 @@ ssh ubuntu@<ORACLE_VM_PUBLIC_IP>
 
 Ubuntu 기준으로 패키지를 갱신합니다.
 
+레포에 포함된 초기 설정 스크립트를 사용할 수 있습니다.
+
+```bash
+sudo bash infra/oracle/setup-server.sh
+```
+
+스크립트는 패키지 설치, UFW 설정, Caddy 설치, `/opt/travel-api`, `/etc/travel-api` 디렉터리 생성을 수행합니다. DB 비밀번호, API 환경변수, Oracle Cloud 리소스는 생성하지 않습니다.
+
+수동으로 진행한다면 아래 명령을 기준으로 실행합니다.
+
 ```bash
 sudo apt update
 sudo apt upgrade -y
