@@ -5,8 +5,8 @@ Wants=postgresql.service
 
 [Service]
 Type=simple
-User=ubuntu
-Group=ubuntu
+User=travel-api
+Group=travel-api
 WorkingDirectory=/opt/travel-api
 EnvironmentFile=/etc/travel-api/travel-api.env
 ExecStart=/opt/travel-api/app
