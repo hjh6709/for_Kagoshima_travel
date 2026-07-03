@@ -7,6 +7,7 @@ import (
 
 	"github.com/hanjeonghyun/for-kagoshima-travel/backend/internal/dto"
 	"github.com/hanjeonghyun/for-kagoshima-travel/backend/internal/httpjson"
+	"github.com/hanjeonghyun/for-kagoshima-travel/backend/internal/middleware"
 	"github.com/hanjeonghyun/for-kagoshima-travel/backend/internal/service"
 )
 
@@ -59,4 +60,19 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	httpjson.Write(w, http.StatusOK, res)
+}
+
+func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.GetClaims(r)
+	if claims == nil {
+		httpjson.WriteError(w, http.StatusUnauthorized, "인증이 필요합니다.")
+		return
+	}
+
+	httpjson.Write(w, http.StatusOK, dto.AuthSessionResponse{
+		User: dto.UserSummary{
+			ID:    claims.UserID,
+			Email: claims.Email,
+		},
+	})
 }
