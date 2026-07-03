@@ -1,0 +1,17 @@
+{
+  "name": "travel-share-app-workspace",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "web:dev": "npm --prefix apps/web run dev",
+    "web:typecheck": "npm --prefix apps/web run typecheck",
+    "web:build": "npm --prefix apps/web run build",
+    "web:preview": "npm --prefix apps/web run preview",
+    "api:dev": "cd apps/api && go run ./cmd/api",
+    "api:test": "cd apps/api && go test ./...",
+    "api:test:race": "cd apps/api && go test -race ./...",
+    "api:vet": "cd apps/api && go vet ./...",
+    "api:gofmt:check": "cd apps/api && test -z \"$(gofmt -l .)\"",
+    "check": "npm run web:typecheck && npm run web:build && npm run api:test && npm run api:test:race && npm run api:vet && npm run api:gofmt:check"
+  }
+}

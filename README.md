@@ -29,16 +29,14 @@ docs/   기획·설계·운영 문서
 프론트엔드 개발 서버:
 
 ```bash
-cd apps/web
-npm install
-npm run dev
+npm --prefix apps/web install
+npm run web:dev
 ```
 
 백엔드 API 서버:
 
 ```bash
-cd apps/api
-go run ./cmd/api
+npm run api:dev
 ```
 
 ## 빌드
@@ -46,8 +44,7 @@ go run ./cmd/api
 프론트엔드:
 
 ```bash
-cd apps/web
-npm run build
+npm run web:build
 ```
 
 백엔드:
@@ -55,6 +52,12 @@ npm run build
 ```bash
 cd apps/api
 go build -o bin/api ./cmd/api
+```
+
+전체 기본 검증:
+
+```bash
+npm run check
 ```
 
 ## 1차 배포
