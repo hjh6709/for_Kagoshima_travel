@@ -275,11 +275,26 @@ journalctl -u travel-api -f
 
 Caddy는 `api.hjh-dev.site`를 `localhost:8080`으로 프록시하고 HTTPS 인증서를 자동 관리합니다.
 
-설치 후 Caddyfile 예시:
+레포의 설정 스크립트를 사용하면 Caddyfile 작성, 검증, reload까지 한 번에 처리할 수 있습니다.
+
+```bash
+sudo TRAVEL_API_DOMAIN=api.hjh-dev.site \
+  TRAVEL_API_UPSTREAM=127.0.0.1:8080 \
+  bash infra/oracle/configure-caddy.sh
+```
+
+스크립트는 `/etc/caddy/Caddyfile`에 `conf.d` import를 보장하고, API site 설정은 `/etc/caddy/conf.d/travel-api.caddy`에 씁니다. 기존 Caddyfile이나 API snippet이 있으면 timestamp가 붙은 `.bak` 파일로 백업합니다.
+
+직접 작성할 경우 Caddyfile 예시는 다음과 같습니다.
 
 ```text
 api.hjh-dev.site {
+	encode zstd gzip
 	reverse_proxy 127.0.0.1:8080
+
+	header {
+		-Server
+	}
 }
 ```
 
