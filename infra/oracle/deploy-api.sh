@@ -6,6 +6,7 @@ SOURCE_BINARY="${1:-}"
 APP_DIR="${TRAVEL_API_APP_DIR:-/opt/travel-api}"
 APP_BINARY="${APP_DIR}/app"
 SERVICE_NAME="${TRAVEL_API_SERVICE_NAME:-travel-api}"
+RUN_USER="${TRAVEL_API_RUN_USER:-travel-api}"
 
 if [[ "${EUID}" -ne 0 ]]; then
   echo "error: run this script with sudo" >&2
@@ -32,6 +33,12 @@ fi
 echo "==> Installing API binary"
 install -d -m 755 "${APP_DIR}"
 install -m 755 "${SOURCE_BINARY}" "${APP_BINARY}"
+
+if id "${RUN_USER}" >/dev/null 2>&1; then
+  chown "${RUN_USER}:${RUN_USER}" "${APP_DIR}" "${APP_BINARY}"
+else
+  echo "warning: run user '${RUN_USER}' does not exist; leaving binary owned by root" >&2
+fi
 
 echo "==> Reloading systemd"
 systemctl daemon-reload

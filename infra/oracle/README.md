@@ -2,9 +2,17 @@
 
 Oracle Cloud Always Free VM에서 여행 공유 앱 API를 운영하기 위한 인프라 스크립트입니다.
 
+현재 기준 권장 서버 이미지는 Oracle Linux 9입니다. 스크립트는 Oracle Linux/RHEL 계열과 Ubuntu/Debian 계열을 모두 감지해서 처리합니다.
+
 ## 서버 초기 설정
 
-Ubuntu VM에 SSH 접속한 뒤 레포를 내려받고 아래 명령을 실행합니다.
+Oracle Linux VM에 SSH 접속한 뒤 레포를 내려받고 아래 명령을 실행합니다.
+
+```bash
+ssh -i ~/.ssh/oracle_travel_api opc@<ORACLE_VM_PUBLIC_IP>
+```
+
+서버에서:
 
 ```bash
 sudo bash infra/oracle/setup-server.sh
@@ -12,11 +20,13 @@ sudo bash infra/oracle/setup-server.sh
 
 스크립트가 수행하는 작업:
 
-- Ubuntu package update/upgrade
+- OS package update/upgrade
 - 기본 패키지 설치
 - PostgreSQL 설치
 - Caddy 설치
-- UFW에서 `22`, `80`, `443` 허용
+- Oracle Linux에서는 `firewalld`로 `ssh`, `http`, `https` 허용
+- Ubuntu에서는 UFW에서 `22`, `80`, `443` 허용
+- API 실행용 시스템 유저 `travel-api` 생성
 - `/opt/travel-api` 생성
 - `/etc/travel-api` 생성
 
@@ -37,7 +47,7 @@ sudo bash infra/oracle/setup-server.sh
 ```bash
 sudo TRAVEL_API_APP_DIR=/opt/travel-api \
   TRAVEL_API_ENV_DIR=/etc/travel-api \
-  TRAVEL_API_RUN_USER=ubuntu \
+  TRAVEL_API_RUN_USER=travel-api \
   bash infra/oracle/setup-server.sh
 ```
 
@@ -46,7 +56,7 @@ sudo TRAVEL_API_APP_DIR=/opt/travel-api \
 ```text
 TRAVEL_API_APP_DIR=/opt/travel-api
 TRAVEL_API_ENV_DIR=/etc/travel-api
-TRAVEL_API_RUN_USER=${SUDO_USER:-ubuntu}
+TRAVEL_API_RUN_USER=travel-api
 ```
 
 ## 검증
@@ -61,11 +71,14 @@ bash -n infra/oracle/deploy-api.sh
 서버에서 실행 후 확인:
 
 ```bash
-ufw status numbered
+sudo firewall-cmd --list-all
 systemctl status postgresql
 systemctl status caddy
+id travel-api
 ls -ld /opt/travel-api /etc/travel-api
 ```
+
+Ubuntu VM을 사용하는 경우 방화벽 확인 명령은 `sudo ufw status numbered`를 사용합니다.
 
 ## systemd 서비스 설정
 
@@ -93,7 +106,7 @@ sudo nano /etc/travel-api/travel-api.env
 로컬 또는 GitHub Actions에서 VM 아키텍처에 맞는 Linux binary를 만든 뒤 서버에 업로드합니다.
 
 ```bash
-scp /tmp/travel-api-linux-arm64 ubuntu@<ORACLE_VM_PUBLIC_IP>:/tmp/travel-api
+scp -i ~/.ssh/oracle_travel_api /tmp/travel-api-linux-arm64 opc@<ORACLE_VM_PUBLIC_IP>:/tmp/travel-api
 ```
 
 서버에서 배포 스크립트를 실행합니다.
