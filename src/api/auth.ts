@@ -31,7 +31,7 @@ function getApiBaseURL() {
   return apiBaseURL;
 }
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+export async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
   const response = await fetch(`${getApiBaseURL()}${path}`, {
     ...options,
     headers: {
@@ -50,21 +50,21 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 export function login(email: string, password: string) {
-  return request<AuthResponse>("/api/auth/login", {
+  return apiRequest<AuthResponse>("/api/auth/login", {
     method: "POST",
     body: JSON.stringify({ email, password }),
   });
 }
 
 export function register(email: string, password: string) {
-  return request<AuthResponse>("/api/auth/register", {
+  return apiRequest<AuthResponse>("/api/auth/register", {
     method: "POST",
     body: JSON.stringify({ email, password }),
   });
 }
 
 export function getCurrentUser(accessToken: string) {
-  return request<AuthSessionResponse>("/api/auth/me", {
+  return apiRequest<AuthSessionResponse>("/api/auth/me", {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
