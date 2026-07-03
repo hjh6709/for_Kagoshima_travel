@@ -1,0 +1,59 @@
+name: api release build
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'apps/api/**'
+      - '.github/workflows/api-release-build.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/api/**'
+      - '.github/workflows/api-release-build.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: api-release-build-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: api linux build (${{ matrix.goarch }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - goarch: amd64
+          - goarch: arm64
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: apps/api/go.mod
+          cache-dependency-path: apps/api/go.sum
+
+      - name: Build Linux API binary
+        env:
+          CGO_ENABLED: '0'
+          GOOS: linux
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          mkdir -p dist
+          go build -trimpath -ldflags="-s -w" -o "dist/travel-api-linux-${GOARCH}" ./cmd/api
+
+      - name: Upload API binary artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: travel-api-linux-${{ matrix.goarch }}
+          path: apps/api/dist/travel-api-linux-${{ matrix.goarch }}
+          if-no-files-found: error
