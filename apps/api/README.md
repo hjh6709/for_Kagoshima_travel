@@ -45,7 +45,7 @@ cp .env.example .env
 
 - `APP_ENV`: `development`, `test`, `production`
 - `PORT`: API 서버 포트
-- `DATABASE_URL`: PostgreSQL 연결 문자열
+- `DATABASE_URL`: PostgreSQL 연결 문자열. 루트 `docker-compose.yml`의 PostgreSQL을 사용할 때는 `localhost:5433`을 사용
 - `JWT_SECRET`: JWT 서명 비밀키
 - `ALLOWED_ORIGINS`: CORS 허용 origin
 

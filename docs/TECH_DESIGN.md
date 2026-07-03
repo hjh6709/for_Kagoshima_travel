@@ -438,7 +438,7 @@ VITE_API_BASE_URL=https://api.example.com
 ```text
 APP_ENV=development
 PORT=8080
-DATABASE_URL=postgres://postgres:postgres@localhost:5432/kagoshima_travel?sslmode=disable
+DATABASE_URL=postgres://postgres:postgres@localhost:5433/kagoshima_travel?sslmode=disable
 JWT_SECRET=replace-with-a-long-random-secret
 ALLOWED_ORIGINS=http://localhost:5173
 ```
