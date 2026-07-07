@@ -11,10 +11,10 @@ import type {
 } from "../types/travel";
 
 export const trip: Trip = {
-  title: "부모님 여행",
+  title: "나의 여행",
   startDate: "2026-06-27",
   endDate: "2026-06-30",
-  travelers: ["아버지", "어머니"],
+  travelers: ["여행자 1", "여행자 2"],
   memo: "샘플 데이터입니다. 실제 항공편, 숙소, 예약 정보로 교체하세요.",
 };
 

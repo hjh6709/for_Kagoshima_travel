@@ -682,7 +682,7 @@ function App() {
 
               <section className="section-block">
                 <details className="date-details">
-                  <summary>임시 여행 날짜 조정</summary>
+                  <summary>여행 날짜 조정</summary>
                   <div className="date-form" aria-label="여행 날짜 변경">
                     <label>
                       출발
@@ -1199,7 +1199,7 @@ function OwnerApp({
                   </div>
                   <a className="primary-button" href="/">
                     <UserRound size={18} />
-                    부모님 화면 보기
+                    여행 화면 보기
                   </a>
                 </article>
 
