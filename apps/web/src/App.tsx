@@ -22,7 +22,15 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { ApiError, getCurrentUser, login, register, type AuthResponse } from "./api/auth";
-import { createShareLink, createTrip, listMyTrips, updateTrip, type OwnerTrip } from "./api/trips";
+import {
+  createShareLink,
+  createTrip,
+  getSharedTrip,
+  listMyTrips,
+  updateTrip,
+  type OwnerTrip,
+  type SharedTripResponse,
+} from "./api/trips";
 import {
   accommodation,
   checklist,
@@ -64,6 +72,10 @@ const scheduleTypeLabels: Record<ScheduleItem["type"], string> = {
   shopping: "쇼핑",
   etc: "기타",
 };
+
+function getScheduleTypeLabel(type: string) {
+  return scheduleTypeLabels[type as ScheduleItem["type"]] ?? "일정";
+}
 
 const placeCategoryLabels = {
   hotel: "숙소",
@@ -299,10 +311,17 @@ function toAbsoluteWebURL(path: string) {
   return new URL(path, window.location.origin).toString();
 }
 
+function getShareTokenFromPath(path: string) {
+  const match = path.match(/^\/share\/([^/]+)\/?$/);
+  return match ? decodeURIComponent(match[1]) : "";
+}
+
 function App() {
   const currentPath = window.location.pathname;
   const isLegacyOwnerRoute = currentPath === "/owner" || currentPath.startsWith("/owner/");
   const isManageRoute = currentPath === "/manage" || currentPath.startsWith("/manage/") || isLegacyOwnerRoute;
+  const shareToken = getShareTokenFromPath(currentPath);
+  const isShareRoute = shareToken.length > 0;
   const contentRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<Tab>("today");
   const [ownerAuth, setOwnerAuth] = useState<AuthResponse | null>(getSavedOwnerAuth);
@@ -334,6 +353,9 @@ function App() {
   const [shareLinkError, setShareLinkError] = useState("");
   const [shareLinkSubmitting, setShareLinkSubmitting] = useState(false);
   const [shareLinkCopied, setShareLinkCopied] = useState(false);
+  const [sharedTrip, setSharedTrip] = useState<SharedTripResponse | null>(null);
+  const [sharedTripError, setSharedTripError] = useState("");
+  const [sharedTripLoading, setSharedTripLoading] = useState(isShareRoute);
   const [tripDates, setTripDates] = useState<TripDates>(getSavedTripDates);
   const [selectedDate, setSelectedDate] = useState(schedules[0]?.date ?? trip.startDate);
   const [addressCopied, setAddressCopied] = useState(false);
@@ -404,6 +426,34 @@ function App() {
     contentRef.current?.scrollTo({ top: 0 });
     window.scrollTo({ top: 0 });
   }, [activeTab]);
+
+  useEffect(() => {
+    if (!shareToken) return;
+
+    let cancelled = false;
+    setSharedTripLoading(true);
+    setSharedTripError("");
+    setSharedTrip(null);
+    getSharedTrip(shareToken)
+      .then((response) => {
+        if (!cancelled) setSharedTrip(response);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        if (error instanceof ApiError && error.status === 404) {
+          setSharedTripError("공유 링크를 찾을 수 없습니다. 링크가 정확한지 확인해주세요.");
+          return;
+        }
+        setSharedTripError(error instanceof Error ? error.message : "공유 여행 정보를 불러오지 못했습니다.");
+      })
+      .finally(() => {
+        if (!cancelled) setSharedTripLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [shareToken]);
 
   useEffect(() => {
     if (!isLegacyOwnerRoute) return;
@@ -690,6 +740,10 @@ function App() {
     setOwnerTripsError("");
     setAuthPassword("");
     setAuthError("");
+  }
+
+  if (isShareRoute) {
+    return <SharedTripApp error={sharedTripError} loading={sharedTripLoading} sharedTrip={sharedTrip} />;
   }
 
   if (isManageRoute) {
@@ -1338,6 +1392,170 @@ function App() {
             );
           })}
         </nav>
+      </section>
+    </main>
+  );
+}
+
+type SharedTripAppProps = {
+  error: string;
+  loading: boolean;
+  sharedTrip: SharedTripResponse | null;
+};
+
+function SharedTripApp({ error, loading, sharedTrip }: SharedTripAppProps) {
+  const placeByID = useMemo(() => {
+    if (!sharedTrip) return new Map<string, SharedTripResponse["places"][number]>();
+    return new Map(sharedTrip.places.map((place) => [place.id, place]));
+  }, [sharedTrip]);
+
+  return (
+    <main className="app-shell">
+      <section className="phone-frame shared-frame">
+        <div className="content">
+          <section className="screen shared-screen">
+            <article className="hero-card shared-hero-card">
+              <span className="pill">읽기 전용 공유</span>
+              {loading && (
+                <>
+                  <h1>공유 여행을 불러오는 중</h1>
+                  <p className="muted">잠시만 기다려주세요.</p>
+                </>
+              )}
+
+              {!loading && error && (
+                <>
+                  <h1>공유 링크를 확인하지 못했습니다</h1>
+                  <p className="form-error">{error}</p>
+                </>
+              )}
+
+              {!loading && !error && sharedTrip && (
+                <>
+                  <h1>{sharedTrip.trip.title}</h1>
+                  <p className="trip-dates">
+                    {formatKoreanDate(sharedTrip.trip.startDate)} ~ {formatKoreanDate(sharedTrip.trip.endDate)}
+                  </p>
+                  <p className="muted">
+                    {sharedTrip.trip.travelers.length > 0
+                      ? `${sharedTrip.trip.travelers.join(", ")}와 공유된 여행입니다.`
+                      : "공유된 여행 정보입니다."}
+                  </p>
+                </>
+              )}
+            </article>
+
+            {!loading && !error && sharedTrip && (
+              <>
+                <section className="section-block">
+                  <div className="section-title-row">
+                    <div>
+                      <h2>일정</h2>
+                      <p className="section-caption">여행 관리자가 공유한 최신 일정입니다.</p>
+                    </div>
+                    <span className="pill subtle">{sharedTrip.schedules.length}개</span>
+                  </div>
+
+                  {sharedTrip.schedules.length === 0 ? (
+                    <article className="empty-state-card list-card">
+                      <p className="muted">공유된 일정이 없습니다.</p>
+                    </article>
+                  ) : (
+                    <div className="card-stack">
+                      {sharedTrip.schedules.map((schedule) => {
+                        const place = placeByID.get(schedule.placeId ?? "");
+                        return (
+                          <article className="schedule-card shared-schedule-card" key={schedule.id}>
+                            <div className="schedule-time">
+                              <span>{formatShortDate(schedule.date)}</span>
+                              <strong>{schedule.time || "시간 미정"}</strong>
+                            </div>
+                            <div className="schedule-content">
+                              <div className="schedule-meta">
+                                <span className="pill subtle">{getScheduleTypeLabel(schedule.type)}</span>
+                                {place && <span className="place-label">{place.name}</span>}
+                              </div>
+                              <h2>{schedule.title}</h2>
+                              {schedule.transportMemo && <p>{schedule.transportMemo}</p>}
+                              {schedule.guideMemo && <p className="muted">{schedule.guideMemo}</p>}
+                            </div>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  )}
+                </section>
+
+                <section className="section-block">
+                  <div className="section-title-row">
+                    <div>
+                      <h2>장소</h2>
+                      <p className="section-caption">지도 링크가 있으면 외부 지도 앱으로 열 수 있습니다.</p>
+                    </div>
+                    <span className="pill subtle">{sharedTrip.places.length}개</span>
+                  </div>
+
+                  {sharedTrip.places.length === 0 ? (
+                    <article className="empty-state-card list-card">
+                      <p className="muted">공유된 장소가 없습니다.</p>
+                    </article>
+                  ) : (
+                    <div className="card-stack">
+                      {sharedTrip.places.map((place) => (
+                        <article className="place-card shared-place-card" key={place.id}>
+                          <div>
+                            <span className="pill subtle">{place.category}</span>
+                            <h2>{place.name}</h2>
+                            {place.address && <p className="muted">{place.address}</p>}
+                            {place.recommendedReason && <p>{place.recommendedReason}</p>}
+                          </div>
+                          {place.googleMapsUrl && (
+                            <a
+                              className="secondary-button compact-button"
+                              href={place.googleMapsUrl}
+                              rel="noreferrer"
+                              target="_blank"
+                            >
+                              <ExternalLink size={16} />
+                              지도 열기
+                            </a>
+                          )}
+                        </article>
+                      ))}
+                    </div>
+                  )}
+                </section>
+
+                <section className="section-block">
+                  <div className="section-title-row">
+                    <div>
+                      <h2>추천 루트</h2>
+                      <p className="section-caption">공유된 이동 흐름과 참고 메모입니다.</p>
+                    </div>
+                    <span className="pill subtle">{sharedTrip.routes.length}개</span>
+                  </div>
+
+                  {sharedTrip.routes.length === 0 ? (
+                    <article className="empty-state-card list-card">
+                      <p className="muted">공유된 추천 루트가 없습니다.</p>
+                    </article>
+                  ) : (
+                    <div className="card-stack">
+                      {sharedTrip.routes.map((route) => (
+                        <article className="info-card shared-route-card" key={route.id}>
+                          <h2>{route.title}</h2>
+                          {route.description && <p>{route.description}</p>}
+                          {route.transportMemo && <p className="muted">{route.transportMemo}</p>}
+                          {route.estimatedDuration && <span className="pill subtle">{route.estimatedDuration}</span>}
+                        </article>
+                      ))}
+                    </div>
+                  )}
+                </section>
+              </>
+            )}
+          </section>
+        </div>
       </section>
     </main>
   );

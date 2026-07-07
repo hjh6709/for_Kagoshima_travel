@@ -400,6 +400,14 @@ p {
   border-top: 5px solid var(--c-green);
 }
 
+.shared-hero-card {
+  margin-top: 0;
+}
+
+.shared-screen {
+  padding-bottom: 28px;
+}
+
 .pill {
   display: inline-flex;
   align-items: center;
@@ -671,6 +679,16 @@ p {
   display: grid;
   gap: 8px;
   padding: 24px;
+}
+
+.shared-place-card,
+.shared-route-card {
+  gap: 12px;
+  padding: 22px;
+}
+
+.shared-schedule-card {
+  border-left: 5px solid var(--c-green);
 }
 
 .card-footer {
