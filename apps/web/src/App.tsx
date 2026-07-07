@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { ApiError, getCurrentUser, login, register, type AuthResponse } from "./api/auth";
-import { createTrip, listMyTrips, updateTrip, type OwnerTrip } from "./api/trips";
+import { createShareLink, createTrip, listMyTrips, updateTrip, type OwnerTrip } from "./api/trips";
 import {
   accommodation,
   checklist,
@@ -295,6 +295,10 @@ function getOrderedSchedulesForDate(date: string, orderByDate: ScheduleOrderByDa
   });
 }
 
+function toAbsoluteWebURL(path: string) {
+  return new URL(path, window.location.origin).toString();
+}
+
 function App() {
   const currentPath = window.location.pathname;
   const isLegacyOwnerRoute = currentPath === "/owner" || currentPath.startsWith("/owner/");
@@ -326,6 +330,10 @@ function App() {
   const [tripEditMemo, setTripEditMemo] = useState("");
   const [tripEditError, setTripEditError] = useState("");
   const [tripEditSubmitting, setTripEditSubmitting] = useState(false);
+  const [shareLinksByTripID, setShareLinksByTripID] = useState<Record<string, string>>({});
+  const [shareLinkError, setShareLinkError] = useState("");
+  const [shareLinkSubmitting, setShareLinkSubmitting] = useState(false);
+  const [shareLinkCopied, setShareLinkCopied] = useState(false);
   const [tripDates, setTripDates] = useState<TripDates>(getSavedTripDates);
   const [selectedDate, setSelectedDate] = useState(schedules[0]?.date ?? trip.startDate);
   const [addressCopied, setAddressCopied] = useState(false);
@@ -493,6 +501,8 @@ function App() {
     setTripEditTravelers(selectedOwnerTrip.travelers.join(", "));
     setTripEditMemo(selectedOwnerTrip.memo ?? "");
     setTripEditError("");
+    setShareLinkError("");
+    setShareLinkCopied(false);
   }, [selectedOwnerTrip]);
 
   async function submitAuth(event: FormEvent<HTMLFormElement>) {
@@ -619,11 +629,64 @@ function App() {
     }
   }
 
+  async function createSelectedTripShareLink() {
+    if (!ownerAuth || !selectedOwnerTrip) return;
+
+    setShareLinkError("");
+    setShareLinkCopied(false);
+    setShareLinkSubmitting(true);
+    try {
+      const link = await createShareLink(ownerAuth.accessToken, selectedOwnerTrip.id);
+      setShareLinksByTripID((currentLinks) => ({
+        ...currentLinks,
+        [selectedOwnerTrip.id]: toAbsoluteWebURL(link.webPath),
+      }));
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        window.localStorage.removeItem(ownerAuthStorageKey);
+        setOwnerAuth(null);
+        setOwnerTrips([]);
+        setSelectedOwnerTripID(null);
+        setShareLinkError("");
+        return;
+      }
+      setShareLinkError(error instanceof Error ? error.message : "공유 링크를 만들지 못했습니다.");
+    } finally {
+      setShareLinkSubmitting(false);
+    }
+  }
+
+  function copySelectedTripShareLink() {
+    if (!selectedOwnerTrip) return;
+
+    const shareLink = shareLinksByTripID[selectedOwnerTrip.id];
+    if (!shareLink) return;
+    if (!navigator.clipboard?.writeText) {
+      setShareLinkCopied(false);
+      setShareLinkError("이 브라우저에서는 자동 복사를 지원하지 않습니다. 링크를 직접 선택해 복사해주세요.");
+      return;
+    }
+
+    navigator.clipboard
+      .writeText(shareLink)
+      .then(() => {
+        setShareLinkError("");
+        setShareLinkCopied(true);
+      })
+      .catch(() => {
+        setShareLinkCopied(false);
+        setShareLinkError("자동 복사에 실패했습니다. 링크를 직접 선택해 복사해주세요.");
+      });
+  }
+
   function logoutOwner() {
     window.localStorage.removeItem(ownerAuthStorageKey);
     setOwnerAuth(null);
     setOwnerTrips([]);
     setSelectedOwnerTripID(null);
+    setShareLinksByTripID({});
+    setShareLinkError("");
+    setShareLinkCopied(false);
     setOwnerTripsError("");
     setAuthPassword("");
     setAuthError("");
@@ -643,11 +706,15 @@ function App() {
         ownerTripsError={ownerTripsError}
         ownerTripsLoading={ownerTripsLoading}
         selectedOwnerTrip={selectedOwnerTrip}
+        selectedShareLink={selectedOwnerTrip ? (shareLinksByTripID[selectedOwnerTrip.id] ?? "") : ""}
         newTripEndDate={newTripEndDate}
         newTripMemo={newTripMemo}
         newTripStartDate={newTripStartDate}
         newTripTitle={newTripTitle}
         newTripTravelers={newTripTravelers}
+        shareLinkCopied={shareLinkCopied}
+        shareLinkError={shareLinkError}
+        shareLinkSubmitting={shareLinkSubmitting}
         tripCreateError={tripCreateError}
         tripCreateSubmitting={tripCreateSubmitting}
         tripEditEndDate={tripEditEndDate}
@@ -674,6 +741,8 @@ function App() {
         onNewTripTitleChange={setNewTripTitle}
         onNewTripTravelersChange={setNewTripTravelers}
         onCloseOwnerTripDetail={() => setSelectedOwnerTripID(null)}
+        onCopyShareLink={copySelectedTripShareLink}
+        onCreateShareLink={createSelectedTripShareLink}
         onTripEditEndDateChange={setTripEditEndDate}
         onTripEditMemoChange={setTripEditMemo}
         onTripEditStartDateChange={(value) => {
@@ -1291,6 +1360,10 @@ type TripManageAppProps = {
   ownerTripsError: string;
   ownerTripsLoading: boolean;
   selectedOwnerTrip: OwnerTrip | null;
+  selectedShareLink: string;
+  shareLinkCopied: boolean;
+  shareLinkError: string;
+  shareLinkSubmitting: boolean;
   tripCreateError: string;
   tripCreateSubmitting: boolean;
   tripEditEndDate: string;
@@ -1309,6 +1382,8 @@ type TripManageAppProps = {
   onNewTripTitleChange: (value: string) => void;
   onNewTripTravelersChange: (value: string) => void;
   onCloseOwnerTripDetail: () => void;
+  onCopyShareLink: () => void;
+  onCreateShareLink: () => void;
   onTripEditEndDateChange: (value: string) => void;
   onTripEditMemoChange: (value: string) => void;
   onTripEditStartDateChange: (value: string) => void;
@@ -1338,6 +1413,10 @@ function TripManageApp({
   ownerTripsError,
   ownerTripsLoading,
   selectedOwnerTrip,
+  selectedShareLink,
+  shareLinkCopied,
+  shareLinkError,
+  shareLinkSubmitting,
   tripCreateError,
   tripCreateSubmitting,
   tripEditEndDate,
@@ -1356,6 +1435,8 @@ function TripManageApp({
   onNewTripTitleChange,
   onNewTripTravelersChange,
   onCloseOwnerTripDetail,
+  onCopyShareLink,
+  onCreateShareLink,
   onTripEditEndDateChange,
   onTripEditMemoChange,
   onTripEditStartDateChange,
@@ -1572,11 +1653,47 @@ function TripManageApp({
                           <MapPin size={18} />
                           장소 편집 준비 중
                         </button>
-                        <button className="quick-button" disabled type="button">
+                        <button
+                          className="quick-button"
+                          disabled={shareLinkSubmitting}
+                          onClick={onCreateShareLink}
+                          type="button"
+                        >
                           <Copy size={18} />
-                          읽기 전용 공유 링크 준비 중
+                          {shareLinkSubmitting
+                            ? "공유 링크 만드는 중"
+                            : selectedShareLink
+                              ? "새 공유 링크 만들기"
+                              : "읽기 전용 공유 링크 만들기"}
                         </button>
                       </div>
+
+                      {selectedShareLink && (
+                        <div className="share-link-panel">
+                          <label>
+                            공유 링크
+                            <input readOnly value={selectedShareLink} />
+                          </label>
+                          <div className="share-link-actions">
+                            <button className="secondary-button compact-button" onClick={onCopyShareLink} type="button">
+                              <Copy size={16} />
+                              링크 복사
+                            </button>
+                            <a
+                              className="secondary-button compact-button"
+                              href={selectedShareLink}
+                              rel="noreferrer"
+                              target="_blank"
+                            >
+                              <ExternalLink size={16} />
+                              열기
+                            </a>
+                          </div>
+                        </div>
+                      )}
+
+                      {shareLinkCopied && <p className="form-success">공유 링크를 복사했습니다.</p>}
+                      {shareLinkError && <p className="form-error">{shareLinkError}</p>}
                     </article>
                   </section>
                 )}

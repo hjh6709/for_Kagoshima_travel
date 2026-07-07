@@ -226,6 +226,16 @@ button:disabled {
   padding: 10px 12px;
 }
 
+.form-success {
+  margin: 0;
+  border-radius: 8px;
+  background: var(--c-green-light);
+  color: var(--c-green);
+  font-size: 14px;
+  font-weight: 800;
+  padding: 10px 12px;
+}
+
 .owner-frame {
   grid-template-rows: 1fr;
 }
@@ -282,6 +292,41 @@ button:disabled {
 .owner-action-grid {
   display: grid;
   gap: 10px;
+}
+
+.share-link-panel {
+  display: grid;
+  gap: 10px;
+  border-radius: 12px;
+  background: var(--c-green-light);
+  padding: 14px;
+}
+
+.share-link-panel label {
+  display: grid;
+  gap: 6px;
+  color: var(--c-muted);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.share-link-panel input {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid rgba(36, 48, 47, 0.12);
+  border-radius: 10px;
+  background: var(--c-surface);
+  color: var(--c-text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 8px 10px;
+}
+
+.share-link-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
 }
 
 .owner-trip-card h2,
