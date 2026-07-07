@@ -359,7 +359,7 @@ curl https://api.hjh-dev.site/healthz
 
 브라우저 CORS 점검:
 
-1. `https://kagoshima.hjh-dev.site/owner` 접속
+1. `https://kagoshima.hjh-dev.site/manage` 접속
 2. 회원가입 또는 로그인 시도
 3. Network 탭에서 API 요청이 `https://api.hjh-dev.site`로 나가는지 확인
 4. CORS 에러가 있으면 `ALLOWED_ORIGINS`와 API 재시작 여부 확인
