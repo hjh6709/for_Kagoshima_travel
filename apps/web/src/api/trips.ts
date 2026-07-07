@@ -26,6 +26,50 @@ export type ShareLinkResponse = {
   expiresAt?: string;
 };
 
+export type PublicTrip = {
+  id: string;
+  title: string;
+  startDate: string;
+  endDate: string;
+  travelers: string[];
+};
+
+export type SharedSchedule = {
+  id: string;
+  placeId?: string;
+  date: string;
+  time: string;
+  type: string;
+  title: string;
+  transportMemo?: string;
+  guideMemo?: string;
+};
+
+export type SharedPlace = {
+  id: string;
+  name: string;
+  category: string;
+  address?: string;
+  googleMapsUrl?: string;
+  recommendedReason?: string;
+};
+
+export type SharedRoute = {
+  id: string;
+  title: string;
+  description?: string;
+  placeIds: string[];
+  transportMemo?: string;
+  estimatedDuration?: string;
+};
+
+export type SharedTripResponse = {
+  trip: PublicTrip;
+  schedules: SharedSchedule[];
+  places: SharedPlace[];
+  routes: SharedRoute[];
+};
+
 export function listMyTrips(accessToken: string) {
   return apiRequest<OwnerTrip[]>("/api/trips", {
     headers: {
@@ -61,4 +105,8 @@ export function createShareLink(accessToken: string, tripID: string) {
       Authorization: `Bearer ${accessToken}`,
     },
   });
+}
+
+export function getSharedTrip(token: string) {
+  return apiRequest<SharedTripResponse>(`/api/share/${encodeURIComponent(token)}`);
 }
