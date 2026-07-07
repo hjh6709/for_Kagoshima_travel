@@ -22,6 +22,7 @@ type TripRepository interface {
 	Save(trip model.Trip) error
 	SaveShareLink(link model.ShareLink) error
 	SaveSchedule(schedule model.Schedule) error
+	SavePlace(place model.Place) error
 	Update(trip model.Trip) error
 	Delete(id string) error
 }
@@ -194,6 +195,13 @@ func (r *MemoryTripRepository) SaveSchedule(schedule model.Schedule) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.schedules = append(r.schedules, schedule)
+	return nil
+}
+
+func (r *MemoryTripRepository) SavePlace(place model.Place) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.places = append(r.places, place)
 	return nil
 }
 

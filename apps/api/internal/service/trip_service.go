@@ -155,6 +155,32 @@ func (s *TripService) CreateSchedule(tripID, ownerID string, req dto.CreateSched
 	return mapScheduleResponse(schedule), nil
 }
 
+func (s *TripService) CreatePlace(tripID, ownerID string, req dto.CreatePlaceRequest) (dto.PlaceResponse, error) {
+	if err := s.ensureTripOwner(tripID, ownerID); err != nil {
+		return dto.PlaceResponse{}, err
+	}
+	if req.Name == "" || req.Category == "" {
+		return dto.PlaceResponse{}, ErrInvalidTrip
+	}
+	id, err := newID()
+	if err != nil {
+		return dto.PlaceResponse{}, err
+	}
+	place := model.Place{
+		ID:                id,
+		TripID:            tripID,
+		Name:              req.Name,
+		Category:          req.Category,
+		Address:           req.Address,
+		GoogleMapsURL:     req.GoogleMapsURL,
+		RecommendedReason: req.RecommendedReason,
+	}
+	if err := s.tripRepository.SavePlace(place); err != nil {
+		return dto.PlaceResponse{}, err
+	}
+	return mapPlaceResponse(place), nil
+}
+
 func (s *TripService) ListPlaces(tripID string) ([]dto.PlaceResponse, error) {
 	places, err := s.tripRepository.FindPlaces(tripID)
 	if err != nil {

@@ -26,6 +26,14 @@ type CreateScheduleRequest struct {
 	GuideMemo     string `json:"guideMemo"`
 }
 
+type CreatePlaceRequest struct {
+	Name              string `json:"name"`
+	Category          string `json:"category"`
+	Address           string `json:"address"`
+	GoogleMapsURL     string `json:"googleMapsUrl"`
+	RecommendedReason string `json:"recommendedReason"`
+}
+
 type TripResponse struct {
 	ID        string   `json:"id"`
 	Title     string   `json:"title"`
