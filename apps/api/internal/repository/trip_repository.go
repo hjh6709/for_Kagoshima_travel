@@ -21,6 +21,7 @@ type TripRepository interface {
 	FindRoutes(tripID string) ([]model.Route, error)
 	Save(trip model.Trip) error
 	SaveShareLink(link model.ShareLink) error
+	SaveSchedule(schedule model.Schedule) error
 	Update(trip model.Trip) error
 	Delete(id string) error
 }
@@ -186,6 +187,13 @@ func (r *MemoryTripRepository) SaveShareLink(link model.ShareLink) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.shares = append(r.shares, link)
+	return nil
+}
+
+func (r *MemoryTripRepository) SaveSchedule(schedule model.Schedule) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.schedules = append(r.schedules, schedule)
 	return nil
 }
 

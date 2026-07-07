@@ -16,6 +16,16 @@ type UpdateTripRequest struct {
 	Memo      *string  `json:"memo"`
 }
 
+type CreateScheduleRequest struct {
+	PlaceID       string `json:"placeId"`
+	Date          string `json:"date"`
+	Time          string `json:"time"`
+	Type          string `json:"type"`
+	Title         string `json:"title"`
+	TransportMemo string `json:"transportMemo"`
+	GuideMemo     string `json:"guideMemo"`
+}
+
 type TripResponse struct {
 	ID        string   `json:"id"`
 	Title     string   `json:"title"`

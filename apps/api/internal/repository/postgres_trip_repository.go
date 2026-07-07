@@ -81,6 +81,19 @@ func (r *PostgresTripRepository) SaveShareLink(link model.ShareLink) error {
 	return err
 }
 
+func (r *PostgresTripRepository) SaveSchedule(schedule model.Schedule) error {
+	var placeID any
+	if schedule.PlaceID != "" {
+		placeID = schedule.PlaceID
+	}
+	_, err := r.pool.Exec(context.Background(),
+		`INSERT INTO schedules (id, trip_id, place_id, date, time, type, title, transport_memo, guide_memo)
+		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+		schedule.ID, schedule.TripID, placeID, schedule.Date, schedule.Time, schedule.Type, schedule.Title,
+		schedule.TransportMemo, schedule.GuideMemo)
+	return err
+}
+
 func (r *PostgresTripRepository) Update(trip model.Trip) error {
 	tag, err := r.pool.Exec(context.Background(),
 		`UPDATE trips SET title=$1, start_date=$2, end_date=$3, travelers=$4, memo=$5, updated_at=NOW() WHERE id=$6`,

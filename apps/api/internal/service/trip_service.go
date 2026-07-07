@@ -127,6 +127,34 @@ func (s *TripService) ListSchedulesForOwner(tripID, ownerID string) ([]dto.Sched
 	return s.ListSchedules(tripID)
 }
 
+func (s *TripService) CreateSchedule(tripID, ownerID string, req dto.CreateScheduleRequest) (dto.ScheduleResponse, error) {
+	if err := s.ensureTripOwner(tripID, ownerID); err != nil {
+		return dto.ScheduleResponse{}, err
+	}
+	if req.Date == "" || req.Time == "" || req.Type == "" || req.Title == "" {
+		return dto.ScheduleResponse{}, ErrInvalidTrip
+	}
+	id, err := newID()
+	if err != nil {
+		return dto.ScheduleResponse{}, err
+	}
+	schedule := model.Schedule{
+		ID:            id,
+		TripID:        tripID,
+		PlaceID:       req.PlaceID,
+		Date:          req.Date,
+		Time:          req.Time,
+		Type:          req.Type,
+		Title:         req.Title,
+		TransportMemo: req.TransportMemo,
+		GuideMemo:     req.GuideMemo,
+	}
+	if err := s.tripRepository.SaveSchedule(schedule); err != nil {
+		return dto.ScheduleResponse{}, err
+	}
+	return mapScheduleResponse(schedule), nil
+}
+
 func (s *TripService) ListPlaces(tripID string) ([]dto.PlaceResponse, error) {
 	places, err := s.tripRepository.FindPlaces(tripID)
 	if err != nil {
