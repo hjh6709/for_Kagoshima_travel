@@ -45,6 +45,7 @@ type ChecklistCategory = ChecklistItem["category"];
 type CustomChecklistItem = ChecklistItem & { custom: true };
 type ScheduleOrderByDate = Record<string, string[]>;
 type AuthMode = "login" | "register";
+type TravelPhase = "before" | "during" | "after";
 
 const tabs: Array<{ id: Tab; label: string; icon: typeof Home }> = [
   { id: "today", label: "오늘", icon: Home },
@@ -147,6 +148,52 @@ function shiftDate(baseDate: string, offset: number): string {
   const month = `${date.getMonth() + 1}`.padStart(2, "0");
   const day = `${date.getDate()}`.padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+function getTodayDateString(): string {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getDate()}`.padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function clampDate(date: string, startDate: string, endDate: string): string {
+  if (date < startDate) return startDate;
+  if (date > endDate) return endDate;
+  return date;
+}
+
+function getTravelPhase(today: string, dates: TripDates): TravelPhase {
+  if (today < dates.startDate) return "before";
+  if (today > dates.endDate) return "after";
+  return "during";
+}
+
+function getTravelStatus(today: string, dates: TripDates): { phase: TravelPhase; label: string; description: string } {
+  const phase = getTravelPhase(today, dates);
+  if (phase === "before") {
+    const daysLeft = Math.max(getDateOffset(today, dates.startDate), 0);
+    return {
+      phase,
+      label: daysLeft === 0 ? "오늘 출발" : `출발 D-${daysLeft}`,
+      description: "출발 전 준비물과 항공편을 먼저 확인하세요.",
+    };
+  }
+  if (phase === "after") {
+    return {
+      phase,
+      label: "여행 완료",
+      description: "귀국 후 짐과 분실물을 한 번 더 확인하세요.",
+    };
+  }
+
+  const dayNumber = getDateOffset(dates.startDate, today) + 1;
+  return {
+    phase,
+    label: `여행 ${dayNumber}일차`,
+    description: "오늘 일정과 다음 이동만 확인하면 됩니다.",
+  };
 }
 
 function isDateValue(value: unknown): value is string {
@@ -286,13 +333,32 @@ function App() {
     () => getOrderedSchedulesForDate(selectedDate, scheduleOrderByDate),
     [selectedDate, scheduleOrderByDate]
   );
-  const nextSchedule = schedules[0];
   const completedScheduleCount = selectedSchedules.filter((item) => completedSchedules[item.id]).length;
   const allChecklist = useMemo(
     () => [...checklist.filter((item) => !hiddenChecklistIDs.includes(item.id)), ...customChecklistItems],
     [customChecklistItems, hiddenChecklistIDs]
   );
   const completedCount = allChecklist.filter((item) => checkedItems[item.id]).length;
+  const today = getTodayDateString();
+  const travelStatus = getTravelStatus(today, tripDates);
+  const displayFocusDate = clampDate(today, tripDates.startDate, tripDates.endDate);
+  const focusDateOffset = getDateOffset(tripDates.startDate, displayFocusDate);
+  const focusScheduleDate = shiftDate(trip.startDate, focusDateOffset);
+  const focusSchedules = useMemo(
+    () => getOrderedSchedulesForDate(focusScheduleDate, scheduleOrderByDate),
+    [focusScheduleDate, scheduleOrderByDate]
+  );
+  const nextSchedule =
+    focusSchedules.find((item) => !completedSchedules[item.id]) ??
+    schedules.find((item) => !completedSchedules[item.id]) ??
+    schedules[0];
+  const focusCompletedScheduleCount = focusSchedules.filter((item) => completedSchedules[item.id]).length;
+  const homeChecklistCategories: ChecklistCategory[] =
+    travelStatus.phase === "before" ? ["before", "airport"] : travelStatus.phase === "during" ? ["daily"] : ["return"];
+  const homeChecklistItems = allChecklist
+    .filter((item) => homeChecklistCategories.includes(item.category))
+    .slice(0, 4);
+  const homeChecklistCompletedCount = homeChecklistItems.filter((item) => checkedItems[item.id]).length;
   const groupedChecklist = useMemo(
     () =>
       checklistCategories
@@ -540,28 +606,15 @@ function App() {
           {activeTab === "today" && (
             <section className="screen">
               <div className="trip-header">
-                <span className="eyebrow">가족 여행</span>
+                <span className="eyebrow">공유 여행 일정</span>
+                <h1>{trip.title}</h1>
                 <p className="trip-dates">
                   {formatKoreanDate(tripDates.startDate)} ~ {formatKoreanDate(tripDates.endDate)}
                 </p>
-                <div className="date-form" aria-label="여행 날짜 변경">
-                  <label>
-                    출발
-                    <input
-                      type="date"
-                      value={tripDates.startDate}
-                      onChange={(event) => updateTripDate("startDate", event.target.value)}
-                    />
-                  </label>
-                  <label>
-                    귀국
-                    <input
-                      type="date"
-                      value={tripDates.endDate}
-                      onChange={(event) => updateTripDate("endDate", event.target.value)}
-                    />
-                  </label>
-                </div>
+                <article className={`status-card ${travelStatus.phase}`}>
+                  <span>{travelStatus.label}</span>
+                  <p>{travelStatus.description}</p>
+                </article>
               </div>
 
               <article className="hero-card">
@@ -584,6 +637,34 @@ function App() {
                 </a>
               </article>
 
+              <section className="section-block">
+                <div className="section-title-row">
+                  <div>
+                    <h2>오늘 확인</h2>
+                    <p className="section-caption">
+                      일정 {focusSchedules.length}개 중 {focusCompletedScheduleCount}개 완료 · 체크{" "}
+                      {homeChecklistItems.length}개 중 {homeChecklistCompletedCount}개 완료
+                    </p>
+                  </div>
+                  <button className="secondary-button compact-button" onClick={() => setActiveTab("schedule")} type="button">
+                    전체 보기
+                  </button>
+                </div>
+
+                <div className="home-checklist-card">
+                  {homeChecklistItems.length > 0 ? (
+                    homeChecklistItems.map((item) => (
+                      <button className="home-check-item" key={item.id} onClick={() => toggleCheck(item.id)} type="button">
+                        <CheckCircle2 className={checkedItems[item.id] ? "checked" : ""} size={22} />
+                        <span>{item.title}</span>
+                      </button>
+                    ))
+                  ) : (
+                    <p className="muted">오늘 확인할 체크리스트가 없습니다.</p>
+                  )}
+                </div>
+              </section>
+
               <div className="grid-two">
                 <button className="quick-button" onClick={() => setActiveTab("schedule")}>
                   <CalendarDays size={22} />
@@ -598,6 +679,30 @@ function App() {
                   긴급 연락
                 </button>
               </div>
+
+              <section className="section-block">
+                <details className="date-details">
+                  <summary>임시 여행 날짜 조정</summary>
+                  <div className="date-form" aria-label="여행 날짜 변경">
+                    <label>
+                      출발
+                      <input
+                        type="date"
+                        value={tripDates.startDate}
+                        onChange={(event) => updateTripDate("startDate", event.target.value)}
+                      />
+                    </label>
+                    <label>
+                      귀국
+                      <input
+                        type="date"
+                        value={tripDates.endDate}
+                        onChange={(event) => updateTripDate("endDate", event.target.value)}
+                      />
+                    </label>
+                  </div>
+                </details>
+              </section>
 
               <section className="section-block">
                 <h2>추천 루트</h2>

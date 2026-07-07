@@ -83,6 +83,34 @@ button:disabled {
   font-weight: 700;
 }
 
+.status-card {
+  display: grid;
+  gap: 4px;
+  margin-top: 14px;
+  padding: 16px;
+  border-radius: 10px;
+  background: var(--c-green);
+  color: #ffffff;
+}
+
+.status-card.before,
+.status-card.after {
+  background: var(--c-gold);
+}
+
+.status-card span {
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.status-card p {
+  margin-bottom: 0;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 14px;
+  font-weight: 700;
+}
+
 .date-form {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -343,6 +371,14 @@ p {
   margin-bottom: 0;
 }
 
+.section-caption {
+  margin: 4px 0 0;
+  color: var(--c-muted);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
 .card-stack {
   display: grid;
   gap: 12px;
@@ -567,6 +603,48 @@ p {
   margin-left: auto;
 }
 
+.home-checklist-card {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid rgba(36, 48, 47, 0.1);
+  border-radius: 10px;
+  background: var(--c-surface);
+  box-shadow: 0 10px 26px rgba(28, 50, 37, 0.08);
+}
+
+.home-checklist-card p {
+  margin: 0;
+  padding: 10px;
+}
+
+.home-check-item {
+  min-height: 50px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--c-bg);
+  color: var(--c-text);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 900;
+}
+
+.date-details {
+  border: 1px solid rgba(36, 48, 47, 0.1);
+  border-radius: 10px;
+  background: var(--c-surface);
+  padding: 14px 16px;
+}
+
+.date-details summary {
+  cursor: pointer;
+  color: var(--c-muted);
+  font-weight: 900;
+}
+
 .info-card,
 .emergency-card {
   padding: 24px;
@@ -766,6 +844,7 @@ p {
 .primary-button:active,
 .secondary-button:active,
 .quick-button:active,
+.home-check-item:active,
 .check-toggle:active,
 .icon-button:active {
   transform: scale(0.97);
