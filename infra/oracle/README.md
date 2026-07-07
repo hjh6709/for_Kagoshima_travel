@@ -115,6 +115,26 @@ scp -i ~/.ssh/oracle_travel_api /tmp/travel-api-linux-arm64 opc@<ORACLE_VM_PUBLI
 sudo bash infra/oracle/deploy-api.sh /tmp/travel-api
 ```
 
+## Caddy reverse proxy 설정
+
+API 도메인을 Go API 내부 포트로 프록시합니다.
+
+```bash
+sudo TRAVEL_API_DOMAIN=api.hjh-dev.site \
+  TRAVEL_API_UPSTREAM=127.0.0.1:8080 \
+  bash infra/oracle/configure-caddy.sh
+```
+
+스크립트가 수행하는 작업:
+
+- `/etc/caddy/Caddyfile`에 `conf.d` import 보장
+- `/etc/caddy/conf.d/travel-api.caddy` 작성
+- 기존 Caddyfile 또는 API snippet 백업
+- `caddy validate` 실행
+- Caddy reload 또는 enable/start
+
+예시 Caddyfile은 `infra/oracle/caddy/Caddyfile.example`에 있습니다.
+
 ## PostgreSQL 백업
 
 백업 스크립트는 `DATABASE_URL` 환경변수를 읽어 `pg_dump`를 실행합니다.
