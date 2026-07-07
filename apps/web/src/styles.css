@@ -237,6 +237,39 @@ button:disabled {
   padding: 22px;
 }
 
+.owner-trip-detail-card {
+  background: var(--c-surface);
+  border: 1px solid rgba(36, 48, 47, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 14px 30px rgba(28, 50, 37, 0.1);
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+}
+
+.owner-detail-section {
+  border-top: 1px solid rgba(36, 48, 47, 0.08);
+  padding-top: 22px;
+}
+
+.detail-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.muted-label {
+  color: var(--c-muted);
+  display: block;
+  font-size: 12px;
+  font-weight: 900;
+  margin-bottom: 4px;
+}
+
+.owner-action-grid {
+  display: grid;
+  gap: 10px;
+}
+
 .owner-trip-card h2,
 .empty-state-card h2 {
   margin-top: 10px;

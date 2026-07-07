@@ -309,6 +309,7 @@ function App() {
   const [ownerTrips, setOwnerTrips] = useState<OwnerTrip[]>([]);
   const [ownerTripsError, setOwnerTripsError] = useState("");
   const [ownerTripsLoading, setOwnerTripsLoading] = useState(false);
+  const [selectedOwnerTripID, setSelectedOwnerTripID] = useState<string | null>(null);
   const [newTripTitle, setNewTripTitle] = useState("");
   const [newTripStartDate, setNewTripStartDate] = useState("");
   const [newTripEndDate, setNewTripEndDate] = useState("");
@@ -376,6 +377,10 @@ function App() {
         }))
         .filter((group) => group.items.length > 0),
     [allChecklist]
+  );
+  const selectedOwnerTrip = useMemo(
+    () => ownerTrips.find((ownerTrip) => ownerTrip.id === selectedOwnerTripID) ?? null,
+    [ownerTrips, selectedOwnerTripID]
   );
 
   useEffect(() => {
@@ -448,6 +453,13 @@ function App() {
     };
   }, [isOwnerRoute, ownerAuth]);
 
+  useEffect(() => {
+    if (!selectedOwnerTripID) return;
+    if (ownerTrips.length > 0 && ownerTrips.every((ownerTrip) => ownerTrip.id !== selectedOwnerTripID)) {
+      setSelectedOwnerTripID(null);
+    }
+  }, [ownerTrips, selectedOwnerTripID]);
+
   async function submitAuth(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setAuthError("");
@@ -499,6 +511,7 @@ function App() {
         memo: memo || undefined,
       });
       setOwnerTrips((currentTrips) => [createdTrip, ...currentTrips.filter((item) => item.id !== createdTrip.id)]);
+      setSelectedOwnerTripID(createdTrip.id);
       setNewTripTitle("");
       setNewTripStartDate("");
       setNewTripEndDate("");
@@ -523,6 +536,7 @@ function App() {
     window.localStorage.removeItem(ownerAuthStorageKey);
     setOwnerAuth(null);
     setOwnerTrips([]);
+    setSelectedOwnerTripID(null);
     setOwnerTripsError("");
     setAuthPassword("");
     setAuthError("");
@@ -541,6 +555,7 @@ function App() {
         ownerTrips={ownerTrips}
         ownerTripsError={ownerTripsError}
         ownerTripsLoading={ownerTripsLoading}
+        selectedOwnerTrip={selectedOwnerTrip}
         newTripEndDate={newTripEndDate}
         newTripMemo={newTripMemo}
         newTripStartDate={newTripStartDate}
@@ -564,7 +579,9 @@ function App() {
         }}
         onNewTripTitleChange={setNewTripTitle}
         onNewTripTravelersChange={setNewTripTravelers}
+        onCloseOwnerTripDetail={() => setSelectedOwnerTripID(null)}
         onLogout={logoutOwner}
+        onSelectOwnerTrip={setSelectedOwnerTripID}
         onSubmitAuth={submitAuth}
         onSubmitNewTrip={submitNewTrip}
       />
@@ -1168,6 +1185,7 @@ type OwnerAppProps = {
   ownerTrips: OwnerTrip[];
   ownerTripsError: string;
   ownerTripsLoading: boolean;
+  selectedOwnerTrip: OwnerTrip | null;
   tripCreateError: string;
   tripCreateSubmitting: boolean;
   onAuthEmailChange: (value: string) => void;
@@ -1178,7 +1196,9 @@ type OwnerAppProps = {
   onNewTripStartDateChange: (value: string) => void;
   onNewTripTitleChange: (value: string) => void;
   onNewTripTravelersChange: (value: string) => void;
+  onCloseOwnerTripDetail: () => void;
   onLogout: () => void;
+  onSelectOwnerTrip: (tripID: string) => void;
   onSubmitAuth: (event: FormEvent<HTMLFormElement>) => void;
   onSubmitNewTrip: (event: FormEvent<HTMLFormElement>) => void;
 };
@@ -1199,6 +1219,7 @@ function OwnerApp({
   ownerTrips,
   ownerTripsError,
   ownerTripsLoading,
+  selectedOwnerTrip,
   tripCreateError,
   tripCreateSubmitting,
   onAuthEmailChange,
@@ -1209,7 +1230,9 @@ function OwnerApp({
   onNewTripStartDateChange,
   onNewTripTitleChange,
   onNewTripTravelersChange,
+  onCloseOwnerTripDetail,
   onLogout,
+  onSelectOwnerTrip,
   onSubmitAuth,
   onSubmitNewTrip,
 }: OwnerAppProps) {
@@ -1306,6 +1329,55 @@ function OwnerApp({
                     여행 화면 보기
                   </a>
                 </article>
+
+                {selectedOwnerTrip && (
+                  <section className="section-block owner-detail-section">
+                    <div className="section-title-row">
+                      <div>
+                        <span className="pill">선택한 여행</span>
+                        <h2>{selectedOwnerTrip.title}</h2>
+                        <p className="section-caption">
+                          {formatKoreanDate(selectedOwnerTrip.startDate)} ~ {formatKoreanDate(selectedOwnerTrip.endDate)}
+                        </p>
+                      </div>
+                      <button className="secondary-button compact-button" onClick={onCloseOwnerTripDetail} type="button">
+                        목록으로
+                      </button>
+                    </div>
+
+                    <article className="owner-trip-detail-card">
+                      <div className="detail-grid">
+                        <div>
+                          <span className="muted-label">여행자</span>
+                          <p>
+                            {selectedOwnerTrip.travelers.length > 0
+                              ? selectedOwnerTrip.travelers.join(", ")
+                              : "여행자 미입력"}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="muted-label">메모</span>
+                          <p>{selectedOwnerTrip.memo || "메모 없음"}</p>
+                        </div>
+                      </div>
+
+                      <div className="owner-action-grid">
+                        <button className="quick-button" disabled type="button">
+                          <CalendarDays size={18} />
+                          일정 편집 준비 중
+                        </button>
+                        <button className="quick-button" disabled type="button">
+                          <MapPin size={18} />
+                          장소 편집 준비 중
+                        </button>
+                        <button className="quick-button" disabled type="button">
+                          <Copy size={18} />
+                          공유 링크 준비 중
+                        </button>
+                      </div>
+                    </article>
+                  </section>
+                )}
 
                 <section className="section-block">
                   <div className="section-title-row">
@@ -1408,8 +1480,12 @@ function OwnerApp({
                             </p>
                             <p>{ownerTrip.travelers.length > 0 ? ownerTrip.travelers.join(", ") : "여행자 미입력"}</p>
                           </div>
-                          <button className="secondary-button compact-button" disabled type="button">
-                            편집 준비 중
+                          <button
+                            className="secondary-button compact-button"
+                            onClick={() => onSelectOwnerTrip(ownerTrip.id)}
+                            type="button"
+                          >
+                            관리하기
                           </button>
                         </article>
                       ))}
