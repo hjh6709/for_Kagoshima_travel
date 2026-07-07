@@ -19,7 +19,7 @@ type Schedule struct {
 	Type          string `json:"type"`
 	Title         string `json:"title"`
 	TransportMemo string `json:"transportMemo,omitempty"`
-	ParentMemo    string `json:"parentMemo,omitempty"`
+	GuideMemo     string `json:"guideMemo,omitempty"`
 }
 
 type Place struct {

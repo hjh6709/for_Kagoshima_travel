@@ -154,7 +154,7 @@ type ScheduleItem = {
   mapUrl?: string;
   transportMemo?: string;
   reservationMemo?: string;
-  parentMemo?: string;
+  guideMemo?: string;
 };
 ```
 

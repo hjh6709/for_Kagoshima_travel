@@ -41,10 +41,10 @@ func NewMemoryTripRepository() *MemoryTripRepository {
 		trips: []model.Trip{
 			{
 				ID:        tripID,
-				Title:     "부모님 여행",
+				Title:     "나의 여행",
 				StartDate: "2026-06-27",
 				EndDate:   "2026-06-30",
-				Travelers: []string{"아버지", "어머니"},
+				Travelers: []string{"여행자 1", "여행자 2"},
 				Memo:      "샘플 데이터입니다. 실제 일정으로 교체 예정입니다.",
 			},
 		},
@@ -58,7 +58,7 @@ func NewMemoryTripRepository() *MemoryTripRepository {
 				Type:          "move",
 				Title:         "여행지 도착",
 				TransportMemo: "공항에서 숙소 이동 방법 확정 필요",
-				ParentMemo:    "도착 후 무리하지 말고 숙소 체크인부터 확인하세요.",
+				GuideMemo:     "도착 후 무리하지 말고 숙소 체크인부터 확인하세요.",
 			},
 			{
 				ID:            "schedule-2",
@@ -69,7 +69,7 @@ func NewMemoryTripRepository() *MemoryTripRepository {
 				Type:          "sightseeing",
 				Title:         "관광지 후보 방문",
 				TransportMemo: "숙소 기준 이동 경로 확인 필요",
-				ParentMemo:    "입장권과 운영시간은 출발 전 다시 확인하세요.",
+				GuideMemo:     "입장권과 운영시간은 출발 전 다시 확인하세요.",
 			},
 		},
 		places: []model.Place{

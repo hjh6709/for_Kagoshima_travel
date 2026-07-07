@@ -47,7 +47,7 @@ CREATE TABLE schedules (
     title           TEXT NOT NULL,
     transport_memo  TEXT,
     reservation_memo TEXT,
-    parent_memo     TEXT,
+    guide_memo     TEXT,
     sort_order      INT NOT NULL DEFAULT 0,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

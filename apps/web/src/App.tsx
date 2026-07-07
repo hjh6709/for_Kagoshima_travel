@@ -624,7 +624,7 @@ function App() {
                   <p>
                     {formatKoreanDate(getDisplayDate(nextSchedule.date))} {nextSchedule.time}
                   </p>
-                  <p className="muted">{nextSchedule.parentMemo}</p>
+                  <p className="muted">{nextSchedule.guideMemo}</p>
                 </div>
                 <a
                   className="primary-button"
@@ -765,7 +765,7 @@ function App() {
                             {item.reservationMemo}
                           </p>
                         )}
-                        {item.parentMemo && <p className="muted">{item.parentMemo}</p>}
+                        {item.guideMemo && <p className="muted">{item.guideMemo}</p>}
                         <div className="schedule-actions">
                           <button
                             className="secondary-button compact-button"

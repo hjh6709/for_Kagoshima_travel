@@ -207,7 +207,7 @@ apps/api/
 | title | text | 일정 제목 |
 | transport_memo | text | 이동 메모 |
 | reservation_memo | text | 예약 메모 |
-| parent_memo | text | 부모님께 보여줄 메모 |
+| guide_memo | text | 여행자에게 보여줄 안내 메모 |
 | sort_order | int | 표시 순서 |
 
 ### places

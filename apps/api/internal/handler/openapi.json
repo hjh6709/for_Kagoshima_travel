@@ -84,10 +84,10 @@
         "type": "object",
         "required": ["title", "startDate", "endDate"],
         "properties": {
-          "title": { "type": "string", "example": "부모님 여행" },
+          "title": { "type": "string", "example": "나의 여행" },
           "startDate": { "type": "string", "example": "2026-06-27" },
           "endDate": { "type": "string", "example": "2026-06-30" },
-          "travelers": { "type": "array", "items": { "type": "string" }, "example": ["아버지", "어머니"] },
+          "travelers": { "type": "array", "items": { "type": "string" }, "example": ["여행자 1", "여행자 2"] },
           "memo": { "type": "string" }
         }
       },
