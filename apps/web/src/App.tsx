@@ -296,7 +296,9 @@ function getOrderedSchedulesForDate(date: string, orderByDate: ScheduleOrderByDa
 }
 
 function App() {
-  const isOwnerRoute = window.location.pathname.startsWith("/owner");
+  const currentPath = window.location.pathname;
+  const isLegacyOwnerRoute = currentPath === "/owner" || currentPath.startsWith("/owner/");
+  const isManageRoute = currentPath === "/manage" || currentPath.startsWith("/manage/") || isLegacyOwnerRoute;
   const contentRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<Tab>("today");
   const [ownerAuth, setOwnerAuth] = useState<AuthResponse | null>(getSavedOwnerAuth);
@@ -304,7 +306,7 @@ function App() {
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
   const [authError, setAuthError] = useState("");
-  const [authChecked, setAuthChecked] = useState(!isOwnerRoute);
+  const [authChecked, setAuthChecked] = useState(!isManageRoute);
   const [authSubmitting, setAuthSubmitting] = useState(false);
   const [ownerTrips, setOwnerTrips] = useState<OwnerTrip[]>([]);
   const [ownerTripsError, setOwnerTripsError] = useState("");
@@ -396,7 +398,14 @@ function App() {
   }, [activeTab]);
 
   useEffect(() => {
-    if (!isOwnerRoute) return;
+    if (!isLegacyOwnerRoute) return;
+
+    const nextPath = currentPath.replace(/^\/owner/, "/manage");
+    window.history.replaceState(null, "", `${nextPath}${window.location.search}${window.location.hash}`);
+  }, [currentPath, isLegacyOwnerRoute]);
+
+  useEffect(() => {
+    if (!isManageRoute) return;
 
     const savedAuth = getSavedOwnerAuth();
     if (!savedAuth) {
@@ -428,10 +437,10 @@ function App() {
     return () => {
       cancelled = true;
     };
-  }, [isOwnerRoute]);
+  }, [isManageRoute]);
 
   useEffect(() => {
-    if (!isOwnerRoute || !ownerAuth) return;
+    if (!isManageRoute || !ownerAuth) return;
 
     let cancelled = false;
     setOwnerTripsLoading(true);
@@ -458,7 +467,7 @@ function App() {
     return () => {
       cancelled = true;
     };
-  }, [isOwnerRoute, ownerAuth]);
+  }, [isManageRoute, ownerAuth]);
 
   useEffect(() => {
     if (!selectedOwnerTripID) return;
@@ -620,9 +629,9 @@ function App() {
     setAuthError("");
   }
 
-  if (isOwnerRoute) {
+  if (isManageRoute) {
     return (
-      <OwnerApp
+      <TripManageApp
         auth={ownerAuth}
         authChecked={authChecked}
         authEmail={authEmail}
@@ -1265,7 +1274,7 @@ function App() {
   );
 }
 
-type OwnerAppProps = {
+type TripManageAppProps = {
   auth: AuthResponse | null;
   authChecked: boolean;
   authEmail: string;
@@ -1312,7 +1321,7 @@ type OwnerAppProps = {
   onSubmitTripEdit: (event: FormEvent<HTMLFormElement>) => void;
 };
 
-function OwnerApp({
+function TripManageApp({
   auth,
   authChecked,
   authEmail,
@@ -1357,7 +1366,7 @@ function OwnerApp({
   onSubmitAuth,
   onSubmitNewTrip,
   onSubmitTripEdit,
-}: OwnerAppProps) {
+}: TripManageAppProps) {
   return (
     <main className="app-shell">
       <section className="phone-frame owner-frame">
