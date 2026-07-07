@@ -116,6 +116,6 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: hjh6709/pr-check-doctor@v0.1.0
+      - uses: hjh6709/pr-check-doctor@v0.1.2
         with:
           github-token: ${{ github.token }}
