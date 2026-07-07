@@ -107,6 +107,22 @@ export function createShareLink(accessToken: string, tripID: string) {
   });
 }
 
+export function listTripSchedules(accessToken: string, tripID: string) {
+  return apiRequest<SharedSchedule[]>(`/api/trips/${tripID}/schedules`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+}
+
+export function listTripPlaces(accessToken: string, tripID: string) {
+  return apiRequest<SharedPlace[]>(`/api/trips/${tripID}/places`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+}
+
 export function getSharedTrip(token: string) {
   return apiRequest<SharedTripResponse>(`/api/share/${encodeURIComponent(token)}`);
 }

@@ -294,6 +294,31 @@ button:disabled {
   gap: 10px;
 }
 
+.owner-linked-data-section {
+  display: grid;
+  gap: 12px;
+  border-top: 1px solid rgba(36, 48, 47, 0.08);
+  padding-top: 18px;
+}
+
+.compact-card-stack {
+  gap: 8px;
+}
+
+.owner-linked-card {
+  display: grid;
+  gap: 8px;
+  border: 1px solid rgba(36, 48, 47, 0.1);
+  border-radius: 10px;
+  background: var(--c-bg);
+  padding: 14px;
+}
+
+.owner-linked-card h2 {
+  margin-bottom: 0;
+  font-size: 17px;
+}
+
 .share-link-panel {
   display: grid;
   gap: 10px;

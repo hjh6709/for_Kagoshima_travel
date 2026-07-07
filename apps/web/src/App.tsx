@@ -26,9 +26,13 @@ import {
   createShareLink,
   createTrip,
   getSharedTrip,
+  listTripPlaces,
+  listTripSchedules,
   listMyTrips,
   updateTrip,
   type OwnerTrip,
+  type SharedPlace,
+  type SharedSchedule,
   type SharedTripResponse,
 } from "./api/trips";
 import {
@@ -353,6 +357,10 @@ function App() {
   const [shareLinkError, setShareLinkError] = useState("");
   const [shareLinkSubmitting, setShareLinkSubmitting] = useState(false);
   const [shareLinkCopied, setShareLinkCopied] = useState(false);
+  const [ownerSchedules, setOwnerSchedules] = useState<SharedSchedule[]>([]);
+  const [ownerPlaces, setOwnerPlaces] = useState<SharedPlace[]>([]);
+  const [ownerDetailDataError, setOwnerDetailDataError] = useState("");
+  const [ownerDetailDataLoading, setOwnerDetailDataLoading] = useState(false);
   const [sharedTrip, setSharedTrip] = useState<SharedTripResponse | null>(null);
   const [sharedTripError, setSharedTripError] = useState("");
   const [sharedTripLoading, setSharedTripLoading] = useState(isShareRoute);
@@ -513,6 +521,9 @@ function App() {
           window.localStorage.removeItem(ownerAuthStorageKey);
           setOwnerAuth(null);
           setOwnerTrips([]);
+          setSelectedOwnerTripID(null);
+          setOwnerSchedules([]);
+          setOwnerPlaces([]);
           setOwnerTripsError("");
           return;
         }
@@ -554,6 +565,52 @@ function App() {
     setShareLinkError("");
     setShareLinkCopied(false);
   }, [selectedOwnerTrip]);
+
+  useEffect(() => {
+    if (!ownerAuth || !selectedOwnerTrip) {
+      setOwnerSchedules([]);
+      setOwnerPlaces([]);
+      setOwnerDetailDataError("");
+      setOwnerDetailDataLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setOwnerDetailDataLoading(true);
+    setOwnerDetailDataError("");
+    Promise.all([
+      listTripSchedules(ownerAuth.accessToken, selectedOwnerTrip.id),
+      listTripPlaces(ownerAuth.accessToken, selectedOwnerTrip.id),
+    ])
+      .then(([nextSchedules, nextPlaces]) => {
+        if (cancelled) return;
+        setOwnerSchedules(nextSchedules);
+        setOwnerPlaces(nextPlaces);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        if (error instanceof ApiError && error.status === 401) {
+          window.localStorage.removeItem(ownerAuthStorageKey);
+          setOwnerAuth(null);
+          setOwnerTrips([]);
+          setSelectedOwnerTripID(null);
+          setOwnerSchedules([]);
+          setOwnerPlaces([]);
+          setOwnerDetailDataError("");
+          return;
+        }
+        setOwnerSchedules([]);
+        setOwnerPlaces([]);
+        setOwnerDetailDataError(error instanceof Error ? error.message : "일정과 장소를 불러오지 못했습니다.");
+      })
+      .finally(() => {
+        if (!cancelled) setOwnerDetailDataLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [ownerAuth, selectedOwnerTrip]);
 
   async function submitAuth(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -618,6 +675,9 @@ function App() {
         window.localStorage.removeItem(ownerAuthStorageKey);
         setOwnerAuth(null);
         setOwnerTrips([]);
+        setSelectedOwnerTripID(null);
+        setOwnerSchedules([]);
+        setOwnerPlaces([]);
         setTripCreateError("");
         return;
       }
@@ -670,6 +730,8 @@ function App() {
         setOwnerAuth(null);
         setOwnerTrips([]);
         setSelectedOwnerTripID(null);
+        setOwnerSchedules([]);
+        setOwnerPlaces([]);
         setTripEditError("");
         return;
       }
@@ -697,6 +759,8 @@ function App() {
         setOwnerAuth(null);
         setOwnerTrips([]);
         setSelectedOwnerTripID(null);
+        setOwnerSchedules([]);
+        setOwnerPlaces([]);
         setShareLinkError("");
         return;
       }
@@ -737,6 +801,10 @@ function App() {
     setShareLinksByTripID({});
     setShareLinkError("");
     setShareLinkCopied(false);
+    setOwnerSchedules([]);
+    setOwnerPlaces([]);
+    setOwnerDetailDataError("");
+    setOwnerDetailDataLoading(false);
     setOwnerTripsError("");
     setAuthPassword("");
     setAuthError("");
@@ -759,6 +827,10 @@ function App() {
         ownerTrips={ownerTrips}
         ownerTripsError={ownerTripsError}
         ownerTripsLoading={ownerTripsLoading}
+        ownerSchedules={ownerSchedules}
+        ownerPlaces={ownerPlaces}
+        ownerDetailDataError={ownerDetailDataError}
+        ownerDetailDataLoading={ownerDetailDataLoading}
         selectedOwnerTrip={selectedOwnerTrip}
         selectedShareLink={selectedOwnerTrip ? (shareLinksByTripID[selectedOwnerTrip.id] ?? "") : ""}
         newTripEndDate={newTripEndDate}
@@ -1577,6 +1649,10 @@ type TripManageAppProps = {
   ownerTrips: OwnerTrip[];
   ownerTripsError: string;
   ownerTripsLoading: boolean;
+  ownerSchedules: SharedSchedule[];
+  ownerPlaces: SharedPlace[];
+  ownerDetailDataError: string;
+  ownerDetailDataLoading: boolean;
   selectedOwnerTrip: OwnerTrip | null;
   selectedShareLink: string;
   shareLinkCopied: boolean;
@@ -1630,6 +1706,10 @@ function TripManageApp({
   ownerTrips,
   ownerTripsError,
   ownerTripsLoading,
+  ownerSchedules,
+  ownerPlaces,
+  ownerDetailDataError,
+  ownerDetailDataLoading,
   selectedOwnerTrip,
   selectedShareLink,
   shareLinkCopied,
@@ -1666,6 +1746,8 @@ function TripManageApp({
   onSubmitNewTrip,
   onSubmitTripEdit,
 }: TripManageAppProps) {
+  const ownerPlaceByID = useMemo(() => new Map(ownerPlaces.map((place) => [place.id, place])), [ownerPlaces]);
+
   return (
     <main className="app-shell">
       <section className="phone-frame owner-frame">
@@ -1865,11 +1947,11 @@ function TripManageApp({
                       <div className="owner-action-grid">
                         <button className="quick-button" disabled type="button">
                           <CalendarDays size={18} />
-                          일정 편집 준비 중
+                          일정 조회 연결됨
                         </button>
                         <button className="quick-button" disabled type="button">
                           <MapPin size={18} />
-                          장소 편집 준비 중
+                          장소 조회 연결됨
                         </button>
                         <button
                           className="quick-button"
@@ -1912,6 +1994,89 @@ function TripManageApp({
 
                       {shareLinkCopied && <p className="form-success">공유 링크를 복사했습니다.</p>}
                       {shareLinkError && <p className="form-error">{shareLinkError}</p>}
+
+                      <section className="owner-linked-data-section">
+                        <div className="section-title-row compact-title-row">
+                          <div>
+                            <h3>공유되는 일정</h3>
+                            <p className="section-caption">현재 서버에 저장되어 공유 화면에 표시되는 일정입니다.</p>
+                          </div>
+                          <span className="pill subtle">{ownerSchedules.length}개</span>
+                        </div>
+
+                        {ownerDetailDataLoading && <p className="muted">일정과 장소를 불러오는 중입니다.</p>}
+                        {ownerDetailDataError && <p className="form-error">{ownerDetailDataError}</p>}
+
+                        {!ownerDetailDataLoading && !ownerDetailDataError && ownerSchedules.length === 0 && (
+                          <article className="empty-state-card list-card">
+                            <p className="muted">아직 서버에 저장된 일정이 없습니다.</p>
+                          </article>
+                        )}
+
+                        {!ownerDetailDataLoading && !ownerDetailDataError && ownerSchedules.length > 0 && (
+                          <div className="card-stack compact-card-stack">
+                            {ownerSchedules.map((schedule) => {
+                              const place = ownerPlaceByID.get(schedule.placeId ?? "");
+                              return (
+                                <article className="owner-linked-card" key={schedule.id}>
+                                  <div>
+                                    <span className="muted-label">
+                                      {formatKoreanDate(schedule.date)} · {schedule.time || "시간 미정"}
+                                    </span>
+                                    <h2>{schedule.title}</h2>
+                                    <p className="section-caption">
+                                      {getScheduleTypeLabel(schedule.type)}
+                                      {place ? ` · ${place.name}` : ""}
+                                    </p>
+                                  </div>
+                                  {schedule.guideMemo && <p className="muted">{schedule.guideMemo}</p>}
+                                </article>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </section>
+
+                      <section className="owner-linked-data-section">
+                        <div className="section-title-row compact-title-row">
+                          <div>
+                            <h3>공유되는 장소</h3>
+                            <p className="section-caption">일정에서 참조하거나 공유 화면에 표시되는 장소입니다.</p>
+                          </div>
+                          <span className="pill subtle">{ownerPlaces.length}개</span>
+                        </div>
+
+                        {!ownerDetailDataLoading && !ownerDetailDataError && ownerPlaces.length === 0 && (
+                          <article className="empty-state-card list-card">
+                            <p className="muted">아직 서버에 저장된 장소가 없습니다.</p>
+                          </article>
+                        )}
+
+                        {!ownerDetailDataLoading && !ownerDetailDataError && ownerPlaces.length > 0 && (
+                          <div className="card-stack compact-card-stack">
+                            {ownerPlaces.map((place) => (
+                              <article className="owner-linked-card" key={place.id}>
+                                <div>
+                                  <span className="muted-label">{place.category}</span>
+                                  <h2>{place.name}</h2>
+                                  {place.address && <p className="section-caption">{place.address}</p>}
+                                </div>
+                                {place.googleMapsUrl && (
+                                  <a
+                                    className="secondary-button compact-button"
+                                    href={place.googleMapsUrl}
+                                    rel="noreferrer"
+                                    target="_blank"
+                                  >
+                                    <ExternalLink size={16} />
+                                    지도 열기
+                                  </a>
+                                )}
+                              </article>
+                            ))}
+                          </div>
+                        )}
+                      </section>
                     </article>
                   </section>
                 )}
