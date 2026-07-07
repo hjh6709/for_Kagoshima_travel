@@ -94,6 +94,14 @@ func (r *PostgresTripRepository) SaveSchedule(schedule model.Schedule) error {
 	return err
 }
 
+func (r *PostgresTripRepository) SavePlace(place model.Place) error {
+	_, err := r.pool.Exec(context.Background(),
+		`INSERT INTO places (id, trip_id, name, category, address, google_maps_url, recommended_reason)
+		 VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+		place.ID, place.TripID, place.Name, place.Category, place.Address, place.GoogleMapsURL, place.RecommendedReason)
+	return err
+}
+
 func (r *PostgresTripRepository) Update(trip model.Trip) error {
 	tag, err := r.pool.Exec(context.Background(),
 		`UPDATE trips SET title=$1, start_date=$2, end_date=$3, travelers=$4, memo=$5, updated_at=NOW() WHERE id=$6`,

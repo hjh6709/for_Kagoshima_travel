@@ -127,6 +127,28 @@
           "guideMemo": { "type": "string" }
         }
       },
+      "CreatePlaceRequest": {
+        "type": "object",
+        "required": ["name", "category"],
+        "properties": {
+          "name": { "type": "string", "example": "공항 렌터카 센터" },
+          "category": { "type": "string", "example": "transport" },
+          "address": { "type": "string", "example": "공항 1층" },
+          "googleMapsUrl": { "type": "string", "example": "https://www.google.com/maps/search/?api=1&query=airport" },
+          "recommendedReason": { "type": "string", "example": "도착 후 바로 이동할 장소" }
+        }
+      },
+      "PlaceResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "category": { "type": "string" },
+          "address": { "type": "string" },
+          "googleMapsUrl": { "type": "string" },
+          "recommendedReason": { "type": "string" }
+        }
+      },
       "ShareLinkResponse": {
         "type": "object",
         "properties": {
@@ -329,6 +351,21 @@
         "tags": ["장소"],
         "security": [{ "bearerAuth": [] }],
         "responses": { "200": { "description": "성공" } }
+      },
+      "post": {
+        "summary": "장소 생성",
+        "tags": ["장소"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreatePlaceRequest" } } }
+        },
+        "responses": {
+          "201": { "description": "장소 생성 성공", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PlaceResponse" } } } },
+          "400": { "description": "입력 오류" },
+          "403": { "description": "권한 없음" },
+          "404": { "description": "여행 없음" }
+        }
       }
     },
     "/api/trips/{tripID}/routes": {
