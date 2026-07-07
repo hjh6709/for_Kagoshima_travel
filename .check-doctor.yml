@@ -1,0 +1,19 @@
+comment:
+  mode: update
+  language: ko
+
+checks:
+  "frontend build":
+    category: build_failure
+    local_command: cd apps/web && npm run build
+    blocks_merge: true
+
+  "backend test":
+    category: test_failure
+    local_command: cd apps/api && go test ./... && go test -race ./...
+    blocks_merge: true
+
+  "backend postgres test":
+    category: test_failure
+    local_command: cd apps/api && TEST_DATABASE_URL=postgres://postgres:postgres@localhost:5432/kagoshima_travel?sslmode=disable go test ./... -count=1
+    blocks_merge: true

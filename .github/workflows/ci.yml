@@ -99,3 +99,24 @@ jobs:
           TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/kagoshima_travel?sslmode=disable
           JWT_SECRET: test-secret
         run: go test ./... -count=1
+
+  pr-check-doctor:
+    name: pr check doctor
+    runs-on: ubuntu-latest
+    needs:
+      - frontend
+      - backend
+      - backend-postgres
+    if: ${{ always() && github.event_name == 'pull_request' }}
+    permissions:
+      actions: read
+      checks: read
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+
+      # pr-check-doctor v0.1.2 pinned to an immutable commit for CodeQL.
+      - uses: hjh6709/pr-check-doctor@8d9f2d28aff26c3661e7de37d49ba546217a1c2b
+        with:
+          github-token: ${{ github.token }}
