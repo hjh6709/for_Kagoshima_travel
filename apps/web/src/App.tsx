@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { ApiError, getCurrentUser, login, register, type AuthResponse } from "./api/auth";
-import { createTrip, listMyTrips, type OwnerTrip } from "./api/trips";
+import { createTrip, listMyTrips, updateTrip, type OwnerTrip } from "./api/trips";
 import {
   accommodation,
   checklist,
@@ -317,6 +317,13 @@ function App() {
   const [newTripMemo, setNewTripMemo] = useState("");
   const [tripCreateError, setTripCreateError] = useState("");
   const [tripCreateSubmitting, setTripCreateSubmitting] = useState(false);
+  const [tripEditTitle, setTripEditTitle] = useState("");
+  const [tripEditStartDate, setTripEditStartDate] = useState("");
+  const [tripEditEndDate, setTripEditEndDate] = useState("");
+  const [tripEditTravelers, setTripEditTravelers] = useState("");
+  const [tripEditMemo, setTripEditMemo] = useState("");
+  const [tripEditError, setTripEditError] = useState("");
+  const [tripEditSubmitting, setTripEditSubmitting] = useState(false);
   const [tripDates, setTripDates] = useState<TripDates>(getSavedTripDates);
   const [selectedDate, setSelectedDate] = useState(schedules[0]?.date ?? trip.startDate);
   const [addressCopied, setAddressCopied] = useState(false);
@@ -460,6 +467,25 @@ function App() {
     }
   }, [ownerTrips, selectedOwnerTripID]);
 
+  useEffect(() => {
+    if (!selectedOwnerTrip) {
+      setTripEditTitle("");
+      setTripEditStartDate("");
+      setTripEditEndDate("");
+      setTripEditTravelers("");
+      setTripEditMemo("");
+      setTripEditError("");
+      return;
+    }
+
+    setTripEditTitle(selectedOwnerTrip.title);
+    setTripEditStartDate(selectedOwnerTrip.startDate);
+    setTripEditEndDate(selectedOwnerTrip.endDate);
+    setTripEditTravelers(selectedOwnerTrip.travelers.join(", "));
+    setTripEditMemo(selectedOwnerTrip.memo ?? "");
+    setTripEditError("");
+  }, [selectedOwnerTrip]);
+
   async function submitAuth(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setAuthError("");
@@ -532,6 +558,58 @@ function App() {
     }
   }
 
+  async function submitTripEdit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!ownerAuth || !selectedOwnerTrip) return;
+
+    const title = tripEditTitle.trim();
+    const startDate = tripEditStartDate;
+    const endDate = tripEditEndDate || tripEditStartDate;
+    const travelers = tripEditTravelers
+      .split(/[\n,]/)
+      .map((traveler) => traveler.trim())
+      .filter(Boolean);
+    const memo = tripEditMemo.trim();
+
+    if (!title || !startDate || !endDate) {
+      setTripEditError("여행명과 여행 날짜를 입력해주세요.");
+      return;
+    }
+    if (endDate < startDate) {
+      setTripEditError("종료일은 시작일보다 빠를 수 없습니다.");
+      return;
+    }
+
+    setTripEditError("");
+    setTripEditSubmitting(true);
+    try {
+      const updatedTrip = await updateTrip(ownerAuth.accessToken, selectedOwnerTrip.id, {
+        title,
+        startDate,
+        endDate,
+        travelers,
+        memo,
+      });
+      setOwnerTrips((currentTrips) =>
+        currentTrips.map((ownerTrip) => (ownerTrip.id === updatedTrip.id ? updatedTrip : ownerTrip))
+      );
+      setTripEditError("");
+      setOwnerTripsError("");
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        window.localStorage.removeItem(ownerAuthStorageKey);
+        setOwnerAuth(null);
+        setOwnerTrips([]);
+        setSelectedOwnerTripID(null);
+        setTripEditError("");
+        return;
+      }
+      setTripEditError(error instanceof Error ? error.message : "여행 정보를 수정하지 못했습니다.");
+    } finally {
+      setTripEditSubmitting(false);
+    }
+  }
+
   function logoutOwner() {
     window.localStorage.removeItem(ownerAuthStorageKey);
     setOwnerAuth(null);
@@ -563,6 +641,13 @@ function App() {
         newTripTravelers={newTripTravelers}
         tripCreateError={tripCreateError}
         tripCreateSubmitting={tripCreateSubmitting}
+        tripEditEndDate={tripEditEndDate}
+        tripEditError={tripEditError}
+        tripEditMemo={tripEditMemo}
+        tripEditStartDate={tripEditStartDate}
+        tripEditSubmitting={tripEditSubmitting}
+        tripEditTitle={tripEditTitle}
+        tripEditTravelers={tripEditTravelers}
         onAuthEmailChange={setAuthEmail}
         onAuthModeChange={(mode) => {
           setAuthMode(mode);
@@ -580,10 +665,21 @@ function App() {
         onNewTripTitleChange={setNewTripTitle}
         onNewTripTravelersChange={setNewTripTravelers}
         onCloseOwnerTripDetail={() => setSelectedOwnerTripID(null)}
+        onTripEditEndDateChange={setTripEditEndDate}
+        onTripEditMemoChange={setTripEditMemo}
+        onTripEditStartDateChange={(value) => {
+          setTripEditStartDate(value);
+          if (!tripEditEndDate || tripEditEndDate < value) {
+            setTripEditEndDate(value);
+          }
+        }}
+        onTripEditTitleChange={setTripEditTitle}
+        onTripEditTravelersChange={setTripEditTravelers}
         onLogout={logoutOwner}
         onSelectOwnerTrip={setSelectedOwnerTripID}
         onSubmitAuth={submitAuth}
         onSubmitNewTrip={submitNewTrip}
+        onSubmitTripEdit={submitTripEdit}
       />
     );
   }
@@ -1188,6 +1284,13 @@ type OwnerAppProps = {
   selectedOwnerTrip: OwnerTrip | null;
   tripCreateError: string;
   tripCreateSubmitting: boolean;
+  tripEditEndDate: string;
+  tripEditError: string;
+  tripEditMemo: string;
+  tripEditStartDate: string;
+  tripEditSubmitting: boolean;
+  tripEditTitle: string;
+  tripEditTravelers: string;
   onAuthEmailChange: (value: string) => void;
   onAuthModeChange: (mode: AuthMode) => void;
   onAuthPasswordChange: (value: string) => void;
@@ -1197,10 +1300,16 @@ type OwnerAppProps = {
   onNewTripTitleChange: (value: string) => void;
   onNewTripTravelersChange: (value: string) => void;
   onCloseOwnerTripDetail: () => void;
+  onTripEditEndDateChange: (value: string) => void;
+  onTripEditMemoChange: (value: string) => void;
+  onTripEditStartDateChange: (value: string) => void;
+  onTripEditTitleChange: (value: string) => void;
+  onTripEditTravelersChange: (value: string) => void;
   onLogout: () => void;
   onSelectOwnerTrip: (tripID: string) => void;
   onSubmitAuth: (event: FormEvent<HTMLFormElement>) => void;
   onSubmitNewTrip: (event: FormEvent<HTMLFormElement>) => void;
+  onSubmitTripEdit: (event: FormEvent<HTMLFormElement>) => void;
 };
 
 function OwnerApp({
@@ -1222,6 +1331,13 @@ function OwnerApp({
   selectedOwnerTrip,
   tripCreateError,
   tripCreateSubmitting,
+  tripEditEndDate,
+  tripEditError,
+  tripEditMemo,
+  tripEditStartDate,
+  tripEditSubmitting,
+  tripEditTitle,
+  tripEditTravelers,
   onAuthEmailChange,
   onAuthModeChange,
   onAuthPasswordChange,
@@ -1231,10 +1347,16 @@ function OwnerApp({
   onNewTripTitleChange,
   onNewTripTravelersChange,
   onCloseOwnerTripDetail,
+  onTripEditEndDateChange,
+  onTripEditMemoChange,
+  onTripEditStartDateChange,
+  onTripEditTitleChange,
+  onTripEditTravelersChange,
   onLogout,
   onSelectOwnerTrip,
   onSubmitAuth,
   onSubmitNewTrip,
+  onSubmitTripEdit,
 }: OwnerAppProps) {
   return (
     <main className="app-shell">
@@ -1363,6 +1485,74 @@ function OwnerApp({
                           <p>{selectedOwnerTrip.memo || "메모 없음"}</p>
                         </div>
                       </div>
+
+                      <form className="auth-form trip-edit-form" onSubmit={onSubmitTripEdit}>
+                        <div className="section-title-row compact-title-row">
+                          <div>
+                            <h3>기본 정보 수정</h3>
+                            <p className="section-caption">여행명, 기간, 여행자, 메모를 수정합니다.</p>
+                          </div>
+                        </div>
+
+                        <label>
+                          여행명
+                          <input
+                            onChange={(event) => onTripEditTitleChange(event.target.value)}
+                            required
+                            type="text"
+                            value={tripEditTitle}
+                          />
+                        </label>
+
+                        <div className="form-grid-two">
+                          <label>
+                            시작일
+                            <input
+                              onChange={(event) => onTripEditStartDateChange(event.target.value)}
+                              required
+                              type="date"
+                              value={tripEditStartDate}
+                            />
+                          </label>
+                          <label>
+                            종료일
+                            <input
+                              min={tripEditStartDate || undefined}
+                              onChange={(event) => onTripEditEndDateChange(event.target.value)}
+                              required
+                              type="date"
+                              value={tripEditEndDate}
+                            />
+                          </label>
+                        </div>
+
+                        <label>
+                          여행자
+                          <textarea
+                            onChange={(event) => onTripEditTravelersChange(event.target.value)}
+                            placeholder="쉼표 또는 줄바꿈으로 입력"
+                            rows={3}
+                            value={tripEditTravelers}
+                          />
+                        </label>
+
+                        <label>
+                          메모
+                          <textarea
+                            onChange={(event) => onTripEditMemoChange(event.target.value)}
+                            placeholder="여행 목적, 주의사항, 준비 메모"
+                            rows={3}
+                            value={tripEditMemo}
+                          />
+                        </label>
+
+                        {tripEditError && <p className="form-error">{tripEditError}</p>}
+
+                        <button className="primary-button" disabled={tripEditSubmitting} type="submit">
+                          <CheckCircle2 size={18} />
+                          {tripEditSubmitting ? "저장 중" : "기본 정보 저장"}
+                        </button>
+                      </form>
 
                       <div className="owner-action-grid">
                         <button className="quick-button" disabled type="button">
