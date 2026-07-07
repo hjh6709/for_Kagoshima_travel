@@ -117,7 +117,7 @@ export const schedules: ScheduleItem[] = [
     title: "여행지 도착",
     placeId: "place-airport",
     transportMemo: "공항에서 숙소까지 이동합니다. 렌터카/택시/버스 중 실제 이동수단을 확정하세요.",
-    parentMemo: "도착 후 무리하지 말고 숙소 체크인부터 확인하세요.",
+    guideMemo: "도착 후 무리하지 말고 숙소 체크인부터 확인하세요.",
   },
   {
     id: "schedule-2",
@@ -128,7 +128,7 @@ export const schedules: ScheduleItem[] = [
     placeId: "place-golf",
     transportMemo: "숙소에서 골프장까지 이동합니다. 출발 시간은 티오프 기준 최소 60분 여유를 두세요.",
     reservationMemo: "티오프 시간, 예약자명, 카트 포함 여부 확인 필요",
-    parentMemo: "전날 밤 장갑, 골프화, 모자, 우비를 먼저 챙겨두세요.",
+    guideMemo: "전날 밤 장갑, 골프화, 모자, 우비를 먼저 챙겨두세요.",
   },
   {
     id: "schedule-3",
@@ -137,7 +137,7 @@ export const schedules: ScheduleItem[] = [
     type: "meal",
     title: "라운딩 후 저녁 식사",
     placeId: "place-local-food",
-    parentMemo: "무리하지 말고 숙소 근처 식당 후보로 편하게 이동하세요.",
+    guideMemo: "무리하지 말고 숙소 근처 식당 후보로 편하게 이동하세요.",
   },
   {
     id: "schedule-4",
@@ -148,7 +148,7 @@ export const schedules: ScheduleItem[] = [
     placeId: "place-golf",
     transportMemo: "숙소에서 골프장까지 다시 이동합니다. 전날과 다른 골프장이라면 장소를 교체하세요.",
     reservationMemo: "티오프 시간과 예약자명 확인 필요",
-    parentMemo: "컨디션을 보고 라운딩 후 일정은 가볍게 조정하세요.",
+    guideMemo: "컨디션을 보고 라운딩 후 일정은 가볍게 조정하세요.",
   },
   {
     id: "schedule-5",
@@ -158,7 +158,7 @@ export const schedules: ScheduleItem[] = [
     title: "체크아웃",
     placeId: "place-hotel",
     transportMemo: "체크아웃 후 공항으로 이동합니다.",
-    parentMemo: "여권, 지갑, 휴대폰, 충전기, 골프용품을 다시 확인하세요.",
+    guideMemo: "여권, 지갑, 휴대폰, 충전기, 골프용품을 다시 확인하세요.",
   },
   {
     id: "schedule-6",
@@ -168,7 +168,7 @@ export const schedules: ScheduleItem[] = [
     title: "공항 이동과 귀국",
     placeId: "place-airport",
     transportMemo: "항공편 출발 시간 기준 최소 2시간 전 공항 도착을 권장합니다.",
-    parentMemo: "공항에서 식사와 선물 구매 시간을 여유 있게 잡으세요.",
+    guideMemo: "공항에서 식사와 선물 구매 시간을 여유 있게 잡으세요.",
   },
 ];
 

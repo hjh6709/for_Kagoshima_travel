@@ -53,7 +53,7 @@ export type ScheduleItem = {
   placeId?: string;
   transportMemo?: string;
   reservationMemo?: string;
-  parentMemo?: string;
+  guideMemo?: string;
 };
 
 export type Place = {

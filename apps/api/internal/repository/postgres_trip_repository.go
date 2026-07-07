@@ -108,7 +108,7 @@ func (r *PostgresTripRepository) Delete(id string) error {
 func (r *PostgresTripRepository) FindSchedules(tripID string) ([]model.Schedule, error) {
 	rows, err := r.pool.Query(context.Background(),
 		`SELECT id::text, trip_id::text, COALESCE(place_id::text,''), date::text, time, type, title,
-		        COALESCE(transport_memo,''), COALESCE(parent_memo,'')
+		        COALESCE(transport_memo,''), COALESCE(guide_memo,'')
 		 FROM schedules WHERE trip_id = $1 ORDER BY date, sort_order`, tripID)
 	if err != nil {
 		return nil, err
@@ -119,7 +119,7 @@ func (r *PostgresTripRepository) FindSchedules(tripID string) ([]model.Schedule,
 	for rows.Next() {
 		var s model.Schedule
 		if err := rows.Scan(&s.ID, &s.TripID, &s.PlaceID, &s.Date, &s.Time, &s.Type, &s.Title,
-			&s.TransportMemo, &s.ParentMemo); err != nil {
+			&s.TransportMemo, &s.GuideMemo); err != nil {
 			return nil, err
 		}
 		result = append(result, s)

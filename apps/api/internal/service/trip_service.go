@@ -302,7 +302,7 @@ func mapScheduleResponse(schedule model.Schedule) dto.ScheduleResponse {
 		Type:          schedule.Type,
 		Title:         schedule.Title,
 		TransportMemo: schedule.TransportMemo,
-		ParentMemo:    schedule.ParentMemo,
+		GuideMemo:     schedule.GuideMemo,
 	}
 }
 
