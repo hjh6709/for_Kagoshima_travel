@@ -19,6 +19,13 @@ export type CreateTripPayload = {
 
 export type UpdateTripPayload = Partial<CreateTripPayload>;
 
+export type ShareLinkResponse = {
+  token: string;
+  apiPath: string;
+  webPath: string;
+  expiresAt?: string;
+};
+
 export function listMyTrips(accessToken: string) {
   return apiRequest<OwnerTrip[]>("/api/trips", {
     headers: {
@@ -44,5 +51,14 @@ export function updateTrip(accessToken: string, tripID: string, payload: UpdateT
       Authorization: `Bearer ${accessToken}`,
     },
     body: JSON.stringify(payload),
+  });
+}
+
+export function createShareLink(accessToken: string, tripID: string) {
+  return apiRequest<ShareLinkResponse>(`/api/trips/${tripID}/share`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
   });
 }
