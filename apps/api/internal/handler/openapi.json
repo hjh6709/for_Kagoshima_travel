@@ -101,6 +101,32 @@
           "memo": { "type": "string" }
         }
       },
+      "CreateScheduleRequest": {
+        "type": "object",
+        "required": ["date", "time", "type", "title"],
+        "properties": {
+          "placeId": { "type": "string" },
+          "date": { "type": "string", "example": "2026-06-27" },
+          "time": { "type": "string", "example": "10:30" },
+          "type": { "type": "string", "example": "sightseeing" },
+          "title": { "type": "string", "example": "전망대 방문" },
+          "transportMemo": { "type": "string" },
+          "guideMemo": { "type": "string" }
+        }
+      },
+      "ScheduleResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "placeId": { "type": "string" },
+          "date": { "type": "string" },
+          "time": { "type": "string" },
+          "type": { "type": "string" },
+          "title": { "type": "string" },
+          "transportMemo": { "type": "string" },
+          "guideMemo": { "type": "string" }
+        }
+      },
       "ShareLinkResponse": {
         "type": "object",
         "properties": {
@@ -277,6 +303,21 @@
         "tags": ["일정"],
         "security": [{ "bearerAuth": [] }],
         "responses": { "200": { "description": "성공" } }
+      },
+      "post": {
+        "summary": "일정 생성",
+        "tags": ["일정"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateScheduleRequest" } } }
+        },
+        "responses": {
+          "201": { "description": "일정 생성 성공", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ScheduleResponse" } } } },
+          "400": { "description": "입력 오류" },
+          "403": { "description": "권한 없음" },
+          "404": { "description": "여행 없음" }
+        }
       }
     },
     "/api/trips/{tripID}/places": {

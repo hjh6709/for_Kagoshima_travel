@@ -107,6 +107,21 @@ func (h *TripHandler) ListSchedules(w http.ResponseWriter, r *http.Request) {
 	httpjson.Write(w, http.StatusOK, schedules)
 }
 
+func (h *TripHandler) CreateSchedule(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.GetClaims(r)
+	var req dto.CreateScheduleRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httpjson.WriteError(w, http.StatusBadRequest, "요청 형식이 올바르지 않습니다.")
+		return
+	}
+	schedule, err := h.tripService.CreateSchedule(r.PathValue("tripID"), claims.UserID, req)
+	if err != nil {
+		writeServiceError(w, err)
+		return
+	}
+	httpjson.Write(w, http.StatusCreated, schedule)
+}
+
 func (h *TripHandler) ListPlaces(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
 	places, err := h.tripService.ListPlacesForOwner(r.PathValue("tripID"), claims.UserID)
