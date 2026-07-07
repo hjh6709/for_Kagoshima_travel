@@ -1243,7 +1243,7 @@ function OwnerApp({
           <section className="screen owner-screen">
             {!authChecked && (
               <article className="info-card auth-card">
-                <span className="pill">관리자</span>
+                <span className="pill">여행 관리 계정</span>
                 <h1>로그인 확인 중</h1>
                 <p className="muted">저장된 로그인 정보를 확인하고 있습니다.</p>
               </article>
@@ -1251,9 +1251,12 @@ function OwnerApp({
 
             {authChecked && !auth && (
               <article className="info-card auth-card">
-                <span className="pill">관리자</span>
-                <h1>여행 관리 로그인</h1>
-                <p className="muted">여행 생성자는 로그인 후 여행 정보와 공유 링크를 관리합니다.</p>
+                <span className="pill">여행 관리 계정</span>
+                <h1>{authMode === "login" ? "여행 관리 로그인" : "여행 관리 계정 만들기"}</h1>
+                <p className="muted">
+                  처음 사용하는 경우 계정을 만든 뒤 여행을 생성합니다. 공유 링크를 받은 가족이나 동행자는 로그인 없이
+                  읽기 전용으로 확인합니다.
+                </p>
 
                 <form className="auth-form" onSubmit={onSubmitAuth}>
                   <label>
@@ -1307,7 +1310,7 @@ function OwnerApp({
               <>
                 <div className="owner-header">
                   <div>
-                    <span className="eyebrow">관리자 화면</span>
+                    <span className="eyebrow">여행 관리 계정</span>
                     <h1>여행 관리</h1>
                     <p className="muted">{auth.user.email}</p>
                   </div>
@@ -1372,7 +1375,7 @@ function OwnerApp({
                         </button>
                         <button className="quick-button" disabled type="button">
                           <Copy size={18} />
-                          공유 링크 준비 중
+                          읽기 전용 공유 링크 준비 중
                         </button>
                       </div>
                     </article>
