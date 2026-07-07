@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { ApiError, getCurrentUser, login, register, type AuthResponse } from "./api/auth";
-import { listMyTrips, type OwnerTrip } from "./api/trips";
+import { createTrip, listMyTrips, type OwnerTrip } from "./api/trips";
 import {
   accommodation,
   checklist,
@@ -309,6 +309,13 @@ function App() {
   const [ownerTrips, setOwnerTrips] = useState<OwnerTrip[]>([]);
   const [ownerTripsError, setOwnerTripsError] = useState("");
   const [ownerTripsLoading, setOwnerTripsLoading] = useState(false);
+  const [newTripTitle, setNewTripTitle] = useState("");
+  const [newTripStartDate, setNewTripStartDate] = useState("");
+  const [newTripEndDate, setNewTripEndDate] = useState("");
+  const [newTripTravelers, setNewTripTravelers] = useState("");
+  const [newTripMemo, setNewTripMemo] = useState("");
+  const [tripCreateError, setTripCreateError] = useState("");
+  const [tripCreateSubmitting, setTripCreateSubmitting] = useState(false);
   const [tripDates, setTripDates] = useState<TripDates>(getSavedTripDates);
   const [selectedDate, setSelectedDate] = useState(schedules[0]?.date ?? trip.startDate);
   const [addressCopied, setAddressCopied] = useState(false);
@@ -459,6 +466,59 @@ function App() {
     }
   }
 
+  async function submitNewTrip(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!ownerAuth) return;
+
+    const title = newTripTitle.trim();
+    const startDate = newTripStartDate;
+    const endDate = newTripEndDate || newTripStartDate;
+    const travelers = newTripTravelers
+      .split(/[\n,]/)
+      .map((traveler) => traveler.trim())
+      .filter(Boolean);
+    const memo = newTripMemo.trim();
+
+    if (!title || !startDate || !endDate) {
+      setTripCreateError("여행명과 여행 날짜를 입력해주세요.");
+      return;
+    }
+    if (endDate < startDate) {
+      setTripCreateError("종료일은 시작일보다 빠를 수 없습니다.");
+      return;
+    }
+
+    setTripCreateError("");
+    setTripCreateSubmitting(true);
+    try {
+      const createdTrip = await createTrip(ownerAuth.accessToken, {
+        title,
+        startDate,
+        endDate,
+        travelers,
+        memo: memo || undefined,
+      });
+      setOwnerTrips((currentTrips) => [createdTrip, ...currentTrips.filter((item) => item.id !== createdTrip.id)]);
+      setNewTripTitle("");
+      setNewTripStartDate("");
+      setNewTripEndDate("");
+      setNewTripTravelers("");
+      setNewTripMemo("");
+      setOwnerTripsError("");
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        window.localStorage.removeItem(ownerAuthStorageKey);
+        setOwnerAuth(null);
+        setOwnerTrips([]);
+        setTripCreateError("");
+        return;
+      }
+      setTripCreateError(error instanceof Error ? error.message : "여행을 만들지 못했습니다.");
+    } finally {
+      setTripCreateSubmitting(false);
+    }
+  }
+
   function logoutOwner() {
     window.localStorage.removeItem(ownerAuthStorageKey);
     setOwnerAuth(null);
@@ -481,14 +541,32 @@ function App() {
         ownerTrips={ownerTrips}
         ownerTripsError={ownerTripsError}
         ownerTripsLoading={ownerTripsLoading}
+        newTripEndDate={newTripEndDate}
+        newTripMemo={newTripMemo}
+        newTripStartDate={newTripStartDate}
+        newTripTitle={newTripTitle}
+        newTripTravelers={newTripTravelers}
+        tripCreateError={tripCreateError}
+        tripCreateSubmitting={tripCreateSubmitting}
         onAuthEmailChange={setAuthEmail}
         onAuthModeChange={(mode) => {
           setAuthMode(mode);
           setAuthError("");
         }}
         onAuthPasswordChange={setAuthPassword}
+        onNewTripEndDateChange={setNewTripEndDate}
+        onNewTripMemoChange={setNewTripMemo}
+        onNewTripStartDateChange={(value) => {
+          setNewTripStartDate(value);
+          if (!newTripEndDate || newTripEndDate < value) {
+            setNewTripEndDate(value);
+          }
+        }}
+        onNewTripTitleChange={setNewTripTitle}
+        onNewTripTravelersChange={setNewTripTravelers}
         onLogout={logoutOwner}
         onSubmitAuth={submitAuth}
+        onSubmitNewTrip={submitNewTrip}
       />
     );
   }
@@ -1082,14 +1160,27 @@ type OwnerAppProps = {
   authMode: AuthMode;
   authPassword: string;
   authSubmitting: boolean;
+  newTripEndDate: string;
+  newTripMemo: string;
+  newTripStartDate: string;
+  newTripTitle: string;
+  newTripTravelers: string;
   ownerTrips: OwnerTrip[];
   ownerTripsError: string;
   ownerTripsLoading: boolean;
+  tripCreateError: string;
+  tripCreateSubmitting: boolean;
   onAuthEmailChange: (value: string) => void;
   onAuthModeChange: (mode: AuthMode) => void;
   onAuthPasswordChange: (value: string) => void;
+  onNewTripEndDateChange: (value: string) => void;
+  onNewTripMemoChange: (value: string) => void;
+  onNewTripStartDateChange: (value: string) => void;
+  onNewTripTitleChange: (value: string) => void;
+  onNewTripTravelersChange: (value: string) => void;
   onLogout: () => void;
   onSubmitAuth: (event: FormEvent<HTMLFormElement>) => void;
+  onSubmitNewTrip: (event: FormEvent<HTMLFormElement>) => void;
 };
 
 function OwnerApp({
@@ -1100,14 +1191,27 @@ function OwnerApp({
   authMode,
   authPassword,
   authSubmitting,
+  newTripEndDate,
+  newTripMemo,
+  newTripStartDate,
+  newTripTitle,
+  newTripTravelers,
   ownerTrips,
   ownerTripsError,
   ownerTripsLoading,
+  tripCreateError,
+  tripCreateSubmitting,
   onAuthEmailChange,
   onAuthModeChange,
   onAuthPasswordChange,
+  onNewTripEndDateChange,
+  onNewTripMemoChange,
+  onNewTripStartDateChange,
+  onNewTripTitleChange,
+  onNewTripTravelersChange,
   onLogout,
   onSubmitAuth,
+  onSubmitNewTrip,
 }: OwnerAppProps) {
   return (
     <main className="app-shell">
@@ -1194,7 +1298,7 @@ function OwnerApp({
                     <span className="pill">내 여행</span>
                     <h2>관리할 여행을 선택하세요</h2>
                     <p className="muted">
-                      로그인한 계정으로 만든 여행 목록입니다. 다음 PR부터 새 여행 만들기와 편집 화면을 연결합니다.
+                      로그인한 계정으로 여행을 만들고, 이후 일정과 장소를 연결합니다.
                     </p>
                   </div>
                   <a className="primary-button" href="/">
@@ -1202,6 +1306,77 @@ function OwnerApp({
                     여행 화면 보기
                   </a>
                 </article>
+
+                <section className="section-block">
+                  <div className="section-title-row">
+                    <div>
+                      <h2>새 여행 만들기</h2>
+                      <p className="section-caption">여행명과 기간만 입력하면 먼저 여행 공간을 만들 수 있습니다.</p>
+                    </div>
+                  </div>
+
+                  <form className="auth-form trip-create-form" onSubmit={onSubmitNewTrip}>
+                    <label>
+                      여행명
+                      <input
+                        onChange={(event) => onNewTripTitleChange(event.target.value)}
+                        placeholder="예: 여름 가족 여행"
+                        required
+                        type="text"
+                        value={newTripTitle}
+                      />
+                    </label>
+
+                    <div className="form-grid-two">
+                      <label>
+                        시작일
+                        <input
+                          onChange={(event) => onNewTripStartDateChange(event.target.value)}
+                          required
+                          type="date"
+                          value={newTripStartDate}
+                        />
+                      </label>
+                      <label>
+                        종료일
+                        <input
+                          min={newTripStartDate || undefined}
+                          onChange={(event) => onNewTripEndDateChange(event.target.value)}
+                          required
+                          type="date"
+                          value={newTripEndDate}
+                        />
+                      </label>
+                    </div>
+
+                    <label>
+                      여행자
+                      <textarea
+                        onChange={(event) => onNewTripTravelersChange(event.target.value)}
+                        placeholder="쉼표 또는 줄바꿈으로 입력&#10;예: 나, 가족"
+                        rows={3}
+                        value={newTripTravelers}
+                      />
+                    </label>
+
+                    <label>
+                      메모
+                      <textarea
+                        onChange={(event) => onNewTripMemoChange(event.target.value)}
+                        placeholder="여행 목적, 주의사항, 준비 메모"
+                        rows={3}
+                        value={newTripMemo}
+                      />
+                    </label>
+
+                    {tripCreateError && <p className="form-error">{tripCreateError}</p>}
+
+                    <button className="primary-button" disabled={tripCreateSubmitting} type="submit">
+                      <PlusCircle size={18} />
+                      {tripCreateSubmitting ? "만드는 중" : "새 여행 만들기"}
+                    </button>
+                  </form>
+                </section>
 
                 <section className="section-block">
                   <div className="section-title-row">
@@ -1217,10 +1392,7 @@ function OwnerApp({
                     <article className="info-card empty-state-card">
                       <PlusCircle size={28} />
                       <h2>아직 만든 여행이 없습니다</h2>
-                      <p className="muted">다음 단계에서 새 여행 만들기 폼을 연결합니다.</p>
-                      <button className="secondary-button" disabled type="button">
-                        새 여행 만들기 준비 중
-                      </button>
+                      <p className="muted">위 폼에서 첫 여행을 만들면 이 목록에 바로 표시됩니다.</p>
                     </article>
                   )}
 
