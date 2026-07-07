@@ -24,6 +24,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { ApiError, getCurrentUser, login, register, type AuthResponse } from "./api/auth";
 import {
   createShareLink,
+  createTripSchedule,
   createTrip,
   getSharedTrip,
   listTripPlaces,
@@ -76,6 +77,7 @@ const scheduleTypeLabels: Record<ScheduleItem["type"], string> = {
   shopping: "쇼핑",
   etc: "기타",
 };
+const scheduleTypeOptions = Object.entries(scheduleTypeLabels) as Array<[ScheduleItem["type"], string]>;
 
 function getScheduleTypeLabel(type: string) {
   return scheduleTypeLabels[type as ScheduleItem["type"]] ?? "일정";
@@ -315,6 +317,18 @@ function toAbsoluteWebURL(path: string) {
   return new URL(path, window.location.origin).toString();
 }
 
+function sortSharedSchedules(items: SharedSchedule[]): SharedSchedule[] {
+  return [...items].sort((left, right) => {
+    const byDate = left.date.localeCompare(right.date);
+    if (byDate !== 0) return byDate;
+
+    const byTime = left.time.localeCompare(right.time);
+    if (byTime !== 0) return byTime;
+
+    return left.title.localeCompare(right.title);
+  });
+}
+
 function getShareTokenFromPath(path: string) {
   const match = path.match(/^\/share\/([^/]+)\/?$/);
   return match ? decodeURIComponent(match[1]) : "";
@@ -361,6 +375,15 @@ function App() {
   const [ownerPlaces, setOwnerPlaces] = useState<SharedPlace[]>([]);
   const [ownerDetailDataError, setOwnerDetailDataError] = useState("");
   const [ownerDetailDataLoading, setOwnerDetailDataLoading] = useState(false);
+  const [newScheduleDate, setNewScheduleDate] = useState("");
+  const [newScheduleTime, setNewScheduleTime] = useState("");
+  const [newScheduleType, setNewScheduleType] = useState<ScheduleItem["type"]>("sightseeing");
+  const [newScheduleTitle, setNewScheduleTitle] = useState("");
+  const [newSchedulePlaceID, setNewSchedulePlaceID] = useState("");
+  const [newScheduleTransportMemo, setNewScheduleTransportMemo] = useState("");
+  const [newScheduleGuideMemo, setNewScheduleGuideMemo] = useState("");
+  const [scheduleCreateError, setScheduleCreateError] = useState("");
+  const [scheduleCreateSubmitting, setScheduleCreateSubmitting] = useState(false);
   const [sharedTrip, setSharedTrip] = useState<SharedTripResponse | null>(null);
   const [sharedTripError, setSharedTripError] = useState("");
   const [sharedTripLoading, setSharedTripLoading] = useState(isShareRoute);
@@ -553,6 +576,14 @@ function App() {
       setTripEditTravelers("");
       setTripEditMemo("");
       setTripEditError("");
+      setNewScheduleDate("");
+      setNewScheduleTime("");
+      setNewScheduleType("sightseeing");
+      setNewScheduleTitle("");
+      setNewSchedulePlaceID("");
+      setNewScheduleTransportMemo("");
+      setNewScheduleGuideMemo("");
+      setScheduleCreateError("");
       return;
     }
 
@@ -564,6 +595,14 @@ function App() {
     setTripEditError("");
     setShareLinkError("");
     setShareLinkCopied(false);
+    setNewScheduleDate(selectedOwnerTrip.startDate);
+    setNewScheduleTime("");
+    setNewScheduleType("sightseeing");
+    setNewScheduleTitle("");
+    setNewSchedulePlaceID("");
+    setNewScheduleTransportMemo("");
+    setNewScheduleGuideMemo("");
+    setScheduleCreateError("");
   }, [selectedOwnerTrip]);
 
   useEffect(() => {
@@ -584,7 +623,7 @@ function App() {
     ])
       .then(([nextSchedules, nextPlaces]) => {
         if (cancelled) return;
-        setOwnerSchedules(nextSchedules);
+        setOwnerSchedules(sortSharedSchedules(nextSchedules));
         setOwnerPlaces(nextPlaces);
       })
       .catch((error) => {
@@ -770,6 +809,61 @@ function App() {
     }
   }
 
+  async function submitNewSchedule(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!ownerAuth || !selectedOwnerTrip) return;
+
+    const date = newScheduleDate;
+    const time = newScheduleTime.trim();
+    const title = newScheduleTitle.trim();
+    const transportMemo = newScheduleTransportMemo.trim();
+    const guideMemo = newScheduleGuideMemo.trim();
+
+    if (!date || !time || !title) {
+      setScheduleCreateError("날짜, 시간, 제목을 입력해주세요.");
+      return;
+    }
+    if (date < selectedOwnerTrip.startDate || date > selectedOwnerTrip.endDate) {
+      setScheduleCreateError("일정 날짜는 여행 기간 안에서 선택해주세요.");
+      return;
+    }
+
+    setScheduleCreateError("");
+    setScheduleCreateSubmitting(true);
+    try {
+      const createdSchedule = await createTripSchedule(ownerAuth.accessToken, selectedOwnerTrip.id, {
+        date,
+        time,
+        type: newScheduleType,
+        title,
+        placeId: newSchedulePlaceID || undefined,
+        transportMemo: transportMemo || undefined,
+        guideMemo: guideMemo || undefined,
+      });
+      setOwnerSchedules((currentSchedules) => sortSharedSchedules([...currentSchedules, createdSchedule]));
+      setNewScheduleTime("");
+      setNewScheduleTitle("");
+      setNewSchedulePlaceID("");
+      setNewScheduleTransportMemo("");
+      setNewScheduleGuideMemo("");
+      setScheduleCreateError("");
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        window.localStorage.removeItem(ownerAuthStorageKey);
+        setOwnerAuth(null);
+        setOwnerTrips([]);
+        setSelectedOwnerTripID(null);
+        setOwnerSchedules([]);
+        setOwnerPlaces([]);
+        setScheduleCreateError("");
+        return;
+      }
+      setScheduleCreateError(error instanceof Error ? error.message : "일정을 추가하지 못했습니다.");
+    } finally {
+      setScheduleCreateSubmitting(false);
+    }
+  }
+
   function copySelectedTripShareLink() {
     if (!selectedOwnerTrip) return;
 
@@ -805,6 +899,15 @@ function App() {
     setOwnerPlaces([]);
     setOwnerDetailDataError("");
     setOwnerDetailDataLoading(false);
+    setNewScheduleDate("");
+    setNewScheduleTime("");
+    setNewScheduleType("sightseeing");
+    setNewScheduleTitle("");
+    setNewSchedulePlaceID("");
+    setNewScheduleTransportMemo("");
+    setNewScheduleGuideMemo("");
+    setScheduleCreateError("");
+    setScheduleCreateSubmitting(false);
     setOwnerTripsError("");
     setAuthPassword("");
     setAuthError("");
@@ -838,6 +941,15 @@ function App() {
         newTripStartDate={newTripStartDate}
         newTripTitle={newTripTitle}
         newTripTravelers={newTripTravelers}
+        newScheduleDate={newScheduleDate}
+        newScheduleGuideMemo={newScheduleGuideMemo}
+        newSchedulePlaceID={newSchedulePlaceID}
+        newScheduleTime={newScheduleTime}
+        newScheduleTitle={newScheduleTitle}
+        newScheduleTransportMemo={newScheduleTransportMemo}
+        newScheduleType={newScheduleType}
+        scheduleCreateError={scheduleCreateError}
+        scheduleCreateSubmitting={scheduleCreateSubmitting}
         shareLinkCopied={shareLinkCopied}
         shareLinkError={shareLinkError}
         shareLinkSubmitting={shareLinkSubmitting}
@@ -866,6 +978,13 @@ function App() {
         }}
         onNewTripTitleChange={setNewTripTitle}
         onNewTripTravelersChange={setNewTripTravelers}
+        onNewScheduleDateChange={setNewScheduleDate}
+        onNewScheduleGuideMemoChange={setNewScheduleGuideMemo}
+        onNewSchedulePlaceIDChange={setNewSchedulePlaceID}
+        onNewScheduleTimeChange={setNewScheduleTime}
+        onNewScheduleTitleChange={setNewScheduleTitle}
+        onNewScheduleTransportMemoChange={setNewScheduleTransportMemo}
+        onNewScheduleTypeChange={setNewScheduleType}
         onCloseOwnerTripDetail={() => setSelectedOwnerTripID(null)}
         onCopyShareLink={copySelectedTripShareLink}
         onCreateShareLink={createSelectedTripShareLink}
@@ -883,6 +1002,7 @@ function App() {
         onSelectOwnerTrip={setSelectedOwnerTripID}
         onSubmitAuth={submitAuth}
         onSubmitNewTrip={submitNewTrip}
+        onSubmitNewSchedule={submitNewSchedule}
         onSubmitTripEdit={submitTripEdit}
       />
     );
@@ -1646,6 +1766,13 @@ type TripManageAppProps = {
   newTripStartDate: string;
   newTripTitle: string;
   newTripTravelers: string;
+  newScheduleDate: string;
+  newScheduleGuideMemo: string;
+  newSchedulePlaceID: string;
+  newScheduleTime: string;
+  newScheduleTitle: string;
+  newScheduleTransportMemo: string;
+  newScheduleType: ScheduleItem["type"];
   ownerTrips: OwnerTrip[];
   ownerTripsError: string;
   ownerTripsLoading: boolean;
@@ -1655,6 +1782,8 @@ type TripManageAppProps = {
   ownerDetailDataLoading: boolean;
   selectedOwnerTrip: OwnerTrip | null;
   selectedShareLink: string;
+  scheduleCreateError: string;
+  scheduleCreateSubmitting: boolean;
   shareLinkCopied: boolean;
   shareLinkError: string;
   shareLinkSubmitting: boolean;
@@ -1675,6 +1804,13 @@ type TripManageAppProps = {
   onNewTripStartDateChange: (value: string) => void;
   onNewTripTitleChange: (value: string) => void;
   onNewTripTravelersChange: (value: string) => void;
+  onNewScheduleDateChange: (value: string) => void;
+  onNewScheduleGuideMemoChange: (value: string) => void;
+  onNewSchedulePlaceIDChange: (value: string) => void;
+  onNewScheduleTimeChange: (value: string) => void;
+  onNewScheduleTitleChange: (value: string) => void;
+  onNewScheduleTransportMemoChange: (value: string) => void;
+  onNewScheduleTypeChange: (value: ScheduleItem["type"]) => void;
   onCloseOwnerTripDetail: () => void;
   onCopyShareLink: () => void;
   onCreateShareLink: () => void;
@@ -1687,6 +1823,7 @@ type TripManageAppProps = {
   onSelectOwnerTrip: (tripID: string) => void;
   onSubmitAuth: (event: FormEvent<HTMLFormElement>) => void;
   onSubmitNewTrip: (event: FormEvent<HTMLFormElement>) => void;
+  onSubmitNewSchedule: (event: FormEvent<HTMLFormElement>) => void;
   onSubmitTripEdit: (event: FormEvent<HTMLFormElement>) => void;
 };
 
@@ -1703,6 +1840,13 @@ function TripManageApp({
   newTripStartDate,
   newTripTitle,
   newTripTravelers,
+  newScheduleDate,
+  newScheduleGuideMemo,
+  newSchedulePlaceID,
+  newScheduleTime,
+  newScheduleTitle,
+  newScheduleTransportMemo,
+  newScheduleType,
   ownerTrips,
   ownerTripsError,
   ownerTripsLoading,
@@ -1712,6 +1856,8 @@ function TripManageApp({
   ownerDetailDataLoading,
   selectedOwnerTrip,
   selectedShareLink,
+  scheduleCreateError,
+  scheduleCreateSubmitting,
   shareLinkCopied,
   shareLinkError,
   shareLinkSubmitting,
@@ -1732,6 +1878,13 @@ function TripManageApp({
   onNewTripStartDateChange,
   onNewTripTitleChange,
   onNewTripTravelersChange,
+  onNewScheduleDateChange,
+  onNewScheduleGuideMemoChange,
+  onNewSchedulePlaceIDChange,
+  onNewScheduleTimeChange,
+  onNewScheduleTitleChange,
+  onNewScheduleTransportMemoChange,
+  onNewScheduleTypeChange,
   onCloseOwnerTripDetail,
   onCopyShareLink,
   onCreateShareLink,
@@ -1744,6 +1897,7 @@ function TripManageApp({
   onSelectOwnerTrip,
   onSubmitAuth,
   onSubmitNewTrip,
+  onSubmitNewSchedule,
   onSubmitTripEdit,
 }: TripManageAppProps) {
   const ownerPlaceByID = useMemo(() => new Map(ownerPlaces.map((place) => [place.id, place])), [ownerPlaces]);
@@ -1994,6 +2148,111 @@ function TripManageApp({
 
                       {shareLinkCopied && <p className="form-success">공유 링크를 복사했습니다.</p>}
                       {shareLinkError && <p className="form-error">{shareLinkError}</p>}
+
+                      <section className="owner-linked-data-section">
+                        <div className="section-title-row compact-title-row">
+                          <div>
+                            <h3>일정 추가</h3>
+                            <p className="section-caption">공유 화면에 표시할 일정을 서버에 저장합니다.</p>
+                          </div>
+                        </div>
+
+                        <form className="auth-form compact-owner-form" onSubmit={onSubmitNewSchedule}>
+                          <div className="form-grid-two">
+                            <label>
+                              날짜
+                              <input
+                                max={selectedOwnerTrip.endDate}
+                                min={selectedOwnerTrip.startDate}
+                                onChange={(event) => onNewScheduleDateChange(event.target.value)}
+                                required
+                                type="date"
+                                value={newScheduleDate}
+                              />
+                            </label>
+                            <label>
+                              시간
+                              <input
+                                onChange={(event) => onNewScheduleTimeChange(event.target.value)}
+                                placeholder="예: 10:30"
+                                required
+                                type="text"
+                                value={newScheduleTime}
+                              />
+                            </label>
+                          </div>
+
+                          <div className="form-grid-two">
+                            <label>
+                              유형
+                              <select
+                                onChange={(event) =>
+                                  onNewScheduleTypeChange(event.target.value as ScheduleItem["type"])
+                                }
+                                value={newScheduleType}
+                              >
+                                {scheduleTypeOptions.map(([type, label]) => (
+                                  <option key={type} value={type}>
+                                    {label}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                            <label>
+                              연결 장소
+                              <select
+                                onChange={(event) => onNewSchedulePlaceIDChange(event.target.value)}
+                                value={newSchedulePlaceID}
+                              >
+                                <option value="">장소 연결 안 함</option>
+                                {ownerPlaces.map((place) => (
+                                  <option key={place.id} value={place.id}>
+                                    {place.name}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                          </div>
+
+                          <label>
+                            일정 제목
+                            <input
+                              onChange={(event) => onNewScheduleTitleChange(event.target.value)}
+                              placeholder="예: 공항 도착 후 렌터카 수령"
+                              required
+                              type="text"
+                              value={newScheduleTitle}
+                            />
+                          </label>
+
+                          <label>
+                            이동 메모
+                            <textarea
+                              onChange={(event) => onNewScheduleTransportMemoChange(event.target.value)}
+                              placeholder="예: 택시, 버스, 도보 이동 정보"
+                              rows={2}
+                              value={newScheduleTransportMemo}
+                            />
+                          </label>
+
+                          <label>
+                            안내 메모
+                            <textarea
+                              onChange={(event) => onNewScheduleGuideMemoChange(event.target.value)}
+                              placeholder="예: 준비물, 현장 주의사항, 가족에게 보여줄 설명"
+                              rows={2}
+                              value={newScheduleGuideMemo}
+                            />
+                          </label>
+
+                          {scheduleCreateError && <p className="form-error">{scheduleCreateError}</p>}
+
+                          <button className="primary-button" disabled={scheduleCreateSubmitting} type="submit">
+                            <PlusCircle size={18} />
+                            {scheduleCreateSubmitting ? "일정 추가 중" : "일정 추가"}
+                          </button>
+                        </form>
+                      </section>
 
                       <section className="owner-linked-data-section">
                         <div className="section-title-row compact-title-row">

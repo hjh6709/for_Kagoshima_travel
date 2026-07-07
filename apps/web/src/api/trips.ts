@@ -19,6 +19,16 @@ export type CreateTripPayload = {
 
 export type UpdateTripPayload = Partial<CreateTripPayload>;
 
+export type CreateSchedulePayload = {
+  placeId?: string;
+  date: string;
+  time: string;
+  type: string;
+  title: string;
+  transportMemo?: string;
+  guideMemo?: string;
+};
+
 export type ShareLinkResponse = {
   token: string;
   apiPath: string;
@@ -112,6 +122,16 @@ export function listTripSchedules(accessToken: string, tripID: string) {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
+  });
+}
+
+export function createTripSchedule(accessToken: string, tripID: string, payload: CreateSchedulePayload) {
+  return apiRequest<SharedSchedule>(`/api/trips/${tripID}/schedules`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(payload),
   });
 }
 
