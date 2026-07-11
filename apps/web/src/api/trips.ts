@@ -29,6 +29,14 @@ export type CreateSchedulePayload = {
   guideMemo?: string;
 };
 
+export type CreatePlacePayload = {
+  name: string;
+  category: string;
+  address?: string;
+  googleMapsUrl?: string;
+  recommendedReason?: string;
+};
+
 export type ShareLinkResponse = {
   token: string;
   apiPath: string;
@@ -140,6 +148,16 @@ export function listTripPlaces(accessToken: string, tripID: string) {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
+  });
+}
+
+export function createTripPlace(accessToken: string, tripID: string, payload: CreatePlacePayload) {
+  return apiRequest<SharedPlace>(`/api/trips/${tripID}/places`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(payload),
   });
 }
 

@@ -24,6 +24,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { ApiError, getCurrentUser, login, register, type AuthResponse } from "./api/auth";
 import {
   createShareLink,
+  createTripPlace,
   createTripSchedule,
   createTrip,
   getSharedTrip,
@@ -93,6 +94,8 @@ const placeCategoryLabels = {
   transport: "이동",
   etc: "기타",
 } as const;
+type PlaceCategory = keyof typeof placeCategoryLabels;
+const placeCategoryOptions = Object.entries(placeCategoryLabels) as Array<[PlaceCategory, string]>;
 
 const checklistCategoryLabels = {
   before: "출발 전",
@@ -329,6 +332,15 @@ function sortSharedSchedules(items: SharedSchedule[]): SharedSchedule[] {
   });
 }
 
+function sortSharedPlaces(items: SharedPlace[]): SharedPlace[] {
+  return [...items].sort((left, right) => {
+    const byCategory = left.category.localeCompare(right.category);
+    if (byCategory !== 0) return byCategory;
+
+    return left.name.localeCompare(right.name);
+  });
+}
+
 function getShareTokenFromPath(path: string) {
   const match = path.match(/^\/share\/([^/]+)\/?$/);
   return match ? decodeURIComponent(match[1]) : "";
@@ -384,6 +396,13 @@ function App() {
   const [newScheduleGuideMemo, setNewScheduleGuideMemo] = useState("");
   const [scheduleCreateError, setScheduleCreateError] = useState("");
   const [scheduleCreateSubmitting, setScheduleCreateSubmitting] = useState(false);
+  const [newPlaceName, setNewPlaceName] = useState("");
+  const [newPlaceCategory, setNewPlaceCategory] = useState<PlaceCategory>("sightseeing");
+  const [newPlaceAddress, setNewPlaceAddress] = useState("");
+  const [newPlaceGoogleMapsURL, setNewPlaceGoogleMapsURL] = useState("");
+  const [newPlaceRecommendedReason, setNewPlaceRecommendedReason] = useState("");
+  const [placeCreateError, setPlaceCreateError] = useState("");
+  const [placeCreateSubmitting, setPlaceCreateSubmitting] = useState(false);
   const [sharedTrip, setSharedTrip] = useState<SharedTripResponse | null>(null);
   const [sharedTripError, setSharedTripError] = useState("");
   const [sharedTripLoading, setSharedTripLoading] = useState(isShareRoute);
@@ -584,6 +603,12 @@ function App() {
       setNewScheduleTransportMemo("");
       setNewScheduleGuideMemo("");
       setScheduleCreateError("");
+      setNewPlaceName("");
+      setNewPlaceCategory("sightseeing");
+      setNewPlaceAddress("");
+      setNewPlaceGoogleMapsURL("");
+      setNewPlaceRecommendedReason("");
+      setPlaceCreateError("");
       return;
     }
 
@@ -603,6 +628,12 @@ function App() {
     setNewScheduleTransportMemo("");
     setNewScheduleGuideMemo("");
     setScheduleCreateError("");
+    setNewPlaceName("");
+    setNewPlaceCategory("sightseeing");
+    setNewPlaceAddress("");
+    setNewPlaceGoogleMapsURL("");
+    setNewPlaceRecommendedReason("");
+    setPlaceCreateError("");
   }, [selectedOwnerTrip]);
 
   useEffect(() => {
@@ -624,7 +655,7 @@ function App() {
       .then(([nextSchedules, nextPlaces]) => {
         if (cancelled) return;
         setOwnerSchedules(sortSharedSchedules(nextSchedules));
-        setOwnerPlaces(nextPlaces);
+        setOwnerPlaces(sortSharedPlaces(nextPlaces));
       })
       .catch((error) => {
         if (cancelled) return;
@@ -864,6 +895,54 @@ function App() {
     }
   }
 
+  async function submitNewPlace(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!ownerAuth || !selectedOwnerTrip) return;
+
+    const name = newPlaceName.trim();
+    const address = newPlaceAddress.trim();
+    const googleMapsUrl = newPlaceGoogleMapsURL.trim();
+    const recommendedReason = newPlaceRecommendedReason.trim();
+
+    if (!name) {
+      setPlaceCreateError("장소 이름을 입력해주세요.");
+      return;
+    }
+
+    setPlaceCreateError("");
+    setPlaceCreateSubmitting(true);
+    try {
+      const createdPlace = await createTripPlace(ownerAuth.accessToken, selectedOwnerTrip.id, {
+        name,
+        category: newPlaceCategory,
+        address: address || undefined,
+        googleMapsUrl: googleMapsUrl || undefined,
+        recommendedReason: recommendedReason || undefined,
+      });
+      setOwnerPlaces((currentPlaces) => sortSharedPlaces([...currentPlaces, createdPlace]));
+      setNewSchedulePlaceID(createdPlace.id);
+      setNewPlaceName("");
+      setNewPlaceAddress("");
+      setNewPlaceGoogleMapsURL("");
+      setNewPlaceRecommendedReason("");
+      setPlaceCreateError("");
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        window.localStorage.removeItem(ownerAuthStorageKey);
+        setOwnerAuth(null);
+        setOwnerTrips([]);
+        setSelectedOwnerTripID(null);
+        setOwnerSchedules([]);
+        setOwnerPlaces([]);
+        setPlaceCreateError("");
+        return;
+      }
+      setPlaceCreateError(error instanceof Error ? error.message : "장소를 추가하지 못했습니다.");
+    } finally {
+      setPlaceCreateSubmitting(false);
+    }
+  }
+
   function copySelectedTripShareLink() {
     if (!selectedOwnerTrip) return;
 
@@ -908,6 +987,13 @@ function App() {
     setNewScheduleGuideMemo("");
     setScheduleCreateError("");
     setScheduleCreateSubmitting(false);
+    setNewPlaceName("");
+    setNewPlaceCategory("sightseeing");
+    setNewPlaceAddress("");
+    setNewPlaceGoogleMapsURL("");
+    setNewPlaceRecommendedReason("");
+    setPlaceCreateError("");
+    setPlaceCreateSubmitting(false);
     setOwnerTripsError("");
     setAuthPassword("");
     setAuthError("");
@@ -948,6 +1034,13 @@ function App() {
         newScheduleTitle={newScheduleTitle}
         newScheduleTransportMemo={newScheduleTransportMemo}
         newScheduleType={newScheduleType}
+        newPlaceAddress={newPlaceAddress}
+        newPlaceCategory={newPlaceCategory}
+        newPlaceGoogleMapsURL={newPlaceGoogleMapsURL}
+        newPlaceName={newPlaceName}
+        newPlaceRecommendedReason={newPlaceRecommendedReason}
+        placeCreateError={placeCreateError}
+        placeCreateSubmitting={placeCreateSubmitting}
         scheduleCreateError={scheduleCreateError}
         scheduleCreateSubmitting={scheduleCreateSubmitting}
         shareLinkCopied={shareLinkCopied}
@@ -985,6 +1078,11 @@ function App() {
         onNewScheduleTitleChange={setNewScheduleTitle}
         onNewScheduleTransportMemoChange={setNewScheduleTransportMemo}
         onNewScheduleTypeChange={setNewScheduleType}
+        onNewPlaceAddressChange={setNewPlaceAddress}
+        onNewPlaceCategoryChange={setNewPlaceCategory}
+        onNewPlaceGoogleMapsURLChange={setNewPlaceGoogleMapsURL}
+        onNewPlaceNameChange={setNewPlaceName}
+        onNewPlaceRecommendedReasonChange={setNewPlaceRecommendedReason}
         onCloseOwnerTripDetail={() => setSelectedOwnerTripID(null)}
         onCopyShareLink={copySelectedTripShareLink}
         onCreateShareLink={createSelectedTripShareLink}
@@ -1001,6 +1099,7 @@ function App() {
         onLogout={logoutOwner}
         onSelectOwnerTrip={setSelectedOwnerTripID}
         onSubmitAuth={submitAuth}
+        onSubmitNewPlace={submitNewPlace}
         onSubmitNewTrip={submitNewTrip}
         onSubmitNewSchedule={submitNewSchedule}
         onSubmitTripEdit={submitTripEdit}
@@ -1773,6 +1872,11 @@ type TripManageAppProps = {
   newScheduleTitle: string;
   newScheduleTransportMemo: string;
   newScheduleType: ScheduleItem["type"];
+  newPlaceAddress: string;
+  newPlaceCategory: PlaceCategory;
+  newPlaceGoogleMapsURL: string;
+  newPlaceName: string;
+  newPlaceRecommendedReason: string;
   ownerTrips: OwnerTrip[];
   ownerTripsError: string;
   ownerTripsLoading: boolean;
@@ -1782,6 +1886,8 @@ type TripManageAppProps = {
   ownerDetailDataLoading: boolean;
   selectedOwnerTrip: OwnerTrip | null;
   selectedShareLink: string;
+  placeCreateError: string;
+  placeCreateSubmitting: boolean;
   scheduleCreateError: string;
   scheduleCreateSubmitting: boolean;
   shareLinkCopied: boolean;
@@ -1811,6 +1917,11 @@ type TripManageAppProps = {
   onNewScheduleTitleChange: (value: string) => void;
   onNewScheduleTransportMemoChange: (value: string) => void;
   onNewScheduleTypeChange: (value: ScheduleItem["type"]) => void;
+  onNewPlaceAddressChange: (value: string) => void;
+  onNewPlaceCategoryChange: (value: PlaceCategory) => void;
+  onNewPlaceGoogleMapsURLChange: (value: string) => void;
+  onNewPlaceNameChange: (value: string) => void;
+  onNewPlaceRecommendedReasonChange: (value: string) => void;
   onCloseOwnerTripDetail: () => void;
   onCopyShareLink: () => void;
   onCreateShareLink: () => void;
@@ -1822,6 +1933,7 @@ type TripManageAppProps = {
   onLogout: () => void;
   onSelectOwnerTrip: (tripID: string) => void;
   onSubmitAuth: (event: FormEvent<HTMLFormElement>) => void;
+  onSubmitNewPlace: (event: FormEvent<HTMLFormElement>) => void;
   onSubmitNewTrip: (event: FormEvent<HTMLFormElement>) => void;
   onSubmitNewSchedule: (event: FormEvent<HTMLFormElement>) => void;
   onSubmitTripEdit: (event: FormEvent<HTMLFormElement>) => void;
@@ -1847,6 +1959,11 @@ function TripManageApp({
   newScheduleTitle,
   newScheduleTransportMemo,
   newScheduleType,
+  newPlaceAddress,
+  newPlaceCategory,
+  newPlaceGoogleMapsURL,
+  newPlaceName,
+  newPlaceRecommendedReason,
   ownerTrips,
   ownerTripsError,
   ownerTripsLoading,
@@ -1856,6 +1973,8 @@ function TripManageApp({
   ownerDetailDataLoading,
   selectedOwnerTrip,
   selectedShareLink,
+  placeCreateError,
+  placeCreateSubmitting,
   scheduleCreateError,
   scheduleCreateSubmitting,
   shareLinkCopied,
@@ -1885,6 +2004,11 @@ function TripManageApp({
   onNewScheduleTitleChange,
   onNewScheduleTransportMemoChange,
   onNewScheduleTypeChange,
+  onNewPlaceAddressChange,
+  onNewPlaceCategoryChange,
+  onNewPlaceGoogleMapsURLChange,
+  onNewPlaceNameChange,
+  onNewPlaceRecommendedReasonChange,
   onCloseOwnerTripDetail,
   onCopyShareLink,
   onCreateShareLink,
@@ -1896,6 +2020,7 @@ function TripManageApp({
   onLogout,
   onSelectOwnerTrip,
   onSubmitAuth,
+  onSubmitNewPlace,
   onSubmitNewTrip,
   onSubmitNewSchedule,
   onSubmitTripEdit,
@@ -2148,6 +2273,83 @@ function TripManageApp({
 
                       {shareLinkCopied && <p className="form-success">공유 링크를 복사했습니다.</p>}
                       {shareLinkError && <p className="form-error">{shareLinkError}</p>}
+
+                      <section className="owner-linked-data-section">
+                        <div className="section-title-row compact-title-row">
+                          <div>
+                            <h3>장소 추가</h3>
+                            <p className="section-caption">
+                              일정에 연결하거나 공유 화면에 표시할 장소를 서버에 저장합니다.
+                            </p>
+                          </div>
+                        </div>
+
+                        <form className="auth-form compact-owner-form" onSubmit={onSubmitNewPlace}>
+                          <div className="form-grid-two">
+                            <label>
+                              장소 이름
+                              <input
+                                onChange={(event) => onNewPlaceNameChange(event.target.value)}
+                                placeholder="예: 공항 렌터카 센터"
+                                required
+                                type="text"
+                                value={newPlaceName}
+                              />
+                            </label>
+                            <label>
+                              분류
+                              <select
+                                onChange={(event) => onNewPlaceCategoryChange(event.target.value as PlaceCategory)}
+                                value={newPlaceCategory}
+                              >
+                                {placeCategoryOptions.map(([category, label]) => (
+                                  <option key={category} value={category}>
+                                    {label}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                          </div>
+
+                          <label>
+                            주소
+                            <input
+                              onChange={(event) => onNewPlaceAddressChange(event.target.value)}
+                              placeholder="예: 공항 1층 또는 숙소 주소"
+                              type="text"
+                              value={newPlaceAddress}
+                            />
+                          </label>
+
+                          <label>
+                            Google Maps 링크
+                            <input
+                              inputMode="url"
+                              onChange={(event) => onNewPlaceGoogleMapsURLChange(event.target.value)}
+                              placeholder="https://www.google.com/maps/..."
+                              type="url"
+                              value={newPlaceGoogleMapsURL}
+                            />
+                          </label>
+
+                          <label>
+                            추천/안내 메모
+                            <textarea
+                              onChange={(event) => onNewPlaceRecommendedReasonChange(event.target.value)}
+                              placeholder="예: 도착 후 바로 이동할 장소, 운영시간 확인 필요"
+                              rows={2}
+                              value={newPlaceRecommendedReason}
+                            />
+                          </label>
+
+                          {placeCreateError && <p className="form-error">{placeCreateError}</p>}
+
+                          <button className="primary-button" disabled={placeCreateSubmitting} type="submit">
+                            <PlusCircle size={18} />
+                            {placeCreateSubmitting ? "장소 추가 중" : "장소 추가"}
+                          </button>
+                        </form>
+                      </section>
 
                       <section className="owner-linked-data-section">
                         <div className="section-title-row compact-title-row">
