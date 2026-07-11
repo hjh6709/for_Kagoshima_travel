@@ -68,6 +68,7 @@ Oracle Cloud Console에서 다음을 준비합니다.
 2. Compute VM을 생성합니다.
    - OS: Oracle Linux 9 권장
    - Shape: Always Free 범위의 Ampere A1 권장
+   - A1 생성이 `Out of host capacity`로 계속 실패하면 AMD `VM.Standard.E2.1.Micro`로 먼저 API 배포 연습을 진행할 수 있음
    - 공인 IPv4: 필요
    - SSH key: 로컬에서 관리하는 공개키 등록
 3. VCN/Subnet Security List 또는 Network Security Group에서 ingress rule을 설정합니다.
@@ -81,6 +82,19 @@ ssh -i ~/.ssh/oracle_travel_api opc@<ORACLE_VM_PUBLIC_IP>
 ```
 
 서버 IP, SSH key, Oracle 계정 정보는 레포에 커밋하지 않습니다.
+
+### Shape 선택 기준
+
+권장 운영 목표는 Ampere A1입니다. A1은 메모리를 더 넉넉하게 잡을 수 있어 Go API와 PostgreSQL을 같은 VM에 올리는 MVP 운영에 더 적합합니다.
+
+다만 A1은 Always Free 용량 부족으로 생성이 오래 실패할 수 있습니다. 이 경우 아래처럼 분리해서 접근합니다.
+
+| Shape | 용도 | 판단 |
+| --- | --- | --- |
+| `VM.Standard.A1.Flex` | 목표 운영 VM | 1 OCPU / 6GB RAM 기준으로 계속 재시도 |
+| `VM.Standard.E2.1.Micro` | 임시 배포 연습 VM | 생성 성공률 확인, Caddy/API/systemd/DNS 연결 검증용 |
+
+`E2.1.Micro`는 메모리가 작기 때문에 API와 PostgreSQL을 모두 안정적으로 운영하는 최종 구성이 되기는 어렵습니다. 먼저 서버 접속, Caddy HTTPS, API systemd 배포, Cloudflare DNS 연결을 검증하는 용도로 사용하고, A1이 생성되면 같은 절차를 A1로 옮기는 방향을 기본으로 합니다.
 
 ## 서버 초기 설정
 

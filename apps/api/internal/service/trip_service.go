@@ -95,6 +95,10 @@ func (s *TripService) GetSharedTrip(token string) (dto.SharedTripResponse, error
 	if err != nil {
 		return dto.SharedTripResponse{}, err
 	}
+	flights, err := s.ListFlights(link.TripID)
+	if err != nil {
+		return dto.SharedTripResponse{}, err
+	}
 	routes, err := s.ListRoutes(link.TripID)
 	if err != nil {
 		return dto.SharedTripResponse{}, err
@@ -103,6 +107,7 @@ func (s *TripService) GetSharedTrip(token string) (dto.SharedTripResponse, error
 		Trip:      mapPublicTripResponse(trip),
 		Schedules: schedules,
 		Places:    places,
+		Flights:   flights,
 		Routes:    routes,
 	}, nil
 }
@@ -199,6 +204,59 @@ func (s *TripService) ListPlacesForOwner(tripID, ownerID string) ([]dto.PlaceRes
 		return nil, err
 	}
 	return s.ListPlaces(tripID)
+}
+
+func (s *TripService) CreateFlight(tripID, ownerID string, req dto.CreateFlightRequest) (dto.FlightResponse, error) {
+	if err := s.ensureTripOwner(tripID, ownerID); err != nil {
+		return dto.FlightResponse{}, err
+	}
+	if req.Direction == "" || req.Label == "" || req.DepartureAirport == "" || req.ArrivalAirport == "" ||
+		req.DepartureDate == "" || req.DepartureTime == "" {
+		return dto.FlightResponse{}, ErrInvalidTrip
+	}
+	id, err := newID()
+	if err != nil {
+		return dto.FlightResponse{}, err
+	}
+	flight := model.Flight{
+		ID:               id,
+		TripID:           tripID,
+		Direction:        req.Direction,
+		Label:            req.Label,
+		Airline:          req.Airline,
+		FlightNumber:     req.FlightNumber,
+		DepartureAirport: req.DepartureAirport,
+		ArrivalAirport:   req.ArrivalAirport,
+		DepartureDate:    req.DepartureDate,
+		DepartureTime:    req.DepartureTime,
+		ArrivalDate:      req.ArrivalDate,
+		ArrivalTime:      req.ArrivalTime,
+		Memo:             req.Memo,
+	}
+	if err := s.tripRepository.SaveFlight(flight); err != nil {
+		return dto.FlightResponse{}, err
+	}
+	return mapFlightResponse(flight), nil
+}
+
+func (s *TripService) ListFlights(tripID string) ([]dto.FlightResponse, error) {
+	flights, err := s.tripRepository.FindFlights(tripID)
+	if err != nil {
+		return nil, mapRepositoryError(err)
+	}
+
+	responses := make([]dto.FlightResponse, 0, len(flights))
+	for _, flight := range flights {
+		responses = append(responses, mapFlightResponse(flight))
+	}
+	return responses, nil
+}
+
+func (s *TripService) ListFlightsForOwner(tripID, ownerID string) ([]dto.FlightResponse, error) {
+	if err := s.ensureTripOwner(tripID, ownerID); err != nil {
+		return nil, err
+	}
+	return s.ListFlights(tripID)
 }
 
 func (s *TripService) ListRoutes(tripID string) ([]dto.RouteResponse, error) {
@@ -368,6 +426,23 @@ func mapPlaceResponse(place model.Place) dto.PlaceResponse {
 		Address:           place.Address,
 		GoogleMapsURL:     place.GoogleMapsURL,
 		RecommendedReason: place.RecommendedReason,
+	}
+}
+
+func mapFlightResponse(flight model.Flight) dto.FlightResponse {
+	return dto.FlightResponse{
+		ID:               flight.ID,
+		Direction:        flight.Direction,
+		Label:            flight.Label,
+		Airline:          flight.Airline,
+		FlightNumber:     flight.FlightNumber,
+		DepartureAirport: flight.DepartureAirport,
+		ArrivalAirport:   flight.ArrivalAirport,
+		DepartureDate:    flight.DepartureDate,
+		DepartureTime:    flight.DepartureTime,
+		ArrivalDate:      flight.ArrivalDate,
+		ArrivalTime:      flight.ArrivalTime,
+		Memo:             flight.Memo,
 	}
 }
 

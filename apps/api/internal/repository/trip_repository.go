@@ -18,11 +18,13 @@ type TripRepository interface {
 	FindShareLinkByToken(token string) (model.ShareLink, error)
 	FindSchedules(tripID string) ([]model.Schedule, error)
 	FindPlaces(tripID string) ([]model.Place, error)
+	FindFlights(tripID string) ([]model.Flight, error)
 	FindRoutes(tripID string) ([]model.Route, error)
 	Save(trip model.Trip) error
 	SaveShareLink(link model.ShareLink) error
 	SaveSchedule(schedule model.Schedule) error
 	SavePlace(place model.Place) error
+	SaveFlight(flight model.Flight) error
 	Update(trip model.Trip) error
 	Delete(id string) error
 }
@@ -32,6 +34,7 @@ type MemoryTripRepository struct {
 	trips     []model.Trip
 	schedules []model.Schedule
 	places    []model.Place
+	flights   []model.Flight
 	routes    []model.Route
 	shares    []model.ShareLink
 }
@@ -91,6 +94,21 @@ func NewMemoryTripRepository() *MemoryTripRepository {
 				Category:          "meal",
 				GoogleMapsURL:     "https://www.google.com/maps/search/?api=1&query=local%20restaurant",
 				RecommendedReason: "여행지의 대표 음식을 먹는 후보 장소입니다.",
+			},
+		},
+		flights: []model.Flight{
+			{
+				ID:               "flight-departure",
+				TripID:           tripID,
+				Direction:        "departure",
+				Label:            "출국 항공편",
+				Airline:          "항공사 입력 예정",
+				FlightNumber:     "편명 입력 예정",
+				DepartureAirport: "출발 공항",
+				ArrivalAirport:   "도착 공항",
+				DepartureDate:    "2026-06-27",
+				DepartureTime:    "출발 시간 입력 예정",
+				Memo:             "실제 항공권 정보로 교체하세요.",
 			},
 		},
 		routes: []model.Route{
@@ -165,6 +183,18 @@ func (r *MemoryTripRepository) FindPlaces(tripID string) ([]model.Place, error) 
 	return places, nil
 }
 
+func (r *MemoryTripRepository) FindFlights(tripID string) ([]model.Flight, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	flights := make([]model.Flight, 0)
+	for _, flight := range r.flights {
+		if flight.TripID == tripID {
+			flights = append(flights, flight)
+		}
+	}
+	return flights, nil
+}
+
 func (r *MemoryTripRepository) FindRoutes(tripID string) ([]model.Route, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -202,6 +232,13 @@ func (r *MemoryTripRepository) SavePlace(place model.Place) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.places = append(r.places, place)
+	return nil
+}
+
+func (r *MemoryTripRepository) SaveFlight(flight model.Flight) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.flights = append(r.flights, flight)
 	return nil
 }
 

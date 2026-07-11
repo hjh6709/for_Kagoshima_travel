@@ -102,6 +102,23 @@ func (r *PostgresTripRepository) SavePlace(place model.Place) error {
 	return err
 }
 
+func (r *PostgresTripRepository) SaveFlight(flight model.Flight) error {
+	var arrivalDate any
+	if flight.ArrivalDate != "" {
+		arrivalDate = flight.ArrivalDate
+	}
+	_, err := r.pool.Exec(context.Background(),
+		`INSERT INTO flights (
+			id, trip_id, direction, label, airline, flight_number,
+			departure_airport, arrival_airport, departure_date, departure_time,
+			arrival_date, arrival_time, memo
+		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
+		flight.ID, flight.TripID, flight.Direction, flight.Label, flight.Airline, flight.FlightNumber,
+		flight.DepartureAirport, flight.ArrivalAirport, flight.DepartureDate, flight.DepartureTime,
+		arrivalDate, flight.ArrivalTime, flight.Memo)
+	return err
+}
+
 func (r *PostgresTripRepository) Update(trip model.Trip) error {
 	tag, err := r.pool.Exec(context.Background(),
 		`UPDATE trips SET title=$1, start_date=$2, end_date=$3, travelers=$4, memo=$5, updated_at=NOW() WHERE id=$6`,
@@ -166,6 +183,30 @@ func (r *PostgresTripRepository) FindPlaces(tripID string) ([]model.Place, error
 			return nil, err
 		}
 		result = append(result, p)
+	}
+	return result, rows.Err()
+}
+
+func (r *PostgresTripRepository) FindFlights(tripID string) ([]model.Flight, error) {
+	rows, err := r.pool.Query(context.Background(),
+		`SELECT id::text, trip_id::text, direction, label, COALESCE(airline,''), COALESCE(flight_number,''),
+		        departure_airport, arrival_airport, departure_date::text, departure_time,
+		        COALESCE(arrival_date::text,''), COALESCE(arrival_time,''), COALESCE(memo,'')
+		 FROM flights WHERE trip_id = $1 ORDER BY departure_date, sort_order, departure_time`, tripID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	result := make([]model.Flight, 0)
+	for rows.Next() {
+		var f model.Flight
+		if err := rows.Scan(&f.ID, &f.TripID, &f.Direction, &f.Label, &f.Airline, &f.FlightNumber,
+			&f.DepartureAirport, &f.ArrivalAirport, &f.DepartureDate, &f.DepartureTime,
+			&f.ArrivalDate, &f.ArrivalTime, &f.Memo); err != nil {
+			return nil, err
+		}
+		result = append(result, f)
 	}
 	return result, rows.Err()
 }

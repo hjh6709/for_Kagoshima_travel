@@ -52,6 +52,24 @@ CREATE TABLE schedules (
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE flights (
+    id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    trip_id             UUID NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
+    direction           TEXT NOT NULL,
+    label               TEXT NOT NULL,
+    airline             TEXT,
+    flight_number       TEXT,
+    departure_airport   TEXT NOT NULL,
+    arrival_airport     TEXT NOT NULL,
+    departure_date      DATE NOT NULL,
+    departure_time      TEXT NOT NULL,
+    arrival_date        DATE,
+    arrival_time        TEXT,
+    memo                TEXT,
+    sort_order          INT NOT NULL DEFAULT 0,
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE routes (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     trip_id             UUID NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
@@ -81,4 +99,5 @@ CREATE TABLE share_links (
 CREATE INDEX ON trips (owner_id);
 CREATE INDEX ON schedules (trip_id, date, sort_order);
 CREATE INDEX ON places (trip_id, category);
+CREATE INDEX ON flights (trip_id, departure_date, sort_order);
 CREATE UNIQUE INDEX ON share_links (token);
