@@ -24,15 +24,18 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { ApiError, getCurrentUser, login, register, type AuthResponse } from "./api/auth";
 import {
   createShareLink,
+  createTripFlight,
   createTripPlace,
   createTripSchedule,
   createTrip,
   getSharedTrip,
+  listTripFlights,
   listTripPlaces,
   listTripSchedules,
   listMyTrips,
   updateTrip,
   type OwnerTrip,
+  type SharedFlight,
   type SharedPlace,
   type SharedSchedule,
   type SharedTripResponse,
@@ -97,11 +100,20 @@ const placeCategoryLabels = {
 type PlaceCategory = keyof typeof placeCategoryLabels;
 const placeCategoryOptions = Object.entries(placeCategoryLabels) as Array<[PlaceCategory, string]>;
 
+const flightDirectionLabels = {
+  departure: "출국",
+  return: "입국",
+  domestic: "국내 이동",
+  etc: "기타",
+} as const;
+type FlightDirection = keyof typeof flightDirectionLabels;
+const flightDirectionOptions = Object.entries(flightDirectionLabels) as Array<[FlightDirection, string]>;
+
 const checklistCategoryLabels = {
   before: "출발 전",
   airport: "공항",
   daily: "여행 중",
-  return: "귀국 전",
+  return: "입국 전",
 } as const;
 const checklistCategories = Object.entries(checklistCategoryLabels) as Array<[ChecklistCategory, string]>;
 const ownerAuthStorageKey = "travel-app-owner-auth";
@@ -205,7 +217,7 @@ function getTravelStatus(today: string, dates: TripDates): { phase: TravelPhase;
     return {
       phase,
       label: "여행 완료",
-      description: "귀국 후 짐과 분실물을 한 번 더 확인하세요.",
+      description: "입국 후 짐과 분실물을 한 번 더 확인하세요.",
     };
   }
 
@@ -341,6 +353,22 @@ function sortSharedPlaces(items: SharedPlace[]): SharedPlace[] {
   });
 }
 
+function sortSharedFlights(items: SharedFlight[]): SharedFlight[] {
+  return [...items].sort((left, right) => {
+    const byDate = left.departureDate.localeCompare(right.departureDate);
+    if (byDate !== 0) return byDate;
+
+    const byTime = left.departureTime.localeCompare(right.departureTime);
+    if (byTime !== 0) return byTime;
+
+    return left.label.localeCompare(right.label);
+  });
+}
+
+function getFlightDirectionLabel(direction: string) {
+  return flightDirectionLabels[direction as FlightDirection] ?? "항공";
+}
+
 function getShareTokenFromPath(path: string) {
   const match = path.match(/^\/share\/([^/]+)\/?$/);
   return match ? decodeURIComponent(match[1]) : "";
@@ -385,6 +413,7 @@ function App() {
   const [shareLinkCopied, setShareLinkCopied] = useState(false);
   const [ownerSchedules, setOwnerSchedules] = useState<SharedSchedule[]>([]);
   const [ownerPlaces, setOwnerPlaces] = useState<SharedPlace[]>([]);
+  const [ownerFlights, setOwnerFlights] = useState<SharedFlight[]>([]);
   const [ownerDetailDataError, setOwnerDetailDataError] = useState("");
   const [ownerDetailDataLoading, setOwnerDetailDataLoading] = useState(false);
   const [newScheduleDate, setNewScheduleDate] = useState("");
@@ -403,6 +432,19 @@ function App() {
   const [newPlaceRecommendedReason, setNewPlaceRecommendedReason] = useState("");
   const [placeCreateError, setPlaceCreateError] = useState("");
   const [placeCreateSubmitting, setPlaceCreateSubmitting] = useState(false);
+  const [newFlightDirection, setNewFlightDirection] = useState<FlightDirection>("departure");
+  const [newFlightLabel, setNewFlightLabel] = useState("");
+  const [newFlightAirline, setNewFlightAirline] = useState("");
+  const [newFlightNumber, setNewFlightNumber] = useState("");
+  const [newFlightDepartureAirport, setNewFlightDepartureAirport] = useState("");
+  const [newFlightArrivalAirport, setNewFlightArrivalAirport] = useState("");
+  const [newFlightDepartureDate, setNewFlightDepartureDate] = useState("");
+  const [newFlightDepartureTime, setNewFlightDepartureTime] = useState("");
+  const [newFlightArrivalDate, setNewFlightArrivalDate] = useState("");
+  const [newFlightArrivalTime, setNewFlightArrivalTime] = useState("");
+  const [newFlightMemo, setNewFlightMemo] = useState("");
+  const [flightCreateError, setFlightCreateError] = useState("");
+  const [flightCreateSubmitting, setFlightCreateSubmitting] = useState(false);
   const [sharedTrip, setSharedTrip] = useState<SharedTripResponse | null>(null);
   const [sharedTripError, setSharedTripError] = useState("");
   const [sharedTripLoading, setSharedTripLoading] = useState(isShareRoute);
@@ -566,6 +608,7 @@ function App() {
           setSelectedOwnerTripID(null);
           setOwnerSchedules([]);
           setOwnerPlaces([]);
+          setOwnerFlights([]);
           setOwnerTripsError("");
           return;
         }
@@ -609,6 +652,18 @@ function App() {
       setNewPlaceGoogleMapsURL("");
       setNewPlaceRecommendedReason("");
       setPlaceCreateError("");
+      setNewFlightDirection("departure");
+      setNewFlightLabel("");
+      setNewFlightAirline("");
+      setNewFlightNumber("");
+      setNewFlightDepartureAirport("");
+      setNewFlightArrivalAirport("");
+      setNewFlightDepartureDate("");
+      setNewFlightDepartureTime("");
+      setNewFlightArrivalDate("");
+      setNewFlightArrivalTime("");
+      setNewFlightMemo("");
+      setFlightCreateError("");
       return;
     }
 
@@ -634,12 +689,25 @@ function App() {
     setNewPlaceGoogleMapsURL("");
     setNewPlaceRecommendedReason("");
     setPlaceCreateError("");
+    setNewFlightDirection("departure");
+    setNewFlightLabel("");
+    setNewFlightAirline("");
+    setNewFlightNumber("");
+    setNewFlightDepartureAirport("");
+    setNewFlightArrivalAirport("");
+    setNewFlightDepartureDate(selectedOwnerTrip.startDate);
+    setNewFlightDepartureTime("");
+    setNewFlightArrivalDate(selectedOwnerTrip.startDate);
+    setNewFlightArrivalTime("");
+    setNewFlightMemo("");
+    setFlightCreateError("");
   }, [selectedOwnerTrip]);
 
   useEffect(() => {
     if (!ownerAuth || !selectedOwnerTrip) {
       setOwnerSchedules([]);
       setOwnerPlaces([]);
+      setOwnerFlights([]);
       setOwnerDetailDataError("");
       setOwnerDetailDataLoading(false);
       return;
@@ -651,11 +719,13 @@ function App() {
     Promise.all([
       listTripSchedules(ownerAuth.accessToken, selectedOwnerTrip.id),
       listTripPlaces(ownerAuth.accessToken, selectedOwnerTrip.id),
+      listTripFlights(ownerAuth.accessToken, selectedOwnerTrip.id),
     ])
-      .then(([nextSchedules, nextPlaces]) => {
+      .then(([nextSchedules, nextPlaces, nextFlights]) => {
         if (cancelled) return;
         setOwnerSchedules(sortSharedSchedules(nextSchedules));
         setOwnerPlaces(sortSharedPlaces(nextPlaces));
+        setOwnerFlights(sortSharedFlights(nextFlights));
       })
       .catch((error) => {
         if (cancelled) return;
@@ -666,12 +736,14 @@ function App() {
           setSelectedOwnerTripID(null);
           setOwnerSchedules([]);
           setOwnerPlaces([]);
+          setOwnerFlights([]);
           setOwnerDetailDataError("");
           return;
         }
         setOwnerSchedules([]);
         setOwnerPlaces([]);
-        setOwnerDetailDataError(error instanceof Error ? error.message : "일정과 장소를 불러오지 못했습니다.");
+        setOwnerFlights([]);
+        setOwnerDetailDataError(error instanceof Error ? error.message : "여행 상세 데이터를 불러오지 못했습니다.");
       })
       .finally(() => {
         if (!cancelled) setOwnerDetailDataLoading(false);
@@ -748,6 +820,7 @@ function App() {
         setSelectedOwnerTripID(null);
         setOwnerSchedules([]);
         setOwnerPlaces([]);
+        setOwnerFlights([]);
         setTripCreateError("");
         return;
       }
@@ -802,6 +875,7 @@ function App() {
         setSelectedOwnerTripID(null);
         setOwnerSchedules([]);
         setOwnerPlaces([]);
+        setOwnerFlights([]);
         setTripEditError("");
         return;
       }
@@ -831,6 +905,7 @@ function App() {
         setSelectedOwnerTripID(null);
         setOwnerSchedules([]);
         setOwnerPlaces([]);
+        setOwnerFlights([]);
         setShareLinkError("");
         return;
       }
@@ -886,6 +961,7 @@ function App() {
         setSelectedOwnerTripID(null);
         setOwnerSchedules([]);
         setOwnerPlaces([]);
+        setOwnerFlights([]);
         setScheduleCreateError("");
         return;
       }
@@ -934,12 +1010,85 @@ function App() {
         setSelectedOwnerTripID(null);
         setOwnerSchedules([]);
         setOwnerPlaces([]);
+        setOwnerFlights([]);
         setPlaceCreateError("");
         return;
       }
       setPlaceCreateError(error instanceof Error ? error.message : "장소를 추가하지 못했습니다.");
     } finally {
       setPlaceCreateSubmitting(false);
+    }
+  }
+
+  async function submitNewFlight(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!ownerAuth || !selectedOwnerTrip) return;
+
+    const label = newFlightLabel.trim();
+    const airline = newFlightAirline.trim();
+    const flightNumber = newFlightNumber.trim();
+    const departureAirport = newFlightDepartureAirport.trim();
+    const arrivalAirport = newFlightArrivalAirport.trim();
+    const departureDate = newFlightDepartureDate;
+    const departureTime = newFlightDepartureTime.trim();
+    const arrivalDate = newFlightArrivalDate;
+    const arrivalTime = newFlightArrivalTime.trim();
+    const memo = newFlightMemo.trim();
+
+    if (!label || !departureAirport || !arrivalAirport || !departureDate || !departureTime) {
+      setFlightCreateError("항공편 이름, 출발/도착 공항, 출발 날짜와 시간을 입력해주세요.");
+      return;
+    }
+    if (departureDate < selectedOwnerTrip.startDate || departureDate > selectedOwnerTrip.endDate) {
+      setFlightCreateError("출발 날짜는 여행 기간 안에서 선택해주세요.");
+      return;
+    }
+    if (arrivalDate && arrivalDate < departureDate) {
+      setFlightCreateError("도착 날짜는 출발 날짜보다 빠를 수 없습니다.");
+      return;
+    }
+
+    setFlightCreateError("");
+    setFlightCreateSubmitting(true);
+    try {
+      const createdFlight = await createTripFlight(ownerAuth.accessToken, selectedOwnerTrip.id, {
+        direction: newFlightDirection,
+        label,
+        airline: airline || undefined,
+        flightNumber: flightNumber || undefined,
+        departureAirport,
+        arrivalAirport,
+        departureDate,
+        departureTime,
+        arrivalDate: arrivalDate || undefined,
+        arrivalTime: arrivalTime || undefined,
+        memo: memo || undefined,
+      });
+      setOwnerFlights((currentFlights) => sortSharedFlights([...currentFlights, createdFlight]));
+      setNewFlightLabel("");
+      setNewFlightAirline("");
+      setNewFlightNumber("");
+      setNewFlightDepartureAirport("");
+      setNewFlightArrivalAirport("");
+      setNewFlightDepartureTime("");
+      setNewFlightArrivalTime("");
+      setNewFlightMemo("");
+      setFlightCreateError("");
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        window.localStorage.removeItem(ownerAuthStorageKey);
+        setOwnerAuth(null);
+        setOwnerTrips([]);
+        setSelectedOwnerTripID(null);
+        setOwnerSchedules([]);
+        setOwnerPlaces([]);
+        setOwnerFlights([]);
+        setFlightCreateError("");
+        return;
+      }
+      setFlightCreateError(error instanceof Error ? error.message : "항공편을 추가하지 못했습니다.");
+    } finally {
+      setFlightCreateSubmitting(false);
     }
   }
 
@@ -976,6 +1125,7 @@ function App() {
     setShareLinkCopied(false);
     setOwnerSchedules([]);
     setOwnerPlaces([]);
+    setOwnerFlights([]);
     setOwnerDetailDataError("");
     setOwnerDetailDataLoading(false);
     setNewScheduleDate("");
@@ -994,6 +1144,19 @@ function App() {
     setNewPlaceRecommendedReason("");
     setPlaceCreateError("");
     setPlaceCreateSubmitting(false);
+    setNewFlightDirection("departure");
+    setNewFlightLabel("");
+    setNewFlightAirline("");
+    setNewFlightNumber("");
+    setNewFlightDepartureAirport("");
+    setNewFlightArrivalAirport("");
+    setNewFlightDepartureDate("");
+    setNewFlightDepartureTime("");
+    setNewFlightArrivalDate("");
+    setNewFlightArrivalTime("");
+    setNewFlightMemo("");
+    setFlightCreateError("");
+    setFlightCreateSubmitting(false);
     setOwnerTripsError("");
     setAuthPassword("");
     setAuthError("");
@@ -1018,6 +1181,7 @@ function App() {
         ownerTripsLoading={ownerTripsLoading}
         ownerSchedules={ownerSchedules}
         ownerPlaces={ownerPlaces}
+        ownerFlights={ownerFlights}
         ownerDetailDataError={ownerDetailDataError}
         ownerDetailDataLoading={ownerDetailDataLoading}
         selectedOwnerTrip={selectedOwnerTrip}
@@ -1039,6 +1203,19 @@ function App() {
         newPlaceGoogleMapsURL={newPlaceGoogleMapsURL}
         newPlaceName={newPlaceName}
         newPlaceRecommendedReason={newPlaceRecommendedReason}
+        newFlightAirline={newFlightAirline}
+        newFlightArrivalAirport={newFlightArrivalAirport}
+        newFlightArrivalDate={newFlightArrivalDate}
+        newFlightArrivalTime={newFlightArrivalTime}
+        newFlightDepartureAirport={newFlightDepartureAirport}
+        newFlightDepartureDate={newFlightDepartureDate}
+        newFlightDepartureTime={newFlightDepartureTime}
+        newFlightDirection={newFlightDirection}
+        newFlightLabel={newFlightLabel}
+        newFlightMemo={newFlightMemo}
+        newFlightNumber={newFlightNumber}
+        flightCreateError={flightCreateError}
+        flightCreateSubmitting={flightCreateSubmitting}
         placeCreateError={placeCreateError}
         placeCreateSubmitting={placeCreateSubmitting}
         scheduleCreateError={scheduleCreateError}
@@ -1083,6 +1260,22 @@ function App() {
         onNewPlaceGoogleMapsURLChange={setNewPlaceGoogleMapsURL}
         onNewPlaceNameChange={setNewPlaceName}
         onNewPlaceRecommendedReasonChange={setNewPlaceRecommendedReason}
+        onNewFlightAirlineChange={setNewFlightAirline}
+        onNewFlightArrivalAirportChange={setNewFlightArrivalAirport}
+        onNewFlightArrivalDateChange={setNewFlightArrivalDate}
+        onNewFlightArrivalTimeChange={setNewFlightArrivalTime}
+        onNewFlightDepartureAirportChange={setNewFlightDepartureAirport}
+        onNewFlightDepartureDateChange={(value) => {
+          setNewFlightDepartureDate(value);
+          if (!newFlightArrivalDate || newFlightArrivalDate < value) {
+            setNewFlightArrivalDate(value);
+          }
+        }}
+        onNewFlightDepartureTimeChange={setNewFlightDepartureTime}
+        onNewFlightDirectionChange={setNewFlightDirection}
+        onNewFlightLabelChange={setNewFlightLabel}
+        onNewFlightMemoChange={setNewFlightMemo}
+        onNewFlightNumberChange={setNewFlightNumber}
         onCloseOwnerTripDetail={() => setSelectedOwnerTripID(null)}
         onCopyShareLink={copySelectedTripShareLink}
         onCreateShareLink={createSelectedTripShareLink}
@@ -1100,6 +1293,7 @@ function App() {
         onSelectOwnerTrip={setSelectedOwnerTripID}
         onSubmitAuth={submitAuth}
         onSubmitNewPlace={submitNewPlace}
+        onSubmitNewFlight={submitNewFlight}
         onSubmitNewTrip={submitNewTrip}
         onSubmitNewSchedule={submitNewSchedule}
         onSubmitTripEdit={submitTripEdit}
@@ -1307,7 +1501,7 @@ function App() {
                       />
                     </label>
                     <label>
-                      귀국
+                      입국
                       <input
                         type="date"
                         value={tripDates.endDate}
@@ -1511,7 +1705,7 @@ function App() {
           {activeTab === "flight" && (
             <section className="screen">
               <h1>항공편</h1>
-              <p className="muted">공항에서 바로 확인할 수 있도록 출국·귀국 항공편을 따로 모았습니다.</p>
+              <p className="muted">공항에서 바로 확인할 수 있도록 출국·입국 항공편을 따로 모았습니다.</p>
 
               <div className="card-stack">
                 {flights.map((flight) => (
@@ -1699,6 +1893,7 @@ function SharedTripApp({ error, loading, sharedTrip }: SharedTripAppProps) {
     if (!sharedTrip) return new Map<string, SharedTripResponse["places"][number]>();
     return new Map(sharedTrip.places.map((place) => [place.id, place]));
   }, [sharedTrip]);
+  const sharedFlights = useMemo(() => sortSharedFlights(sharedTrip?.flights ?? []), [sharedTrip]);
 
   return (
     <main className="app-shell">
@@ -1773,6 +1968,59 @@ function SharedTripApp({ error, loading, sharedTrip }: SharedTripAppProps) {
                           </article>
                         );
                       })}
+                    </div>
+                  )}
+                </section>
+
+                <section className="section-block">
+                  <div className="section-title-row">
+                    <div>
+                      <h2>항공편</h2>
+                      <p className="section-caption">공항에서 바로 확인할 수 있는 항공 정보입니다.</p>
+                    </div>
+                    <span className="pill subtle">{sharedFlights.length}개</span>
+                  </div>
+
+                  {sharedFlights.length === 0 ? (
+                    <article className="empty-state-card list-card">
+                      <p className="muted">공유된 항공편이 없습니다.</p>
+                    </article>
+                  ) : (
+                    <div className="card-stack">
+                      {sharedFlights.map((flight) => (
+                        <article className="flight-card shared-flight-card" key={flight.id}>
+                          <div className="flight-card-header">
+                            <span className="pill">{getFlightDirectionLabel(flight.direction)}</span>
+                            <Plane size={20} />
+                          </div>
+                          <h2>
+                            {flight.label}
+                            {flight.flightNumber ? ` · ${flight.flightNumber}` : ""}
+                          </h2>
+                          {(flight.airline || flight.memo) && (
+                            <p className="muted">{[flight.airline, flight.memo].filter(Boolean).join(" · ")}</p>
+                          )}
+                          <dl className="flight-details">
+                            <div>
+                              <dt>출발</dt>
+                              <dd>
+                                {flight.departureAirport}
+                                <br />
+                                {formatKoreanDate(flight.departureDate)} {flight.departureTime}
+                              </dd>
+                            </div>
+                            <div>
+                              <dt>도착</dt>
+                              <dd>
+                                {flight.arrivalAirport}
+                                <br />
+                                {flight.arrivalDate ? formatKoreanDate(flight.arrivalDate) : "날짜 미정"}{" "}
+                                {flight.arrivalTime || "시간 미정"}
+                              </dd>
+                            </div>
+                          </dl>
+                        </article>
+                      ))}
                     </div>
                   )}
                 </section>
@@ -1877,15 +2125,29 @@ type TripManageAppProps = {
   newPlaceGoogleMapsURL: string;
   newPlaceName: string;
   newPlaceRecommendedReason: string;
+  newFlightAirline: string;
+  newFlightArrivalAirport: string;
+  newFlightArrivalDate: string;
+  newFlightArrivalTime: string;
+  newFlightDepartureAirport: string;
+  newFlightDepartureDate: string;
+  newFlightDepartureTime: string;
+  newFlightDirection: FlightDirection;
+  newFlightLabel: string;
+  newFlightMemo: string;
+  newFlightNumber: string;
   ownerTrips: OwnerTrip[];
   ownerTripsError: string;
   ownerTripsLoading: boolean;
   ownerSchedules: SharedSchedule[];
   ownerPlaces: SharedPlace[];
+  ownerFlights: SharedFlight[];
   ownerDetailDataError: string;
   ownerDetailDataLoading: boolean;
   selectedOwnerTrip: OwnerTrip | null;
   selectedShareLink: string;
+  flightCreateError: string;
+  flightCreateSubmitting: boolean;
   placeCreateError: string;
   placeCreateSubmitting: boolean;
   scheduleCreateError: string;
@@ -1922,6 +2184,17 @@ type TripManageAppProps = {
   onNewPlaceGoogleMapsURLChange: (value: string) => void;
   onNewPlaceNameChange: (value: string) => void;
   onNewPlaceRecommendedReasonChange: (value: string) => void;
+  onNewFlightAirlineChange: (value: string) => void;
+  onNewFlightArrivalAirportChange: (value: string) => void;
+  onNewFlightArrivalDateChange: (value: string) => void;
+  onNewFlightArrivalTimeChange: (value: string) => void;
+  onNewFlightDepartureAirportChange: (value: string) => void;
+  onNewFlightDepartureDateChange: (value: string) => void;
+  onNewFlightDepartureTimeChange: (value: string) => void;
+  onNewFlightDirectionChange: (value: FlightDirection) => void;
+  onNewFlightLabelChange: (value: string) => void;
+  onNewFlightMemoChange: (value: string) => void;
+  onNewFlightNumberChange: (value: string) => void;
   onCloseOwnerTripDetail: () => void;
   onCopyShareLink: () => void;
   onCreateShareLink: () => void;
@@ -1933,6 +2206,7 @@ type TripManageAppProps = {
   onLogout: () => void;
   onSelectOwnerTrip: (tripID: string) => void;
   onSubmitAuth: (event: FormEvent<HTMLFormElement>) => void;
+  onSubmitNewFlight: (event: FormEvent<HTMLFormElement>) => void;
   onSubmitNewPlace: (event: FormEvent<HTMLFormElement>) => void;
   onSubmitNewTrip: (event: FormEvent<HTMLFormElement>) => void;
   onSubmitNewSchedule: (event: FormEvent<HTMLFormElement>) => void;
@@ -1964,15 +2238,29 @@ function TripManageApp({
   newPlaceGoogleMapsURL,
   newPlaceName,
   newPlaceRecommendedReason,
+  newFlightAirline,
+  newFlightArrivalAirport,
+  newFlightArrivalDate,
+  newFlightArrivalTime,
+  newFlightDepartureAirport,
+  newFlightDepartureDate,
+  newFlightDepartureTime,
+  newFlightDirection,
+  newFlightLabel,
+  newFlightMemo,
+  newFlightNumber,
   ownerTrips,
   ownerTripsError,
   ownerTripsLoading,
   ownerSchedules,
   ownerPlaces,
+  ownerFlights,
   ownerDetailDataError,
   ownerDetailDataLoading,
   selectedOwnerTrip,
   selectedShareLink,
+  flightCreateError,
+  flightCreateSubmitting,
   placeCreateError,
   placeCreateSubmitting,
   scheduleCreateError,
@@ -2009,6 +2297,17 @@ function TripManageApp({
   onNewPlaceGoogleMapsURLChange,
   onNewPlaceNameChange,
   onNewPlaceRecommendedReasonChange,
+  onNewFlightAirlineChange,
+  onNewFlightArrivalAirportChange,
+  onNewFlightArrivalDateChange,
+  onNewFlightArrivalTimeChange,
+  onNewFlightDepartureAirportChange,
+  onNewFlightDepartureDateChange,
+  onNewFlightDepartureTimeChange,
+  onNewFlightDirectionChange,
+  onNewFlightLabelChange,
+  onNewFlightMemoChange,
+  onNewFlightNumberChange,
   onCloseOwnerTripDetail,
   onCopyShareLink,
   onCreateShareLink,
@@ -2020,6 +2319,7 @@ function TripManageApp({
   onLogout,
   onSelectOwnerTrip,
   onSubmitAuth,
+  onSubmitNewFlight,
   onSubmitNewPlace,
   onSubmitNewTrip,
   onSubmitNewSchedule,
@@ -2232,6 +2532,10 @@ function TripManageApp({
                           <MapPin size={18} />
                           장소 조회 연결됨
                         </button>
+                        <button className="quick-button" disabled type="button">
+                          <Plane size={18} />
+                          항공 조회 연결됨
+                        </button>
                         <button
                           className="quick-button"
                           disabled={shareLinkSubmitting}
@@ -2347,6 +2651,150 @@ function TripManageApp({
                           <button className="primary-button" disabled={placeCreateSubmitting} type="submit">
                             <PlusCircle size={18} />
                             {placeCreateSubmitting ? "장소 추가 중" : "장소 추가"}
+                          </button>
+                        </form>
+                      </section>
+
+                      <section className="owner-linked-data-section">
+                        <div className="section-title-row compact-title-row">
+                          <div>
+                            <h3>항공편 추가</h3>
+                            <p className="section-caption">공유 화면 항공 정보에 표시할 항공편을 서버에 저장합니다.</p>
+                          </div>
+                        </div>
+
+                        <form className="auth-form compact-owner-form" onSubmit={onSubmitNewFlight}>
+                          <div className="form-grid-two">
+                            <label>
+                              구분
+                              <select
+                                onChange={(event) => onNewFlightDirectionChange(event.target.value as FlightDirection)}
+                                value={newFlightDirection}
+                              >
+                                {flightDirectionOptions.map(([direction, label]) => (
+                                  <option key={direction} value={direction}>
+                                    {label}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                            <label>
+                              항공편 이름
+                              <input
+                                onChange={(event) => onNewFlightLabelChange(event.target.value)}
+                                placeholder="예: 출국 항공편"
+                                required
+                                type="text"
+                                value={newFlightLabel}
+                              />
+                            </label>
+                          </div>
+
+                          <div className="form-grid-two">
+                            <label>
+                              항공사
+                              <input
+                                onChange={(event) => onNewFlightAirlineChange(event.target.value)}
+                                placeholder="예: 대한항공"
+                                type="text"
+                                value={newFlightAirline}
+                              />
+                            </label>
+                            <label>
+                              편명
+                              <input
+                                autoCapitalize="characters"
+                                onChange={(event) => onNewFlightNumberChange(event.target.value)}
+                                placeholder="예: KE123"
+                                type="text"
+                                value={newFlightNumber}
+                              />
+                            </label>
+                          </div>
+
+                          <div className="form-grid-two">
+                            <label>
+                              출발 공항
+                              <input
+                                onChange={(event) => onNewFlightDepartureAirportChange(event.target.value)}
+                                placeholder="예: 인천"
+                                required
+                                type="text"
+                                value={newFlightDepartureAirport}
+                              />
+                            </label>
+                            <label>
+                              도착 공항
+                              <input
+                                onChange={(event) => onNewFlightArrivalAirportChange(event.target.value)}
+                                placeholder="예: 도쿄"
+                                required
+                                type="text"
+                                value={newFlightArrivalAirport}
+                              />
+                            </label>
+                          </div>
+
+                          <div className="form-grid-two">
+                            <label>
+                              출발 날짜
+                              <input
+                                max={selectedOwnerTrip.endDate}
+                                min={selectedOwnerTrip.startDate}
+                                onChange={(event) => onNewFlightDepartureDateChange(event.target.value)}
+                                required
+                                type="date"
+                                value={newFlightDepartureDate}
+                              />
+                            </label>
+                            <label>
+                              출발 시간
+                              <input
+                                onChange={(event) => onNewFlightDepartureTimeChange(event.target.value)}
+                                placeholder="예: 10:30"
+                                required
+                                type="text"
+                                value={newFlightDepartureTime}
+                              />
+                            </label>
+                          </div>
+
+                          <div className="form-grid-two">
+                            <label>
+                              도착 날짜
+                              <input
+                                min={newFlightDepartureDate || selectedOwnerTrip.startDate}
+                                onChange={(event) => onNewFlightArrivalDateChange(event.target.value)}
+                                type="date"
+                                value={newFlightArrivalDate}
+                              />
+                            </label>
+                            <label>
+                              도착 시간
+                              <input
+                                onChange={(event) => onNewFlightArrivalTimeChange(event.target.value)}
+                                placeholder="예: 12:45"
+                                type="text"
+                                value={newFlightArrivalTime}
+                              />
+                            </label>
+                          </div>
+
+                          <label>
+                            항공 메모
+                            <textarea
+                              onChange={(event) => onNewFlightMemoChange(event.target.value)}
+                              placeholder="예: 터미널, 수하물, 체크인 주의사항"
+                              rows={2}
+                              value={newFlightMemo}
+                            />
+                          </label>
+
+                          {flightCreateError && <p className="form-error">{flightCreateError}</p>}
+
+                          <button className="primary-button" disabled={flightCreateSubmitting} type="submit">
+                            <PlusCircle size={18} />
+                            {flightCreateSubmitting ? "항공편 추가 중" : "항공편 추가"}
                           </button>
                         </form>
                       </section>
@@ -2533,6 +2981,45 @@ function TripManageApp({
                                     지도 열기
                                   </a>
                                 )}
+                              </article>
+                            ))}
+                          </div>
+                        )}
+                      </section>
+
+                      <section className="owner-linked-data-section">
+                        <div className="section-title-row compact-title-row">
+                          <div>
+                            <h3>공유되는 항공편</h3>
+                            <p className="section-caption">공유 화면 항공 정보에 표시되는 항공편입니다.</p>
+                          </div>
+                          <span className="pill subtle">{ownerFlights.length}개</span>
+                        </div>
+
+                        {!ownerDetailDataLoading && !ownerDetailDataError && ownerFlights.length === 0 && (
+                          <article className="empty-state-card list-card">
+                            <p className="muted">아직 서버에 저장된 항공편이 없습니다.</p>
+                          </article>
+                        )}
+
+                        {!ownerDetailDataLoading && !ownerDetailDataError && ownerFlights.length > 0 && (
+                          <div className="card-stack compact-card-stack">
+                            {ownerFlights.map((flight) => (
+                              <article className="owner-linked-card" key={flight.id}>
+                                <div>
+                                  <span className="muted-label">
+                                    {getFlightDirectionLabel(flight.direction)} ·{" "}
+                                    {formatKoreanDate(flight.departureDate)} {flight.departureTime}
+                                  </span>
+                                  <h2>
+                                    {flight.label}
+                                    {flight.flightNumber ? ` · ${flight.flightNumber}` : ""}
+                                  </h2>
+                                  <p className="section-caption">
+                                    {flight.departureAirport} → {flight.arrivalAirport}
+                                  </p>
+                                </div>
+                                {flight.memo && <p className="muted">{flight.memo}</p>}
                               </article>
                             ))}
                           </div>
