@@ -74,9 +74,39 @@ func TestPlaceCreateBoundaries(t *testing.T) {
 	if invalidCreate.status != http.StatusBadRequest {
 		t.Fatalf("invalid create place status = %d, want %d", invalidCreate.status, http.StatusBadRequest)
 	}
+
+	otherDelete := deletePlace(t, httpServer.URL, otherToken, tripID, placeID)
+	if otherDelete.status != http.StatusForbidden {
+		t.Fatalf("other user delete place status = %d, want %d", otherDelete.status, http.StatusForbidden)
+	}
+
+	deleted := deletePlace(t, httpServer.URL, ownerToken, tripID, placeID)
+	if deleted.status != http.StatusNoContent {
+		t.Fatalf("owner delete place status = %d, want %d, body = %#v", deleted.status, http.StatusNoContent, deleted.body)
+	}
+
+	listAfterDelete := getJSON(t, httpServer.URL+"/api/trips/"+tripID+"/places", ownerToken)
+	if listAfterDelete.status != http.StatusOK {
+		t.Fatalf("list places after delete status = %d, want %d, body = %#v", listAfterDelete.status, http.StatusOK, listAfterDelete.body)
+	}
+	for _, place := range listAfterDelete.arrayBody {
+		if place["id"] == placeID {
+			t.Fatalf("deleted place %q still found in list: %#v", placeID, listAfterDelete.arrayBody)
+		}
+	}
+
+	deleteAgain := deletePlace(t, httpServer.URL, ownerToken, tripID, placeID)
+	if deleteAgain.status != http.StatusNotFound {
+		t.Fatalf("delete missing place status = %d, want %d", deleteAgain.status, http.StatusNotFound)
+	}
 }
 
 func createPlace(t *testing.T, baseURL, token, tripID string, payload map[string]any) jsonResponse {
 	t.Helper()
 	return doJSON(t, http.MethodPost, baseURL+"/api/trips/"+tripID+"/places", token, payload)
+}
+
+func deletePlace(t *testing.T, baseURL, token, tripID, placeID string) jsonResponse {
+	t.Helper()
+	return doJSON(t, http.MethodDelete, baseURL+"/api/trips/"+tripID+"/places/"+placeID, token, nil)
 }

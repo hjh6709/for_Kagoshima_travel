@@ -160,6 +160,9 @@ func doJSON(t *testing.T, method, url, token string, payload any) jsonResponse {
 		status: resp.StatusCode,
 		body:   map[string]any{},
 	}
+	if resp.StatusCode == http.StatusNoContent {
+		return result
+	}
 	if resp.Body != nil {
 		var decoded any
 		if err := json.NewDecoder(resp.Body).Decode(&decoded); err != nil {
