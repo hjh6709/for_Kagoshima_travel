@@ -37,6 +37,20 @@ export type CreatePlacePayload = {
   recommendedReason?: string;
 };
 
+export type CreateFlightPayload = {
+  direction: string;
+  label: string;
+  airline?: string;
+  flightNumber?: string;
+  departureAirport: string;
+  arrivalAirport: string;
+  departureDate: string;
+  departureTime: string;
+  arrivalDate?: string;
+  arrivalTime?: string;
+  memo?: string;
+};
+
 export type ShareLinkResponse = {
   token: string;
   apiPath: string;
@@ -72,6 +86,21 @@ export type SharedPlace = {
   recommendedReason?: string;
 };
 
+export type SharedFlight = {
+  id: string;
+  direction: string;
+  label: string;
+  airline?: string;
+  flightNumber?: string;
+  departureAirport: string;
+  arrivalAirport: string;
+  departureDate: string;
+  departureTime: string;
+  arrivalDate?: string;
+  arrivalTime?: string;
+  memo?: string;
+};
+
 export type SharedRoute = {
   id: string;
   title: string;
@@ -85,6 +114,7 @@ export type SharedTripResponse = {
   trip: PublicTrip;
   schedules: SharedSchedule[];
   places: SharedPlace[];
+  flights: SharedFlight[];
   routes: SharedRoute[];
 };
 
@@ -153,6 +183,24 @@ export function listTripPlaces(accessToken: string, tripID: string) {
 
 export function createTripPlace(accessToken: string, tripID: string, payload: CreatePlacePayload) {
   return apiRequest<SharedPlace>(`/api/trips/${tripID}/places`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function listTripFlights(accessToken: string, tripID: string) {
+  return apiRequest<SharedFlight[]>(`/api/trips/${tripID}/flights`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+}
+
+export function createTripFlight(accessToken: string, tripID: string, payload: CreateFlightPayload) {
+  return apiRequest<SharedFlight>(`/api/trips/${tripID}/flights`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${accessToken}`,

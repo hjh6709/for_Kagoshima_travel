@@ -30,10 +30,10 @@ export const flights: FlightInfo[] = [
   },
   {
     id: "flight-return",
-    label: "귀국",
+    label: "입국",
     airline: "항공사 입력 예정",
     flightNumber: "편명 입력 예정",
-    date: "귀국일 확인 필요",
+    date: "입국일 확인 필요",
     time: "출발 시간 확인 필요",
   },
 ];
@@ -69,7 +69,7 @@ export const places: Place[] = [
     category: "transport",
     address: "공항 주소 입력 예정",
     googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=airport",
-    recommendedReason: "입국과 귀국 기준 장소입니다.",
+    recommendedReason: "출입국 기준 장소입니다.",
   },
   {
     id: "place-hotel",
@@ -165,7 +165,7 @@ export const schedules: ScheduleItem[] = [
     date: "2026-06-30",
     time: "출국 전",
     type: "move",
-    title: "공항 이동과 귀국",
+    title: "공항 이동과 입국",
     placeId: "place-airport",
     transportMemo: "항공편 출발 시간 기준 최소 2시간 전 공항 도착을 권장합니다.",
     guideMemo: "공항에서 식사와 선물 구매 시간을 여유 있게 잡으세요.",
@@ -200,7 +200,7 @@ export const checklist: ChecklistItem[] = [
   { id: "check-ticket", category: "airport", title: "항공권과 여권 확인" },
   { id: "check-tee-time", category: "daily", title: "티오프 시간 확인" },
   { id: "check-medicine", category: "daily", title: "상비약 챙기기" },
-  { id: "check-souvenir", category: "return", title: "귀국 전 짐과 선물 확인" },
+  { id: "check-souvenir", category: "return", title: "입국 전 짐과 선물 확인" },
 ];
 
 export const emergencies: EmergencyInfo[] = [
