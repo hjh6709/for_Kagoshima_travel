@@ -32,6 +32,22 @@ type Place struct {
 	RecommendedReason string `json:"recommendedReason,omitempty"`
 }
 
+type Flight struct {
+	ID               string `json:"id"`
+	TripID           string `json:"tripId"`
+	Direction        string `json:"direction"`
+	Label            string `json:"label"`
+	Airline          string `json:"airline,omitempty"`
+	FlightNumber     string `json:"flightNumber,omitempty"`
+	DepartureAirport string `json:"departureAirport"`
+	ArrivalAirport   string `json:"arrivalAirport"`
+	DepartureDate    string `json:"departureDate"`
+	DepartureTime    string `json:"departureTime"`
+	ArrivalDate      string `json:"arrivalDate,omitempty"`
+	ArrivalTime      string `json:"arrivalTime,omitempty"`
+	Memo             string `json:"memo,omitempty"`
+}
+
 type Route struct {
 	ID                string   `json:"id"`
 	TripID            string   `json:"tripId"`

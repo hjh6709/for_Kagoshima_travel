@@ -34,6 +34,20 @@ type CreatePlaceRequest struct {
 	RecommendedReason string `json:"recommendedReason"`
 }
 
+type CreateFlightRequest struct {
+	Direction        string `json:"direction"`
+	Label            string `json:"label"`
+	Airline          string `json:"airline"`
+	FlightNumber     string `json:"flightNumber"`
+	DepartureAirport string `json:"departureAirport"`
+	ArrivalAirport   string `json:"arrivalAirport"`
+	DepartureDate    string `json:"departureDate"`
+	DepartureTime    string `json:"departureTime"`
+	ArrivalDate      string `json:"arrivalDate"`
+	ArrivalTime      string `json:"arrivalTime"`
+	Memo             string `json:"memo"`
+}
+
 type TripResponse struct {
 	ID        string   `json:"id"`
 	Title     string   `json:"title"`
@@ -71,6 +85,21 @@ type PlaceResponse struct {
 	RecommendedReason string `json:"recommendedReason,omitempty"`
 }
 
+type FlightResponse struct {
+	ID               string `json:"id"`
+	Direction        string `json:"direction"`
+	Label            string `json:"label"`
+	Airline          string `json:"airline,omitempty"`
+	FlightNumber     string `json:"flightNumber,omitempty"`
+	DepartureAirport string `json:"departureAirport"`
+	ArrivalAirport   string `json:"arrivalAirport"`
+	DepartureDate    string `json:"departureDate"`
+	DepartureTime    string `json:"departureTime"`
+	ArrivalDate      string `json:"arrivalDate,omitempty"`
+	ArrivalTime      string `json:"arrivalTime,omitempty"`
+	Memo             string `json:"memo,omitempty"`
+}
+
 type RouteResponse struct {
 	ID                string   `json:"id"`
 	Title             string   `json:"title"`
@@ -91,5 +120,6 @@ type SharedTripResponse struct {
 	Trip      PublicTripResponse `json:"trip"`
 	Schedules []ScheduleResponse `json:"schedules"`
 	Places    []PlaceResponse    `json:"places"`
+	Flights   []FlightResponse   `json:"flights"`
 	Routes    []RouteResponse    `json:"routes"`
 }

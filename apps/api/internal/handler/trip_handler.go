@@ -147,6 +147,31 @@ func (h *TripHandler) CreatePlace(w http.ResponseWriter, r *http.Request) {
 	httpjson.Write(w, http.StatusCreated, place)
 }
 
+func (h *TripHandler) ListFlights(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.GetClaims(r)
+	flights, err := h.tripService.ListFlightsForOwner(r.PathValue("tripID"), claims.UserID)
+	if err != nil {
+		writeServiceError(w, err)
+		return
+	}
+	httpjson.Write(w, http.StatusOK, flights)
+}
+
+func (h *TripHandler) CreateFlight(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.GetClaims(r)
+	var req dto.CreateFlightRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httpjson.WriteError(w, http.StatusBadRequest, "요청 형식이 올바르지 않습니다.")
+		return
+	}
+	flight, err := h.tripService.CreateFlight(r.PathValue("tripID"), claims.UserID, req)
+	if err != nil {
+		writeServiceError(w, err)
+		return
+	}
+	httpjson.Write(w, http.StatusCreated, flight)
+}
+
 func (h *TripHandler) ListRoutes(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
 	routes, err := h.tripService.ListRoutesForOwner(r.PathValue("tripID"), claims.UserID)

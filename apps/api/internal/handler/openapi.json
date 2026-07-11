@@ -138,6 +138,23 @@
           "recommendedReason": { "type": "string", "example": "도착 후 바로 이동할 장소" }
         }
       },
+      "CreateFlightRequest": {
+        "type": "object",
+        "required": ["direction", "label", "departureAirport", "arrivalAirport", "departureDate", "departureTime"],
+        "properties": {
+          "direction": { "type": "string", "example": "departure" },
+          "label": { "type": "string", "example": "출국 항공편" },
+          "airline": { "type": "string", "example": "대한항공" },
+          "flightNumber": { "type": "string", "example": "KE123" },
+          "departureAirport": { "type": "string", "example": "인천" },
+          "arrivalAirport": { "type": "string", "example": "도쿄" },
+          "departureDate": { "type": "string", "example": "2026-07-10" },
+          "departureTime": { "type": "string", "example": "10:30" },
+          "arrivalDate": { "type": "string", "example": "2026-07-10" },
+          "arrivalTime": { "type": "string", "example": "12:45" },
+          "memo": { "type": "string", "example": "터미널 확인 필요" }
+        }
+      },
       "PlaceResponse": {
         "type": "object",
         "properties": {
@@ -147,6 +164,23 @@
           "address": { "type": "string" },
           "googleMapsUrl": { "type": "string" },
           "recommendedReason": { "type": "string" }
+        }
+      },
+      "FlightResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "direction": { "type": "string" },
+          "label": { "type": "string" },
+          "airline": { "type": "string" },
+          "flightNumber": { "type": "string" },
+          "departureAirport": { "type": "string" },
+          "arrivalAirport": { "type": "string" },
+          "departureDate": { "type": "string" },
+          "departureTime": { "type": "string" },
+          "arrivalDate": { "type": "string" },
+          "arrivalTime": { "type": "string" },
+          "memo": { "type": "string" }
         }
       },
       "ShareLinkResponse": {
@@ -164,6 +198,7 @@
           "trip": { "$ref": "#/components/schemas/PublicTripResponse" },
           "schedules": { "type": "array", "items": { "type": "object" } },
           "places": { "type": "array", "items": { "type": "object" } },
+          "flights": { "type": "array", "items": { "$ref": "#/components/schemas/FlightResponse" } },
           "routes": { "type": "array", "items": { "type": "object" } }
         }
       },
@@ -377,6 +412,36 @@
         "tags": ["루트"],
         "security": [{ "bearerAuth": [] }],
         "responses": { "200": { "description": "성공" } }
+      }
+    },
+    "/api/trips/{tripID}/flights": {
+      "parameters": [
+        { "name": "tripID", "in": "path", "required": true, "schema": { "type": "string" } }
+      ],
+      "get": {
+        "summary": "항공편 목록",
+        "tags": ["항공"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "성공", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/FlightResponse" } } } } },
+          "403": { "description": "권한 없음" },
+          "404": { "description": "여행 없음" }
+        }
+      },
+      "post": {
+        "summary": "항공편 생성",
+        "tags": ["항공"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateFlightRequest" } } }
+        },
+        "responses": {
+          "201": { "description": "항공편 생성 성공", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FlightResponse" } } } },
+          "400": { "description": "입력 오류" },
+          "403": { "description": "권한 없음" },
+          "404": { "description": "여행 없음" }
+        }
       }
     }
   }

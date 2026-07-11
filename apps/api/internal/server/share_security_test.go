@@ -61,6 +61,9 @@ func TestShareSecurityBoundaries(t *testing.T) {
 	if _, exists := trip["memo"]; exists {
 		t.Fatalf("public shared trip leaked memo: %#v", trip)
 	}
+	if _, ok := shared.body["flights"].([]any); !ok {
+		t.Fatalf("shared trip flights field has unexpected shape: %#v", shared.body["flights"])
+	}
 
 	missing := getJSON(t, httpServer.URL+"/api/share/not-a-real-token", "")
 	if missing.status != http.StatusNotFound {
