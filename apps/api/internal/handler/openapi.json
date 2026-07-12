@@ -377,6 +377,22 @@
         }
       }
     },
+    "/api/trips/{tripID}/schedules/{scheduleID}": {
+      "parameters": [
+        { "name": "tripID", "in": "path", "required": true, "schema": { "type": "string" } },
+        { "name": "scheduleID", "in": "path", "required": true, "schema": { "type": "string" } }
+      ],
+      "delete": {
+        "summary": "일정 삭제",
+        "tags": ["일정"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "204": { "description": "일정 삭제 성공" },
+          "403": { "description": "권한 없음" },
+          "404": { "description": "여행 또는 일정 없음" }
+        }
+      }
+    },
     "/api/trips/{tripID}/places": {
       "parameters": [
         { "name": "tripID", "in": "path", "required": true, "schema": { "type": "string" } }

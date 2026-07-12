@@ -122,6 +122,15 @@ func (h *TripHandler) CreateSchedule(w http.ResponseWriter, r *http.Request) {
 	httpjson.Write(w, http.StatusCreated, schedule)
 }
 
+func (h *TripHandler) DeleteSchedule(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.GetClaims(r)
+	if err := h.tripService.DeleteSchedule(r.PathValue("tripID"), r.PathValue("scheduleID"), claims.UserID); err != nil {
+		writeServiceError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (h *TripHandler) ListPlaces(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
 	places, err := h.tripService.ListPlacesForOwner(r.PathValue("tripID"), claims.UserID)

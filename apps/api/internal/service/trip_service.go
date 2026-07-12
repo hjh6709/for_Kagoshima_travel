@@ -160,6 +160,16 @@ func (s *TripService) CreateSchedule(tripID, ownerID string, req dto.CreateSched
 	return mapScheduleResponse(schedule), nil
 }
 
+func (s *TripService) DeleteSchedule(tripID, scheduleID, ownerID string) error {
+	if err := s.ensureTripOwner(tripID, ownerID); err != nil {
+		return err
+	}
+	if err := s.tripRepository.DeleteSchedule(tripID, scheduleID); err != nil {
+		return mapRepositoryError(err)
+	}
+	return nil
+}
+
 func (s *TripService) CreatePlace(tripID, ownerID string, req dto.CreatePlaceRequest) (dto.PlaceResponse, error) {
 	if err := s.ensureTripOwner(tripID, ownerID); err != nil {
 		return dto.PlaceResponse{}, err

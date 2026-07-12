@@ -82,6 +82,7 @@ func (s *Server) registerRoutes(jwtSecret string) {
 	s.mux.Handle("POST /api/trips/{tripID}/share", requireAuth(http.HandlerFunc(s.tripHandler.CreateShareLink)))
 	s.mux.Handle("GET /api/trips/{tripID}/schedules", requireAuth(http.HandlerFunc(s.tripHandler.ListSchedules)))
 	s.mux.Handle("POST /api/trips/{tripID}/schedules", requireAuth(http.HandlerFunc(s.tripHandler.CreateSchedule)))
+	s.mux.Handle("DELETE /api/trips/{tripID}/schedules/{scheduleID}", requireAuth(http.HandlerFunc(s.tripHandler.DeleteSchedule)))
 	s.mux.Handle("GET /api/trips/{tripID}/places", requireAuth(http.HandlerFunc(s.tripHandler.ListPlaces)))
 	s.mux.Handle("POST /api/trips/{tripID}/places", requireAuth(http.HandlerFunc(s.tripHandler.CreatePlace)))
 	s.mux.Handle("DELETE /api/trips/{tripID}/places/{placeID}", requireAuth(http.HandlerFunc(s.tripHandler.DeletePlace)))
