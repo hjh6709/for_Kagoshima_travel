@@ -27,8 +27,8 @@ import type { PlaceCategory, ScheduleItem } from "../../types/travel";
 
 export type AuthMode = "login" | "register";
 
-// App.tsx owns routing, API calls, and session state. This component stays presentational
-// so the travel management UI can be split into smaller sections without changing behavior.
+// 라우팅, API 호출, 세션 상태는 App.tsx가 담당한다.
+// 이 컴포넌트는 화면 렌더링만 맡겨서 이후 일정/장소/항공 섹션을 동작 변경 없이 나누기 쉽게 한다.
 type TripManagePageProps = {
   auth: AuthResponse | null;
   authChecked: boolean;

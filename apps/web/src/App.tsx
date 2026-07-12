@@ -1099,7 +1099,7 @@ function App() {
   }
 
   if (isManageRoute) {
-    // App owns API/session side effects; TripManagePage only renders the management UI from props.
+    // App은 API 호출과 세션 상태를 담당하고, TripManagePage는 props로 받은 여행 관리 화면만 렌더링한다.
     return (
       <TripManagePage
         auth={ownerAuth}
