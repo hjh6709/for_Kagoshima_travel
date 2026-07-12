@@ -50,8 +50,25 @@ import {
   schedules,
   trip,
 } from "./data/sampleTrip";
-import { TripManagePage, type AuthMode } from "./features/manage/TripManagePage";
+import { TripManagePage } from "./features/manage/TripManagePage";
+import type { AuthMode } from "./features/manage/manageTypes";
+import { getSavedOwnerAuth, ownerAuthStorageKey } from "./features/manage/ownerAuthStorage";
 import { SharedTripPage } from "./features/share/SharedTripPage";
+import {
+  getMapUrl,
+  getOrderedSchedulesForDate,
+  getPlace,
+  getSavedCustomChecklist,
+  getSavedHiddenChecklistIDs,
+  getSavedScheduleCompletions,
+  getSavedScheduleOrder,
+  getSavedTripDates,
+  isCustomChecklistItem,
+  type ChecklistCategory,
+  type CustomChecklistItem,
+  type ScheduleOrderByDate,
+  type Tab,
+} from "./features/trip/tripViewState";
 import {
   clampDate,
   formatKoreanDate,
@@ -66,18 +83,12 @@ import { getShareTokenFromPath, toAbsoluteWebURL } from "./shared/share";
 import { sortSharedFlights, sortSharedPlaces, sortSharedSchedules } from "./shared/sort";
 import {
   checklistCategories,
-  checklistCategoryLabels,
   placeCategoryLabels,
   scheduleTypeLabels,
   translationLinks,
   type FlightDirection,
 } from "./shared/travelOptions";
 import type { ChecklistItem, PlaceCategory, ScheduleItem } from "./types/travel";
-
-type Tab = "today" | "schedule" | "flight" | "map" | "concierge";
-type ChecklistCategory = ChecklistItem["category"];
-type CustomChecklistItem = ChecklistItem & { custom: true };
-type ScheduleOrderByDate = Record<string, string[]>;
 
 const tabs: Array<{ id: Tab; label: string; icon: typeof Home }> = [
   { id: "today", label: "오늘", icon: Home },
@@ -86,134 +97,6 @@ const tabs: Array<{ id: Tab; label: string; icon: typeof Home }> = [
   { id: "map", label: "지도", icon: MapIcon },
   { id: "concierge", label: "긴급", icon: Shield },
 ];
-
-const ownerAuthStorageKey = "travel-app-owner-auth";
-
-function getSavedOwnerAuth(): AuthResponse | null {
-  const saved = window.localStorage.getItem(ownerAuthStorageKey);
-  try {
-    const parsed = saved ? JSON.parse(saved) : null;
-    if (
-      parsed &&
-      typeof parsed.accessToken === "string" &&
-      typeof parsed.user?.id === "string" &&
-      typeof parsed.user?.email === "string"
-    ) {
-      return parsed;
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-function getPlace(placeId?: string) {
-  return places.find((place) => place.id === placeId);
-}
-
-function getMapUrl(place?: ReturnType<typeof getPlace>) {
-  const fallback = place?.address || place?.name || "여행지";
-  return place?.googleMapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fallback)}`;
-}
-
-function isDateValue(value: unknown): value is string {
-  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
-}
-
-function isChecklistCategory(value: unknown): value is ChecklistCategory {
-  return typeof value === "string" && value in checklistCategoryLabels;
-}
-
-function isCustomChecklistItem(item: ChecklistItem): item is CustomChecklistItem {
-  return "custom" in item && item.custom === true;
-}
-
-function getSavedTripDates(): TripDates {
-  const fallback = { startDate: trip.startDate, endDate: trip.endDate };
-  const saved = window.localStorage.getItem("kagoshima-trip-dates");
-  try {
-    const parsed = saved ? JSON.parse(saved) : fallback;
-    return isDateValue(parsed.startDate) && isDateValue(parsed.endDate) ? parsed : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function getSavedCustomChecklist(): CustomChecklistItem[] {
-  const saved = window.localStorage.getItem("kagoshima-custom-checklist");
-  try {
-    const parsed = saved ? JSON.parse(saved) : [];
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter((item): item is CustomChecklistItem => {
-      return (
-        typeof item?.id === "string" &&
-        isChecklistCategory(item.category) &&
-        typeof item.title === "string" &&
-        item.title.trim().length > 0 &&
-        item.custom === true
-      );
-    });
-  } catch {
-    return [];
-  }
-}
-
-function getSavedHiddenChecklistIDs(): string[] {
-  const saved = window.localStorage.getItem("kagoshima-hidden-checklist");
-  try {
-    const parsed = saved ? JSON.parse(saved) : [];
-    return Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === "string") : [];
-  } catch {
-    return [];
-  }
-}
-
-function getSavedScheduleCompletions(): Record<string, boolean> {
-  const saved = window.localStorage.getItem("kagoshima-schedule-completions");
-  try {
-    const parsed = saved ? JSON.parse(saved) : {};
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
-
-    return Object.fromEntries(
-      Object.entries(parsed).filter((entry): entry is [string, boolean] => {
-        const [id, completed] = entry;
-        return typeof id === "string" && typeof completed === "boolean";
-      })
-    );
-  } catch {
-    return {};
-  }
-}
-
-function getSavedScheduleOrder(): ScheduleOrderByDate {
-  const saved = window.localStorage.getItem("kagoshima-schedule-order");
-  try {
-    const parsed = saved ? JSON.parse(saved) : {};
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
-
-    return Object.fromEntries(
-      Object.entries(parsed).filter((entry): entry is [string, string[]] => {
-        const [date, ids] = entry;
-        return isDateValue(date) && Array.isArray(ids) && ids.every((id) => typeof id === "string");
-      })
-    );
-  } catch {
-    return {};
-  }
-}
-
-function getOrderedSchedulesForDate(date: string, orderByDate: ScheduleOrderByDate): ScheduleItem[] {
-  const baseSchedules = schedules.filter((item) => item.date === date);
-  const order = orderByDate[date];
-  if (!order) return baseSchedules;
-
-  const orderIndex = new Map(order.map((id, index) => [id, index]));
-  return [...baseSchedules].sort((left, right) => {
-    const leftIndex = orderIndex.get(left.id) ?? Number.MAX_SAFE_INTEGER;
-    const rightIndex = orderIndex.get(right.id) ?? Number.MAX_SAFE_INTEGER;
-    return leftIndex - rightIndex;
-  });
-}
 
 function App() {
   const currentPath = window.location.pathname;
