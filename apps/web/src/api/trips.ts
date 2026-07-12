@@ -173,6 +173,15 @@ export function createTripSchedule(accessToken: string, tripID: string, payload:
   });
 }
 
+export function deleteTripSchedule(accessToken: string, tripID: string, scheduleID: string) {
+  return apiRequest<void>(`/api/trips/${tripID}/schedules/${scheduleID}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+}
+
 export function listTripPlaces(accessToken: string, tripID: string) {
   return apiRequest<SharedPlace[]>(`/api/trips/${tripID}/places`, {
     headers: {
