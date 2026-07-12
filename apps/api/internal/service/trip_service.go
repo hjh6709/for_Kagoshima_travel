@@ -206,6 +206,16 @@ func (s *TripService) ListPlacesForOwner(tripID, ownerID string) ([]dto.PlaceRes
 	return s.ListPlaces(tripID)
 }
 
+func (s *TripService) DeletePlace(tripID, placeID, ownerID string) error {
+	if err := s.ensureTripOwner(tripID, ownerID); err != nil {
+		return err
+	}
+	if err := s.tripRepository.DeletePlace(tripID, placeID); err != nil {
+		return mapRepositoryError(err)
+	}
+	return nil
+}
+
 func (s *TripService) CreateFlight(tripID, ownerID string, req dto.CreateFlightRequest) (dto.FlightResponse, error) {
 	if err := s.ensureTripOwner(tripID, ownerID); err != nil {
 		return dto.FlightResponse{}, err

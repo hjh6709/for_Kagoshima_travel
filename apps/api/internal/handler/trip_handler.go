@@ -147,6 +147,15 @@ func (h *TripHandler) CreatePlace(w http.ResponseWriter, r *http.Request) {
 	httpjson.Write(w, http.StatusCreated, place)
 }
 
+func (h *TripHandler) DeletePlace(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.GetClaims(r)
+	if err := h.tripService.DeletePlace(r.PathValue("tripID"), r.PathValue("placeID"), claims.UserID); err != nil {
+		writeServiceError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (h *TripHandler) ListFlights(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
 	flights, err := h.tripService.ListFlightsForOwner(r.PathValue("tripID"), claims.UserID)

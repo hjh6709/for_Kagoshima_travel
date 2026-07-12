@@ -403,6 +403,22 @@
         }
       }
     },
+    "/api/trips/{tripID}/places/{placeID}": {
+      "parameters": [
+        { "name": "tripID", "in": "path", "required": true, "schema": { "type": "string" } },
+        { "name": "placeID", "in": "path", "required": true, "schema": { "type": "string" } }
+      ],
+      "delete": {
+        "summary": "장소 삭제",
+        "tags": ["장소"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "204": { "description": "장소 삭제 성공" },
+          "403": { "description": "권한 없음" },
+          "404": { "description": "여행 또는 장소 없음" }
+        }
+      }
+    },
     "/api/trips/{tripID}/routes": {
       "parameters": [
         { "name": "tripID", "in": "path", "required": true, "schema": { "type": "string" } }

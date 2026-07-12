@@ -119,6 +119,17 @@ func (r *PostgresTripRepository) SaveFlight(flight model.Flight) error {
 	return err
 }
 
+func (r *PostgresTripRepository) DeletePlace(tripID, placeID string) error {
+	tag, err := r.pool.Exec(context.Background(), `DELETE FROM places WHERE trip_id = $1 AND id = $2`, tripID, placeID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
 func (r *PostgresTripRepository) Update(trip model.Trip) error {
 	tag, err := r.pool.Exec(context.Background(),
 		`UPDATE trips SET title=$1, start_date=$2, end_date=$3, travelers=$4, memo=$5, updated_at=NOW() WHERE id=$6`,
