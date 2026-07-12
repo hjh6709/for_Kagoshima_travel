@@ -19,7 +19,6 @@ import {
   flightDirectionOptions,
   getFlightDirectionLabel,
   getScheduleTypeLabel,
-  placeCategoryLabels,
   placeCategoryOptions,
   scheduleTypeOptions,
   type FlightDirection,
