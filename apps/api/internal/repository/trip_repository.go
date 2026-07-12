@@ -25,6 +25,7 @@ type TripRepository interface {
 	SaveSchedule(schedule model.Schedule) error
 	SavePlace(place model.Place) error
 	SaveFlight(flight model.Flight) error
+	DeleteSchedule(tripID, scheduleID string) error
 	DeletePlace(tripID, placeID string) error
 	Update(trip model.Trip) error
 	Delete(id string) error
@@ -241,6 +242,18 @@ func (r *MemoryTripRepository) SaveFlight(flight model.Flight) error {
 	defer r.mu.Unlock()
 	r.flights = append(r.flights, flight)
 	return nil
+}
+
+func (r *MemoryTripRepository) DeleteSchedule(tripID, scheduleID string) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for i, schedule := range r.schedules {
+		if schedule.ID == scheduleID && schedule.TripID == tripID {
+			r.schedules = append(r.schedules[:i], r.schedules[i+1:]...)
+			return nil
+		}
+	}
+	return ErrNotFound
 }
 
 func (r *MemoryTripRepository) DeletePlace(tripID, placeID string) error {

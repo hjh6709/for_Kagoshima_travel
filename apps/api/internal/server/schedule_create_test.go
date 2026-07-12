@@ -68,9 +68,39 @@ func TestScheduleCreateBoundaries(t *testing.T) {
 	if missingTripCreate.status != http.StatusNotFound {
 		t.Fatalf("missing trip create schedule status = %d, want %d", missingTripCreate.status, http.StatusNotFound)
 	}
+
+	otherDelete := deleteSchedule(t, httpServer.URL, otherToken, tripID, scheduleID)
+	if otherDelete.status != http.StatusForbidden {
+		t.Fatalf("other user delete schedule status = %d, want %d", otherDelete.status, http.StatusForbidden)
+	}
+
+	deleted := deleteSchedule(t, httpServer.URL, ownerToken, tripID, scheduleID)
+	if deleted.status != http.StatusNoContent {
+		t.Fatalf("owner delete schedule status = %d, want %d, body = %#v", deleted.status, http.StatusNoContent, deleted.body)
+	}
+
+	listAfterDelete := getJSON(t, httpServer.URL+"/api/trips/"+tripID+"/schedules", ownerToken)
+	if listAfterDelete.status != http.StatusOK {
+		t.Fatalf("list schedules after delete status = %d, want %d, body = %#v", listAfterDelete.status, http.StatusOK, listAfterDelete.body)
+	}
+	for _, schedule := range listAfterDelete.arrayBody {
+		if schedule["id"] == scheduleID {
+			t.Fatalf("deleted schedule %q still found in list: %#v", scheduleID, listAfterDelete.arrayBody)
+		}
+	}
+
+	deleteAgain := deleteSchedule(t, httpServer.URL, ownerToken, tripID, scheduleID)
+	if deleteAgain.status != http.StatusNotFound {
+		t.Fatalf("delete missing schedule status = %d, want %d", deleteAgain.status, http.StatusNotFound)
+	}
 }
 
 func createSchedule(t *testing.T, baseURL, token, tripID string, payload map[string]any) jsonResponse {
 	t.Helper()
 	return doJSON(t, http.MethodPost, baseURL+"/api/trips/"+tripID+"/schedules", token, payload)
+}
+
+func deleteSchedule(t *testing.T, baseURL, token, tripID, scheduleID string) jsonResponse {
+	t.Helper()
+	return doJSON(t, http.MethodDelete, baseURL+"/api/trips/"+tripID+"/schedules/"+scheduleID, token, nil)
 }
