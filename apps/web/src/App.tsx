@@ -53,18 +53,39 @@ import {
   schedules,
   trip,
 } from "./data/sampleTrip";
-import type { ChecklistItem, ScheduleItem } from "./types/travel";
+import { SharedTripPage } from "./features/share/SharedTripPage";
+import {
+  clampDate,
+  formatKoreanDate,
+  formatShortDate,
+  getDateOffset,
+  getTodayDateString,
+  getTravelStatus,
+  shiftDate,
+  type TripDates,
+} from "./shared/date";
+import { getShareTokenFromPath, toAbsoluteWebURL } from "./shared/share";
+import { sortSharedFlights, sortSharedPlaces, sortSharedSchedules } from "./shared/sort";
+import {
+  checklistCategories,
+  checklistCategoryLabels,
+  flightDirectionOptions,
+  getFlightDirectionLabel,
+  getScheduleTypeLabel,
+  placeCategoryLabels,
+  placeCategoryOptions,
+  scheduleTypeLabels,
+  scheduleTypeOptions,
+  translationLinks,
+  type FlightDirection,
+} from "./shared/travelOptions";
+import type { ChecklistItem, PlaceCategory, ScheduleItem } from "./types/travel";
 
 type Tab = "today" | "schedule" | "flight" | "map" | "concierge";
-type TripDates = {
-  startDate: string;
-  endDate: string;
-};
 type ChecklistCategory = ChecklistItem["category"];
 type CustomChecklistItem = ChecklistItem & { custom: true };
 type ScheduleOrderByDate = Record<string, string[]>;
 type AuthMode = "login" | "register";
-type TravelPhase = "before" | "during" | "after";
 
 const tabs: Array<{ id: Tab; label: string; icon: typeof Home }> = [
   { id: "today", label: "오늘", icon: Home },
@@ -74,64 +95,7 @@ const tabs: Array<{ id: Tab; label: string; icon: typeof Home }> = [
   { id: "concierge", label: "긴급", icon: Shield },
 ];
 
-const scheduleTypeLabels: Record<ScheduleItem["type"], string> = {
-  move: "이동",
-  meal: "식사",
-  golf: "골프",
-  sightseeing: "관광",
-  hotel: "숙소",
-  shopping: "쇼핑",
-  etc: "기타",
-};
-const scheduleTypeOptions = Object.entries(scheduleTypeLabels) as Array<[ScheduleItem["type"], string]>;
-
-function getScheduleTypeLabel(type: string) {
-  return scheduleTypeLabels[type as ScheduleItem["type"]] ?? "일정";
-}
-
-const placeCategoryLabels = {
-  hotel: "숙소",
-  meal: "식사",
-  golf: "골프",
-  cafe: "카페",
-  sightseeing: "관광",
-  shopping: "쇼핑",
-  transport: "이동",
-  etc: "기타",
-} as const;
-type PlaceCategory = keyof typeof placeCategoryLabels;
-const placeCategoryOptions = Object.entries(placeCategoryLabels) as Array<[PlaceCategory, string]>;
-
-const flightDirectionLabels = {
-  departure: "출국",
-  return: "입국",
-  domestic: "국내 이동",
-  etc: "기타",
-} as const;
-type FlightDirection = keyof typeof flightDirectionLabels;
-const flightDirectionOptions = Object.entries(flightDirectionLabels) as Array<[FlightDirection, string]>;
-
-const checklistCategoryLabels = {
-  before: "출발 전",
-  airport: "공항",
-  daily: "여행 중",
-  return: "입국 전",
-} as const;
-const checklistCategories = Object.entries(checklistCategoryLabels) as Array<[ChecklistCategory, string]>;
 const ownerAuthStorageKey = "travel-app-owner-auth";
-
-const translationLinks = [
-  {
-    id: "google-translate",
-    label: "Google 번역 열기",
-    href: "https://translate.google.com/?sl=auto&tl=ja&op=translate",
-  },
-  {
-    id: "papago",
-    label: "Papago 열기",
-    href: "https://papago.naver.com/",
-  },
-] as const;
 
 function getSavedOwnerAuth(): AuthResponse | null {
   const saved = window.localStorage.getItem(ownerAuthStorageKey);
@@ -158,77 +122,6 @@ function getPlace(placeId?: string) {
 function getMapUrl(place?: ReturnType<typeof getPlace>) {
   const fallback = place?.address || place?.name || "여행지";
   return place?.googleMapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fallback)}`;
-}
-
-function formatKoreanDate(dateStr: string): string {
-  const date = new Date(`${dateStr}T00:00:00`);
-  const days = ["일", "월", "화", "수", "목", "금", "토"];
-  return `${date.getMonth() + 1}월 ${date.getDate()}일(${days[date.getDay()]})`;
-}
-
-function formatShortDate(dateStr: string): string {
-  const date = new Date(`${dateStr}T00:00:00`);
-  const days = ["일", "월", "화", "수", "목", "금", "토"];
-  return `${date.getMonth() + 1}/${date.getDate()}(${days[date.getDay()]})`;
-}
-
-function getDateOffset(from: string, to: string): number {
-  return Math.round((new Date(`${to}T00:00:00`).getTime() - new Date(`${from}T00:00:00`).getTime()) / 86400000);
-}
-
-function shiftDate(baseDate: string, offset: number): string {
-  const date = new Date(`${baseDate}T00:00:00`);
-  date.setDate(date.getDate() + offset);
-  const year = date.getFullYear();
-  const month = `${date.getMonth() + 1}`.padStart(2, "0");
-  const day = `${date.getDate()}`.padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function getTodayDateString(): string {
-  const date = new Date();
-  const year = date.getFullYear();
-  const month = `${date.getMonth() + 1}`.padStart(2, "0");
-  const day = `${date.getDate()}`.padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function clampDate(date: string, startDate: string, endDate: string): string {
-  if (date < startDate) return startDate;
-  if (date > endDate) return endDate;
-  return date;
-}
-
-function getTravelPhase(today: string, dates: TripDates): TravelPhase {
-  if (today < dates.startDate) return "before";
-  if (today > dates.endDate) return "after";
-  return "during";
-}
-
-function getTravelStatus(today: string, dates: TripDates): { phase: TravelPhase; label: string; description: string } {
-  const phase = getTravelPhase(today, dates);
-  if (phase === "before") {
-    const daysLeft = Math.max(getDateOffset(today, dates.startDate), 0);
-    return {
-      phase,
-      label: daysLeft === 0 ? "오늘 출발" : `출발 D-${daysLeft}`,
-      description: "출발 전 준비물과 항공편을 먼저 확인하세요.",
-    };
-  }
-  if (phase === "after") {
-    return {
-      phase,
-      label: "여행 완료",
-      description: "입국 후 짐과 분실물을 한 번 더 확인하세요.",
-    };
-  }
-
-  const dayNumber = getDateOffset(dates.startDate, today) + 1;
-  return {
-    phase,
-    label: `여행 ${dayNumber}일차`,
-    description: "오늘 일정과 다음 이동만 확인하면 됩니다.",
-  };
 }
 
 function isDateValue(value: unknown): value is string {
@@ -328,52 +221,6 @@ function getOrderedSchedulesForDate(date: string, orderByDate: ScheduleOrderByDa
     const rightIndex = orderIndex.get(right.id) ?? Number.MAX_SAFE_INTEGER;
     return leftIndex - rightIndex;
   });
-}
-
-function toAbsoluteWebURL(path: string) {
-  return new URL(path, window.location.origin).toString();
-}
-
-function sortSharedSchedules(items: SharedSchedule[]): SharedSchedule[] {
-  return [...items].sort((left, right) => {
-    const byDate = left.date.localeCompare(right.date);
-    if (byDate !== 0) return byDate;
-
-    const byTime = left.time.localeCompare(right.time);
-    if (byTime !== 0) return byTime;
-
-    return left.title.localeCompare(right.title);
-  });
-}
-
-function sortSharedPlaces(items: SharedPlace[]): SharedPlace[] {
-  return [...items].sort((left, right) => {
-    const byCategory = left.category.localeCompare(right.category);
-    if (byCategory !== 0) return byCategory;
-
-    return left.name.localeCompare(right.name);
-  });
-}
-
-function sortSharedFlights(items: SharedFlight[]): SharedFlight[] {
-  return [...items].sort((left, right) => {
-    const byDate = left.departureDate.localeCompare(right.departureDate);
-    if (byDate !== 0) return byDate;
-
-    const byTime = left.departureTime.localeCompare(right.departureTime);
-    if (byTime !== 0) return byTime;
-
-    return left.label.localeCompare(right.label);
-  });
-}
-
-function getFlightDirectionLabel(direction: string) {
-  return flightDirectionLabels[direction as FlightDirection] ?? "항공";
-}
-
-function getShareTokenFromPath(path: string) {
-  const match = path.match(/^\/share\/([^/]+)\/?$/);
-  return match ? decodeURIComponent(match[1]) : "";
 }
 
 function App() {
@@ -1256,7 +1103,7 @@ function App() {
   }
 
   if (isShareRoute) {
-    return <SharedTripApp error={sharedTripError} loading={sharedTripLoading} sharedTrip={sharedTrip} />;
+    return <SharedTripPage error={sharedTripError} loading={sharedTripLoading} sharedTrip={sharedTrip} />;
   }
 
   if (isManageRoute) {
@@ -1980,224 +1827,6 @@ function App() {
             );
           })}
         </nav>
-      </section>
-    </main>
-  );
-}
-
-type SharedTripAppProps = {
-  error: string;
-  loading: boolean;
-  sharedTrip: SharedTripResponse | null;
-};
-
-function SharedTripApp({ error, loading, sharedTrip }: SharedTripAppProps) {
-  const placeByID = useMemo(() => {
-    if (!sharedTrip) return new Map<string, SharedTripResponse["places"][number]>();
-    return new Map(sharedTrip.places.map((place) => [place.id, place]));
-  }, [sharedTrip]);
-  const sharedFlights = useMemo(() => sortSharedFlights(sharedTrip?.flights ?? []), [sharedTrip]);
-
-  return (
-    <main className="app-shell">
-      <section className="phone-frame shared-frame">
-        <div className="content">
-          <section className="screen shared-screen">
-            <article className="hero-card shared-hero-card">
-              <span className="pill">읽기 전용 공유</span>
-              {loading && (
-                <>
-                  <h1>공유 여행을 불러오는 중</h1>
-                  <p className="muted">잠시만 기다려주세요.</p>
-                </>
-              )}
-
-              {!loading && error && (
-                <>
-                  <h1>공유 링크를 확인하지 못했습니다</h1>
-                  <p className="form-error">{error}</p>
-                </>
-              )}
-
-              {!loading && !error && sharedTrip && (
-                <>
-                  <h1>{sharedTrip.trip.title}</h1>
-                  <p className="trip-dates">
-                    {formatKoreanDate(sharedTrip.trip.startDate)} ~ {formatKoreanDate(sharedTrip.trip.endDate)}
-                  </p>
-                  <p className="muted">
-                    {sharedTrip.trip.travelers.length > 0
-                      ? `${sharedTrip.trip.travelers.join(", ")}와 공유된 여행입니다.`
-                      : "공유된 여행 정보입니다."}
-                  </p>
-                </>
-              )}
-            </article>
-
-            {!loading && !error && sharedTrip && (
-              <>
-                <section className="section-block">
-                  <div className="section-title-row">
-                    <div>
-                      <h2>일정</h2>
-                      <p className="section-caption">공유된 최신 일정입니다.</p>
-                    </div>
-                    <span className="pill subtle">{sharedTrip.schedules.length}개</span>
-                  </div>
-
-                  {sharedTrip.schedules.length === 0 ? (
-                    <article className="empty-state-card list-card">
-                      <p className="muted">공유된 일정이 없습니다.</p>
-                    </article>
-                  ) : (
-                    <div className="card-stack">
-                      {sharedTrip.schedules.map((schedule) => {
-                        const place = placeByID.get(schedule.placeId ?? "");
-                        return (
-                          <article className="schedule-card shared-schedule-card" key={schedule.id}>
-                            <div className="schedule-time">
-                              <span>{formatShortDate(schedule.date)}</span>
-                              <strong>{schedule.time || "시간 미정"}</strong>
-                            </div>
-                            <div className="schedule-content">
-                              <div className="schedule-meta">
-                                <span className="pill subtle">{getScheduleTypeLabel(schedule.type)}</span>
-                                {place && <span className="place-label">{place.name}</span>}
-                              </div>
-                              <h2>{schedule.title}</h2>
-                              {schedule.transportMemo && <p>{schedule.transportMemo}</p>}
-                              {schedule.guideMemo && <p className="muted">{schedule.guideMemo}</p>}
-                            </div>
-                          </article>
-                        );
-                      })}
-                    </div>
-                  )}
-                </section>
-
-                <section className="section-block">
-                  <div className="section-title-row">
-                    <div>
-                      <h2>항공편</h2>
-                      <p className="section-caption">공항에서 바로 확인할 수 있는 항공 정보입니다.</p>
-                    </div>
-                    <span className="pill subtle">{sharedFlights.length}개</span>
-                  </div>
-
-                  {sharedFlights.length === 0 ? (
-                    <article className="empty-state-card list-card">
-                      <p className="muted">공유된 항공편이 없습니다.</p>
-                    </article>
-                  ) : (
-                    <div className="card-stack">
-                      {sharedFlights.map((flight) => (
-                        <article className="flight-card shared-flight-card" key={flight.id}>
-                          <div className="flight-card-header">
-                            <span className="pill">{getFlightDirectionLabel(flight.direction)}</span>
-                            <Plane size={20} />
-                          </div>
-                          <h2>
-                            {flight.label}
-                            {flight.flightNumber ? ` · ${flight.flightNumber}` : ""}
-                          </h2>
-                          {(flight.airline || flight.memo) && (
-                            <p className="muted">{[flight.airline, flight.memo].filter(Boolean).join(" · ")}</p>
-                          )}
-                          <dl className="flight-details">
-                            <div>
-                              <dt>출발</dt>
-                              <dd>
-                                {flight.departureAirport}
-                                <br />
-                                {formatKoreanDate(flight.departureDate)} {flight.departureTime}
-                              </dd>
-                            </div>
-                            <div>
-                              <dt>도착</dt>
-                              <dd>
-                                {flight.arrivalAirport}
-                                <br />
-                                {flight.arrivalDate ? formatKoreanDate(flight.arrivalDate) : "날짜 미정"}{" "}
-                                {flight.arrivalTime || "시간 미정"}
-                              </dd>
-                            </div>
-                          </dl>
-                        </article>
-                      ))}
-                    </div>
-                  )}
-                </section>
-
-                <section className="section-block">
-                  <div className="section-title-row">
-                    <div>
-                      <h2>장소</h2>
-                      <p className="section-caption">지도 링크가 있으면 외부 지도 앱으로 열 수 있습니다.</p>
-                    </div>
-                    <span className="pill subtle">{sharedTrip.places.length}개</span>
-                  </div>
-
-                  {sharedTrip.places.length === 0 ? (
-                    <article className="empty-state-card list-card">
-                      <p className="muted">공유된 장소가 없습니다.</p>
-                    </article>
-                  ) : (
-                    <div className="card-stack">
-                      {sharedTrip.places.map((place) => (
-                        <article className="place-card shared-place-card" key={place.id}>
-                          <div>
-                            <span className="pill subtle">{place.category}</span>
-                            <h2>{place.name}</h2>
-                            {place.address && <p className="muted">{place.address}</p>}
-                            {place.recommendedReason && <p>{place.recommendedReason}</p>}
-                          </div>
-                          {place.googleMapsUrl && (
-                            <a
-                              className="secondary-button compact-button"
-                              href={place.googleMapsUrl}
-                              rel="noreferrer"
-                              target="_blank"
-                            >
-                              <ExternalLink size={16} />
-                              지도 열기
-                            </a>
-                          )}
-                        </article>
-                      ))}
-                    </div>
-                  )}
-                </section>
-
-                <section className="section-block">
-                  <div className="section-title-row">
-                    <div>
-                      <h2>추천 루트</h2>
-                      <p className="section-caption">공유된 이동 흐름과 참고 메모입니다.</p>
-                    </div>
-                    <span className="pill subtle">{sharedTrip.routes.length}개</span>
-                  </div>
-
-                  {sharedTrip.routes.length === 0 ? (
-                    <article className="empty-state-card list-card">
-                      <p className="muted">공유된 추천 루트가 없습니다.</p>
-                    </article>
-                  ) : (
-                    <div className="card-stack">
-                      {sharedTrip.routes.map((route) => (
-                        <article className="info-card shared-route-card" key={route.id}>
-                          <h2>{route.title}</h2>
-                          {route.description && <p>{route.description}</p>}
-                          {route.transportMemo && <p className="muted">{route.transportMemo}</p>}
-                          {route.estimatedDuration && <span className="pill subtle">{route.estimatedDuration}</span>}
-                        </article>
-                      ))}
-                    </div>
-                  )}
-                </section>
-              </>
-            )}
-          </section>
-        </div>
       </section>
     </main>
   );
