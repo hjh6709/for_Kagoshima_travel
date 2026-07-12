@@ -462,6 +462,7 @@ p {
 
 .primary-button,
 .secondary-button,
+.danger-button,
 .quick-button {
   min-height: 48px;
   border: 0;
@@ -485,6 +486,13 @@ p {
   margin-top: 12px;
   color: var(--c-green);
   background: var(--c-green-light);
+  padding: 10px 14px;
+}
+
+.danger-button {
+  margin-top: 12px;
+  color: var(--c-danger);
+  background: var(--c-danger-light);
   padding: 10px 14px;
 }
 
@@ -742,6 +750,22 @@ p {
   min-height: 40px;
   margin-top: 0;
   padding: 8px 12px;
+}
+
+.section-actions,
+.owner-linked-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.section-actions {
+  justify-content: flex-end;
+}
+
+.owner-linked-actions {
+  justify-content: flex-end;
 }
 
 .restore-button {
@@ -1004,6 +1028,7 @@ p {
 
 .primary-button:active,
 .secondary-button:active,
+.danger-button:active,
 .quick-button:active,
 .home-check-item:active,
 .check-toggle:active,

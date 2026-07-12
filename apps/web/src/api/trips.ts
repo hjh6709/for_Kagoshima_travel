@@ -191,6 +191,15 @@ export function createTripPlace(accessToken: string, tripID: string, payload: Cr
   });
 }
 
+export function deleteTripPlace(accessToken: string, tripID: string, placeID: string) {
+  return apiRequest<void>(`/api/trips/${tripID}/places/${placeID}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+}
+
 export function listTripFlights(accessToken: string, tripID: string) {
   return apiRequest<SharedFlight[]>(`/api/trips/${tripID}/flights`, {
     headers: {
