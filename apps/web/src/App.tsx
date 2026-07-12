@@ -29,6 +29,7 @@ import {
   createTripSchedule,
   createTrip,
   deleteTripPlace,
+  deleteTripSchedule,
   getSharedTrip,
   listTripFlights,
   listTripPlaces,
@@ -426,6 +427,9 @@ function App() {
   const [newScheduleGuideMemo, setNewScheduleGuideMemo] = useState("");
   const [scheduleCreateError, setScheduleCreateError] = useState("");
   const [scheduleCreateSubmitting, setScheduleCreateSubmitting] = useState(false);
+  const [isScheduleListEditing, setIsScheduleListEditing] = useState(false);
+  const [scheduleDeleteError, setScheduleDeleteError] = useState("");
+  const [deletingScheduleID, setDeletingScheduleID] = useState("");
   const [newPlaceName, setNewPlaceName] = useState("");
   const [newPlaceCategory, setNewPlaceCategory] = useState<PlaceCategory>("sightseeing");
   const [newPlaceAddress, setNewPlaceAddress] = useState("");
@@ -650,6 +654,9 @@ function App() {
       setNewScheduleTransportMemo("");
       setNewScheduleGuideMemo("");
       setScheduleCreateError("");
+      setIsScheduleListEditing(false);
+      setScheduleDeleteError("");
+      setDeletingScheduleID("");
       setNewPlaceName("");
       setNewPlaceCategory("sightseeing");
       setNewPlaceAddress("");
@@ -690,6 +697,9 @@ function App() {
     setNewScheduleTransportMemo("");
     setNewScheduleGuideMemo("");
     setScheduleCreateError("");
+    setIsScheduleListEditing(false);
+    setScheduleDeleteError("");
+    setDeletingScheduleID("");
     setNewPlaceName("");
     setNewPlaceCategory("sightseeing");
     setNewPlaceAddress("");
@@ -981,6 +991,39 @@ function App() {
     }
   }
 
+  async function deleteOwnerSchedule(scheduleID: string) {
+    if (!ownerAuth || !selectedOwnerTrip) return;
+
+    const schedule = ownerSchedules.find((item) => item.id === scheduleID);
+    const confirmed = window.confirm(
+      schedule ? `"${schedule.title}" 일정을 삭제할까요?` : "일정을 삭제할까요?"
+    );
+    if (!confirmed) return;
+
+    setScheduleDeleteError("");
+    setDeletingScheduleID(scheduleID);
+    try {
+      await deleteTripSchedule(ownerAuth.accessToken, selectedOwnerTrip.id, scheduleID);
+      setOwnerSchedules((currentSchedules) => currentSchedules.filter((item) => item.id !== scheduleID));
+      setScheduleDeleteError("");
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        window.localStorage.removeItem(ownerAuthStorageKey);
+        setOwnerAuth(null);
+        setOwnerTrips([]);
+        setSelectedOwnerTripID(null);
+        setOwnerSchedules([]);
+        setOwnerPlaces([]);
+        setOwnerFlights([]);
+        setScheduleDeleteError("");
+        return;
+      }
+      setScheduleDeleteError(error instanceof Error ? error.message : "일정을 삭제하지 못했습니다.");
+    } finally {
+      setDeletingScheduleID("");
+    }
+  }
+
   async function submitNewPlace(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!ownerAuth || !selectedOwnerTrip) return;
@@ -1181,6 +1224,9 @@ function App() {
     setNewScheduleGuideMemo("");
     setScheduleCreateError("");
     setScheduleCreateSubmitting(false);
+    setIsScheduleListEditing(false);
+    setScheduleDeleteError("");
+    setDeletingScheduleID("");
     setNewPlaceName("");
     setNewPlaceCategory("sightseeing");
     setNewPlaceAddress("");
@@ -1188,6 +1234,9 @@ function App() {
     setNewPlaceRecommendedReason("");
     setPlaceCreateError("");
     setPlaceCreateSubmitting(false);
+    setIsPlaceListEditing(false);
+    setPlaceDeleteError("");
+    setDeletingPlaceID("");
     setNewFlightDirection("departure");
     setNewFlightLabel("");
     setNewFlightAirline("");
@@ -1228,6 +1277,8 @@ function App() {
         ownerFlights={ownerFlights}
         ownerDetailDataError={ownerDetailDataError}
         ownerDetailDataLoading={ownerDetailDataLoading}
+        isScheduleListEditing={isScheduleListEditing}
+        deletingScheduleID={deletingScheduleID}
         isPlaceListEditing={isPlaceListEditing}
         deletingPlaceID={deletingPlaceID}
         selectedOwnerTrip={selectedOwnerTrip}
@@ -1267,6 +1318,7 @@ function App() {
         placeDeleteError={placeDeleteError}
         scheduleCreateError={scheduleCreateError}
         scheduleCreateSubmitting={scheduleCreateSubmitting}
+        scheduleDeleteError={scheduleDeleteError}
         shareLinkCopied={shareLinkCopied}
         shareLinkError={shareLinkError}
         shareLinkSubmitting={shareLinkSubmitting}
@@ -1326,6 +1378,8 @@ function App() {
         onCloseOwnerTripDetail={() => setSelectedOwnerTripID(null)}
         onCopyShareLink={copySelectedTripShareLink}
         onCreateShareLink={createSelectedTripShareLink}
+        onDeleteSchedule={deleteOwnerSchedule}
+        onScheduleListEditingChange={setIsScheduleListEditing}
         onDeletePlace={deleteOwnerPlace}
         onPlaceListEditingChange={setIsPlaceListEditing}
         onTripEditEndDateChange={setTripEditEndDate}
@@ -1986,7 +2040,7 @@ function SharedTripApp({ error, loading, sharedTrip }: SharedTripAppProps) {
                   <div className="section-title-row">
                     <div>
                       <h2>일정</h2>
-                      <p className="section-caption">여행 관리자가 공유한 최신 일정입니다.</p>
+                      <p className="section-caption">공유된 최신 일정입니다.</p>
                     </div>
                     <span className="pill subtle">{sharedTrip.schedules.length}개</span>
                   </div>
@@ -2193,6 +2247,8 @@ type TripManageAppProps = {
   ownerFlights: SharedFlight[];
   ownerDetailDataError: string;
   ownerDetailDataLoading: boolean;
+  isScheduleListEditing: boolean;
+  deletingScheduleID: string;
   isPlaceListEditing: boolean;
   deletingPlaceID: string;
   selectedOwnerTrip: OwnerTrip | null;
@@ -2204,6 +2260,7 @@ type TripManageAppProps = {
   placeDeleteError: string;
   scheduleCreateError: string;
   scheduleCreateSubmitting: boolean;
+  scheduleDeleteError: string;
   shareLinkCopied: boolean;
   shareLinkError: string;
   shareLinkSubmitting: boolean;
@@ -2250,6 +2307,8 @@ type TripManageAppProps = {
   onCloseOwnerTripDetail: () => void;
   onCopyShareLink: () => void;
   onCreateShareLink: () => void;
+  onDeleteSchedule: (scheduleID: string) => void;
+  onScheduleListEditingChange: (value: boolean) => void;
   onDeletePlace: (placeID: string) => void;
   onPlaceListEditingChange: (value: boolean) => void;
   onTripEditEndDateChange: (value: string) => void;
@@ -2311,6 +2370,8 @@ function TripManageApp({
   ownerFlights,
   ownerDetailDataError,
   ownerDetailDataLoading,
+  isScheduleListEditing,
+  deletingScheduleID,
   isPlaceListEditing,
   deletingPlaceID,
   selectedOwnerTrip,
@@ -2322,6 +2383,7 @@ function TripManageApp({
   placeDeleteError,
   scheduleCreateError,
   scheduleCreateSubmitting,
+  scheduleDeleteError,
   shareLinkCopied,
   shareLinkError,
   shareLinkSubmitting,
@@ -2368,6 +2430,8 @@ function TripManageApp({
   onCloseOwnerTripDetail,
   onCopyShareLink,
   onCreateShareLink,
+  onDeleteSchedule,
+  onScheduleListEditingChange,
   onDeletePlace,
   onPlaceListEditingChange,
   onTripEditEndDateChange,
@@ -2969,11 +3033,22 @@ function TripManageApp({
                             <h3>공유되는 일정</h3>
                             <p className="section-caption">현재 서버에 저장되어 공유 화면에 표시되는 일정입니다.</p>
                           </div>
-                          <span className="pill subtle">{ownerSchedules.length}개</span>
+                          <div className="section-actions">
+                            <span className="pill subtle">{ownerSchedules.length}개</span>
+                            <button
+                              className="secondary-button compact-button"
+                              disabled={ownerSchedules.length === 0}
+                              onClick={() => onScheduleListEditingChange(!isScheduleListEditing)}
+                              type="button"
+                            >
+                              {isScheduleListEditing ? "완료" : "편집"}
+                            </button>
+                          </div>
                         </div>
 
                         {ownerDetailDataLoading && <p className="muted">일정과 장소를 불러오는 중입니다.</p>}
                         {ownerDetailDataError && <p className="form-error">{ownerDetailDataError}</p>}
+                        {scheduleDeleteError && <p className="form-error">{scheduleDeleteError}</p>}
 
                         {!ownerDetailDataLoading && !ownerDetailDataError && ownerSchedules.length === 0 && (
                           <article className="empty-state-card list-card">
@@ -2998,6 +3073,19 @@ function TripManageApp({
                                     </p>
                                   </div>
                                   {schedule.guideMemo && <p className="muted">{schedule.guideMemo}</p>}
+                                  {isScheduleListEditing && (
+                                    <div className="owner-linked-actions">
+                                      <button
+                                        className="danger-button compact-button"
+                                        disabled={deletingScheduleID === schedule.id}
+                                        onClick={() => onDeleteSchedule(schedule.id)}
+                                        type="button"
+                                      >
+                                        <Trash2 size={16} />
+                                        {deletingScheduleID === schedule.id ? "삭제 중" : "삭제"}
+                                      </button>
+                                    </div>
+                                  )}
                                 </article>
                               );
                             })}
