@@ -68,6 +68,21 @@ type CreateFlightRequest struct {
 	Memo             string `json:"memo"`
 }
 
+// UpdateFlightRequest는 항공편 수정 화면에서 전달된 필드만 바꾸기 위해 포인터로 받는다.
+type UpdateFlightRequest struct {
+	Direction        *string `json:"direction"`
+	Label            *string `json:"label"`
+	Airline          *string `json:"airline"`
+	FlightNumber     *string `json:"flightNumber"`
+	DepartureAirport *string `json:"departureAirport"`
+	ArrivalAirport   *string `json:"arrivalAirport"`
+	DepartureDate    *string `json:"departureDate"`
+	DepartureTime    *string `json:"departureTime"`
+	ArrivalDate      *string `json:"arrivalDate"`
+	ArrivalTime      *string `json:"arrivalTime"`
+	Memo             *string `json:"memo"`
+}
+
 type TripResponse struct {
 	ID        string   `json:"id"`
 	Title     string   `json:"title"`

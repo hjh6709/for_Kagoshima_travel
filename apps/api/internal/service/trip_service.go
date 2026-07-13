@@ -359,6 +359,73 @@ func (s *TripService) ListFlightsForOwner(tripID, ownerID string) ([]dto.FlightR
 	return s.ListFlights(tripID)
 }
 
+// UpdateFlight는 여행 소유자가 항공편 정보를 부분 수정할 때 기존 값을 보존한다.
+func (s *TripService) UpdateFlight(tripID, flightID, ownerID string, req dto.UpdateFlightRequest) (dto.FlightResponse, error) {
+	if err := s.ensureTripOwner(tripID, ownerID); err != nil {
+		return dto.FlightResponse{}, err
+	}
+	flight, err := s.tripRepository.FindFlight(tripID, flightID)
+	if err != nil {
+		return dto.FlightResponse{}, mapRepositoryError(err)
+	}
+
+	// PATCH 요청은 사용자가 편집한 항공편 필드만 덮어쓰고 나머지는 기존 값을 유지한다.
+	if req.Direction != nil {
+		flight.Direction = *req.Direction
+	}
+	if req.Label != nil {
+		flight.Label = *req.Label
+	}
+	if req.Airline != nil {
+		flight.Airline = *req.Airline
+	}
+	if req.FlightNumber != nil {
+		flight.FlightNumber = *req.FlightNumber
+	}
+	if req.DepartureAirport != nil {
+		flight.DepartureAirport = *req.DepartureAirport
+	}
+	if req.ArrivalAirport != nil {
+		flight.ArrivalAirport = *req.ArrivalAirport
+	}
+	if req.DepartureDate != nil {
+		flight.DepartureDate = *req.DepartureDate
+	}
+	if req.DepartureTime != nil {
+		flight.DepartureTime = *req.DepartureTime
+	}
+	if req.ArrivalDate != nil {
+		flight.ArrivalDate = *req.ArrivalDate
+	}
+	if req.ArrivalTime != nil {
+		flight.ArrivalTime = *req.ArrivalTime
+	}
+	if req.Memo != nil {
+		flight.Memo = *req.Memo
+	}
+
+	// 공유 화면에서 항공편 카드가 성립하려면 핵심 이동 정보는 수정 후에도 비어 있으면 안 된다.
+	if flight.Direction == "" || flight.Label == "" || flight.DepartureAirport == "" || flight.ArrivalAirport == "" ||
+		flight.DepartureDate == "" || flight.DepartureTime == "" {
+		return dto.FlightResponse{}, ErrInvalidTrip
+	}
+	if err := s.tripRepository.UpdateFlight(flight); err != nil {
+		return dto.FlightResponse{}, mapRepositoryError(err)
+	}
+	return mapFlightResponse(flight), nil
+}
+
+func (s *TripService) DeleteFlight(tripID, flightID, ownerID string) error {
+	if err := s.ensureTripOwner(tripID, ownerID); err != nil {
+		return err
+	}
+	// 항공편 삭제도 여행 소유권을 먼저 확인한 뒤 여행 ID와 항공편 ID를 함께 사용해 경계를 고정한다.
+	if err := s.tripRepository.DeleteFlight(tripID, flightID); err != nil {
+		return mapRepositoryError(err)
+	}
+	return nil
+}
+
 func (s *TripService) ListRoutes(tripID string) ([]dto.RouteResponse, error) {
 	routes, err := s.tripRepository.FindRoutes(tripID)
 	if err != nil {

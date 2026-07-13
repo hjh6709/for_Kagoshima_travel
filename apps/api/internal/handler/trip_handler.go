@@ -222,6 +222,32 @@ func (h *TripHandler) CreateFlight(w http.ResponseWriter, r *http.Request) {
 	httpjson.Write(w, http.StatusCreated, flight)
 }
 
+// UpdateFlight는 여행 소유자가 선택한 항공편 일부 필드를 수정할 때 사용한다.
+func (h *TripHandler) UpdateFlight(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.GetClaims(r)
+	var req dto.UpdateFlightRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httpjson.WriteError(w, http.StatusBadRequest, "요청 형식이 올바르지 않습니다.")
+		return
+	}
+	flight, err := h.tripService.UpdateFlight(r.PathValue("tripID"), r.PathValue("flightID"), claims.UserID, req)
+	if err != nil {
+		writeServiceError(w, err)
+		return
+	}
+	httpjson.Write(w, http.StatusOK, flight)
+}
+
+func (h *TripHandler) DeleteFlight(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.GetClaims(r)
+	// DeleteFlight는 여행 상세 화면에서 사용자가 직접 항공편을 제거할 때 호출된다.
+	if err := h.tripService.DeleteFlight(r.PathValue("tripID"), r.PathValue("flightID"), claims.UserID); err != nil {
+		writeServiceError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (h *TripHandler) ListRoutes(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
 	routes, err := h.tripService.ListRoutesForOwner(r.PathValue("tripID"), claims.UserID)
