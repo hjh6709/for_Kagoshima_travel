@@ -87,8 +87,26 @@ type UseTripManageDetailDataParams = {
     newFlightLabel: string;
     newFlightMemo: string;
     newFlightNumber: string;
+    cancelFlightEdit: () => void;
+    deletingFlightID: string;
+    editingFlightAirline: string;
+    editingFlightArrivalAirport: string;
+    editingFlightArrivalDate: string;
+    editingFlightArrivalTime: string;
+    editingFlightDepartureAirport: string;
+    editingFlightDepartureDate: string;
+    editingFlightDepartureTime: string;
+    editingFlightDirection: FlightDirection;
+    editingFlightID: string;
+    editingFlightLabel: string;
+    editingFlightMemo: string;
+    editingFlightNumber: string;
     setFlightCreateError: Dispatch<SetStateAction<string>>;
     setFlightCreateSubmitting: Dispatch<SetStateAction<boolean>>;
+    setDeletingFlightID: Dispatch<SetStateAction<string>>;
+    setFlightDeleteError: Dispatch<SetStateAction<string>>;
+    setFlightEditError: Dispatch<SetStateAction<string>>;
+    setFlightEditSubmitting: Dispatch<SetStateAction<boolean>>;
     setNewFlightAirline: Dispatch<SetStateAction<string>>;
     setNewFlightArrivalAirport: Dispatch<SetStateAction<string>>;
     setNewFlightArrivalTime: Dispatch<SetStateAction<string>>;
@@ -182,16 +200,18 @@ export function useTripManageDetailData({
     selectedOwnerTrip,
     setOwnerPlaces,
   });
-  const { submitNewFlight } = useTripManageFlightActions({
+  const { deleteOwnerFlight, submitFlightEdit, submitNewFlight } = useTripManageFlightActions({
     clearOwnerSession,
     flightForm,
     ownerAuth,
+    ownerFlights,
     selectedOwnerTrip,
     setOwnerFlights,
   });
 
   return {
     clearOwnerDetailData,
+    deleteOwnerFlight,
     deleteOwnerPlace,
     deleteOwnerSchedule,
     ownerDetailDataError,
@@ -199,6 +219,7 @@ export function useTripManageDetailData({
     ownerFlights,
     ownerPlaces,
     ownerSchedules,
+    submitFlightEdit,
     submitNewFlight,
     submitNewPlace,
     submitNewSchedule,
