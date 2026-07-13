@@ -24,7 +24,7 @@ export function TripListSection({
         <article className="info-card empty-state-card">
           <PlusCircle size={28} />
           <h2>아직 만든 여행이 없습니다</h2>
-          <p className="muted">위 폼에서 첫 여행을 만들면 이 목록에 바로 표시됩니다.</p>
+          <p className="muted">아래 폼에서 첫 여행을 만들면 이 목록에 바로 표시됩니다.</p>
         </article>
       )}
 

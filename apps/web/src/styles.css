@@ -270,6 +270,43 @@ button:disabled {
   padding: 22px;
 }
 
+.manage-flow-card {
+  display: grid;
+  gap: 16px;
+  margin-top: 18px;
+  border: 1px solid rgba(36, 48, 47, 0.1);
+  border-radius: 14px;
+  background: var(--c-surface);
+  box-shadow: 0 12px 28px rgba(28, 50, 37, 0.08);
+  padding: 18px;
+}
+
+.manage-flow-card h2 {
+  margin: 8px 0 4px;
+}
+
+.manage-flow-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.manage-flow-steps li {
+  display: grid;
+  place-items: center;
+  gap: 6px;
+  min-height: 76px;
+  border-radius: 12px;
+  background: var(--c-green-light);
+  color: var(--c-green);
+  font-size: 12px;
+  font-weight: 900;
+  text-align: center;
+}
+
 .owner-trip-detail-card {
   background: var(--c-surface);
   border: 1px solid rgba(36, 48, 47, 0.1);
