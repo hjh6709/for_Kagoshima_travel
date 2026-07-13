@@ -2,6 +2,14 @@ import { useState } from "react";
 import type { FlightDirection } from "../../shared/travelOptions";
 import type { PlaceCategory, ScheduleItem } from "../../types/travel";
 
+type EditableTrip = {
+  title: string;
+  startDate: string;
+  endDate: string;
+  travelers: string[];
+  memo?: string;
+};
+
 // 여행 생성 폼의 입력값과 제출 상태를 모아 관리한다.
 export function useTripCreateFormState() {
   const [newTripTitle, setNewTripTitle] = useState("");
@@ -11,6 +19,14 @@ export function useTripCreateFormState() {
   const [newTripMemo, setNewTripMemo] = useState("");
   const [tripCreateError, setTripCreateError] = useState("");
   const [tripCreateSubmitting, setTripCreateSubmitting] = useState(false);
+
+  function resetTripCreateForm() {
+    setNewTripTitle("");
+    setNewTripStartDate("");
+    setNewTripEndDate("");
+    setNewTripTravelers("");
+    setNewTripMemo("");
+  }
 
   return {
     newTripTitle,
@@ -27,6 +43,7 @@ export function useTripCreateFormState() {
     setTripCreateError,
     tripCreateSubmitting,
     setTripCreateSubmitting,
+    resetTripCreateForm,
   };
 }
 
@@ -39,6 +56,24 @@ export function useTripEditFormState() {
   const [tripEditMemo, setTripEditMemo] = useState("");
   const [tripEditError, setTripEditError] = useState("");
   const [tripEditSubmitting, setTripEditSubmitting] = useState(false);
+
+  function resetTripEditForm() {
+    setTripEditTitle("");
+    setTripEditStartDate("");
+    setTripEditEndDate("");
+    setTripEditTravelers("");
+    setTripEditMemo("");
+    setTripEditError("");
+  }
+
+  function fillTripEditForm(trip: EditableTrip) {
+    setTripEditTitle(trip.title);
+    setTripEditStartDate(trip.startDate);
+    setTripEditEndDate(trip.endDate);
+    setTripEditTravelers(trip.travelers.join(", "));
+    setTripEditMemo(trip.memo ?? "");
+    setTripEditError("");
+  }
 
   return {
     tripEditTitle,
@@ -55,6 +90,8 @@ export function useTripEditFormState() {
     setTripEditError,
     tripEditSubmitting,
     setTripEditSubmitting,
+    resetTripEditForm,
+    fillTripEditForm,
   };
 }
 
@@ -72,6 +109,34 @@ export function useScheduleManageFormState() {
   const [isScheduleListEditing, setIsScheduleListEditing] = useState(false);
   const [scheduleDeleteError, setScheduleDeleteError] = useState("");
   const [deletingScheduleID, setDeletingScheduleID] = useState("");
+
+  function resetScheduleManageForm() {
+    setNewScheduleDate("");
+    setNewScheduleTime("");
+    setNewScheduleType("sightseeing");
+    setNewScheduleTitle("");
+    setNewSchedulePlaceID("");
+    setNewScheduleTransportMemo("");
+    setNewScheduleGuideMemo("");
+    setScheduleCreateError("");
+    setIsScheduleListEditing(false);
+    setScheduleDeleteError("");
+    setDeletingScheduleID("");
+  }
+
+  function prepareScheduleManageForm(startDate: string) {
+    setNewScheduleDate(startDate);
+    setNewScheduleTime("");
+    setNewScheduleType("sightseeing");
+    setNewScheduleTitle("");
+    setNewSchedulePlaceID("");
+    setNewScheduleTransportMemo("");
+    setNewScheduleGuideMemo("");
+    setScheduleCreateError("");
+    setIsScheduleListEditing(false);
+    setScheduleDeleteError("");
+    setDeletingScheduleID("");
+  }
 
   return {
     newScheduleDate,
@@ -98,6 +163,8 @@ export function useScheduleManageFormState() {
     setScheduleDeleteError,
     deletingScheduleID,
     setDeletingScheduleID,
+    resetScheduleManageForm,
+    prepareScheduleManageForm,
   };
 }
 
@@ -113,6 +180,18 @@ export function usePlaceManageFormState() {
   const [isPlaceListEditing, setIsPlaceListEditing] = useState(false);
   const [placeDeleteError, setPlaceDeleteError] = useState("");
   const [deletingPlaceID, setDeletingPlaceID] = useState("");
+
+  function resetPlaceManageForm() {
+    setNewPlaceName("");
+    setNewPlaceCategory("sightseeing");
+    setNewPlaceAddress("");
+    setNewPlaceGoogleMapsURL("");
+    setNewPlaceRecommendedReason("");
+    setPlaceCreateError("");
+    setIsPlaceListEditing(false);
+    setPlaceDeleteError("");
+    setDeletingPlaceID("");
+  }
 
   return {
     newPlaceName,
@@ -135,6 +214,7 @@ export function usePlaceManageFormState() {
     setPlaceDeleteError,
     deletingPlaceID,
     setDeletingPlaceID,
+    resetPlaceManageForm,
   };
 }
 
@@ -153,6 +233,36 @@ export function useFlightManageFormState() {
   const [newFlightMemo, setNewFlightMemo] = useState("");
   const [flightCreateError, setFlightCreateError] = useState("");
   const [flightCreateSubmitting, setFlightCreateSubmitting] = useState(false);
+
+  function resetFlightManageForm() {
+    setNewFlightDirection("departure");
+    setNewFlightLabel("");
+    setNewFlightAirline("");
+    setNewFlightNumber("");
+    setNewFlightDepartureAirport("");
+    setNewFlightArrivalAirport("");
+    setNewFlightDepartureDate("");
+    setNewFlightDepartureTime("");
+    setNewFlightArrivalDate("");
+    setNewFlightArrivalTime("");
+    setNewFlightMemo("");
+    setFlightCreateError("");
+  }
+
+  function prepareFlightManageForm(startDate: string) {
+    setNewFlightDirection("departure");
+    setNewFlightLabel("");
+    setNewFlightAirline("");
+    setNewFlightNumber("");
+    setNewFlightDepartureAirport("");
+    setNewFlightArrivalAirport("");
+    setNewFlightDepartureDate(startDate);
+    setNewFlightDepartureTime("");
+    setNewFlightArrivalDate(startDate);
+    setNewFlightArrivalTime("");
+    setNewFlightMemo("");
+    setFlightCreateError("");
+  }
 
   return {
     newFlightDirection,
@@ -181,5 +291,7 @@ export function useFlightManageFormState() {
     setFlightCreateError,
     flightCreateSubmitting,
     setFlightCreateSubmitting,
+    resetFlightManageForm,
+    prepareFlightManageForm,
   };
 }
