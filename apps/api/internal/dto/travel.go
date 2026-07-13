@@ -45,6 +45,15 @@ type CreatePlaceRequest struct {
 	RecommendedReason string `json:"recommendedReason"`
 }
 
+// UpdatePlaceRequest는 장소 수정 화면에서 바뀐 필드만 PATCH로 보낼 수 있게 포인터로 받는다.
+type UpdatePlaceRequest struct {
+	Name              *string `json:"name"`
+	Category          *string `json:"category"`
+	Address           *string `json:"address"`
+	GoogleMapsURL     *string `json:"googleMapsUrl"`
+	RecommendedReason *string `json:"recommendedReason"`
+}
+
 type CreateFlightRequest struct {
 	Direction        string `json:"direction"`
 	Label            string `json:"label"`

@@ -239,6 +239,43 @@ func (s *TripService) CreatePlace(tripID, ownerID string, req dto.CreatePlaceReq
 	return mapPlaceResponse(place), nil
 }
 
+// UpdatePlace는 여행 소유자가 장소 정보를 부분 수정할 때 기존 값을 보존한다.
+func (s *TripService) UpdatePlace(tripID, placeID, ownerID string, req dto.UpdatePlaceRequest) (dto.PlaceResponse, error) {
+	if err := s.ensureTripOwner(tripID, ownerID); err != nil {
+		return dto.PlaceResponse{}, err
+	}
+	place, err := s.tripRepository.FindPlace(tripID, placeID)
+	if err != nil {
+		return dto.PlaceResponse{}, mapRepositoryError(err)
+	}
+
+	// PATCH 요청은 사용자가 편집한 입력만 덮어쓰고, 누락된 값은 현재 장소 정보를 유지한다.
+	if req.Name != nil {
+		place.Name = *req.Name
+	}
+	if req.Category != nil {
+		place.Category = *req.Category
+	}
+	if req.Address != nil {
+		place.Address = *req.Address
+	}
+	if req.GoogleMapsURL != nil {
+		place.GoogleMapsURL = *req.GoogleMapsURL
+	}
+	if req.RecommendedReason != nil {
+		place.RecommendedReason = *req.RecommendedReason
+	}
+
+	// 장소 카드가 화면에 의미 있게 표시되려면 이름과 분류는 수정 후에도 필수다.
+	if place.Name == "" || place.Category == "" {
+		return dto.PlaceResponse{}, ErrInvalidTrip
+	}
+	if err := s.tripRepository.UpdatePlace(place); err != nil {
+		return dto.PlaceResponse{}, mapRepositoryError(err)
+	}
+	return mapPlaceResponse(place), nil
+}
+
 func (s *TripService) ListPlaces(tripID string) ([]dto.PlaceResponse, error) {
 	places, err := s.tripRepository.FindPlaces(tripID)
 	if err != nil {

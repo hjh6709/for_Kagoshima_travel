@@ -172,6 +172,22 @@ func (h *TripHandler) CreatePlace(w http.ResponseWriter, r *http.Request) {
 	httpjson.Write(w, http.StatusCreated, place)
 }
 
+// UpdatePlace는 여행 소유자가 선택한 장소 일부 필드를 수정할 때 사용한다.
+func (h *TripHandler) UpdatePlace(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.GetClaims(r)
+	var req dto.UpdatePlaceRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httpjson.WriteError(w, http.StatusBadRequest, "요청 형식이 올바르지 않습니다.")
+		return
+	}
+	place, err := h.tripService.UpdatePlace(r.PathValue("tripID"), r.PathValue("placeID"), claims.UserID, req)
+	if err != nil {
+		writeServiceError(w, err)
+		return
+	}
+	httpjson.Write(w, http.StatusOK, place)
+}
+
 func (h *TripHandler) DeletePlace(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
 	if err := h.tripService.DeletePlace(r.PathValue("tripID"), r.PathValue("placeID"), claims.UserID); err != nil {

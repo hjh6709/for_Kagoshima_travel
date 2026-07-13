@@ -150,6 +150,16 @@
           "recommendedReason": { "type": "string", "example": "도착 후 바로 이동할 장소" }
         }
       },
+      "UpdatePlaceRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "example": "공항 렌터카 센터 변경" },
+          "category": { "type": "string", "example": "transport" },
+          "address": { "type": "string", "example": "공항 2층" },
+          "googleMapsUrl": { "type": "string", "example": "https://www.google.com/maps/search/?api=1&query=airport" },
+          "recommendedReason": { "type": "string", "example": "도착 후 바로 이동할 장소" }
+        }
+      },
       "CreateFlightRequest": {
         "type": "object",
         "required": ["direction", "label", "departureAirport", "arrivalAirport", "departureDate", "departureTime"],
@@ -451,6 +461,21 @@
         { "name": "tripID", "in": "path", "required": true, "schema": { "type": "string" } },
         { "name": "placeID", "in": "path", "required": true, "schema": { "type": "string" } }
       ],
+      "patch": {
+        "summary": "장소 수정",
+        "tags": ["장소"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UpdatePlaceRequest" } } }
+        },
+        "responses": {
+          "200": { "description": "장소 수정 성공", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PlaceResponse" } } } },
+          "400": { "description": "입력 오류" },
+          "403": { "description": "권한 없음" },
+          "404": { "description": "여행 또는 장소 없음" }
+        }
+      },
       "delete": {
         "summary": "장소 삭제",
         "tags": ["장소"],
