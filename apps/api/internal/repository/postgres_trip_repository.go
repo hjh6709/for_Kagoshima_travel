@@ -194,6 +194,50 @@ func (r *PostgresTripRepository) SaveFlight(flight model.Flight) error {
 	return err
 }
 
+// FindFlight는 PATCH 전에 기존 항공편 값을 유지하기 위해 단건을 조회한다.
+func (r *PostgresTripRepository) FindFlight(tripID, flightID string) (model.Flight, error) {
+	row := r.pool.QueryRow(context.Background(),
+		`SELECT id::text, trip_id::text, direction, label, COALESCE(airline,''), COALESCE(flight_number,''),
+		        departure_airport, arrival_airport, departure_date::text, departure_time,
+		        COALESCE(arrival_date::text,''), COALESCE(arrival_time,''), COALESCE(memo,'')
+		 FROM flights WHERE trip_id = $1 AND id = $2`, tripID, flightID)
+
+	var flight model.Flight
+	if err := row.Scan(&flight.ID, &flight.TripID, &flight.Direction, &flight.Label, &flight.Airline,
+		&flight.FlightNumber, &flight.DepartureAirport, &flight.ArrivalAirport, &flight.DepartureDate,
+		&flight.DepartureTime, &flight.ArrivalDate, &flight.ArrivalTime, &flight.Memo); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return model.Flight{}, ErrNotFound
+		}
+		return model.Flight{}, err
+	}
+	return flight, nil
+}
+
+// UpdateFlight는 flights 스키마에 실제로 존재하는 컬럼만 수정한다. arrival_date가 비어 있으면 NULL로 저장한다.
+func (r *PostgresTripRepository) UpdateFlight(flight model.Flight) error {
+	var arrivalDate any
+	if flight.ArrivalDate != "" {
+		arrivalDate = flight.ArrivalDate
+	}
+	tag, err := r.pool.Exec(context.Background(),
+		`UPDATE flights
+		 SET direction = $1, label = $2, airline = $3, flight_number = $4,
+		     departure_airport = $5, arrival_airport = $6, departure_date = $7, departure_time = $8,
+		     arrival_date = $9, arrival_time = $10, memo = $11
+		 WHERE trip_id = $12 AND id = $13`,
+		flight.Direction, flight.Label, flight.Airline, flight.FlightNumber, flight.DepartureAirport,
+		flight.ArrivalAirport, flight.DepartureDate, flight.DepartureTime, arrivalDate, flight.ArrivalTime,
+		flight.Memo, flight.TripID, flight.ID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
 func (r *PostgresTripRepository) DeleteSchedule(tripID, scheduleID string) error {
 	tag, err := r.pool.Exec(context.Background(), `DELETE FROM schedules WHERE trip_id = $1 AND id = $2`, tripID, scheduleID)
 	if err != nil {
@@ -207,6 +251,18 @@ func (r *PostgresTripRepository) DeleteSchedule(tripID, scheduleID string) error
 
 func (r *PostgresTripRepository) DeletePlace(tripID, placeID string) error {
 	tag, err := r.pool.Exec(context.Background(), `DELETE FROM places WHERE trip_id = $1 AND id = $2`, tripID, placeID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+func (r *PostgresTripRepository) DeleteFlight(tripID, flightID string) error {
+	// WHERE 절에 trip_id를 함께 둬서 다른 여행의 항공편을 실수로 지우지 않게 한다.
+	tag, err := r.pool.Exec(context.Background(), `DELETE FROM flights WHERE trip_id = $1 AND id = $2`, tripID, flightID)
 	if err != nil {
 		return err
 	}

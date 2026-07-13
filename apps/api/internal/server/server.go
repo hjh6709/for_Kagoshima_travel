@@ -90,6 +90,8 @@ func (s *Server) registerRoutes(jwtSecret string) {
 	s.mux.Handle("DELETE /api/trips/{tripID}/places/{placeID}", requireAuth(http.HandlerFunc(s.tripHandler.DeletePlace)))
 	s.mux.Handle("GET /api/trips/{tripID}/flights", requireAuth(http.HandlerFunc(s.tripHandler.ListFlights)))
 	s.mux.Handle("POST /api/trips/{tripID}/flights", requireAuth(http.HandlerFunc(s.tripHandler.CreateFlight)))
+	s.mux.Handle("PATCH /api/trips/{tripID}/flights/{flightID}", requireAuth(http.HandlerFunc(s.tripHandler.UpdateFlight)))
+	s.mux.Handle("DELETE /api/trips/{tripID}/flights/{flightID}", requireAuth(http.HandlerFunc(s.tripHandler.DeleteFlight)))
 	s.mux.Handle("GET /api/trips/{tripID}/routes", requireAuth(http.HandlerFunc(s.tripHandler.ListRoutes)))
 }
 

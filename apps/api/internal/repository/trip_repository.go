@@ -20,6 +20,7 @@ type TripRepository interface {
 	FindSchedules(tripID string) ([]model.Schedule, error)
 	FindPlace(tripID, placeID string) (model.Place, error)
 	FindPlaces(tripID string) ([]model.Place, error)
+	FindFlight(tripID, flightID string) (model.Flight, error)
 	FindFlights(tripID string) ([]model.Flight, error)
 	FindRoutes(tripID string) ([]model.Route, error)
 	Save(trip model.Trip) error
@@ -29,8 +30,10 @@ type TripRepository interface {
 	SavePlace(place model.Place) error
 	UpdatePlace(place model.Place) error
 	SaveFlight(flight model.Flight) error
+	UpdateFlight(flight model.Flight) error
 	DeleteSchedule(tripID, scheduleID string) error
 	DeletePlace(tripID, placeID string) error
+	DeleteFlight(tripID, flightID string) error
 	Update(trip model.Trip) error
 	Delete(id string) error
 }
@@ -225,6 +228,18 @@ func (r *MemoryTripRepository) FindFlights(tripID string) ([]model.Flight, error
 	return flights, nil
 }
 
+// FindFlight는 수정/삭제 대상 항공편이 선택한 여행에 속하는지 함께 확인한다.
+func (r *MemoryTripRepository) FindFlight(tripID, flightID string) (model.Flight, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	for _, flight := range r.flights {
+		if flight.TripID == tripID && flight.ID == flightID {
+			return flight, nil
+		}
+	}
+	return model.Flight{}, ErrNotFound
+}
+
 func (r *MemoryTripRepository) FindRoutes(tripID string) ([]model.Route, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -298,6 +313,19 @@ func (r *MemoryTripRepository) SaveFlight(flight model.Flight) error {
 	return nil
 }
 
+// UpdateFlight는 항공편 ID와 여행 ID가 모두 맞을 때만 기존 항공편을 교체한다.
+func (r *MemoryTripRepository) UpdateFlight(flight model.Flight) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for i, currentFlight := range r.flights {
+		if currentFlight.ID == flight.ID && currentFlight.TripID == flight.TripID {
+			r.flights[i] = flight
+			return nil
+		}
+	}
+	return ErrNotFound
+}
+
 func (r *MemoryTripRepository) DeleteSchedule(tripID, scheduleID string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -330,6 +358,19 @@ func (r *MemoryTripRepository) DeletePlace(tripID, placeID string) error {
 				}
 				r.routes[routeIndex].PlaceIDs = nextPlaceIDs
 			}
+			return nil
+		}
+	}
+	return ErrNotFound
+}
+
+func (r *MemoryTripRepository) DeleteFlight(tripID, flightID string) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	// 같은 항공편 ID라도 다른 여행에 속하면 삭제하지 않도록 tripID를 함께 비교한다.
+	for i, flight := range r.flights {
+		if flight.ID == flightID && flight.TripID == tripID {
+			r.flights = append(r.flights[:i], r.flights[i+1:]...)
 			return nil
 		}
 	}
