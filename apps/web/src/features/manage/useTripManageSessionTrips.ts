@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState, type Dispatch, type FormEvent, type SetStateAction } from "react";
 import { ApiError, getCurrentUser, login, register, type AuthResponse } from "../../api/auth";
 import { createTrip, listMyTrips, updateTrip, type OwnerTrip } from "../../api/trips";
+import {
+  handleManageApiError,
+  isEndDateBeforeStartDate,
+  optionalTrimmedText,
+  parseTravelers,
+} from "./manageFormUtils";
 import type { AuthMode } from "./manageTypes";
 import { getSavedOwnerAuth, ownerAuthStorageKey } from "./ownerAuthStorage";
 
@@ -131,12 +137,11 @@ export function useTripManageSessionTrips({
       })
       .catch((error) => {
         if (cancelled) return;
-        if (error instanceof ApiError && error.status === 401) {
-          clearOwnerSessionBase();
-          setOwnerTripsError("");
-          return;
-        }
-        setOwnerTripsError(error instanceof Error ? error.message : "여행 목록을 불러오지 못했습니다.");
+        handleManageApiError(error, {
+          clearOwnerSession: clearOwnerSessionBase,
+          fallbackMessage: "여행 목록을 불러오지 못했습니다.",
+          setError: setOwnerTripsError,
+        });
       })
       .finally(() => {
         if (!cancelled) setOwnerTripsLoading(false);
@@ -179,17 +184,14 @@ export function useTripManageSessionTrips({
     const title = tripCreateForm.newTripTitle.trim();
     const startDate = tripCreateForm.newTripStartDate;
     const endDate = tripCreateForm.newTripEndDate || tripCreateForm.newTripStartDate;
-    const travelers = tripCreateForm.newTripTravelers
-      .split(/[\n,]/)
-      .map((traveler) => traveler.trim())
-      .filter(Boolean);
-    const memo = tripCreateForm.newTripMemo.trim();
+    const travelers = parseTravelers(tripCreateForm.newTripTravelers);
+    const memo = optionalTrimmedText(tripCreateForm.newTripMemo);
 
     if (!title || !startDate || !endDate) {
       tripCreateForm.setTripCreateError("여행명과 여행 날짜를 입력해주세요.");
       return;
     }
-    if (endDate < startDate) {
+    if (isEndDateBeforeStartDate(startDate, endDate)) {
       tripCreateForm.setTripCreateError("종료일은 시작일보다 빠를 수 없습니다.");
       return;
     }
@@ -202,19 +204,18 @@ export function useTripManageSessionTrips({
         startDate,
         endDate,
         travelers,
-        memo: memo || undefined,
+        memo,
       });
       setOwnerTrips((currentTrips) => [createdTrip, ...currentTrips.filter((item) => item.id !== createdTrip.id)]);
       setSelectedOwnerTripID(createdTrip.id);
       tripCreateForm.resetTripCreateForm();
       setOwnerTripsError("");
     } catch (error) {
-      if (error instanceof ApiError && error.status === 401) {
-        clearOwnerSessionBase();
-        tripCreateForm.setTripCreateError("");
-        return;
-      }
-      tripCreateForm.setTripCreateError(error instanceof Error ? error.message : "여행을 만들지 못했습니다.");
+      handleManageApiError(error, {
+        clearOwnerSession: clearOwnerSessionBase,
+        fallbackMessage: "여행을 만들지 못했습니다.",
+        setError: tripCreateForm.setTripCreateError,
+      });
     } finally {
       tripCreateForm.setTripCreateSubmitting(false);
     }
@@ -227,17 +228,14 @@ export function useTripManageSessionTrips({
     const title = tripEditForm.tripEditTitle.trim();
     const startDate = tripEditForm.tripEditStartDate;
     const endDate = tripEditForm.tripEditEndDate || tripEditForm.tripEditStartDate;
-    const travelers = tripEditForm.tripEditTravelers
-      .split(/[\n,]/)
-      .map((traveler) => traveler.trim())
-      .filter(Boolean);
+    const travelers = parseTravelers(tripEditForm.tripEditTravelers);
     const memo = tripEditForm.tripEditMemo.trim();
 
     if (!title || !startDate || !endDate) {
       tripEditForm.setTripEditError("여행명과 여행 날짜를 입력해주세요.");
       return;
     }
-    if (endDate < startDate) {
+    if (isEndDateBeforeStartDate(startDate, endDate)) {
       tripEditForm.setTripEditError("종료일은 시작일보다 빠를 수 없습니다.");
       return;
     }
@@ -258,12 +256,11 @@ export function useTripManageSessionTrips({
       tripEditForm.setTripEditError("");
       setOwnerTripsError("");
     } catch (error) {
-      if (error instanceof ApiError && error.status === 401) {
-        clearOwnerSessionBase();
-        tripEditForm.setTripEditError("");
-        return;
-      }
-      tripEditForm.setTripEditError(error instanceof Error ? error.message : "여행 정보를 수정하지 못했습니다.");
+      handleManageApiError(error, {
+        clearOwnerSession: clearOwnerSessionBase,
+        fallbackMessage: "여행 정보를 수정하지 못했습니다.",
+        setError: tripEditForm.setTripEditError,
+      });
     } finally {
       tripEditForm.setTripEditSubmitting(false);
     }

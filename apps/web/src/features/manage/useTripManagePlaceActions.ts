@@ -1,8 +1,9 @@
 import type { Dispatch, FormEvent, SetStateAction } from "react";
-import { ApiError, type AuthResponse } from "../../api/auth";
+import type { AuthResponse } from "../../api/auth";
 import { createTripPlace, deleteTripPlace, type OwnerTrip, type SharedPlace } from "../../api/trips";
 import { sortSharedPlaces } from "../../shared/sort";
 import type { PlaceCategory } from "../../types/travel";
+import { handleManageApiError, optionalTrimmedText } from "./manageFormUtils";
 
 type PlaceFormState = {
   newPlaceAddress: string;
@@ -45,9 +46,9 @@ export function useTripManagePlaceActions({
     if (!ownerAuth || !selectedOwnerTrip) return;
 
     const name = placeForm.newPlaceName.trim();
-    const address = placeForm.newPlaceAddress.trim();
-    const googleMapsUrl = placeForm.newPlaceGoogleMapsURL.trim();
-    const recommendedReason = placeForm.newPlaceRecommendedReason.trim();
+    const address = optionalTrimmedText(placeForm.newPlaceAddress);
+    const googleMapsUrl = optionalTrimmedText(placeForm.newPlaceGoogleMapsURL);
+    const recommendedReason = optionalTrimmedText(placeForm.newPlaceRecommendedReason);
 
     if (!name) {
       placeForm.setPlaceCreateError("장소 이름을 입력해주세요.");
@@ -60,9 +61,9 @@ export function useTripManagePlaceActions({
       const createdPlace = await createTripPlace(ownerAuth.accessToken, selectedOwnerTrip.id, {
         name,
         category: placeForm.newPlaceCategory,
-        address: address || undefined,
-        googleMapsUrl: googleMapsUrl || undefined,
-        recommendedReason: recommendedReason || undefined,
+        address,
+        googleMapsUrl,
+        recommendedReason,
       });
       setOwnerPlaces((currentPlaces) => sortSharedPlaces([...currentPlaces, createdPlace]));
       placeForm.setNewSchedulePlaceID(createdPlace.id);
@@ -72,12 +73,11 @@ export function useTripManagePlaceActions({
       placeForm.setNewPlaceRecommendedReason("");
       placeForm.setPlaceCreateError("");
     } catch (error) {
-      if (error instanceof ApiError && error.status === 401) {
-        clearOwnerSession();
-        placeForm.setPlaceCreateError("");
-        return;
-      }
-      placeForm.setPlaceCreateError(error instanceof Error ? error.message : "장소를 추가하지 못했습니다.");
+      handleManageApiError(error, {
+        clearOwnerSession,
+        fallbackMessage: "장소를 추가하지 못했습니다.",
+        setError: placeForm.setPlaceCreateError,
+      });
     } finally {
       placeForm.setPlaceCreateSubmitting(false);
     }
@@ -101,12 +101,11 @@ export function useTripManagePlaceActions({
       placeForm.setNewSchedulePlaceID((currentPlaceID) => (currentPlaceID === placeID ? "" : currentPlaceID));
       placeForm.setPlaceDeleteError("");
     } catch (error) {
-      if (error instanceof ApiError && error.status === 401) {
-        clearOwnerSession();
-        placeForm.setPlaceDeleteError("");
-        return;
-      }
-      placeForm.setPlaceDeleteError(error instanceof Error ? error.message : "장소를 삭제하지 못했습니다.");
+      handleManageApiError(error, {
+        clearOwnerSession,
+        fallbackMessage: "장소를 삭제하지 못했습니다.",
+        setError: placeForm.setPlaceDeleteError,
+      });
     } finally {
       placeForm.setDeletingPlaceID("");
     }

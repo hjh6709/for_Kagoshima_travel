@@ -1,5 +1,5 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
-import { ApiError, type AuthResponse } from "../../api/auth";
+import type { AuthResponse } from "../../api/auth";
 import {
   listTripFlights,
   listTripPlaces,
@@ -12,6 +12,7 @@ import {
 import { sortSharedFlights, sortSharedPlaces, sortSharedSchedules } from "../../shared/sort";
 import type { FlightDirection } from "../../shared/travelOptions";
 import type { PlaceCategory, ScheduleItem } from "../../types/travel";
+import { handleManageApiError } from "./manageFormUtils";
 import { useTripManageFlightActions } from "./useTripManageFlightActions";
 import { useTripManagePlaceActions } from "./useTripManagePlaceActions";
 import { useTripManageScheduleActions } from "./useTripManageScheduleActions";
@@ -125,15 +126,14 @@ export function useTripManageDetailData({
       })
       .catch((error) => {
         if (cancelled) return;
-        if (error instanceof ApiError && error.status === 401) {
-          clearOwnerSession();
-          setOwnerDetailDataError("");
-          return;
-        }
         setOwnerSchedules([]);
         setOwnerPlaces([]);
         setOwnerFlights([]);
-        setOwnerDetailDataError(error instanceof Error ? error.message : "여행 상세 데이터를 불러오지 못했습니다.");
+        handleManageApiError(error, {
+          clearOwnerSession,
+          fallbackMessage: "여행 상세 데이터를 불러오지 못했습니다.",
+          setError: setOwnerDetailDataError,
+        });
       })
       .finally(() => {
         if (!cancelled) setOwnerDetailDataLoading(false);
