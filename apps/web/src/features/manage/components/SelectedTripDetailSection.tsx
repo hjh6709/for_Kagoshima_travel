@@ -5,12 +5,12 @@ import {
   flightDirectionOptions,
   getFlightDirectionLabel,
   getScheduleTypeLabel,
-  placeCategoryOptions,
   scheduleTypeOptions,
   type FlightDirection,
 } from "../../../shared/travelOptions";
-import type { PlaceCategory, ScheduleItem } from "../../../types/travel";
+import type { ScheduleItem } from "../../../types/travel";
 import type { TripManagePageProps } from "../manageTypes";
+import { ManagePlaceCreateForm } from "./ManagePlaceCreateForm";
 import { ManageShareActions } from "./ManageShareActions";
 import { TripBasicInfoForm } from "./TripBasicInfoForm";
 
@@ -267,82 +267,21 @@ export function SelectedTripDetailSection(props: SelectedTripDetailSectionProps)
           shareLinkSubmitting={shareLinkSubmitting}
         />
 
-        <section className="owner-linked-data-section">
-          <div className="section-title-row compact-title-row">
-            <div>
-              <h3>장소 추가</h3>
-              <p className="section-caption">
-                일정에 연결하거나 공유 화면에 표시할 장소를 서버에 저장합니다.
-              </p>
-            </div>
-          </div>
-
-          <form className="auth-form compact-owner-form" onSubmit={onSubmitNewPlace}>
-            <div className="form-grid-two">
-              <label>
-                장소 이름
-                <input
-                  onChange={(event) => onNewPlaceNameChange(event.target.value)}
-                  placeholder="예: 공항 렌터카 센터"
-                  required
-                  type="text"
-                  value={newPlaceName}
-                />
-              </label>
-              <label>
-                분류
-                <select
-                  onChange={(event) => onNewPlaceCategoryChange(event.target.value as PlaceCategory)}
-                  value={newPlaceCategory}
-                >
-                  {placeCategoryOptions.map(([category, label]) => (
-                    <option key={category} value={category}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-
-            <label>
-              주소
-              <input
-                onChange={(event) => onNewPlaceAddressChange(event.target.value)}
-                placeholder="예: 공항 1층 또는 숙소 주소"
-                type="text"
-                value={newPlaceAddress}
-              />
-            </label>
-
-            <label>
-              Google Maps 링크
-              <input
-                inputMode="url"
-                onChange={(event) => onNewPlaceGoogleMapsURLChange(event.target.value)}
-                placeholder="https://www.google.com/maps/..."
-                type="url"
-                value={newPlaceGoogleMapsURL}
-              />
-            </label>
-
-            <label>
-              추천/안내 메모
-              <textarea
-                onChange={(event) => onNewPlaceRecommendedReasonChange(event.target.value)}
-                placeholder="예: 도착 후 바로 이동할 장소, 운영시간 확인 필요"
-                rows={2}
-                value={newPlaceRecommendedReason}
-              />
-            </label>
-
-            {placeCreateError && <p className="form-error">{placeCreateError}</p>}
-
-            <button className="primary-button" disabled={placeCreateSubmitting} type="submit">
-              <PlusCircle size={18} />
-              {placeCreateSubmitting ? "장소 추가 중" : "장소 추가"}
-            </button>
-          </form>
-        </section>
+        <ManagePlaceCreateForm
+          newPlaceAddress={newPlaceAddress}
+          newPlaceCategory={newPlaceCategory}
+          newPlaceGoogleMapsURL={newPlaceGoogleMapsURL}
+          newPlaceName={newPlaceName}
+          newPlaceRecommendedReason={newPlaceRecommendedReason}
+          onNewPlaceAddressChange={onNewPlaceAddressChange}
+          onNewPlaceCategoryChange={onNewPlaceCategoryChange}
+          onNewPlaceGoogleMapsURLChange={onNewPlaceGoogleMapsURLChange}
+          onNewPlaceNameChange={onNewPlaceNameChange}
+          onNewPlaceRecommendedReasonChange={onNewPlaceRecommendedReasonChange}
+          onSubmitNewPlace={onSubmitNewPlace}
+          placeCreateError={placeCreateError}
+          placeCreateSubmitting={placeCreateSubmitting}
+        />
 
         <section className="owner-linked-data-section">
           <div className="section-title-row compact-title-row">
