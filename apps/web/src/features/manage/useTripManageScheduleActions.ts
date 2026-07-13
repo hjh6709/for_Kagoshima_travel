@@ -1,5 +1,5 @@
 import type { Dispatch, FormEvent, SetStateAction } from "react";
-import { ApiError, type AuthResponse } from "../../api/auth";
+import type { AuthResponse } from "../../api/auth";
 import {
   createTripSchedule,
   deleteTripSchedule,
@@ -8,6 +8,7 @@ import {
 } from "../../api/trips";
 import { sortSharedSchedules } from "../../shared/sort";
 import type { ScheduleItem } from "../../types/travel";
+import { handleManageApiError, isDateOutsideTrip, optionalTrimmedText } from "./manageFormUtils";
 
 type ScheduleFormState = {
   newScheduleDate: string;
@@ -54,14 +55,14 @@ export function useTripManageScheduleActions({
     const date = scheduleForm.newScheduleDate;
     const time = scheduleForm.newScheduleTime.trim();
     const title = scheduleForm.newScheduleTitle.trim();
-    const transportMemo = scheduleForm.newScheduleTransportMemo.trim();
-    const guideMemo = scheduleForm.newScheduleGuideMemo.trim();
+    const transportMemo = optionalTrimmedText(scheduleForm.newScheduleTransportMemo);
+    const guideMemo = optionalTrimmedText(scheduleForm.newScheduleGuideMemo);
 
     if (!date || !time || !title) {
       scheduleForm.setScheduleCreateError("날짜, 시간, 제목을 입력해주세요.");
       return;
     }
-    if (date < selectedOwnerTrip.startDate || date > selectedOwnerTrip.endDate) {
+    if (isDateOutsideTrip(date, selectedOwnerTrip)) {
       scheduleForm.setScheduleCreateError("일정 날짜는 여행 기간 안에서 선택해주세요.");
       return;
     }
@@ -75,8 +76,8 @@ export function useTripManageScheduleActions({
         type: scheduleForm.newScheduleType,
         title,
         placeId: scheduleForm.newSchedulePlaceID || undefined,
-        transportMemo: transportMemo || undefined,
-        guideMemo: guideMemo || undefined,
+        transportMemo,
+        guideMemo,
       });
       setOwnerSchedules((currentSchedules) => sortSharedSchedules([...currentSchedules, createdSchedule]));
       scheduleForm.setNewScheduleTime("");
@@ -86,12 +87,11 @@ export function useTripManageScheduleActions({
       scheduleForm.setNewScheduleGuideMemo("");
       scheduleForm.setScheduleCreateError("");
     } catch (error) {
-      if (error instanceof ApiError && error.status === 401) {
-        clearOwnerSession();
-        scheduleForm.setScheduleCreateError("");
-        return;
-      }
-      scheduleForm.setScheduleCreateError(error instanceof Error ? error.message : "일정을 추가하지 못했습니다.");
+      handleManageApiError(error, {
+        clearOwnerSession,
+        fallbackMessage: "일정을 추가하지 못했습니다.",
+        setError: scheduleForm.setScheduleCreateError,
+      });
     } finally {
       scheduleForm.setScheduleCreateSubmitting(false);
     }
@@ -112,12 +112,11 @@ export function useTripManageScheduleActions({
       setOwnerSchedules((currentSchedules) => currentSchedules.filter((item) => item.id !== scheduleID));
       scheduleForm.setScheduleDeleteError("");
     } catch (error) {
-      if (error instanceof ApiError && error.status === 401) {
-        clearOwnerSession();
-        scheduleForm.setScheduleDeleteError("");
-        return;
-      }
-      scheduleForm.setScheduleDeleteError(error instanceof Error ? error.message : "일정을 삭제하지 못했습니다.");
+      handleManageApiError(error, {
+        clearOwnerSession,
+        fallbackMessage: "일정을 삭제하지 못했습니다.",
+        setError: scheduleForm.setScheduleDeleteError,
+      });
     } finally {
       scheduleForm.setDeletingScheduleID("");
     }

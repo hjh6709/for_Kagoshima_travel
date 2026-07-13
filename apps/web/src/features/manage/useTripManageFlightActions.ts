@@ -1,8 +1,14 @@
 import type { Dispatch, FormEvent, SetStateAction } from "react";
-import { ApiError, type AuthResponse } from "../../api/auth";
+import type { AuthResponse } from "../../api/auth";
 import { createTripFlight, type OwnerTrip, type SharedFlight } from "../../api/trips";
 import { sortSharedFlights } from "../../shared/sort";
 import type { FlightDirection } from "../../shared/travelOptions";
+import {
+  handleManageApiError,
+  isDateOutsideTrip,
+  isEndDateBeforeStartDate,
+  optionalTrimmedText,
+} from "./manageFormUtils";
 
 type FlightFormState = {
   newFlightAirline: string;
@@ -50,25 +56,25 @@ export function useTripManageFlightActions({
     if (!ownerAuth || !selectedOwnerTrip) return;
 
     const label = flightForm.newFlightLabel.trim();
-    const airline = flightForm.newFlightAirline.trim();
-    const flightNumber = flightForm.newFlightNumber.trim();
+    const airline = optionalTrimmedText(flightForm.newFlightAirline);
+    const flightNumber = optionalTrimmedText(flightForm.newFlightNumber);
     const departureAirport = flightForm.newFlightDepartureAirport.trim();
     const arrivalAirport = flightForm.newFlightArrivalAirport.trim();
     const departureDate = flightForm.newFlightDepartureDate;
     const departureTime = flightForm.newFlightDepartureTime.trim();
     const arrivalDate = flightForm.newFlightArrivalDate;
-    const arrivalTime = flightForm.newFlightArrivalTime.trim();
-    const memo = flightForm.newFlightMemo.trim();
+    const arrivalTime = optionalTrimmedText(flightForm.newFlightArrivalTime);
+    const memo = optionalTrimmedText(flightForm.newFlightMemo);
 
     if (!label || !departureAirport || !arrivalAirport || !departureDate || !departureTime) {
       flightForm.setFlightCreateError("항공편 이름, 출발/도착 공항, 출발 날짜와 시간을 입력해주세요.");
       return;
     }
-    if (departureDate < selectedOwnerTrip.startDate || departureDate > selectedOwnerTrip.endDate) {
+    if (isDateOutsideTrip(departureDate, selectedOwnerTrip)) {
       flightForm.setFlightCreateError("출발 날짜는 여행 기간 안에서 선택해주세요.");
       return;
     }
-    if (arrivalDate && arrivalDate < departureDate) {
+    if (arrivalDate && isEndDateBeforeStartDate(departureDate, arrivalDate)) {
       flightForm.setFlightCreateError("도착 날짜는 출발 날짜보다 빠를 수 없습니다.");
       return;
     }
@@ -79,15 +85,15 @@ export function useTripManageFlightActions({
       const createdFlight = await createTripFlight(ownerAuth.accessToken, selectedOwnerTrip.id, {
         direction: flightForm.newFlightDirection,
         label,
-        airline: airline || undefined,
-        flightNumber: flightNumber || undefined,
+        airline,
+        flightNumber,
         departureAirport,
         arrivalAirport,
         departureDate,
         departureTime,
         arrivalDate: arrivalDate || undefined,
-        arrivalTime: arrivalTime || undefined,
-        memo: memo || undefined,
+        arrivalTime,
+        memo,
       });
       setOwnerFlights((currentFlights) => sortSharedFlights([...currentFlights, createdFlight]));
       flightForm.setNewFlightLabel("");
@@ -100,12 +106,11 @@ export function useTripManageFlightActions({
       flightForm.setNewFlightMemo("");
       flightForm.setFlightCreateError("");
     } catch (error) {
-      if (error instanceof ApiError && error.status === 401) {
-        clearOwnerSession();
-        flightForm.setFlightCreateError("");
-        return;
-      }
-      flightForm.setFlightCreateError(error instanceof Error ? error.message : "항공편을 추가하지 못했습니다.");
+      handleManageApiError(error, {
+        clearOwnerSession,
+        fallbackMessage: "항공편을 추가하지 못했습니다.",
+        setError: flightForm.setFlightCreateError,
+      });
     } finally {
       flightForm.setFlightCreateSubmitting(false);
     }

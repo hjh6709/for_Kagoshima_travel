@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { ApiError, type AuthResponse } from "../../api/auth";
+import type { AuthResponse } from "../../api/auth";
 import { createShareLink, type OwnerTrip } from "../../api/trips";
 import { toAbsoluteWebURL } from "../../shared/share";
+import { handleManageApiError } from "./manageFormUtils";
 
 type UseTripManageShareLinkParams = {
   clearOwnerSession: () => void;
@@ -40,12 +41,11 @@ export function useTripManageShareLink({
         [selectedOwnerTrip.id]: toAbsoluteWebURL(link.webPath),
       }));
     } catch (error) {
-      if (error instanceof ApiError && error.status === 401) {
-        clearOwnerSession();
-        setShareLinkError("");
-        return;
-      }
-      setShareLinkError(error instanceof Error ? error.message : "공유 링크를 만들지 못했습니다.");
+      handleManageApiError(error, {
+        clearOwnerSession,
+        fallbackMessage: "공유 링크를 만들지 못했습니다.",
+        setError: setShareLinkError,
+      });
     } finally {
       setShareLinkSubmitting(false);
     }
