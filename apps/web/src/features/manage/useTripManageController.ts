@@ -20,10 +20,15 @@ import {
 } from "../../api/trips";
 import { toAbsoluteWebURL } from "../../shared/share";
 import { sortSharedFlights, sortSharedPlaces, sortSharedSchedules } from "../../shared/sort";
-import type { FlightDirection } from "../../shared/travelOptions";
-import type { PlaceCategory, ScheduleItem } from "../../types/travel";
 import type { AuthMode, TripManagePageProps } from "./manageTypes";
 import { getSavedOwnerAuth, ownerAuthStorageKey } from "./ownerAuthStorage";
+import {
+  useFlightManageFormState,
+  usePlaceManageFormState,
+  useScheduleManageFormState,
+  useTripCreateFormState,
+  useTripEditFormState,
+} from "./useTripManageFormState";
 
 type UseTripManageControllerParams = {
   currentPath: string;
@@ -48,20 +53,38 @@ export function useTripManageController({
   const [ownerTripsError, setOwnerTripsError] = useState("");
   const [ownerTripsLoading, setOwnerTripsLoading] = useState(false);
   const [selectedOwnerTripID, setSelectedOwnerTripID] = useState<string | null>(null);
-  const [newTripTitle, setNewTripTitle] = useState("");
-  const [newTripStartDate, setNewTripStartDate] = useState("");
-  const [newTripEndDate, setNewTripEndDate] = useState("");
-  const [newTripTravelers, setNewTripTravelers] = useState("");
-  const [newTripMemo, setNewTripMemo] = useState("");
-  const [tripCreateError, setTripCreateError] = useState("");
-  const [tripCreateSubmitting, setTripCreateSubmitting] = useState(false);
-  const [tripEditTitle, setTripEditTitle] = useState("");
-  const [tripEditStartDate, setTripEditStartDate] = useState("");
-  const [tripEditEndDate, setTripEditEndDate] = useState("");
-  const [tripEditTravelers, setTripEditTravelers] = useState("");
-  const [tripEditMemo, setTripEditMemo] = useState("");
-  const [tripEditError, setTripEditError] = useState("");
-  const [tripEditSubmitting, setTripEditSubmitting] = useState(false);
+  const {
+    newTripTitle,
+    setNewTripTitle,
+    newTripStartDate,
+    setNewTripStartDate,
+    newTripEndDate,
+    setNewTripEndDate,
+    newTripTravelers,
+    setNewTripTravelers,
+    newTripMemo,
+    setNewTripMemo,
+    tripCreateError,
+    setTripCreateError,
+    tripCreateSubmitting,
+    setTripCreateSubmitting,
+  } = useTripCreateFormState();
+  const {
+    tripEditTitle,
+    setTripEditTitle,
+    tripEditStartDate,
+    setTripEditStartDate,
+    tripEditEndDate,
+    setTripEditEndDate,
+    tripEditTravelers,
+    setTripEditTravelers,
+    tripEditMemo,
+    setTripEditMemo,
+    tripEditError,
+    setTripEditError,
+    tripEditSubmitting,
+    setTripEditSubmitting,
+  } = useTripEditFormState();
   const [shareLinksByTripID, setShareLinksByTripID] = useState<Record<string, string>>({});
   const [shareLinkError, setShareLinkError] = useState("");
   const [shareLinkSubmitting, setShareLinkSubmitting] = useState(false);
@@ -71,45 +94,97 @@ export function useTripManageController({
   const [ownerFlights, setOwnerFlights] = useState<SharedFlight[]>([]);
   const [ownerDetailDataError, setOwnerDetailDataError] = useState("");
   const [ownerDetailDataLoading, setOwnerDetailDataLoading] = useState(false);
-  const [newScheduleDate, setNewScheduleDate] = useState("");
-  const [newScheduleTime, setNewScheduleTime] = useState("");
-  const [newScheduleType, setNewScheduleType] = useState<ScheduleItem["type"]>("sightseeing");
-  const [newScheduleTitle, setNewScheduleTitle] = useState("");
-  const [newSchedulePlaceID, setNewSchedulePlaceID] = useState("");
-  const [newScheduleTransportMemo, setNewScheduleTransportMemo] = useState("");
-  const [newScheduleGuideMemo, setNewScheduleGuideMemo] = useState("");
-  const [scheduleCreateError, setScheduleCreateError] = useState("");
-  const [scheduleCreateSubmitting, setScheduleCreateSubmitting] = useState(false);
-  const [isScheduleListEditing, setIsScheduleListEditing] = useState(false);
-  const [scheduleDeleteError, setScheduleDeleteError] = useState("");
-  const [deletingScheduleID, setDeletingScheduleID] = useState("");
-  const [newPlaceName, setNewPlaceName] = useState("");
-  const [newPlaceCategory, setNewPlaceCategory] = useState<PlaceCategory>("sightseeing");
-  const [newPlaceAddress, setNewPlaceAddress] = useState("");
-  const [newPlaceGoogleMapsURL, setNewPlaceGoogleMapsURL] = useState("");
-  const [newPlaceRecommendedReason, setNewPlaceRecommendedReason] = useState("");
-  const [placeCreateError, setPlaceCreateError] = useState("");
-  const [placeCreateSubmitting, setPlaceCreateSubmitting] = useState(false);
-  const [isPlaceListEditing, setIsPlaceListEditing] = useState(false);
-  const [placeDeleteError, setPlaceDeleteError] = useState("");
-  const [deletingPlaceID, setDeletingPlaceID] = useState("");
-  const [newFlightDirection, setNewFlightDirection] = useState<FlightDirection>("departure");
-  const [newFlightLabel, setNewFlightLabel] = useState("");
-  const [newFlightAirline, setNewFlightAirline] = useState("");
-  const [newFlightNumber, setNewFlightNumber] = useState("");
-  const [newFlightDepartureAirport, setNewFlightDepartureAirport] = useState("");
-  const [newFlightArrivalAirport, setNewFlightArrivalAirport] = useState("");
-  const [newFlightDepartureDate, setNewFlightDepartureDate] = useState("");
-  const [newFlightDepartureTime, setNewFlightDepartureTime] = useState("");
-  const [newFlightArrivalDate, setNewFlightArrivalDate] = useState("");
-  const [newFlightArrivalTime, setNewFlightArrivalTime] = useState("");
-  const [newFlightMemo, setNewFlightMemo] = useState("");
-  const [flightCreateError, setFlightCreateError] = useState("");
-  const [flightCreateSubmitting, setFlightCreateSubmitting] = useState(false);
+  const {
+    newScheduleDate,
+    setNewScheduleDate,
+    newScheduleTime,
+    setNewScheduleTime,
+    newScheduleType,
+    setNewScheduleType,
+    newScheduleTitle,
+    setNewScheduleTitle,
+    newSchedulePlaceID,
+    setNewSchedulePlaceID,
+    newScheduleTransportMemo,
+    setNewScheduleTransportMemo,
+    newScheduleGuideMemo,
+    setNewScheduleGuideMemo,
+    scheduleCreateError,
+    setScheduleCreateError,
+    scheduleCreateSubmitting,
+    setScheduleCreateSubmitting,
+    isScheduleListEditing,
+    setIsScheduleListEditing,
+    scheduleDeleteError,
+    setScheduleDeleteError,
+    deletingScheduleID,
+    setDeletingScheduleID,
+  } = useScheduleManageFormState();
+  const {
+    newPlaceName,
+    setNewPlaceName,
+    newPlaceCategory,
+    setNewPlaceCategory,
+    newPlaceAddress,
+    setNewPlaceAddress,
+    newPlaceGoogleMapsURL,
+    setNewPlaceGoogleMapsURL,
+    newPlaceRecommendedReason,
+    setNewPlaceRecommendedReason,
+    placeCreateError,
+    setPlaceCreateError,
+    placeCreateSubmitting,
+    setPlaceCreateSubmitting,
+    isPlaceListEditing,
+    setIsPlaceListEditing,
+    placeDeleteError,
+    setPlaceDeleteError,
+    deletingPlaceID,
+    setDeletingPlaceID,
+  } = usePlaceManageFormState();
+  const {
+    newFlightDirection,
+    setNewFlightDirection,
+    newFlightLabel,
+    setNewFlightLabel,
+    newFlightAirline,
+    setNewFlightAirline,
+    newFlightNumber,
+    setNewFlightNumber,
+    newFlightDepartureAirport,
+    setNewFlightDepartureAirport,
+    newFlightArrivalAirport,
+    setNewFlightArrivalAirport,
+    newFlightDepartureDate,
+    setNewFlightDepartureDate,
+    newFlightDepartureTime,
+    setNewFlightDepartureTime,
+    newFlightArrivalDate,
+    setNewFlightArrivalDate,
+    newFlightArrivalTime,
+    setNewFlightArrivalTime,
+    newFlightMemo,
+    setNewFlightMemo,
+    flightCreateError,
+    setFlightCreateError,
+    flightCreateSubmitting,
+    setFlightCreateSubmitting,
+  } = useFlightManageFormState();
   const selectedOwnerTrip = useMemo(
     () => ownerTrips.find((ownerTrip) => ownerTrip.id === selectedOwnerTripID) ?? null,
     [ownerTrips, selectedOwnerTripID]
   );
+
+  // 인증이 만료되었을 때 화면에 남은 소유자 전용 데이터를 한 번에 비운다.
+  function clearOwnerSession() {
+    window.localStorage.removeItem(ownerAuthStorageKey);
+    setOwnerAuth(null);
+    setOwnerTrips([]);
+    setSelectedOwnerTripID(null);
+    setOwnerSchedules([]);
+    setOwnerPlaces([]);
+    setOwnerFlights([]);
+  }
 
   useEffect(() => {
     if (!isLegacyOwnerRoute) return;
@@ -166,13 +241,7 @@ export function useTripManageController({
       .catch((error) => {
         if (cancelled) return;
         if (error instanceof ApiError && error.status === 401) {
-          window.localStorage.removeItem(ownerAuthStorageKey);
-          setOwnerAuth(null);
-          setOwnerTrips([]);
-          setSelectedOwnerTripID(null);
-          setOwnerSchedules([]);
-          setOwnerPlaces([]);
-          setOwnerFlights([]);
+          clearOwnerSession();
           setOwnerTripsError("");
           return;
         }
@@ -306,13 +375,7 @@ export function useTripManageController({
       .catch((error) => {
         if (cancelled) return;
         if (error instanceof ApiError && error.status === 401) {
-          window.localStorage.removeItem(ownerAuthStorageKey);
-          setOwnerAuth(null);
-          setOwnerTrips([]);
-          setSelectedOwnerTripID(null);
-          setOwnerSchedules([]);
-          setOwnerPlaces([]);
-          setOwnerFlights([]);
+          clearOwnerSession();
           setOwnerDetailDataError("");
           return;
         }
@@ -390,13 +453,7 @@ export function useTripManageController({
       setOwnerTripsError("");
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
-        window.localStorage.removeItem(ownerAuthStorageKey);
-        setOwnerAuth(null);
-        setOwnerTrips([]);
-        setSelectedOwnerTripID(null);
-        setOwnerSchedules([]);
-        setOwnerPlaces([]);
-        setOwnerFlights([]);
+        clearOwnerSession();
         setTripCreateError("");
         return;
       }
@@ -445,13 +502,7 @@ export function useTripManageController({
       setOwnerTripsError("");
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
-        window.localStorage.removeItem(ownerAuthStorageKey);
-        setOwnerAuth(null);
-        setOwnerTrips([]);
-        setSelectedOwnerTripID(null);
-        setOwnerSchedules([]);
-        setOwnerPlaces([]);
-        setOwnerFlights([]);
+        clearOwnerSession();
         setTripEditError("");
         return;
       }
@@ -475,13 +526,7 @@ export function useTripManageController({
       }));
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
-        window.localStorage.removeItem(ownerAuthStorageKey);
-        setOwnerAuth(null);
-        setOwnerTrips([]);
-        setSelectedOwnerTripID(null);
-        setOwnerSchedules([]);
-        setOwnerPlaces([]);
-        setOwnerFlights([]);
+        clearOwnerSession();
         setShareLinkError("");
         return;
       }
@@ -531,13 +576,7 @@ export function useTripManageController({
       setScheduleCreateError("");
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
-        window.localStorage.removeItem(ownerAuthStorageKey);
-        setOwnerAuth(null);
-        setOwnerTrips([]);
-        setSelectedOwnerTripID(null);
-        setOwnerSchedules([]);
-        setOwnerPlaces([]);
-        setOwnerFlights([]);
+        clearOwnerSession();
         setScheduleCreateError("");
         return;
       }
@@ -562,13 +601,7 @@ export function useTripManageController({
       setScheduleDeleteError("");
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
-        window.localStorage.removeItem(ownerAuthStorageKey);
-        setOwnerAuth(null);
-        setOwnerTrips([]);
-        setSelectedOwnerTripID(null);
-        setOwnerSchedules([]);
-        setOwnerPlaces([]);
-        setOwnerFlights([]);
+        clearOwnerSession();
         setScheduleDeleteError("");
         return;
       }
@@ -611,13 +644,7 @@ export function useTripManageController({
       setPlaceCreateError("");
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
-        window.localStorage.removeItem(ownerAuthStorageKey);
-        setOwnerAuth(null);
-        setOwnerTrips([]);
-        setSelectedOwnerTripID(null);
-        setOwnerSchedules([]);
-        setOwnerPlaces([]);
-        setOwnerFlights([]);
+        clearOwnerSession();
         setPlaceCreateError("");
         return;
       }
@@ -645,13 +672,7 @@ export function useTripManageController({
       setPlaceDeleteError("");
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
-        window.localStorage.removeItem(ownerAuthStorageKey);
-        setOwnerAuth(null);
-        setOwnerTrips([]);
-        setSelectedOwnerTripID(null);
-        setOwnerSchedules([]);
-        setOwnerPlaces([]);
-        setOwnerFlights([]);
+        clearOwnerSession();
         setPlaceDeleteError("");
         return;
       }
@@ -717,13 +738,7 @@ export function useTripManageController({
       setFlightCreateError("");
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
-        window.localStorage.removeItem(ownerAuthStorageKey);
-        setOwnerAuth(null);
-        setOwnerTrips([]);
-        setSelectedOwnerTripID(null);
-        setOwnerSchedules([]);
-        setOwnerPlaces([]);
-        setOwnerFlights([]);
+        clearOwnerSession();
         setFlightCreateError("");
         return;
       }
@@ -757,10 +772,7 @@ export function useTripManageController({
   }
 
   function logoutOwner() {
-    window.localStorage.removeItem(ownerAuthStorageKey);
-    setOwnerAuth(null);
-    setOwnerTrips([]);
-    setSelectedOwnerTripID(null);
+    clearOwnerSession();
     setShareLinksByTripID({});
     setShareLinkError("");
     setShareLinkCopied(false);
