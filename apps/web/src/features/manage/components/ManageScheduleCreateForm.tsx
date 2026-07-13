@@ -55,8 +55,8 @@ export function ManageScheduleCreateForm({
     <section className="owner-linked-data-section">
       <div className="section-title-row compact-title-row">
         <div>
-          <h3>일정 추가</h3>
-          <p className="section-caption">공유 화면에 표시할 일정을 서버에 저장합니다.</p>
+          <h3>일정</h3>
+          <p className="section-caption">저장한 장소를 연결해 날짜별 여행 일정을 만듭니다.</p>
         </div>
       </div>
 

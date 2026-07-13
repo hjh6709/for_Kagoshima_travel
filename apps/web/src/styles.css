@@ -398,6 +398,42 @@ button:disabled {
   gap: 14px;
 }
 
+.detail-step-guide {
+  display: grid;
+  gap: 14px;
+  border-radius: 12px;
+  background: var(--c-gold-light);
+  padding: 14px;
+}
+
+.detail-step-guide h3 {
+  margin-bottom: 0;
+  color: var(--c-text);
+  font-size: 17px;
+  letter-spacing: -0.01em;
+}
+
+.detail-step-list {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.detail-step-list li {
+  display: grid;
+  place-items: center;
+  gap: 4px;
+  min-height: 58px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.62);
+  color: var(--c-green);
+  font-size: 12px;
+  font-weight: 900;
+}
+
 .muted-label {
   color: var(--c-muted);
   display: block;
@@ -878,6 +914,10 @@ p {
 
 .owner-linked-actions .primary-button.compact-button {
   width: auto;
+}
+
+.share-step-section {
+  border-top-color: rgba(169, 132, 70, 0.34);
 }
 
 .owner-inline-edit-form {

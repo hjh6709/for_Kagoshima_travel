@@ -40,8 +40,8 @@ export function ManagePlaceCreateForm({
     <section className="owner-linked-data-section">
       <div className="section-title-row compact-title-row">
         <div>
-          <h3>장소 추가</h3>
-          <p className="section-caption">일정에 연결하거나 공유 화면에 표시할 장소를 서버에 저장합니다.</p>
+          <h3>장소</h3>
+          <p className="section-caption">숙소, 식당, 이동 장소처럼 일정에 연결할 후보를 먼저 저장합니다.</p>
         </div>
       </div>
 

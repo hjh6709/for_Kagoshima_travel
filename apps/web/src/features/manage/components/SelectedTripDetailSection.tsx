@@ -2,6 +2,7 @@ import { formatKoreanDate } from "../../../shared/date";
 import type { SelectedTripDetailSectionProps } from "../manageTypes";
 import { ManageFlightCreateForm } from "./ManageFlightCreateForm";
 import { ManageFlightList } from "./ManageFlightList";
+import { ManageDetailStepGuide } from "./ManageDetailStepGuide";
 import { ManagePlaceCreateForm } from "./ManagePlaceCreateForm";
 import { ManagePlaceList } from "./ManagePlaceList";
 import { ManageScheduleCreateForm } from "./ManageScheduleCreateForm";
@@ -48,18 +49,22 @@ export function SelectedTripDetailSection(props: SelectedTripDetailSectionProps)
           </div>
         </div>
 
+        <ManageDetailStepGuide />
+
         {/* 상세 섹션들은 같은 선택 여행 컨텍스트를 공유하므로 공통 props를 넘기고 각 컴포넌트 타입에서 필요한 값만 사용한다. */}
         <TripBasicInfoForm {...props} />
 
-        <ManageShareActions {...props} />
-
         <ManagePlaceCreateForm {...props} />
+
+        <ManagePlaceList {...props} />
 
         <ManageFlightCreateForm
           {...props}
           tripEndDate={selectedOwnerTrip.endDate}
           tripStartDate={selectedOwnerTrip.startDate}
         />
+
+        <ManageFlightList {...props} />
 
         <ManageScheduleCreateForm
           {...props}
@@ -69,9 +74,7 @@ export function SelectedTripDetailSection(props: SelectedTripDetailSectionProps)
 
         <ManageScheduleList {...props} />
 
-        <ManagePlaceList {...props} />
-
-        <ManageFlightList {...props} />
+        <ManageShareActions {...props} />
       </article>
     </section>
   );
