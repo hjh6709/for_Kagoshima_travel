@@ -16,6 +16,7 @@ type TripRepository interface {
 	FindTrip(id string) (model.Trip, error)
 	FindByOwner(ownerID string) ([]model.Trip, error)
 	FindShareLinkByToken(token string) (model.ShareLink, error)
+	FindSchedule(tripID, scheduleID string) (model.Schedule, error)
 	FindSchedules(tripID string) ([]model.Schedule, error)
 	FindPlaces(tripID string) ([]model.Place, error)
 	FindFlights(tripID string) ([]model.Flight, error)
@@ -23,6 +24,7 @@ type TripRepository interface {
 	Save(trip model.Trip) error
 	SaveShareLink(link model.ShareLink) error
 	SaveSchedule(schedule model.Schedule) error
+	UpdateSchedule(schedule model.Schedule) error
 	SavePlace(place model.Place) error
 	SaveFlight(flight model.Flight) error
 	DeleteSchedule(tripID, scheduleID string) error
@@ -173,6 +175,18 @@ func (r *MemoryTripRepository) FindSchedules(tripID string) ([]model.Schedule, e
 	return schedules, nil
 }
 
+// FindSchedule은 수정 대상 일정이 선택한 여행에 실제로 속해 있는지 함께 확인한다.
+func (r *MemoryTripRepository) FindSchedule(tripID, scheduleID string) (model.Schedule, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	for _, schedule := range r.schedules {
+		if schedule.TripID == tripID && schedule.ID == scheduleID {
+			return schedule, nil
+		}
+	}
+	return model.Schedule{}, ErrNotFound
+}
+
 func (r *MemoryTripRepository) FindPlaces(tripID string) ([]model.Place, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -228,6 +242,19 @@ func (r *MemoryTripRepository) SaveSchedule(schedule model.Schedule) error {
 	defer r.mu.Unlock()
 	r.schedules = append(r.schedules, schedule)
 	return nil
+}
+
+// UpdateSchedule은 일정 ID와 여행 ID가 모두 맞을 때만 기존 일정을 교체한다.
+func (r *MemoryTripRepository) UpdateSchedule(schedule model.Schedule) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for i, currentSchedule := range r.schedules {
+		if currentSchedule.ID == schedule.ID && currentSchedule.TripID == schedule.TripID {
+			r.schedules[i] = schedule
+			return nil
+		}
+	}
+	return ErrNotFound
 }
 
 func (r *MemoryTripRepository) SavePlace(place model.Place) error {

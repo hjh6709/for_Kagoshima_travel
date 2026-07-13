@@ -59,6 +59,43 @@ func TestScheduleCreateBoundaries(t *testing.T) {
 		t.Fatalf("created schedule %q not found in list: %#v", scheduleID, list.arrayBody)
 	}
 
+	updated := updateSchedule(t, httpServer.URL, ownerToken, tripID, scheduleID, map[string]any{
+		"title":         "전망대 대신 점심 식사",
+		"time":          "12:00",
+		"transportMemo": "도보 이동",
+	})
+	if updated.status != http.StatusOK {
+		t.Fatalf("owner update schedule status = %d, want %d, body = %#v", updated.status, http.StatusOK, updated.body)
+	}
+	if updated.body["title"] != "전망대 대신 점심 식사" {
+		t.Fatalf("updated schedule title = %#v, want %#v", updated.body["title"], "전망대 대신 점심 식사")
+	}
+	if updated.body["date"] != payload["date"] {
+		t.Fatalf("partial update changed date = %#v, want %#v", updated.body["date"], payload["date"])
+	}
+
+	otherUpdate := updateSchedule(t, httpServer.URL, otherToken, tripID, scheduleID, map[string]any{"title": "권한 없는 수정"})
+	if otherUpdate.status != http.StatusForbidden {
+		t.Fatalf("other user update schedule status = %d, want %d", otherUpdate.status, http.StatusForbidden)
+	}
+
+	invalidUpdate := updateSchedule(t, httpServer.URL, ownerToken, tripID, scheduleID, map[string]any{"title": ""})
+	if invalidUpdate.status != http.StatusBadRequest {
+		t.Fatalf("invalid update schedule status = %d, want %d", invalidUpdate.status, http.StatusBadRequest)
+	}
+
+	missingScheduleUpdate := updateSchedule(
+		t,
+		httpServer.URL,
+		ownerToken,
+		tripID,
+		"00000000-0000-0000-0000-000000000000",
+		map[string]any{"title": "없는 일정 수정"},
+	)
+	if missingScheduleUpdate.status != http.StatusNotFound {
+		t.Fatalf("missing schedule update status = %d, want %d", missingScheduleUpdate.status, http.StatusNotFound)
+	}
+
 	otherCreate := createSchedule(t, httpServer.URL, otherToken, tripID, payload)
 	if otherCreate.status != http.StatusForbidden {
 		t.Fatalf("other user create schedule status = %d, want %d", otherCreate.status, http.StatusForbidden)
@@ -98,6 +135,11 @@ func TestScheduleCreateBoundaries(t *testing.T) {
 func createSchedule(t *testing.T, baseURL, token, tripID string, payload map[string]any) jsonResponse {
 	t.Helper()
 	return doJSON(t, http.MethodPost, baseURL+"/api/trips/"+tripID+"/schedules", token, payload)
+}
+
+func updateSchedule(t *testing.T, baseURL, token, tripID, scheduleID string, payload map[string]any) jsonResponse {
+	t.Helper()
+	return doJSON(t, http.MethodPatch, baseURL+"/api/trips/"+tripID+"/schedules/"+scheduleID, token, payload)
 }
 
 func deleteSchedule(t *testing.T, baseURL, token, tripID, scheduleID string) jsonResponse {

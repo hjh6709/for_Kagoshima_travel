@@ -26,6 +26,17 @@ type CreateScheduleRequest struct {
 	GuideMemo     string `json:"guideMemo"`
 }
 
+// UpdateScheduleRequest는 PATCH 요청에서 들어온 필드만 수정하기 위해 포인터로 받는다.
+type UpdateScheduleRequest struct {
+	PlaceID       *string `json:"placeId"`
+	Date          *string `json:"date"`
+	Time          *string `json:"time"`
+	Type          *string `json:"type"`
+	Title         *string `json:"title"`
+	TransportMemo *string `json:"transportMemo"`
+	GuideMemo     *string `json:"guideMemo"`
+}
+
 type CreatePlaceRequest struct {
 	Name              string `json:"name"`
 	Category          string `json:"category"`
