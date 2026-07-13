@@ -132,6 +132,27 @@ export function useTripManageController({
     setScheduleDeleteError,
     deletingScheduleID,
     setDeletingScheduleID,
+    editingScheduleID,
+    editingScheduleDate,
+    setEditingScheduleDate,
+    editingScheduleTime,
+    setEditingScheduleTime,
+    editingScheduleType,
+    setEditingScheduleType,
+    editingScheduleTitle,
+    setEditingScheduleTitle,
+    editingSchedulePlaceID,
+    setEditingSchedulePlaceID,
+    editingScheduleTransportMemo,
+    setEditingScheduleTransportMemo,
+    editingScheduleGuideMemo,
+    setEditingScheduleGuideMemo,
+    scheduleEditError,
+    setScheduleEditError,
+    scheduleEditSubmitting,
+    setScheduleEditSubmitting,
+    cancelScheduleEdit,
+    startScheduleEdit,
     resetScheduleManageForm,
     prepareScheduleManageForm,
   } = useScheduleManageFormState();
@@ -207,6 +228,7 @@ export function useTripManageController({
     submitNewFlight,
     submitNewPlace,
     submitNewSchedule,
+    submitScheduleEdit,
   } = useTripManageDetailData({
     clearOwnerSession,
     ownerAuth,
@@ -219,6 +241,15 @@ export function useTripManageController({
       newScheduleTitle,
       newScheduleTransportMemo,
       newScheduleType,
+      cancelScheduleEdit,
+      editingScheduleDate,
+      editingScheduleGuideMemo,
+      editingScheduleID,
+      editingSchedulePlaceID,
+      editingScheduleTime,
+      editingScheduleTitle,
+      editingScheduleTransportMemo,
+      editingScheduleType,
       setDeletingScheduleID,
       setNewScheduleGuideMemo,
       setNewSchedulePlaceID,
@@ -228,6 +259,8 @@ export function useTripManageController({
       setScheduleCreateError,
       setScheduleCreateSubmitting,
       setScheduleDeleteError,
+      setScheduleEditError,
+      setScheduleEditSubmitting,
     },
     placeForm: {
       newPlaceAddress,
@@ -308,6 +341,14 @@ export function useTripManageController({
     resetSessionMessagesForLogout();
   }
 
+  // 일정 목록 편집을 닫을 때 열려 있던 일정 수정 폼도 함께 닫아 화면 상태를 단순하게 유지한다.
+  function changeScheduleListEditing(value: boolean) {
+    setIsScheduleListEditing(value);
+    if (!value) {
+      cancelScheduleEdit();
+    }
+  }
+
   // TripManagePage는 순수 화면 컴포넌트라 여기서 모든 상태와 이벤트 핸들러를 props로 조립한다.
   return {
     auth: ownerAuth,
@@ -327,6 +368,14 @@ export function useTripManageController({
     ownerDetailDataLoading,
     isScheduleListEditing,
     deletingScheduleID,
+    editingScheduleID,
+    editingScheduleDate,
+    editingScheduleTime,
+    editingScheduleType,
+    editingScheduleTitle,
+    editingSchedulePlaceID,
+    editingScheduleTransportMemo,
+    editingScheduleGuideMemo,
     isPlaceListEditing,
     deletingPlaceID,
     selectedOwnerTrip,
@@ -367,6 +416,8 @@ export function useTripManageController({
     scheduleCreateError,
     scheduleCreateSubmitting,
     scheduleDeleteError,
+    scheduleEditError,
+    scheduleEditSubmitting,
     shareLinkCopied,
     shareLinkError,
     shareLinkSubmitting,
@@ -395,6 +446,13 @@ export function useTripManageController({
     onNewScheduleTitleChange: setNewScheduleTitle,
     onNewScheduleTransportMemoChange: setNewScheduleTransportMemo,
     onNewScheduleTypeChange: setNewScheduleType,
+    onEditingScheduleDateChange: setEditingScheduleDate,
+    onEditingScheduleGuideMemoChange: setEditingScheduleGuideMemo,
+    onEditingSchedulePlaceIDChange: setEditingSchedulePlaceID,
+    onEditingScheduleTimeChange: setEditingScheduleTime,
+    onEditingScheduleTitleChange: setEditingScheduleTitle,
+    onEditingScheduleTransportMemoChange: setEditingScheduleTransportMemo,
+    onEditingScheduleTypeChange: setEditingScheduleType,
     onNewPlaceAddressChange: setNewPlaceAddress,
     onNewPlaceCategoryChange: setNewPlaceCategory,
     onNewPlaceGoogleMapsURLChange: setNewPlaceGoogleMapsURL,
@@ -415,8 +473,10 @@ export function useTripManageController({
     onCloseOwnerTripDetail: () => setSelectedOwnerTripID(null),
     onCopyShareLink: copySelectedTripShareLink,
     onCreateShareLink: createSelectedTripShareLink,
+    onCancelScheduleEdit: cancelScheduleEdit,
     onDeleteSchedule: deleteOwnerSchedule,
-    onScheduleListEditingChange: setIsScheduleListEditing,
+    onScheduleListEditingChange: changeScheduleListEditing,
+    onStartScheduleEdit: startScheduleEdit,
     onDeletePlace: deleteOwnerPlace,
     onPlaceListEditingChange: setIsPlaceListEditing,
     onTripEditEndDateChange: setTripEditEndDate,
@@ -432,6 +492,7 @@ export function useTripManageController({
     onSubmitNewFlight: submitNewFlight,
     onSubmitNewTrip: submitNewTrip,
     onSubmitNewSchedule: submitNewSchedule,
+    onSubmitScheduleEdit: submitScheduleEdit,
     onSubmitTripEdit: submitTripEdit,
   };
 }

@@ -54,6 +54,14 @@ export type TripListSectionProps = {
 export type SelectedTripDetailSectionProps = {
   deletingPlaceID: string;
   deletingScheduleID: string;
+  editingScheduleDate: string;
+  editingScheduleGuideMemo: string;
+  editingScheduleID: string;
+  editingSchedulePlaceID: string;
+  editingScheduleTime: string;
+  editingScheduleTitle: string;
+  editingScheduleTransportMemo: string;
+  editingScheduleType: ScheduleItem["type"];
   flightCreateError: string;
   flightCreateSubmitting: boolean;
   isPlaceListEditing: boolean;
@@ -81,11 +89,19 @@ export type SelectedTripDetailSectionProps = {
   newScheduleTitle: string;
   newScheduleTransportMemo: string;
   newScheduleType: ScheduleItem["type"];
+  onCancelScheduleEdit: () => void;
   onCloseOwnerTripDetail: () => void;
   onCopyShareLink: () => void;
   onCreateShareLink: () => void;
   onDeletePlace: (placeID: string) => void;
   onDeleteSchedule: (scheduleID: string) => void;
+  onEditingScheduleDateChange: (value: string) => void;
+  onEditingScheduleGuideMemoChange: (value: string) => void;
+  onEditingSchedulePlaceIDChange: (value: string) => void;
+  onEditingScheduleTimeChange: (value: string) => void;
+  onEditingScheduleTitleChange: (value: string) => void;
+  onEditingScheduleTransportMemoChange: (value: string) => void;
+  onEditingScheduleTypeChange: (value: ScheduleItem["type"]) => void;
   onNewFlightAirlineChange: (value: string) => void;
   onNewFlightArrivalAirportChange: (value: string) => void;
   onNewFlightArrivalDateChange: (value: string) => void;
@@ -111,9 +127,11 @@ export type SelectedTripDetailSectionProps = {
   onNewScheduleTypeChange: (value: ScheduleItem["type"]) => void;
   onPlaceListEditingChange: (value: boolean) => void;
   onScheduleListEditingChange: (value: boolean) => void;
+  onStartScheduleEdit: (schedule: SharedSchedule) => void;
   onSubmitNewFlight: (event: FormEvent<HTMLFormElement>) => void;
   onSubmitNewPlace: (event: FormEvent<HTMLFormElement>) => void;
   onSubmitNewSchedule: (event: FormEvent<HTMLFormElement>) => void;
+  onSubmitScheduleEdit: (event: FormEvent<HTMLFormElement>) => void;
   onSubmitTripEdit: (event: FormEvent<HTMLFormElement>) => void;
   onTripEditEndDateChange: (value: string) => void;
   onTripEditMemoChange: (value: string) => void;
@@ -131,6 +149,8 @@ export type SelectedTripDetailSectionProps = {
   scheduleCreateError: string;
   scheduleCreateSubmitting: boolean;
   scheduleDeleteError: string;
+  scheduleEditError: string;
+  scheduleEditSubmitting: boolean;
   selectedOwnerTrip: OwnerTrip | null;
   selectedShareLink: string;
   shareLinkCopied: boolean;
