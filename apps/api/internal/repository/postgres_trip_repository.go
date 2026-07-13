@@ -112,7 +112,7 @@ func (r *PostgresTripRepository) FindSchedule(tripID, scheduleID string) (model.
 	return schedule, nil
 }
 
-// UpdateSchedule은 place_id가 비어 있으면 NULL로 저장해 장소 연결을 해제할 수 있게 한다.
+// UpdateSchedule은 schedules 스키마에 있는 컬럼만 수정한다. place_id가 비어 있으면 NULL로 저장해 장소 연결을 해제한다.
 func (r *PostgresTripRepository) UpdateSchedule(schedule model.Schedule) error {
 	var placeID any
 	if schedule.PlaceID != "" {
@@ -121,7 +121,7 @@ func (r *PostgresTripRepository) UpdateSchedule(schedule model.Schedule) error {
 	tag, err := r.pool.Exec(context.Background(),
 		`UPDATE schedules
 		 SET place_id = $1, date = $2, time = $3, type = $4, title = $5,
-		     transport_memo = $6, guide_memo = $7, updated_at = NOW()
+		     transport_memo = $6, guide_memo = $7
 		 WHERE trip_id = $8 AND id = $9`,
 		placeID, schedule.Date, schedule.Time, schedule.Type, schedule.Title,
 		schedule.TransportMemo, schedule.GuideMemo, schedule.TripID, schedule.ID)
