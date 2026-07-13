@@ -122,6 +122,22 @@ func (h *TripHandler) CreateSchedule(w http.ResponseWriter, r *http.Request) {
 	httpjson.Write(w, http.StatusCreated, schedule)
 }
 
+// UpdateSchedule은 여행 소유자가 선택한 일정 일부 필드를 수정할 때 사용한다.
+func (h *TripHandler) UpdateSchedule(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.GetClaims(r)
+	var req dto.UpdateScheduleRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httpjson.WriteError(w, http.StatusBadRequest, "요청 형식이 올바르지 않습니다.")
+		return
+	}
+	schedule, err := h.tripService.UpdateSchedule(r.PathValue("tripID"), r.PathValue("scheduleID"), claims.UserID, req)
+	if err != nil {
+		writeServiceError(w, err)
+		return
+	}
+	httpjson.Write(w, http.StatusOK, schedule)
+}
+
 func (h *TripHandler) DeleteSchedule(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
 	if err := h.tripService.DeleteSchedule(r.PathValue("tripID"), r.PathValue("scheduleID"), claims.UserID); err != nil {

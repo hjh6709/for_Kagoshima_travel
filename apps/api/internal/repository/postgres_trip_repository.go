@@ -94,6 +94,46 @@ func (r *PostgresTripRepository) SaveSchedule(schedule model.Schedule) error {
 	return err
 }
 
+// FindSchedule은 PATCH 전에 기존 일정 값을 보존하기 위해 단건을 조회한다.
+func (r *PostgresTripRepository) FindSchedule(tripID, scheduleID string) (model.Schedule, error) {
+	row := r.pool.QueryRow(context.Background(),
+		`SELECT id::text, trip_id::text, COALESCE(place_id::text,''), date::text, time, type, title,
+		        COALESCE(transport_memo,''), COALESCE(guide_memo,'')
+		 FROM schedules WHERE trip_id = $1 AND id = $2`, tripID, scheduleID)
+
+	var schedule model.Schedule
+	if err := row.Scan(&schedule.ID, &schedule.TripID, &schedule.PlaceID, &schedule.Date, &schedule.Time,
+		&schedule.Type, &schedule.Title, &schedule.TransportMemo, &schedule.GuideMemo); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return model.Schedule{}, ErrNotFound
+		}
+		return model.Schedule{}, err
+	}
+	return schedule, nil
+}
+
+// UpdateSchedule은 place_id가 비어 있으면 NULL로 저장해 장소 연결을 해제할 수 있게 한다.
+func (r *PostgresTripRepository) UpdateSchedule(schedule model.Schedule) error {
+	var placeID any
+	if schedule.PlaceID != "" {
+		placeID = schedule.PlaceID
+	}
+	tag, err := r.pool.Exec(context.Background(),
+		`UPDATE schedules
+		 SET place_id = $1, date = $2, time = $3, type = $4, title = $5,
+		     transport_memo = $6, guide_memo = $7, updated_at = NOW()
+		 WHERE trip_id = $8 AND id = $9`,
+		placeID, schedule.Date, schedule.Time, schedule.Type, schedule.Title,
+		schedule.TransportMemo, schedule.GuideMemo, schedule.TripID, schedule.ID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
 func (r *PostgresTripRepository) SavePlace(place model.Place) error {
 	_, err := r.pool.Exec(context.Background(),
 		`INSERT INTO places (id, trip_id, name, category, address, google_maps_url, recommended_reason)

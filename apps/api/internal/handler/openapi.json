@@ -114,6 +114,18 @@
           "guideMemo": { "type": "string" }
         }
       },
+      "UpdateScheduleRequest": {
+        "type": "object",
+        "properties": {
+          "placeId": { "type": "string" },
+          "date": { "type": "string", "example": "2026-06-27" },
+          "time": { "type": "string", "example": "12:00" },
+          "type": { "type": "string", "example": "meal" },
+          "title": { "type": "string", "example": "점심 식사" },
+          "transportMemo": { "type": "string" },
+          "guideMemo": { "type": "string" }
+        }
+      },
       "ScheduleResponse": {
         "type": "object",
         "properties": {
@@ -388,6 +400,21 @@
         "security": [{ "bearerAuth": [] }],
         "responses": {
           "204": { "description": "일정 삭제 성공" },
+          "403": { "description": "권한 없음" },
+          "404": { "description": "여행 또는 일정 없음" }
+        }
+      },
+      "patch": {
+        "summary": "일정 수정",
+        "tags": ["일정"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UpdateScheduleRequest" } } }
+        },
+        "responses": {
+          "200": { "description": "일정 수정 성공", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ScheduleResponse" } } } },
+          "400": { "description": "입력 오류" },
           "403": { "description": "권한 없음" },
           "404": { "description": "여행 또는 일정 없음" }
         }

@@ -160,6 +160,49 @@ func (s *TripService) CreateSchedule(tripID, ownerID string, req dto.CreateSched
 	return mapScheduleResponse(schedule), nil
 }
 
+// UpdateSchedule은 여행 소유자만 기존 일정을 부분 수정할 수 있게 한다.
+func (s *TripService) UpdateSchedule(tripID, scheduleID, ownerID string, req dto.UpdateScheduleRequest) (dto.ScheduleResponse, error) {
+	if err := s.ensureTripOwner(tripID, ownerID); err != nil {
+		return dto.ScheduleResponse{}, err
+	}
+	schedule, err := s.tripRepository.FindSchedule(tripID, scheduleID)
+	if err != nil {
+		return dto.ScheduleResponse{}, mapRepositoryError(err)
+	}
+
+	// PATCH 요청은 전달된 필드만 바꾸고, 누락된 필드는 기존 일정 값을 유지한다.
+	if req.PlaceID != nil {
+		schedule.PlaceID = *req.PlaceID
+	}
+	if req.Date != nil {
+		schedule.Date = *req.Date
+	}
+	if req.Time != nil {
+		schedule.Time = *req.Time
+	}
+	if req.Type != nil {
+		schedule.Type = *req.Type
+	}
+	if req.Title != nil {
+		schedule.Title = *req.Title
+	}
+	if req.TransportMemo != nil {
+		schedule.TransportMemo = *req.TransportMemo
+	}
+	if req.GuideMemo != nil {
+		schedule.GuideMemo = *req.GuideMemo
+	}
+
+	// 수정 후에도 일정 화면의 핵심 필드는 비어 있으면 안 된다.
+	if schedule.Date == "" || schedule.Time == "" || schedule.Type == "" || schedule.Title == "" {
+		return dto.ScheduleResponse{}, ErrInvalidTrip
+	}
+	if err := s.tripRepository.UpdateSchedule(schedule); err != nil {
+		return dto.ScheduleResponse{}, mapRepositoryError(err)
+	}
+	return mapScheduleResponse(schedule), nil
+}
+
 func (s *TripService) DeleteSchedule(tripID, scheduleID, ownerID string) error {
 	if err := s.ensureTripOwner(tripID, ownerID); err != nil {
 		return err
