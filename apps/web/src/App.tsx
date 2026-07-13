@@ -8,7 +8,6 @@ import {
   createTrip,
   deleteTripPlace,
   deleteTripSchedule,
-  getSharedTrip,
   listTripFlights,
   listTripPlaces,
   listTripSchedules,
@@ -18,12 +17,12 @@ import {
   type SharedFlight,
   type SharedPlace,
   type SharedSchedule,
-  type SharedTripResponse,
 } from "./api/trips";
 import { TripManagePage } from "./features/manage/TripManagePage";
 import type { AuthMode } from "./features/manage/manageTypes";
 import { getSavedOwnerAuth, ownerAuthStorageKey } from "./features/manage/ownerAuthStorage";
 import { SharedTripPage } from "./features/share/SharedTripPage";
+import { useSharedTripController } from "./features/share/useSharedTripController";
 import { TripPage } from "./features/trip/TripPage";
 import { useTripPageController } from "./features/trip/useTripPageController";
 import { getShareTokenFromPath, toAbsoluteWebURL } from "./shared/share";
@@ -36,7 +35,7 @@ function App() {
   const isLegacyOwnerRoute = currentPath === "/owner" || currentPath.startsWith("/owner/");
   const isManageRoute = currentPath === "/manage" || currentPath.startsWith("/manage/") || isLegacyOwnerRoute;
   const shareToken = getShareTokenFromPath(currentPath);
-  const isShareRoute = shareToken.length > 0;
+  const { isShareRoute, sharedTrip, sharedTripError, sharedTripLoading } = useSharedTripController({ shareToken });
   const tripPageProps = useTripPageController();
   const [ownerAuth, setOwnerAuth] = useState<AuthResponse | null>(getSavedOwnerAuth);
   const [authMode, setAuthMode] = useState<AuthMode>("login");
@@ -107,41 +106,10 @@ function App() {
   const [newFlightMemo, setNewFlightMemo] = useState("");
   const [flightCreateError, setFlightCreateError] = useState("");
   const [flightCreateSubmitting, setFlightCreateSubmitting] = useState(false);
-  const [sharedTrip, setSharedTrip] = useState<SharedTripResponse | null>(null);
-  const [sharedTripError, setSharedTripError] = useState("");
-  const [sharedTripLoading, setSharedTripLoading] = useState(isShareRoute);
   const selectedOwnerTrip = useMemo(
     () => ownerTrips.find((ownerTrip) => ownerTrip.id === selectedOwnerTripID) ?? null,
     [ownerTrips, selectedOwnerTripID]
   );
-
-  useEffect(() => {
-    if (!shareToken) return;
-
-    let cancelled = false;
-    setSharedTripLoading(true);
-    setSharedTripError("");
-    setSharedTrip(null);
-    getSharedTrip(shareToken)
-      .then((response) => {
-        if (!cancelled) setSharedTrip(response);
-      })
-      .catch((error) => {
-        if (cancelled) return;
-        if (error instanceof ApiError && error.status === 404) {
-          setSharedTripError("공유 링크를 찾을 수 없습니다. 링크가 정확한지 확인해주세요.");
-          return;
-        }
-        setSharedTripError(error instanceof Error ? error.message : "공유 여행 정보를 불러오지 못했습니다.");
-      })
-      .finally(() => {
-        if (!cancelled) setSharedTripLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [shareToken]);
 
   useEffect(() => {
     if (!isLegacyOwnerRoute) return;
