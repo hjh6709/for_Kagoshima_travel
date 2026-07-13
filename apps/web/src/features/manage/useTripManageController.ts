@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { syncStartDateWithEndDate } from "./manageFormUtils";
 import type { TripManagePageProps } from "./manageTypes";
 import { useTripManageDetailData } from "./useTripManageDetailData";
 import {
@@ -381,12 +382,8 @@ export function useTripManageController({
     onAuthPasswordChange: setAuthPassword,
     onNewTripEndDateChange: setNewTripEndDate,
     onNewTripMemoChange: setNewTripMemo,
-    onNewTripStartDateChange: (value) => {
-      setNewTripStartDate(value);
-      if (!newTripEndDate || newTripEndDate < value) {
-        setNewTripEndDate(value);
-      }
-    },
+    onNewTripStartDateChange: (value) =>
+      syncStartDateWithEndDate(value, newTripEndDate, setNewTripStartDate, setNewTripEndDate),
     onNewTripTitleChange: setNewTripTitle,
     onNewTripTravelersChange: setNewTripTravelers,
     onNewScheduleDateChange: setNewScheduleDate,
@@ -406,12 +403,8 @@ export function useTripManageController({
     onNewFlightArrivalDateChange: setNewFlightArrivalDate,
     onNewFlightArrivalTimeChange: setNewFlightArrivalTime,
     onNewFlightDepartureAirportChange: setNewFlightDepartureAirport,
-    onNewFlightDepartureDateChange: (value) => {
-      setNewFlightDepartureDate(value);
-      if (!newFlightArrivalDate || newFlightArrivalDate < value) {
-        setNewFlightArrivalDate(value);
-      }
-    },
+    onNewFlightDepartureDateChange: (value) =>
+      syncStartDateWithEndDate(value, newFlightArrivalDate, setNewFlightDepartureDate, setNewFlightArrivalDate),
     onNewFlightDepartureTimeChange: setNewFlightDepartureTime,
     onNewFlightDirectionChange: setNewFlightDirection,
     onNewFlightLabelChange: setNewFlightLabel,
@@ -426,12 +419,8 @@ export function useTripManageController({
     onPlaceListEditingChange: setIsPlaceListEditing,
     onTripEditEndDateChange: setTripEditEndDate,
     onTripEditMemoChange: setTripEditMemo,
-    onTripEditStartDateChange: (value) => {
-      setTripEditStartDate(value);
-      if (!tripEditEndDate || tripEditEndDate < value) {
-        setTripEditEndDate(value);
-      }
-    },
+    onTripEditStartDateChange: (value) =>
+      syncStartDateWithEndDate(value, tripEditEndDate, setTripEditStartDate, setTripEditEndDate),
     onTripEditTitleChange: setTripEditTitle,
     onTripEditTravelersChange: setTripEditTravelers,
     onLogout: logoutOwner,

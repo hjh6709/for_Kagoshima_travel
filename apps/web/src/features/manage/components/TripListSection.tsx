@@ -1,11 +1,6 @@
 import { PlusCircle } from "lucide-react";
 import { formatKoreanDate } from "../../../shared/date";
-import type { TripManagePageProps } from "../manageTypes";
-
-type TripListSectionProps = Pick<
-  TripManagePageProps,
-  "onSelectOwnerTrip" | "ownerTrips" | "ownerTripsError" | "ownerTripsLoading"
->;
+import type { TripListSectionProps } from "../manageTypes";
 
 // 여행 목록 렌더링만 담당한다. 선택 시 상세 데이터 로딩은 상위 콜백이 처리한다.
 export function TripListSection({
