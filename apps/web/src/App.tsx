@@ -40,12 +40,19 @@ import {
   getMapUrl,
   getOrderedSchedulesForDate,
   getPlace,
+  getSavedChecklistCompletions,
   getSavedCustomChecklist,
   getSavedHiddenChecklistIDs,
   getSavedScheduleCompletions,
   getSavedScheduleOrder,
   getSavedTripDates,
   isCustomChecklistItem,
+  saveChecklistCompletions,
+  saveCustomChecklistItems,
+  saveHiddenChecklistIDs,
+  saveScheduleCompletions,
+  saveScheduleOrder as persistScheduleOrder,
+  saveTripDates,
   type ChecklistCategory,
   type CustomChecklistItem,
   type ScheduleOrderByDate,
@@ -154,14 +161,7 @@ function App() {
   const [newChecklistCategory, setNewChecklistCategory] = useState<ChecklistCategory>("before");
   const [completedSchedules, setCompletedSchedules] = useState<Record<string, boolean>>(getSavedScheduleCompletions);
   const [scheduleOrderByDate, setScheduleOrderByDate] = useState<ScheduleOrderByDate>(getSavedScheduleOrder);
-  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>(() => {
-    const saved = window.localStorage.getItem("kagoshima-checklist");
-    try {
-      return saved ? JSON.parse(saved) : {};
-    } catch {
-      return {};
-    }
-  });
+  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>(getSavedChecklistCompletions);
 
   const dates = useMemo(() => Array.from(new Set(schedules.map((item) => item.date))), []);
   const selectedSchedules = useMemo(
@@ -1104,7 +1104,7 @@ function App() {
       next.endDate = next.startDate;
     }
     setTripDates(next);
-    window.localStorage.setItem("kagoshima-trip-dates", JSON.stringify(next));
+    saveTripDates(next);
   }
 
   function copyAccommodationAddress() {
@@ -1120,12 +1120,12 @@ function App() {
   function toggleCheck(id: string) {
     const next = { ...checkedItems, [id]: !checkedItems[id] };
     setCheckedItems(next);
-    window.localStorage.setItem("kagoshima-checklist", JSON.stringify(next));
+    saveChecklistCompletions(next);
   }
 
   function saveCustomChecklist(items: CustomChecklistItem[]) {
     setCustomChecklistItems(items);
-    window.localStorage.setItem("kagoshima-custom-checklist", JSON.stringify(items));
+    saveCustomChecklistItems(items);
   }
 
   function addChecklistItem(event: FormEvent<HTMLFormElement>) {
@@ -1151,13 +1151,13 @@ function App() {
     const nextCheckedItems = { ...checkedItems };
     delete nextCheckedItems[id];
     setCheckedItems(nextCheckedItems);
-    window.localStorage.setItem("kagoshima-checklist", JSON.stringify(nextCheckedItems));
+    saveChecklistCompletions(nextCheckedItems);
   }
 
   function hideDefaultChecklistItem(id: string) {
     const nextHiddenIDs = Array.from(new Set([...hiddenChecklistIDs, id]));
     setHiddenChecklistIDs(nextHiddenIDs);
-    window.localStorage.setItem("kagoshima-hidden-checklist", JSON.stringify(nextHiddenIDs));
+    saveHiddenChecklistIDs(nextHiddenIDs);
     removeChecklistCompletion(id);
   }
 
@@ -1171,12 +1171,12 @@ function App() {
 
   function restoreDefaultChecklistItems() {
     setHiddenChecklistIDs([]);
-    window.localStorage.setItem("kagoshima-hidden-checklist", JSON.stringify([]));
+    saveHiddenChecklistIDs([]);
   }
 
   function saveCompletedSchedules(next: Record<string, boolean>) {
     setCompletedSchedules(next);
-    window.localStorage.setItem("kagoshima-schedule-completions", JSON.stringify(next));
+    saveScheduleCompletions(next);
   }
 
   function toggleScheduleComplete(id: string) {
@@ -1185,7 +1185,7 @@ function App() {
 
   function saveScheduleOrder(next: ScheduleOrderByDate) {
     setScheduleOrderByDate(next);
-    window.localStorage.setItem("kagoshima-schedule-order", JSON.stringify(next));
+    persistScheduleOrder(next);
   }
 
   function moveSchedule(scheduleID: string, direction: "up" | "down") {
