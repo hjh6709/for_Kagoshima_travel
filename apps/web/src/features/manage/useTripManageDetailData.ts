@@ -29,6 +29,15 @@ type UseTripManageDetailDataParams = {
     newScheduleTitle: string;
     newScheduleTransportMemo: string;
     newScheduleType: ScheduleItem["type"];
+    cancelScheduleEdit: () => void;
+    editingScheduleDate: string;
+    editingScheduleGuideMemo: string;
+    editingScheduleID: string;
+    editingSchedulePlaceID: string;
+    editingScheduleTime: string;
+    editingScheduleTitle: string;
+    editingScheduleTransportMemo: string;
+    editingScheduleType: ScheduleItem["type"];
     setDeletingScheduleID: Dispatch<SetStateAction<string>>;
     setNewScheduleGuideMemo: Dispatch<SetStateAction<string>>;
     setNewSchedulePlaceID: Dispatch<SetStateAction<string>>;
@@ -38,6 +47,8 @@ type UseTripManageDetailDataParams = {
     setScheduleCreateError: Dispatch<SetStateAction<string>>;
     setScheduleCreateSubmitting: Dispatch<SetStateAction<boolean>>;
     setScheduleDeleteError: Dispatch<SetStateAction<string>>;
+    setScheduleEditError: Dispatch<SetStateAction<string>>;
+    setScheduleEditSubmitting: Dispatch<SetStateAction<boolean>>;
   };
   placeForm: {
     newPlaceAddress: string;
@@ -146,7 +157,7 @@ export function useTripManageDetailData({
   }, [ownerAuth, selectedOwnerTrip]);
 
   // 생성/삭제 액션은 리소스별 훅으로 위임하고, 여기서는 조회된 목록 state만 공유한다.
-  const { deleteOwnerSchedule, submitNewSchedule } = useTripManageScheduleActions({
+  const { deleteOwnerSchedule, submitNewSchedule, submitScheduleEdit } = useTripManageScheduleActions({
     clearOwnerSession,
     ownerAuth,
     ownerSchedules,
@@ -182,5 +193,6 @@ export function useTripManageDetailData({
     submitNewFlight,
     submitNewPlace,
     submitNewSchedule,
+    submitScheduleEdit,
   };
 }

@@ -3,6 +3,7 @@ import type { AuthResponse } from "../../api/auth";
 import {
   createTripSchedule,
   deleteTripSchedule,
+  updateTripSchedule,
   type OwnerTrip,
   type SharedSchedule,
 } from "../../api/trips";
@@ -18,7 +19,18 @@ type ScheduleFormState = {
   newScheduleTitle: string;
   newScheduleTransportMemo: string;
   newScheduleType: ScheduleItem["type"];
+  cancelScheduleEdit: () => void;
   setDeletingScheduleID: Dispatch<SetStateAction<string>>;
+  editingScheduleDate: string;
+  editingScheduleGuideMemo: string;
+  editingScheduleID: string;
+  editingSchedulePlaceID: string;
+  editingScheduleTime: string;
+  editingScheduleTitle: string;
+  editingScheduleTransportMemo: string;
+  editingScheduleType: ScheduleItem["type"];
+  setScheduleEditError: Dispatch<SetStateAction<string>>;
+  setScheduleEditSubmitting: Dispatch<SetStateAction<boolean>>;
   setNewScheduleGuideMemo: Dispatch<SetStateAction<string>>;
   setNewSchedulePlaceID: Dispatch<SetStateAction<string>>;
   setNewScheduleTime: Dispatch<SetStateAction<string>>;
@@ -97,6 +109,58 @@ export function useTripManageScheduleActions({
     }
   }
 
+  // 일정 수정 폼 입력값을 검증한 뒤 서버에 반영하고, 성공하면 목록의 해당 일정만 교체한다.
+  async function submitScheduleEdit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!ownerAuth || !selectedOwnerTrip || !scheduleForm.editingScheduleID) return;
+
+    const date = scheduleForm.editingScheduleDate;
+    const time = scheduleForm.editingScheduleTime.trim();
+    const title = scheduleForm.editingScheduleTitle.trim();
+    const transportMemo = scheduleForm.editingScheduleTransportMemo.trim();
+    const guideMemo = scheduleForm.editingScheduleGuideMemo.trim();
+
+    if (!date || !time || !title) {
+      scheduleForm.setScheduleEditError("날짜, 시간, 제목을 입력해주세요.");
+      return;
+    }
+    if (isDateOutsideTrip(date, selectedOwnerTrip)) {
+      scheduleForm.setScheduleEditError("일정 날짜는 여행 기간 안에서 선택해주세요.");
+      return;
+    }
+
+    scheduleForm.setScheduleEditError("");
+    scheduleForm.setScheduleEditSubmitting(true);
+    try {
+      const updatedSchedule = await updateTripSchedule(
+        ownerAuth.accessToken,
+        selectedOwnerTrip.id,
+        scheduleForm.editingScheduleID,
+        {
+          date,
+          time,
+          type: scheduleForm.editingScheduleType,
+          title,
+          placeId: scheduleForm.editingSchedulePlaceID,
+          transportMemo,
+          guideMemo,
+        }
+      );
+      setOwnerSchedules((currentSchedules) =>
+        sortSharedSchedules(currentSchedules.map((item) => (item.id === updatedSchedule.id ? updatedSchedule : item)))
+      );
+      scheduleForm.cancelScheduleEdit();
+    } catch (error) {
+      handleManageApiError(error, {
+        clearOwnerSession,
+        fallbackMessage: "일정을 수정하지 못했습니다.",
+        setError: scheduleForm.setScheduleEditError,
+      });
+    } finally {
+      scheduleForm.setScheduleEditSubmitting(false);
+    }
+  }
+
   // 일정 목록의 편집 모드에서 사용자가 선택한 일정을 삭제한다.
   async function deleteOwnerSchedule(scheduleID: string) {
     if (!ownerAuth || !selectedOwnerTrip) return;
@@ -110,6 +174,9 @@ export function useTripManageScheduleActions({
     try {
       await deleteTripSchedule(ownerAuth.accessToken, selectedOwnerTrip.id, scheduleID);
       setOwnerSchedules((currentSchedules) => currentSchedules.filter((item) => item.id !== scheduleID));
+      if (scheduleForm.editingScheduleID === scheduleID) {
+        scheduleForm.cancelScheduleEdit();
+      }
       scheduleForm.setScheduleDeleteError("");
     } catch (error) {
       handleManageApiError(error, {
@@ -125,5 +192,6 @@ export function useTripManageScheduleActions({
   return {
     deleteOwnerSchedule,
     submitNewSchedule,
+    submitScheduleEdit,
   };
 }
