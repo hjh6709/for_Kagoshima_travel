@@ -10,6 +10,7 @@ export type ScheduleOrderByDate = Record<string, string[]>;
 
 const tripStorageKeys = {
   tripDates: "kagoshima-trip-dates",
+  checklistCompletions: "kagoshima-checklist",
   customChecklist: "kagoshima-custom-checklist",
   hiddenChecklist: "kagoshima-hidden-checklist",
   scheduleCompletions: "kagoshima-schedule-completions",
@@ -68,6 +69,23 @@ export function getSavedCustomChecklist(): CustomChecklistItem[] {
   }
 }
 
+export function getSavedChecklistCompletions(): Record<string, boolean> {
+  const saved = window.localStorage.getItem(tripStorageKeys.checklistCompletions);
+  try {
+    const parsed = saved ? JSON.parse(saved) : {};
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+
+    return Object.fromEntries(
+      Object.entries(parsed).filter((entry): entry is [string, boolean] => {
+        const [id, completed] = entry;
+        return typeof id === "string" && typeof completed === "boolean";
+      })
+    );
+  } catch {
+    return {};
+  }
+}
+
 export function getSavedHiddenChecklistIDs(): string[] {
   const saved = window.localStorage.getItem(tripStorageKeys.hiddenChecklist);
   try {
@@ -110,6 +128,31 @@ export function getSavedScheduleOrder(): ScheduleOrderByDate {
   } catch {
     return {};
   }
+}
+
+// 여행 화면의 로컬 상태 저장은 이 파일을 통해서만 수행해 storage key가 화면 컴포넌트로 퍼지지 않게 한다.
+export function saveTripDates(dates: TripDates) {
+  window.localStorage.setItem(tripStorageKeys.tripDates, JSON.stringify(dates));
+}
+
+export function saveChecklistCompletions(completions: Record<string, boolean>) {
+  window.localStorage.setItem(tripStorageKeys.checklistCompletions, JSON.stringify(completions));
+}
+
+export function saveCustomChecklistItems(items: CustomChecklistItem[]) {
+  window.localStorage.setItem(tripStorageKeys.customChecklist, JSON.stringify(items));
+}
+
+export function saveHiddenChecklistIDs(ids: string[]) {
+  window.localStorage.setItem(tripStorageKeys.hiddenChecklist, JSON.stringify(ids));
+}
+
+export function saveScheduleCompletions(completions: Record<string, boolean>) {
+  window.localStorage.setItem(tripStorageKeys.scheduleCompletions, JSON.stringify(completions));
+}
+
+export function saveScheduleOrder(orderByDate: ScheduleOrderByDate) {
+  window.localStorage.setItem(tripStorageKeys.scheduleOrder, JSON.stringify(orderByDate));
 }
 
 export function getOrderedSchedulesForDate(date: string, orderByDate: ScheduleOrderByDate) {
