@@ -39,6 +39,8 @@ export type CreatePlacePayload = {
   recommendedReason?: string;
 };
 
+export type UpdatePlacePayload = Partial<CreatePlacePayload>;
+
 export type CreateFlightPayload = {
   direction: string;
   label: string;
@@ -210,6 +212,16 @@ export function listTripPlaces(accessToken: string, tripID: string) {
 export function createTripPlace(accessToken: string, tripID: string, payload: CreatePlacePayload) {
   return apiRequest<SharedPlace>(`/api/trips/${tripID}/places`, {
     method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateTripPlace(accessToken: string, tripID: string, placeID: string, payload: UpdatePlacePayload) {
+  return apiRequest<SharedPlace>(`/api/trips/${tripID}/places/${placeID}`, {
+    method: "PATCH",
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },

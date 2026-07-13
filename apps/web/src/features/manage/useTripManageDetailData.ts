@@ -56,7 +56,16 @@ type UseTripManageDetailDataParams = {
     newPlaceGoogleMapsURL: string;
     newPlaceName: string;
     newPlaceRecommendedReason: string;
+    cancelPlaceEdit: () => void;
+    editingPlaceAddress: string;
+    editingPlaceCategory: PlaceCategory;
+    editingPlaceGoogleMapsURL: string;
+    editingPlaceID: string;
+    editingPlaceName: string;
+    editingPlaceRecommendedReason: string;
     setDeletingPlaceID: Dispatch<SetStateAction<string>>;
+    setPlaceEditError: Dispatch<SetStateAction<string>>;
+    setPlaceEditSubmitting: Dispatch<SetStateAction<boolean>>;
     setNewPlaceAddress: Dispatch<SetStateAction<string>>;
     setNewPlaceGoogleMapsURL: Dispatch<SetStateAction<string>>;
     setNewPlaceName: Dispatch<SetStateAction<string>>;
@@ -165,7 +174,7 @@ export function useTripManageDetailData({
     selectedOwnerTrip,
     setOwnerSchedules,
   });
-  const { deleteOwnerPlace, submitNewPlace } = useTripManagePlaceActions({
+  const { deleteOwnerPlace, submitNewPlace, submitPlaceEdit } = useTripManagePlaceActions({
     clearOwnerSession,
     ownerAuth,
     ownerPlaces,
@@ -193,6 +202,7 @@ export function useTripManageDetailData({
     submitNewFlight,
     submitNewPlace,
     submitNewSchedule,
+    submitPlaceEdit,
     submitScheduleEdit,
   };
 }

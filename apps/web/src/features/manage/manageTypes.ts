@@ -54,6 +54,12 @@ export type TripListSectionProps = {
 export type SelectedTripDetailSectionProps = {
   deletingPlaceID: string;
   deletingScheduleID: string;
+  editingPlaceAddress: string;
+  editingPlaceCategory: PlaceCategory;
+  editingPlaceGoogleMapsURL: string;
+  editingPlaceID: string;
+  editingPlaceName: string;
+  editingPlaceRecommendedReason: string;
   editingScheduleDate: string;
   editingScheduleGuideMemo: string;
   editingScheduleID: string;
@@ -89,12 +95,18 @@ export type SelectedTripDetailSectionProps = {
   newScheduleTitle: string;
   newScheduleTransportMemo: string;
   newScheduleType: ScheduleItem["type"];
+  onCancelPlaceEdit: () => void;
   onCancelScheduleEdit: () => void;
   onCloseOwnerTripDetail: () => void;
   onCopyShareLink: () => void;
   onCreateShareLink: () => void;
   onDeletePlace: (placeID: string) => void;
   onDeleteSchedule: (scheduleID: string) => void;
+  onEditingPlaceAddressChange: (value: string) => void;
+  onEditingPlaceCategoryChange: (value: PlaceCategory) => void;
+  onEditingPlaceGoogleMapsURLChange: (value: string) => void;
+  onEditingPlaceNameChange: (value: string) => void;
+  onEditingPlaceRecommendedReasonChange: (value: string) => void;
   onEditingScheduleDateChange: (value: string) => void;
   onEditingScheduleGuideMemoChange: (value: string) => void;
   onEditingSchedulePlaceIDChange: (value: string) => void;
@@ -127,10 +139,12 @@ export type SelectedTripDetailSectionProps = {
   onNewScheduleTypeChange: (value: ScheduleItem["type"]) => void;
   onPlaceListEditingChange: (value: boolean) => void;
   onScheduleListEditingChange: (value: boolean) => void;
+  onStartPlaceEdit: (place: SharedPlace) => void;
   onStartScheduleEdit: (schedule: SharedSchedule) => void;
   onSubmitNewFlight: (event: FormEvent<HTMLFormElement>) => void;
   onSubmitNewPlace: (event: FormEvent<HTMLFormElement>) => void;
   onSubmitNewSchedule: (event: FormEvent<HTMLFormElement>) => void;
+  onSubmitPlaceEdit: (event: FormEvent<HTMLFormElement>) => void;
   onSubmitScheduleEdit: (event: FormEvent<HTMLFormElement>) => void;
   onSubmitTripEdit: (event: FormEvent<HTMLFormElement>) => void;
   onTripEditEndDateChange: (value: string) => void;
@@ -146,6 +160,8 @@ export type SelectedTripDetailSectionProps = {
   placeCreateError: string;
   placeCreateSubmitting: boolean;
   placeDeleteError: string;
+  placeEditError: string;
+  placeEditSubmitting: boolean;
   scheduleCreateError: string;
   scheduleCreateSubmitting: boolean;
   scheduleDeleteError: string;
