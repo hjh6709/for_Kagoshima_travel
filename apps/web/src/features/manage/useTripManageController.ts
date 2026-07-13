@@ -1,13 +1,11 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { ApiError, getCurrentUser, login, register, type AuthResponse } from "../../api/auth";
 import {
-  createShareLink,
   createTrip,
   listMyTrips,
   updateTrip,
   type OwnerTrip,
 } from "../../api/trips";
-import { toAbsoluteWebURL } from "../../shared/share";
 import type { AuthMode, TripManagePageProps } from "./manageTypes";
 import { getSavedOwnerAuth, ownerAuthStorageKey } from "./ownerAuthStorage";
 import { useTripManageDetailData } from "./useTripManageDetailData";
@@ -18,6 +16,7 @@ import {
   useTripCreateFormState,
   useTripEditFormState,
 } from "./useTripManageFormState";
+import { useTripManageShareLink } from "./useTripManageShareLink";
 
 type UseTripManageControllerParams = {
   currentPath: string;
@@ -77,10 +76,6 @@ export function useTripManageController({
     resetTripEditForm,
     fillTripEditForm,
   } = useTripEditFormState();
-  const [shareLinksByTripID, setShareLinksByTripID] = useState<Record<string, string>>({});
-  const [shareLinkError, setShareLinkError] = useState("");
-  const [shareLinkSubmitting, setShareLinkSubmitting] = useState(false);
-  const [shareLinkCopied, setShareLinkCopied] = useState(false);
   const {
     newScheduleDate,
     setNewScheduleDate,
@@ -250,6 +245,19 @@ export function useTripManageController({
       setNewFlightNumber,
     },
   });
+  const {
+    copySelectedTripShareLink,
+    createSelectedTripShareLink,
+    resetShareLinkState,
+    selectedShareLink,
+    shareLinkCopied,
+    shareLinkError,
+    shareLinkSubmitting,
+  } = useTripManageShareLink({
+    clearOwnerSession,
+    ownerAuth,
+    selectedOwnerTrip,
+  });
 
   useEffect(() => {
     if (!isLegacyOwnerRoute) return;
@@ -338,8 +346,6 @@ export function useTripManageController({
     }
 
     fillTripEditForm(selectedOwnerTrip);
-    setShareLinkError("");
-    setShareLinkCopied(false);
     prepareScheduleManageForm(selectedOwnerTrip.startDate);
     resetPlaceManageForm();
     prepareFlightManageForm(selectedOwnerTrip.startDate);
@@ -460,58 +466,9 @@ export function useTripManageController({
     }
   }
 
-  async function createSelectedTripShareLink() {
-    if (!ownerAuth || !selectedOwnerTrip) return;
-
-    setShareLinkError("");
-    setShareLinkCopied(false);
-    setShareLinkSubmitting(true);
-    try {
-      const link = await createShareLink(ownerAuth.accessToken, selectedOwnerTrip.id);
-      setShareLinksByTripID((currentLinks) => ({
-        ...currentLinks,
-        [selectedOwnerTrip.id]: toAbsoluteWebURL(link.webPath),
-      }));
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 401) {
-        clearOwnerSession();
-        setShareLinkError("");
-        return;
-      }
-      setShareLinkError(error instanceof Error ? error.message : "공유 링크를 만들지 못했습니다.");
-    } finally {
-      setShareLinkSubmitting(false);
-    }
-  }
-
-  function copySelectedTripShareLink() {
-    if (!selectedOwnerTrip) return;
-
-    const shareLink = shareLinksByTripID[selectedOwnerTrip.id];
-    if (!shareLink) return;
-    if (!navigator.clipboard?.writeText) {
-      setShareLinkCopied(false);
-      setShareLinkError("이 브라우저에서는 자동 복사를 지원하지 않습니다. 링크를 직접 선택해 복사해주세요.");
-      return;
-    }
-
-    navigator.clipboard
-      .writeText(shareLink)
-      .then(() => {
-        setShareLinkError("");
-        setShareLinkCopied(true);
-      })
-      .catch(() => {
-        setShareLinkCopied(false);
-        setShareLinkError("자동 복사에 실패했습니다. 링크를 직접 선택해 복사해주세요.");
-      });
-  }
-
   function logoutOwner() {
     clearOwnerSession();
-    setShareLinksByTripID({});
-    setShareLinkError("");
-    setShareLinkCopied(false);
+    resetShareLinkState();
     setScheduleCreateSubmitting(false);
     resetScheduleManageForm();
     setPlaceCreateSubmitting(false);
@@ -544,7 +501,7 @@ export function useTripManageController({
     isPlaceListEditing,
     deletingPlaceID,
     selectedOwnerTrip,
-    selectedShareLink: selectedOwnerTrip ? (shareLinksByTripID[selectedOwnerTrip.id] ?? "") : "",
+    selectedShareLink,
     newTripEndDate,
     newTripMemo,
     newTripStartDate,
