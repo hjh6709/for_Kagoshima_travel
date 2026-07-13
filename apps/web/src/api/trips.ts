@@ -55,6 +55,8 @@ export type CreateFlightPayload = {
   memo?: string;
 };
 
+export type UpdateFlightPayload = Partial<CreateFlightPayload>;
+
 export type ShareLinkResponse = {
   token: string;
   apiPath: string;
@@ -253,6 +255,30 @@ export function createTripFlight(accessToken: string, tripID: string, payload: C
       Authorization: `Bearer ${accessToken}`,
     },
     body: JSON.stringify(payload),
+  });
+}
+
+export function updateTripFlight(
+  accessToken: string,
+  tripID: string,
+  flightID: string,
+  payload: UpdateFlightPayload
+) {
+  return apiRequest<SharedFlight>(`/api/trips/${tripID}/flights/${flightID}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteTripFlight(accessToken: string, tripID: string, flightID: string) {
+  return apiRequest<void>(`/api/trips/${tripID}/flights/${flightID}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
   });
 }
 

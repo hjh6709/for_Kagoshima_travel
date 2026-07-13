@@ -1,6 +1,6 @@
 import type { Dispatch, FormEvent, SetStateAction } from "react";
 import type { AuthResponse } from "../../api/auth";
-import { createTripFlight, type OwnerTrip, type SharedFlight } from "../../api/trips";
+import { createTripFlight, deleteTripFlight, updateTripFlight, type OwnerTrip, type SharedFlight } from "../../api/trips";
 import { sortSharedFlights } from "../../shared/sort";
 import type { FlightDirection } from "../../shared/travelOptions";
 import {
@@ -22,8 +22,26 @@ type FlightFormState = {
   newFlightLabel: string;
   newFlightMemo: string;
   newFlightNumber: string;
+  cancelFlightEdit: () => void;
+  deletingFlightID: string;
+  editingFlightAirline: string;
+  editingFlightArrivalAirport: string;
+  editingFlightArrivalDate: string;
+  editingFlightArrivalTime: string;
+  editingFlightDepartureAirport: string;
+  editingFlightDepartureDate: string;
+  editingFlightDepartureTime: string;
+  editingFlightDirection: FlightDirection;
+  editingFlightID: string;
+  editingFlightLabel: string;
+  editingFlightMemo: string;
+  editingFlightNumber: string;
   setFlightCreateError: Dispatch<SetStateAction<string>>;
   setFlightCreateSubmitting: Dispatch<SetStateAction<boolean>>;
+  setDeletingFlightID: Dispatch<SetStateAction<string>>;
+  setFlightDeleteError: Dispatch<SetStateAction<string>>;
+  setFlightEditError: Dispatch<SetStateAction<string>>;
+  setFlightEditSubmitting: Dispatch<SetStateAction<boolean>>;
   setNewFlightAirline: Dispatch<SetStateAction<string>>;
   setNewFlightArrivalAirport: Dispatch<SetStateAction<string>>;
   setNewFlightArrivalTime: Dispatch<SetStateAction<string>>;
@@ -38,6 +56,7 @@ type UseTripManageFlightActionsParams = {
   clearOwnerSession: () => void;
   flightForm: FlightFormState;
   ownerAuth: AuthResponse | null;
+  ownerFlights: SharedFlight[];
   selectedOwnerTrip: OwnerTrip | null;
   setOwnerFlights: Dispatch<SetStateAction<SharedFlight[]>>;
 };
@@ -47,6 +66,7 @@ export function useTripManageFlightActions({
   clearOwnerSession,
   flightForm,
   ownerAuth,
+  ownerFlights,
   selectedOwnerTrip,
   setOwnerFlights,
 }: UseTripManageFlightActionsParams) {
@@ -116,7 +136,103 @@ export function useTripManageFlightActions({
     }
   }
 
+  // 항공편 수정 폼 입력값을 검증한 뒤 서버에 반영하고, 성공하면 목록의 해당 항공편만 교체한다.
+  async function submitFlightEdit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!ownerAuth || !selectedOwnerTrip || !flightForm.editingFlightID) return;
+
+    const label = flightForm.editingFlightLabel.trim();
+    const airline = flightForm.editingFlightAirline.trim();
+    const flightNumber = flightForm.editingFlightNumber.trim();
+    const departureAirport = flightForm.editingFlightDepartureAirport.trim();
+    const arrivalAirport = flightForm.editingFlightArrivalAirport.trim();
+    const departureDate = flightForm.editingFlightDepartureDate;
+    const departureTime = flightForm.editingFlightDepartureTime.trim();
+    const arrivalDate = flightForm.editingFlightArrivalDate;
+    const arrivalTime = flightForm.editingFlightArrivalTime.trim();
+    const memo = flightForm.editingFlightMemo.trim();
+
+    if (!label || !departureAirport || !arrivalAirport || !departureDate || !departureTime) {
+      flightForm.setFlightEditError("항공편 이름, 출발/도착 공항, 출발 날짜와 시간을 입력해주세요.");
+      return;
+    }
+    if (isDateOutsideTrip(departureDate, selectedOwnerTrip)) {
+      flightForm.setFlightEditError("출발 날짜는 여행 기간 안에서 선택해주세요.");
+      return;
+    }
+    if (arrivalDate && isEndDateBeforeStartDate(departureDate, arrivalDate)) {
+      flightForm.setFlightEditError("도착 날짜는 출발 날짜보다 빠를 수 없습니다.");
+      return;
+    }
+
+    flightForm.setFlightEditError("");
+    flightForm.setFlightEditSubmitting(true);
+    try {
+      // 수정에서는 빈 문자열도 서버로 보내 사용자가 항공사/편명/메모를 지울 수 있게 한다.
+      const updatedFlight = await updateTripFlight(
+        ownerAuth.accessToken,
+        selectedOwnerTrip.id,
+        flightForm.editingFlightID,
+        {
+          direction: flightForm.editingFlightDirection,
+          label,
+          airline,
+          flightNumber,
+          departureAirport,
+          arrivalAirport,
+          departureDate,
+          departureTime,
+          arrivalDate,
+          arrivalTime,
+          memo,
+        }
+      );
+      setOwnerFlights((currentFlights) =>
+        sortSharedFlights(currentFlights.map((item) => (item.id === updatedFlight.id ? updatedFlight : item)))
+      );
+      flightForm.cancelFlightEdit();
+    } catch (error) {
+      handleManageApiError(error, {
+        clearOwnerSession,
+        fallbackMessage: "항공편을 수정하지 못했습니다.",
+        setError: flightForm.setFlightEditError,
+      });
+    } finally {
+      flightForm.setFlightEditSubmitting(false);
+    }
+  }
+
+  // 항공편 목록의 편집 모드에서 사용자가 선택한 항공편을 삭제한다.
+  async function deleteOwnerFlight(flightID: string) {
+    if (!ownerAuth || !selectedOwnerTrip) return;
+
+    const flight = ownerFlights.find((item) => item.id === flightID);
+    const confirmed = window.confirm(flight ? `"${flight.label}" 항공편을 삭제할까요?` : "항공편을 삭제할까요?");
+    if (!confirmed) return;
+
+    flightForm.setFlightDeleteError("");
+    flightForm.setDeletingFlightID(flightID);
+    try {
+      await deleteTripFlight(ownerAuth.accessToken, selectedOwnerTrip.id, flightID);
+      setOwnerFlights((currentFlights) => currentFlights.filter((item) => item.id !== flightID));
+      if (flightForm.editingFlightID === flightID) {
+        flightForm.cancelFlightEdit();
+      }
+      flightForm.setFlightDeleteError("");
+    } catch (error) {
+      handleManageApiError(error, {
+        clearOwnerSession,
+        fallbackMessage: "항공편을 삭제하지 못했습니다.",
+        setError: flightForm.setFlightDeleteError,
+      });
+    } finally {
+      flightForm.setDeletingFlightID("");
+    }
+  }
+
   return {
+    deleteOwnerFlight,
+    submitFlightEdit,
     submitNewFlight,
   };
 }
