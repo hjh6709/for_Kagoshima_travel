@@ -142,6 +142,41 @@ func (r *PostgresTripRepository) SavePlace(place model.Place) error {
 	return err
 }
 
+// FindPlace는 PATCH 전에 기존 장소 값을 유지하기 위해 단건을 조회한다.
+func (r *PostgresTripRepository) FindPlace(tripID, placeID string) (model.Place, error) {
+	row := r.pool.QueryRow(context.Background(),
+		`SELECT id::text, trip_id::text, name, category, COALESCE(address,''),
+		        COALESCE(google_maps_url,''), COALESCE(recommended_reason,'')
+		 FROM places WHERE trip_id = $1 AND id = $2`, tripID, placeID)
+
+	var place model.Place
+	if err := row.Scan(&place.ID, &place.TripID, &place.Name, &place.Category, &place.Address,
+		&place.GoogleMapsURL, &place.RecommendedReason); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return model.Place{}, ErrNotFound
+		}
+		return model.Place{}, err
+	}
+	return place, nil
+}
+
+// UpdatePlace는 places 스키마에 실제로 존재하는 컬럼만 수정한다.
+func (r *PostgresTripRepository) UpdatePlace(place model.Place) error {
+	tag, err := r.pool.Exec(context.Background(),
+		`UPDATE places
+		 SET name = $1, category = $2, address = $3, google_maps_url = $4, recommended_reason = $5
+		 WHERE trip_id = $6 AND id = $7`,
+		place.Name, place.Category, place.Address, place.GoogleMapsURL, place.RecommendedReason,
+		place.TripID, place.ID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
 func (r *PostgresTripRepository) SaveFlight(flight model.Flight) error {
 	var arrivalDate any
 	if flight.ArrivalDate != "" {

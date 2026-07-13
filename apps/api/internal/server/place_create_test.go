@@ -58,6 +58,45 @@ func TestPlaceCreateBoundaries(t *testing.T) {
 		t.Fatalf("created place %q not found in list: %#v", placeID, list.arrayBody)
 	}
 
+	// 장소 편집 UI가 기대하는 부분 수정 동작: 보낸 필드만 바뀌고 나머지는 유지된다.
+	updated := updatePlace(t, httpServer.URL, ownerToken, tripID, placeID, map[string]any{
+		"name":    "공항 렌터카 센터 변경",
+		"address": "공항 2층",
+	})
+	if updated.status != http.StatusOK {
+		t.Fatalf("owner update place status = %d, want %d, body = %#v", updated.status, http.StatusOK, updated.body)
+	}
+	if updated.body["name"] != "공항 렌터카 센터 변경" {
+		t.Fatalf("updated place name = %#v, want changed name", updated.body["name"])
+	}
+	if updated.body["category"] != payload["category"] {
+		t.Fatalf("partial update changed category = %#v, want %#v", updated.body["category"], payload["category"])
+	}
+	if updated.body["address"] != "공항 2층" {
+		t.Fatalf("updated place address = %#v, want changed address", updated.body["address"])
+	}
+
+	otherUpdate := updatePlace(t, httpServer.URL, otherToken, tripID, placeID, map[string]any{
+		"name": "권한 없는 수정",
+	})
+	if otherUpdate.status != http.StatusForbidden {
+		t.Fatalf("other user update place status = %d, want %d", otherUpdate.status, http.StatusForbidden)
+	}
+
+	invalidUpdate := updatePlace(t, httpServer.URL, ownerToken, tripID, placeID, map[string]any{
+		"name": "",
+	})
+	if invalidUpdate.status != http.StatusBadRequest {
+		t.Fatalf("invalid update place status = %d, want %d", invalidUpdate.status, http.StatusBadRequest)
+	}
+
+	missingPlaceUpdate := updatePlace(t, httpServer.URL, ownerToken, tripID, "00000000-0000-0000-0000-000000000000", map[string]any{
+		"name": "없는 장소",
+	})
+	if missingPlaceUpdate.status != http.StatusNotFound {
+		t.Fatalf("missing place update status = %d, want %d", missingPlaceUpdate.status, http.StatusNotFound)
+	}
+
 	otherCreate := createPlace(t, httpServer.URL, otherToken, tripID, payload)
 	if otherCreate.status != http.StatusForbidden {
 		t.Fatalf("other user create place status = %d, want %d", otherCreate.status, http.StatusForbidden)
@@ -104,6 +143,11 @@ func TestPlaceCreateBoundaries(t *testing.T) {
 func createPlace(t *testing.T, baseURL, token, tripID string, payload map[string]any) jsonResponse {
 	t.Helper()
 	return doJSON(t, http.MethodPost, baseURL+"/api/trips/"+tripID+"/places", token, payload)
+}
+
+func updatePlace(t *testing.T, baseURL, token, tripID, placeID string, payload map[string]any) jsonResponse {
+	t.Helper()
+	return doJSON(t, http.MethodPatch, baseURL+"/api/trips/"+tripID+"/places/"+placeID, token, payload)
 }
 
 func deletePlace(t *testing.T, baseURL, token, tripID, placeID string) jsonResponse {
