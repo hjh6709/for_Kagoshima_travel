@@ -1,4 +1,4 @@
-import { checklist, places, schedules, trip } from "../../data/sampleTrip";
+import { places, schedules, trip } from "../../data/sampleTrip";
 import type { TripDates } from "../../shared/date";
 import { checklistCategoryLabels } from "../../shared/travelOptions";
 import type { ChecklistItem } from "../../types/travel";
