@@ -1,6 +1,6 @@
-import { useEffect } from "react";
 import { syncStartDateWithEndDate } from "./manageFormUtils";
 import type { TripManagePageProps } from "./manageTypes";
+import { useSelectedOwnerTripLifecycle } from "./useSelectedOwnerTripLifecycle";
 import { useTripManageDetailData } from "./useTripManageDetailData";
 import {
   useFlightManageFormState,
@@ -284,21 +284,16 @@ export function useTripManageController({
     selectedOwnerTrip,
   });
 
-  // 선택 여행이 바뀌면 상세 폼의 기준 날짜와 편집 모드를 새 여행 기준으로 다시 맞춘다.
-  useEffect(() => {
-    if (!selectedOwnerTrip) {
-      resetTripEditForm();
-      resetScheduleManageForm();
-      resetPlaceManageForm();
-      resetFlightManageForm();
-      return;
-    }
-
-    fillTripEditForm(selectedOwnerTrip);
-    prepareScheduleManageForm(selectedOwnerTrip.startDate);
-    resetPlaceManageForm();
-    prepareFlightManageForm(selectedOwnerTrip.startDate);
-  }, [selectedOwnerTrip]);
+  useSelectedOwnerTripLifecycle({
+    fillTripEditForm,
+    prepareFlightManageForm,
+    prepareScheduleManageForm,
+    resetFlightManageForm,
+    resetPlaceManageForm,
+    resetScheduleManageForm,
+    resetTripEditForm,
+    selectedOwnerTrip,
+  });
 
   // 로그아웃은 인증뿐 아니라 현재 화면의 pending/submitting 상태까지 초기화해야 재로그인 시 잔상이 남지 않는다.
   function logoutOwner() {
