@@ -1,6 +1,6 @@
 import type { Dispatch, FormEvent, SetStateAction } from "react";
 import type { AuthResponse } from "../../api/auth";
-import { createTripPlace, deleteTripPlace, type OwnerTrip, type SharedPlace } from "../../api/trips";
+import { createTripPlace, deleteTripPlace, updateTripPlace, type OwnerTrip, type SharedPlace } from "../../api/trips";
 import { sortSharedPlaces } from "../../shared/sort";
 import type { PlaceCategory } from "../../types/travel";
 import { handleManageApiError, optionalTrimmedText } from "./manageFormUtils";
@@ -11,7 +11,16 @@ type PlaceFormState = {
   newPlaceGoogleMapsURL: string;
   newPlaceName: string;
   newPlaceRecommendedReason: string;
+  cancelPlaceEdit: () => void;
+  editingPlaceAddress: string;
+  editingPlaceCategory: PlaceCategory;
+  editingPlaceGoogleMapsURL: string;
+  editingPlaceID: string;
+  editingPlaceName: string;
+  editingPlaceRecommendedReason: string;
   setDeletingPlaceID: Dispatch<SetStateAction<string>>;
+  setPlaceEditError: Dispatch<SetStateAction<string>>;
+  setPlaceEditSubmitting: Dispatch<SetStateAction<boolean>>;
   setNewPlaceAddress: Dispatch<SetStateAction<string>>;
   setNewPlaceGoogleMapsURL: Dispatch<SetStateAction<string>>;
   setNewPlaceName: Dispatch<SetStateAction<string>>;
@@ -83,6 +92,46 @@ export function useTripManagePlaceActions({
     }
   }
 
+  // 장소 수정 폼 입력값을 검증한 뒤 서버에 반영하고, 성공하면 목록의 해당 장소만 교체한다.
+  async function submitPlaceEdit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!ownerAuth || !selectedOwnerTrip || !placeForm.editingPlaceID) return;
+
+    const name = placeForm.editingPlaceName.trim();
+    const address = optionalTrimmedText(placeForm.editingPlaceAddress);
+    const googleMapsUrl = optionalTrimmedText(placeForm.editingPlaceGoogleMapsURL);
+    const recommendedReason = optionalTrimmedText(placeForm.editingPlaceRecommendedReason);
+
+    if (!name) {
+      placeForm.setPlaceEditError("장소 이름을 입력해주세요.");
+      return;
+    }
+
+    placeForm.setPlaceEditError("");
+    placeForm.setPlaceEditSubmitting(true);
+    try {
+      const updatedPlace = await updateTripPlace(ownerAuth.accessToken, selectedOwnerTrip.id, placeForm.editingPlaceID, {
+        name,
+        category: placeForm.editingPlaceCategory,
+        address,
+        googleMapsUrl,
+        recommendedReason,
+      });
+      setOwnerPlaces((currentPlaces) =>
+        sortSharedPlaces(currentPlaces.map((item) => (item.id === updatedPlace.id ? updatedPlace : item)))
+      );
+      placeForm.cancelPlaceEdit();
+    } catch (error) {
+      handleManageApiError(error, {
+        clearOwnerSession,
+        fallbackMessage: "장소를 수정하지 못했습니다.",
+        setError: placeForm.setPlaceEditError,
+      });
+    } finally {
+      placeForm.setPlaceEditSubmitting(false);
+    }
+  }
+
   // 장소를 삭제하면 장소 목록과 새 일정의 연결 장소 선택 상태를 함께 정리한다.
   async function deleteOwnerPlace(placeID: string) {
     if (!ownerAuth || !selectedOwnerTrip) return;
@@ -99,6 +148,9 @@ export function useTripManagePlaceActions({
       await deleteTripPlace(ownerAuth.accessToken, selectedOwnerTrip.id, placeID);
       setOwnerPlaces((currentPlaces) => currentPlaces.filter((item) => item.id !== placeID));
       placeForm.setNewSchedulePlaceID((currentPlaceID) => (currentPlaceID === placeID ? "" : currentPlaceID));
+      if (placeForm.editingPlaceID === placeID) {
+        placeForm.cancelPlaceEdit();
+      }
       placeForm.setPlaceDeleteError("");
     } catch (error) {
       handleManageApiError(error, {
@@ -114,5 +166,6 @@ export function useTripManagePlaceActions({
   return {
     deleteOwnerPlace,
     submitNewPlace,
+    submitPlaceEdit,
   };
 }
