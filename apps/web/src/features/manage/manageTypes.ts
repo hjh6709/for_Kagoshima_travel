@@ -6,8 +6,7 @@ import type { PlaceCategory, ScheduleItem } from "../../types/travel";
 
 export type AuthMode = "login" | "register";
 
-// 라우팅, API 호출, 세션 상태는 App.tsx가 담당한다.
-// 이 컴포넌트는 관리 화면의 섹션 컴포넌트를 조립하는 역할만 맡는다.
+// useTripManageController가 계산한 여행 관리 화면 입력값과 이벤트 핸들러를 한 번에 전달한다.
 export type TripManagePageProps = {
   auth: AuthResponse | null;
   authChecked: boolean;
