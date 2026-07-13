@@ -12,6 +12,7 @@ type ManageShareActionsProps = Pick<
 >;
 
 // 선택된 여행의 연결 상태와 읽기 전용 공유 링크 생성/복사 UI만 담당한다.
+// 상세 편집 흐름에서는 마지막 단계로 배치해 입력 완료 후 공유하도록 유도한다.
 export function ManageShareActions({
   onCopyShareLink,
   onCreateShareLink,
@@ -21,7 +22,14 @@ export function ManageShareActions({
   shareLinkSubmitting,
 }: ManageShareActionsProps) {
   return (
-    <>
+    <section className="owner-linked-data-section share-step-section">
+      <div className="section-title-row compact-title-row">
+        <div>
+          <h3>공유 링크</h3>
+          <p className="section-caption">입력한 여행 정보를 가족이나 동행자에게 읽기 전용으로 공유합니다.</p>
+        </div>
+      </div>
+
       <div className="owner-action-grid">
         <button className="quick-button" disabled type="button">
           <CalendarDays size={18} />
@@ -66,6 +74,6 @@ export function ManageShareActions({
 
       {shareLinkCopied && <p className="form-success">공유 링크를 복사했습니다.</p>}
       {shareLinkError && <p className="form-error">{shareLinkError}</p>}
-    </>
+    </section>
   );
 }
