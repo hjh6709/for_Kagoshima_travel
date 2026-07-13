@@ -29,6 +29,19 @@ export function isDateOutsideTrip(date: string, trip: OwnerTrip): boolean {
   return date < trip.startDate || date > trip.endDate;
 }
 
+// 시작일이 뒤로 밀리면 종료일도 최소 시작일에 맞춰 보정한다.
+export function syncStartDateWithEndDate(
+  startDate: string,
+  currentEndDate: string,
+  setStartDate: (value: string) => void,
+  setEndDate: (value: string) => void
+) {
+  setStartDate(startDate);
+  if (!currentEndDate || currentEndDate < startDate) {
+    setEndDate(startDate);
+  }
+}
+
 // 여행 관리 API 요청에서 공통으로 처리하는 인증 만료와 기본 에러 메시지 처리다.
 export function handleManageApiError(
   error: unknown,

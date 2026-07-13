@@ -83,6 +83,7 @@ export function useTripManageSessionTrips({
     setAuthError("");
   }
 
+  // 기존 /owner 주소로 접근한 사용자는 현재 표준 경로인 /manage로 조용히 이동시킨다.
   useEffect(() => {
     if (!isLegacyOwnerRoute) return;
 
@@ -90,6 +91,7 @@ export function useTripManageSessionTrips({
     window.history.replaceState(null, "", `${nextPath}${window.location.search}${window.location.hash}`);
   }, [currentPath, isLegacyOwnerRoute]);
 
+  // 저장된 토큰은 앱 시작 시 한 번 검증한다. 실패하면 오래된 localStorage 세션을 폐기한다.
   useEffect(() => {
     if (!isManageRoute) return;
 
@@ -125,6 +127,7 @@ export function useTripManageSessionTrips({
     };
   }, [isManageRoute]);
 
+  // 인증된 관리자만 본인이 만든 여행 목록을 가져온다.
   useEffect(() => {
     if (!isManageRoute || !ownerAuth) return;
 
@@ -152,6 +155,7 @@ export function useTripManageSessionTrips({
     };
   }, [isManageRoute, ownerAuth]);
 
+  // 목록 갱신 후 선택했던 여행이 사라졌으면 상세 화면을 닫는다.
   useEffect(() => {
     if (!selectedOwnerTripID) return;
     if (ownerTrips.length > 0 && ownerTrips.every((ownerTrip) => ownerTrip.id !== selectedOwnerTripID)) {
@@ -159,6 +163,7 @@ export function useTripManageSessionTrips({
     }
   }, [ownerTrips, selectedOwnerTripID]);
 
+  // 로그인과 회원가입은 같은 폼을 사용하되 authMode로 API만 분기한다.
   async function submitAuth(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setAuthError("");
@@ -177,6 +182,7 @@ export function useTripManageSessionTrips({
     }
   }
 
+  // 여행 생성 성공 시 목록 맨 앞에 반영하고 바로 상세 편집 상태로 진입한다.
   async function submitNewTrip(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!ownerAuth) return;
@@ -221,6 +227,7 @@ export function useTripManageSessionTrips({
     }
   }
 
+  // 여행 기본 정보 수정은 현재 선택된 여행만 대상으로 하며, 성공 후 목록의 해당 항목만 교체한다.
   async function submitTripEdit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!ownerAuth || !selectedOwnerTrip) return;

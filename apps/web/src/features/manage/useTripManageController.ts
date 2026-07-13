@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { syncStartDateWithEndDate } from "./manageFormUtils";
 import type { TripManagePageProps } from "./manageTypes";
 import { useTripManageDetailData } from "./useTripManageDetailData";
 import {
@@ -23,6 +24,7 @@ export function useTripManageController({
   isLegacyOwnerRoute,
   isManageRoute,
 }: UseTripManageControllerParams): TripManagePageProps {
+  // 여행 생성/수정 입력 상태는 화면 상태만 담당하고, API 요청은 세션 훅에서 처리한다.
   const {
     newTripTitle,
     setNewTripTitle,
@@ -58,6 +60,7 @@ export function useTripManageController({
     resetTripEditForm,
     fillTripEditForm,
   } = useTripEditFormState();
+  // 인증 세션과 여행 목록은 상세 리소스보다 상위 개념이라 별도 훅에서 먼저 구성한다.
   const {
     authChecked,
     authEmail,
@@ -103,6 +106,7 @@ export function useTripManageController({
       tripEditTravelers,
     },
   });
+  // 선택 여행 안쪽의 일정/장소/항공편 폼 상태는 리소스별로 분리해 화면 섹션과 맞춘다.
   const {
     newScheduleDate,
     setNewScheduleDate,
@@ -265,6 +269,7 @@ export function useTripManageController({
       setNewFlightNumber,
     },
   });
+  // 공유 링크는 선택 여행과 인증 토큰만 알면 되므로 상세 데이터 조회 훅과 분리한다.
   const {
     copySelectedTripShareLink,
     createSelectedTripShareLink,
@@ -279,6 +284,7 @@ export function useTripManageController({
     selectedOwnerTrip,
   });
 
+  // 선택 여행이 바뀌면 상세 폼의 기준 날짜와 편집 모드를 새 여행 기준으로 다시 맞춘다.
   useEffect(() => {
     if (!selectedOwnerTrip) {
       resetTripEditForm();
@@ -294,6 +300,7 @@ export function useTripManageController({
     prepareFlightManageForm(selectedOwnerTrip.startDate);
   }, [selectedOwnerTrip]);
 
+  // 로그아웃은 인증뿐 아니라 현재 화면의 pending/submitting 상태까지 초기화해야 재로그인 시 잔상이 남지 않는다.
   function logoutOwner() {
     clearOwnerSession();
     resetShareLinkState();
@@ -306,6 +313,7 @@ export function useTripManageController({
     resetSessionMessagesForLogout();
   }
 
+  // TripManagePage는 순수 화면 컴포넌트라 여기서 모든 상태와 이벤트 핸들러를 props로 조립한다.
   return {
     auth: ownerAuth,
     authChecked,
@@ -381,12 +389,8 @@ export function useTripManageController({
     onAuthPasswordChange: setAuthPassword,
     onNewTripEndDateChange: setNewTripEndDate,
     onNewTripMemoChange: setNewTripMemo,
-    onNewTripStartDateChange: (value) => {
-      setNewTripStartDate(value);
-      if (!newTripEndDate || newTripEndDate < value) {
-        setNewTripEndDate(value);
-      }
-    },
+    onNewTripStartDateChange: (value) =>
+      syncStartDateWithEndDate(value, newTripEndDate, setNewTripStartDate, setNewTripEndDate),
     onNewTripTitleChange: setNewTripTitle,
     onNewTripTravelersChange: setNewTripTravelers,
     onNewScheduleDateChange: setNewScheduleDate,
@@ -406,12 +410,8 @@ export function useTripManageController({
     onNewFlightArrivalDateChange: setNewFlightArrivalDate,
     onNewFlightArrivalTimeChange: setNewFlightArrivalTime,
     onNewFlightDepartureAirportChange: setNewFlightDepartureAirport,
-    onNewFlightDepartureDateChange: (value) => {
-      setNewFlightDepartureDate(value);
-      if (!newFlightArrivalDate || newFlightArrivalDate < value) {
-        setNewFlightArrivalDate(value);
-      }
-    },
+    onNewFlightDepartureDateChange: (value) =>
+      syncStartDateWithEndDate(value, newFlightArrivalDate, setNewFlightDepartureDate, setNewFlightArrivalDate),
     onNewFlightDepartureTimeChange: setNewFlightDepartureTime,
     onNewFlightDirectionChange: setNewFlightDirection,
     onNewFlightLabelChange: setNewFlightLabel,
@@ -426,12 +426,8 @@ export function useTripManageController({
     onPlaceListEditingChange: setIsPlaceListEditing,
     onTripEditEndDateChange: setTripEditEndDate,
     onTripEditMemoChange: setTripEditMemo,
-    onTripEditStartDateChange: (value) => {
-      setTripEditStartDate(value);
-      if (!tripEditEndDate || tripEditEndDate < value) {
-        setTripEditEndDate(value);
-      }
-    },
+    onTripEditStartDateChange: (value) =>
+      syncStartDateWithEndDate(value, tripEditEndDate, setTripEditStartDate, setTripEditEndDate),
     onTripEditTitleChange: setTripEditTitle,
     onTripEditTravelersChange: setTripEditTravelers,
     onLogout: logoutOwner,

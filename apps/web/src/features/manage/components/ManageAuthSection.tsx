@@ -1,20 +1,5 @@
 import { LockKeyhole } from "lucide-react";
-import type { TripManagePageProps } from "../manageTypes";
-
-type ManageAuthSectionProps = Pick<
-  TripManagePageProps,
-  | "auth"
-  | "authChecked"
-  | "authEmail"
-  | "authError"
-  | "authMode"
-  | "authPassword"
-  | "authSubmitting"
-  | "onAuthEmailChange"
-  | "onAuthModeChange"
-  | "onAuthPasswordChange"
-  | "onSubmitAuth"
->;
+import type { ManageAuthSectionProps } from "../manageTypes";
 
 // 인증 화면만 분리한다. 로그인/회원가입 요청은 App.tsx가 넘긴 콜백이 처리한다.
 export function ManageAuthSection({

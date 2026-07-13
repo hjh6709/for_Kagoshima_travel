@@ -16,6 +16,7 @@ export function useScheduleManageFormState() {
   const [scheduleDeleteError, setScheduleDeleteError] = useState("");
   const [deletingScheduleID, setDeletingScheduleID] = useState("");
 
+  // 선택 여행이 없거나 닫혔을 때는 일정 입력과 편집 모드를 완전히 초기화한다.
   function resetScheduleManageForm() {
     setNewScheduleDate("");
     setNewScheduleTime("");
@@ -30,6 +31,7 @@ export function useScheduleManageFormState() {
     setDeletingScheduleID("");
   }
 
+  // 새 여행을 선택하면 일정 추가 날짜는 여행 시작일로 맞추고 나머지 입력값은 비운다.
   function prepareScheduleManageForm(startDate: string) {
     setNewScheduleDate(startDate);
     setNewScheduleTime("");

@@ -1,22 +1,5 @@
 import { PlusCircle } from "lucide-react";
-import type { TripManagePageProps } from "../manageTypes";
-
-type TripCreateSectionProps = Pick<
-  TripManagePageProps,
-  | "newTripEndDate"
-  | "newTripMemo"
-  | "newTripStartDate"
-  | "newTripTitle"
-  | "newTripTravelers"
-  | "onNewTripEndDateChange"
-  | "onNewTripMemoChange"
-  | "onNewTripStartDateChange"
-  | "onNewTripTitleChange"
-  | "onNewTripTravelersChange"
-  | "onSubmitNewTrip"
-  | "tripCreateError"
-  | "tripCreateSubmitting"
->;
+import type { TripCreateSectionProps } from "../manageTypes";
 
 // 새 여행 생성 폼만 담당한다. 생성 후 목록 갱신은 상위 상태 흐름을 따른다.
 export function TripCreateSection({

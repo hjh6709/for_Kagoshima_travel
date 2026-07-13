@@ -17,6 +17,7 @@ export function useFlightManageFormState() {
   const [flightCreateError, setFlightCreateError] = useState("");
   const [flightCreateSubmitting, setFlightCreateSubmitting] = useState(false);
 
+  // 선택 여행이 닫히면 항공편 입력값을 완전히 비운다.
   function resetFlightManageForm() {
     setNewFlightDirection("departure");
     setNewFlightLabel("");
@@ -32,6 +33,7 @@ export function useFlightManageFormState() {
     setFlightCreateError("");
   }
 
+  // 새 여행을 선택하면 출발/도착 날짜를 여행 시작일로 맞춰 바로 입력할 수 있게 한다.
   function prepareFlightManageForm(startDate: string) {
     setNewFlightDirection("departure");
     setNewFlightLabel("");

@@ -18,6 +18,7 @@ export function useTripEditFormState() {
   const [tripEditError, setTripEditError] = useState("");
   const [tripEditSubmitting, setTripEditSubmitting] = useState(false);
 
+  // 선택 여행이 없을 때 수정 폼에 이전 여행 정보가 남지 않도록 비운다.
   function resetTripEditForm() {
     setTripEditTitle("");
     setTripEditStartDate("");
@@ -27,6 +28,7 @@ export function useTripEditFormState() {
     setTripEditError("");
   }
 
+  // 여행을 선택하면 서버에서 받은 최신 기본 정보를 수정 폼의 초기값으로 채운다.
   function fillTripEditForm(trip: EditableTrip) {
     setTripEditTitle(trip.title);
     setTripEditStartDate(trip.startDate);
