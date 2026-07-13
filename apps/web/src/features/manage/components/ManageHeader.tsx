@@ -27,9 +27,9 @@ export function ManageHeader({ auth, onLogout }: ManageHeaderProps) {
           <h2>여행 정보를 입력하고 공유 링크를 만듭니다</h2>
           <p className="muted">여행을 선택하면 기본 정보, 장소, 항공편, 일정을 한 화면에서 편집할 수 있습니다.</p>
         </div>
-        <a className="primary-button" href="/">
+        <a className="primary-button" href="/demo">
           <UserRound size={18} />
-          여행 화면 보기
+          샘플 여행 화면 보기
         </a>
       </article>
     </>
