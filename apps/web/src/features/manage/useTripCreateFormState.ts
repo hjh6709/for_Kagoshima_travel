@@ -10,6 +10,7 @@ export function useTripCreateFormState() {
   const [tripCreateError, setTripCreateError] = useState("");
   const [tripCreateSubmitting, setTripCreateSubmitting] = useState(false);
 
+  // 생성 완료 후 다음 여행을 바로 입력할 수 있도록 사용자 입력값만 비운다.
   function resetTripCreateForm() {
     setNewTripTitle("");
     setNewTripStartDate("");

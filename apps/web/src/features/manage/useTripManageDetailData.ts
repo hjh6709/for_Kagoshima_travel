@@ -110,6 +110,7 @@ export function useTripManageDetailData({
       return;
     }
 
+    // 상세 화면은 일정/장소/항공편을 한 세트로 보여주므로 선택 여행 변경 시 함께 다시 조회한다.
     let cancelled = false;
     setOwnerDetailDataLoading(true);
     setOwnerDetailDataError("");
@@ -144,6 +145,7 @@ export function useTripManageDetailData({
     };
   }, [ownerAuth, selectedOwnerTrip]);
 
+  // 생성/삭제 액션은 리소스별 훅으로 위임하고, 여기서는 조회된 목록 state만 공유한다.
   const { deleteOwnerSchedule, submitNewSchedule } = useTripManageScheduleActions({
     clearOwnerSession,
     ownerAuth,

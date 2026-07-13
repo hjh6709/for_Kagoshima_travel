@@ -6,6 +6,8 @@ import type { PlaceCategory, ScheduleItem } from "../../types/travel";
 
 export type AuthMode = "login" | "register";
 
+// 화면 섹션이 실제로 사용하는 props 묶음이다.
+// 새 섹션을 추가할 때는 TripManagePage 전체를 넘기기보다 여기처럼 필요한 경계를 먼저 정의한다.
 export type ManageAuthSectionProps = {
   auth: AuthResponse | null;
   authChecked: boolean;
@@ -47,6 +49,8 @@ export type TripListSectionProps = {
   ownerTripsLoading: boolean;
 };
 
+// 선택 여행 상세 화면은 일정/장소/항공/공유/기본정보 섹션을 다시 감싸는 상위 섹션이다.
+// 하위 컴포넌트 props를 이 타입으로 모아 두면 controller의 반환 구조와 화면 연결 지점을 한곳에서 추적할 수 있다.
 export type SelectedTripDetailSectionProps = {
   deletingPlaceID: string;
   deletingScheduleID: string;
