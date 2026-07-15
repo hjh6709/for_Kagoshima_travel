@@ -48,7 +48,7 @@ export function ConciergeTab({
         </article>
 
         {/* 다국어 환율 & 서바이벌 회화 퀵 위젯 탑재 */}
-        <QuickTravelHelper destinationCountry={trip.destinationCountry} />
+        <QuickTravelHelper destinationCountry={trip.destinationCountry || "JP"} />
       </section>
     </section>
   );
