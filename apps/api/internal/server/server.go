@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 
+	"golang.org/x/time/rate"
+
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/db"
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/handler"
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/middleware"
@@ -17,6 +19,7 @@ type Server struct {
 	mux         *http.ServeMux
 	tripHandler *handler.TripHandler
 	authHandler *handler.AuthHandler
+	rateLimiter *middleware.RateLimiter
 }
 
 func New() *Server {
@@ -52,13 +55,14 @@ func New() *Server {
 		mux:         http.NewServeMux(),
 		tripHandler: handler.NewTripHandler(tripService),
 		authHandler: handler.NewAuthHandler(authService),
+		rateLimiter: middleware.NewRateLimiter(rate.Limit(5), 20),
 	}
 	s.registerRoutes(jwtSecret)
 	return s
 }
 
 func (s *Server) Routes() http.Handler {
-	return withCORS(s.mux)
+	return withCORS(s.rateLimiter.Limit(s.mux))
 }
 
 func (s *Server) registerRoutes(jwtSecret string) {
