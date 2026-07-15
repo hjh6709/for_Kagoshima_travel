@@ -22,8 +22,10 @@ export function getPlace(placeId?: string) {
 }
 
 export function getMapUrl(place?: ReturnType<typeof getPlace>) {
-  const fallback = place?.address || place?.name || "여행지";
-  return place?.googleMapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fallback)}`;
+  const destination = place?.latitude && place?.longitude
+    ? `${place.latitude},${place.longitude}`
+    : (place?.address || place?.name || "여행지");
+  return `https://www.google.com/maps/dir/?api=1&origin=current+location&destination=${encodeURIComponent(destination)}`;
 }
 
 function isDateValue(value: unknown): value is string {

@@ -77,9 +77,15 @@ export function ScheduleCard({
             </button>
           </div>
         </div>
-        <a className="secondary-button" href={mapUrl} rel="noopener noreferrer" target="_blank">
+        <a
+          className="secondary-button compact-button map-direction-button"
+          href={mapUrl}
+          rel="noopener noreferrer"
+          target="_blank"
+          style={{ width: "100%", justifyContent: "center", marginTop: "12px" }}
+        >
           <MapPin size={18} />
-          지도
+          현위치 길찾기
         </a>
       </div>
     </article>

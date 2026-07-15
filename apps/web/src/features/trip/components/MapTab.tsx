@@ -34,13 +34,13 @@ export function MapTab({ getMapUrl, places }: TripPageProps) {
             <div className="card-footer">
               <span>{placeCategoryLabels[place.category]}</span>
               <a
-                className="secondary-button compact-button"
+                className="secondary-button compact-button map-direction-button"
                 href={getMapUrl(place)}
                 rel="noopener noreferrer"
                 target="_blank"
               >
                 <MapPin size={18} />
-                보기
+                현위치 길찾기
               </a>
             </div>
           </article>
