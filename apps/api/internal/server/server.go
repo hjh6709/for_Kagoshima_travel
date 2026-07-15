@@ -16,10 +16,11 @@ import (
 )
 
 type Server struct {
-	mux         *http.ServeMux
-	tripHandler *handler.TripHandler
-	authHandler *handler.AuthHandler
-	rateLimiter *middleware.RateLimiter
+	mux              *http.ServeMux
+	tripHandler      *handler.TripHandler
+	authHandler      *handler.AuthHandler
+	checklistHandler *handler.ChecklistHandler
+	rateLimiter      *middleware.RateLimiter
 }
 
 func New() *Server {
@@ -30,6 +31,7 @@ func New() *Server {
 
 	var tripRepository repository.TripRepository
 	var userRepository repository.UserRepository
+	var checklistRepository repository.ChecklistRepository
 
 	if dbURL := os.Getenv("DATABASE_URL"); dbURL != "" {
 		pool, err := db.NewPool(dbURL)
@@ -42,20 +44,24 @@ func New() *Server {
 		log.Println("PostgreSQL 연결됨")
 		tripRepository = repository.NewPostgresTripRepository(pool)
 		userRepository = repository.NewPostgresUserRepository(pool)
+		checklistRepository = repository.NewPostgresChecklistRepository(pool)
 	} else {
 		log.Println("in-memory 리포지토리 사용 (DATABASE_URL 미설정)")
 		tripRepository = repository.NewMemoryTripRepository()
 		userRepository = repository.NewMemoryUserRepository()
+		checklistRepository = repository.NewMemoryChecklistRepository()
 	}
 
-	tripService := service.NewTripService(tripRepository)
+	tripService := service.NewTripService(tripRepository, checklistRepository)
 	authService := service.NewAuthService(userRepository, jwtSecret)
+	checklistService := service.NewChecklistService(checklistRepository, tripRepository)
 
 	s := &Server{
-		mux:         http.NewServeMux(),
-		tripHandler: handler.NewTripHandler(tripService),
-		authHandler: handler.NewAuthHandler(authService),
-		rateLimiter: middleware.NewRateLimiter(rate.Limit(5), 20),
+		mux:              http.NewServeMux(),
+		tripHandler:      handler.NewTripHandler(tripService),
+		authHandler:      handler.NewAuthHandler(authService),
+		checklistHandler: handler.NewChecklistHandler(checklistService),
+		rateLimiter:      middleware.NewRateLimiter(rate.Limit(5), 20),
 	}
 	s.registerRoutes(jwtSecret)
 	return s
@@ -97,6 +103,12 @@ func (s *Server) registerRoutes(jwtSecret string) {
 	s.mux.Handle("PATCH /api/trips/{tripID}/flights/{flightID}", requireAuth(http.HandlerFunc(s.tripHandler.UpdateFlight)))
 	s.mux.Handle("DELETE /api/trips/{tripID}/flights/{flightID}", requireAuth(http.HandlerFunc(s.tripHandler.DeleteFlight)))
 	s.mux.Handle("GET /api/trips/{tripID}/routes", requireAuth(http.HandlerFunc(s.tripHandler.ListRoutes)))
+
+	// 체크리스트 관련 엔드포인트
+	s.mux.Handle("GET /api/trips/{tripID}/checklists", requireAuth(http.HandlerFunc(s.checklistHandler.ListChecklist)))
+	s.mux.Handle("POST /api/trips/{tripID}/checklists", requireAuth(http.HandlerFunc(s.checklistHandler.CreateChecklistCustomItem)))
+	s.mux.Handle("PATCH /api/trips/checklists/{checklistID}", requireAuth(http.HandlerFunc(s.checklistHandler.UpdateChecklistItem)))
+	s.mux.Handle("DELETE /api/trips/checklists/{checklistID}", requireAuth(http.HandlerFunc(s.checklistHandler.DeleteChecklistItem)))
 }
 
 func withCORS(next http.Handler) http.Handler {

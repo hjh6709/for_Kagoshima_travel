@@ -208,14 +208,27 @@ export type SelectedTripDetailSectionProps = {
   shareLinkCopied: boolean;
   shareLinkError: string;
   shareLinkSubmitting: boolean;
-  tripEditEndDate: string;
-  tripEditError: string;
-  tripEditMemo: string;
-  tripEditStartDate: string;
-  tripEditSubmitting: boolean;
-  tripEditTitle: string;
-  tripEditTravelers: string;
-  tripEditDestinationCountry: string;
+	tripEditEndDate: string;
+	tripEditError: string;
+	tripEditMemo: string;
+	tripEditStartDate: string;
+	tripEditSubmitting: boolean;
+	tripEditTitle: string;
+	tripEditTravelers: string;
+	tripEditDestinationCountry: string;
+
+	// 체크리스트 고도화 필드
+	checklistItems: any[];
+	checklistLoading: boolean;
+	checklistError: string;
+	newChecklistTitle: string;
+	onNewChecklistTitleChange: (value: string) => void;
+	newChecklistCategory: "before" | "airport" | "daily" | "return";
+	onNewChecklistCategoryChange: (value: "before" | "airport" | "daily" | "return") => void;
+	checklistSubmitting: boolean;
+	onAddChecklistItem: (e: React.FormEvent) => void;
+	onToggleChecklistItem: (itemID: string, isCompleted: boolean) => void;
+	onDeleteChecklistItem: (itemID: string) => void;
 };
 
 // useTripManageController가 계산한 여행 관리 화면 입력값과 이벤트 핸들러를 섹션별 props로 전달한다.

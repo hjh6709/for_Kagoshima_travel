@@ -17,11 +17,15 @@ var (
 )
 
 type TripService struct {
-	tripRepository repository.TripRepository
+	tripRepository      repository.TripRepository
+	checklistRepository repository.ChecklistRepository
 }
 
-func NewTripService(tripRepository repository.TripRepository) *TripService {
-	return &TripService{tripRepository: tripRepository}
+func NewTripService(tripRepository repository.TripRepository, checklistRepository repository.ChecklistRepository) *TripService {
+	return &TripService{
+		tripRepository:      tripRepository,
+		checklistRepository: checklistRepository,
+	}
 }
 
 func (s *TripService) GetTrip(id string) (dto.TripResponse, error) {
@@ -113,12 +117,23 @@ func (s *TripService) GetSharedTrip(token string) (dto.SharedTripResponse, error
 	if err != nil {
 		return dto.SharedTripResponse{}, err
 	}
+
+	checklistItems, err := s.checklistRepository.FindByTrip(link.TripID)
+	if err != nil {
+		return dto.SharedTripResponse{}, err
+	}
+	sharedChecklist := make([]dto.ChecklistItemResponse, 0, len(checklistItems))
+	for _, item := range checklistItems {
+		sharedChecklist = append(sharedChecklist, mapChecklistItemResponse(item))
+	}
+
 	return dto.SharedTripResponse{
 		Trip:      mapPublicTripResponse(trip),
 		Schedules: schedules,
 		Places:    places,
 		Flights:   sharedFlights,
 		Routes:    routes,
+		Checklist: sharedChecklist,
 	}, nil
 }
 
@@ -456,6 +471,35 @@ func (s *TripService) ListRoutesForOwner(tripID, ownerID string) ([]dto.RouteRes
 	return s.ListRoutes(tripID)
 }
 
+type PresetItem struct {
+	Category           string
+	Title              string
+	DestinationCountry string
+}
+
+var defaultChecklistPresets = []PresetItem{
+	{Category: "before", Title: "여권"},
+	{Category: "before", Title: "로밍 또는 eSIM 확인"},
+	{Category: "before", Title: "보조배터리"},
+	{Category: "before", Title: "골프화와 장갑"},
+	{Category: "before", Title: "우비 또는 바람막이"},
+	{Category: "airport", Title: "항공권과 여권 확인"},
+	{Category: "daily", Title: "티오프 시간 확인"},
+	{Category: "daily", Title: "상비약 챙기기"},
+	{Category: "return", Title: "입국 전 짐과 선물 확인"},
+
+	// 일본 전용 필수 항목
+	{Category: "before", Title: "Visit Japan Web 동반가족 포함 사전 등록", DestinationCountry: "JP"},
+	{Category: "before", Title: "현금 및 100엔 동전지갑 준비", DestinationCountry: "JP"},
+	{Category: "before", Title: "110V 11자 돼지코 콘센트 플러그", DestinationCountry: "JP"},
+
+	// 중국 전용 필수 항목
+	{Category: "before", Title: "알리페이(Alipay)/위챗페이 앱 결제카드 사전 연동", DestinationCountry: "CN"},
+	{Category: "before", Title: "VPN 우회 프로그램(인스타/구글 접속용) 설치", DestinationCountry: "CN"},
+	{Category: "before", Title: "여권 사본 및 중국 무비자/비자 증빙 서류 지참", DestinationCountry: "CN"},
+	{Category: "airport", Title: "중국 기내 입국 신고서 작성용 필기도구 지참", DestinationCountry: "CN"},
+}
+
 func (s *TripService) CreateTrip(ownerID string, req dto.CreateTripRequest) (dto.TripResponse, error) {
 	if req.Title == "" || req.StartDate == "" || req.EndDate == "" {
 		return dto.TripResponse{}, ErrInvalidTrip
@@ -481,6 +525,31 @@ func (s *TripService) CreateTrip(ownerID string, req dto.CreateTripRequest) (dto
 	if err := s.tripRepository.Save(trip); err != nil {
 		return dto.TripResponse{}, err
 	}
+
+	// 기본 체크리스트 프리셋 자동 주입
+	presetItems := make([]model.ChecklistItem, 0)
+	for _, preset := range defaultChecklistPresets {
+		if preset.DestinationCountry == "" || preset.DestinationCountry == destCountry {
+			itemID, err := newID()
+			if err != nil {
+				return dto.TripResponse{}, err
+			}
+			presetItems = append(presetItems, model.ChecklistItem{
+				ID:                 itemID,
+				TripID:             id,
+				Category:           preset.Category,
+				Title:              preset.Title,
+				IsCompleted:        false,
+				Custom:             false,
+				DestinationCountry: preset.DestinationCountry,
+				CreatedAt:          time.Now().Add(time.Duration(len(presetItems)) * time.Millisecond),
+			})
+		}
+	}
+	if err := s.checklistRepository.SaveAll(presetItems); err != nil {
+		return dto.TripResponse{}, err
+	}
+
 	return mapTripResponse(trip), nil
 }
 

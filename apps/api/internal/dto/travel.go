@@ -156,9 +156,10 @@ type ShareLinkResponse struct {
 }
 
 type SharedTripResponse struct {
-	Trip      PublicTripResponse `json:"trip"`
-	Schedules []ScheduleResponse `json:"schedules"`
-	Places    []PlaceResponse    `json:"places"`
-	Flights   []FlightResponse   `json:"flights"`
-	Routes    []RouteResponse    `json:"routes"`
+	Trip      PublicTripResponse      `json:"trip"`
+	Schedules []ScheduleResponse      `json:"schedules"`
+	Places    []PlaceResponse         `json:"places"`
+	Flights   []FlightResponse        `json:"flights"`
+	Routes    []RouteResponse         `json:"routes"`
+	Checklist []ChecklistItemResponse `json:"checklist"`
 }
