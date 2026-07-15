@@ -9,8 +9,8 @@ import (
 // MemoryChecklistRepository는 데이터베이스 연결이 없거나 테스트 실행 시에 동작하는
 // 스레드 세이프(Thread-safe)한 인메모리 준비물 데이터 저장소 구현체입니다.
 type MemoryChecklistRepository struct {
-	mu    sync.RWMutex           // 동시성 접근 제어를 위한 RWMutex
-	items []model.ChecklistItem  // 준비물 데이터를 담는 메모리 슬라이스
+	mu    sync.RWMutex          // 동시성 접근 제어를 위한 RWMutex
+	items []model.ChecklistItem // 준비물 데이터를 담는 메모리 슬라이스
 }
 
 // NewMemoryChecklistRepository는 MemoryChecklistRepository를 초기화하여 반환합니다.
