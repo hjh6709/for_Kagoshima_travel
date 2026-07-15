@@ -9,6 +9,7 @@ import {
   isEndDateBeforeStartDate,
   optionalTrimmedText,
 } from "./manageFormUtils";
+import { isOnline } from "../../utils/offlineCache";
 
 type FlightFormState = {
   newFlightAirline: string;
@@ -74,6 +75,11 @@ export function useTripManageFlightActions({
   async function submitNewFlight(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!ownerAuth || !selectedOwnerTrip) return;
+
+    if (!isOnline()) {
+      flightForm.setFlightCreateError("네트워크 연결이 끊겼습니다. 오프라인 상태에서는 항공편을 추가할 수 없습니다.");
+      return;
+    }
 
     const label = flightForm.newFlightLabel.trim();
     const airline = optionalTrimmedText(flightForm.newFlightAirline);
@@ -141,6 +147,11 @@ export function useTripManageFlightActions({
     event.preventDefault();
     if (!ownerAuth || !selectedOwnerTrip || !flightForm.editingFlightID) return;
 
+    if (!isOnline()) {
+      flightForm.setFlightEditError("네트워크 연결이 끊겼습니다. 오프라인 상태에서는 항공편을 수정할 수 없습니다.");
+      return;
+    }
+
     const label = flightForm.editingFlightLabel.trim();
     const airline = flightForm.editingFlightAirline.trim();
     const flightNumber = flightForm.editingFlightNumber.trim();
@@ -205,6 +216,11 @@ export function useTripManageFlightActions({
   // 항공편 목록의 편집 모드에서 사용자가 선택한 항공편을 삭제한다.
   async function deleteOwnerFlight(flightID: string) {
     if (!ownerAuth || !selectedOwnerTrip) return;
+
+    if (!isOnline()) {
+      flightForm.setFlightDeleteError("네트워크 연결이 끊겼습니다. 오프라인 상태에서는 항공편을 삭제할 수 없습니다.");
+      return;
+    }
 
     const flight = ownerFlights.find((item) => item.id === flightID);
     const confirmed = window.confirm(flight ? `"${flight.label}" 항공편을 삭제할까요?` : "항공편을 삭제할까요?");

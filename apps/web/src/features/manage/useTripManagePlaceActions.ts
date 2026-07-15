@@ -4,6 +4,7 @@ import { createTripPlace, deleteTripPlace, updateTripPlace, type OwnerTrip, type
 import { sortSharedPlaces } from "../../shared/sort";
 import type { PlaceCategory } from "../../types/travel";
 import { handleManageApiError, optionalTrimmedText } from "./manageFormUtils";
+import { isOnline } from "../../utils/offlineCache";
 
 type PlaceFormState = {
   newPlaceAddress: string;
@@ -54,6 +55,11 @@ export function useTripManagePlaceActions({
     event.preventDefault();
     if (!ownerAuth || !selectedOwnerTrip) return;
 
+    if (!isOnline()) {
+      placeForm.setPlaceCreateError("네트워크 연결이 끊겼습니다. 오프라인 상태에서는 장소를 추가할 수 없습니다.");
+      return;
+    }
+
     const name = placeForm.newPlaceName.trim();
     const address = optionalTrimmedText(placeForm.newPlaceAddress);
     const googleMapsUrl = optionalTrimmedText(placeForm.newPlaceGoogleMapsURL);
@@ -97,6 +103,11 @@ export function useTripManagePlaceActions({
     event.preventDefault();
     if (!ownerAuth || !selectedOwnerTrip || !placeForm.editingPlaceID) return;
 
+    if (!isOnline()) {
+      placeForm.setPlaceEditError("네트워크 연결이 끊겼습니다. 오프라인 상태에서는 장소를 수정할 수 없습니다.");
+      return;
+    }
+
     const name = placeForm.editingPlaceName.trim();
     const address = optionalTrimmedText(placeForm.editingPlaceAddress);
     const googleMapsUrl = optionalTrimmedText(placeForm.editingPlaceGoogleMapsURL);
@@ -135,6 +146,11 @@ export function useTripManagePlaceActions({
   // 장소를 삭제하면 장소 목록과 새 일정의 연결 장소 선택 상태를 함께 정리한다.
   async function deleteOwnerPlace(placeID: string) {
     if (!ownerAuth || !selectedOwnerTrip) return;
+
+    if (!isOnline()) {
+      placeForm.setPlaceDeleteError("네트워크 연결이 끊겼습니다. 오프라인 상태에서는 장소를 삭제할 수 없습니다.");
+      return;
+    }
 
     const place = ownerPlaces.find((item) => item.id === placeID);
     const confirmed = window.confirm(
