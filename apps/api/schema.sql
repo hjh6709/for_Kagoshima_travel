@@ -16,6 +16,7 @@ CREATE TABLE trips (
     start_date  DATE NOT NULL,
     end_date    DATE NOT NULL,
     travelers   TEXT[] NOT NULL DEFAULT '{}',
+    destination_country TEXT NOT NULL DEFAULT 'JP',
     memo        TEXT,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()

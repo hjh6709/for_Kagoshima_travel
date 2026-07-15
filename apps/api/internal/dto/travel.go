@@ -1,19 +1,21 @@
 package dto
 
 type CreateTripRequest struct {
-	Title     string   `json:"title"`
-	StartDate string   `json:"startDate"`
-	EndDate   string   `json:"endDate"`
-	Travelers []string `json:"travelers"`
-	Memo      string   `json:"memo"`
+	Title              string   `json:"title"`
+	StartDate          string   `json:"startDate"`
+	EndDate            string   `json:"endDate"`
+	Travelers          []string `json:"travelers"`
+	DestinationCountry string   `json:"destinationCountry"`
+	Memo               string   `json:"memo"`
 }
 
 type UpdateTripRequest struct {
-	Title     *string  `json:"title"`
-	StartDate *string  `json:"startDate"`
-	EndDate   *string  `json:"endDate"`
-	Travelers []string `json:"travelers"`
-	Memo      *string  `json:"memo"`
+	Title              *string  `json:"title"`
+	StartDate          *string  `json:"startDate"`
+	EndDate            *string  `json:"endDate"`
+	Travelers          []string `json:"travelers"`
+	DestinationCountry *string  `json:"destinationCountry"`
+	Memo               *string  `json:"memo"`
 }
 
 type CreateScheduleRequest struct {
@@ -84,20 +86,22 @@ type UpdateFlightRequest struct {
 }
 
 type TripResponse struct {
-	ID        string   `json:"id"`
-	Title     string   `json:"title"`
-	StartDate string   `json:"startDate"`
-	EndDate   string   `json:"endDate"`
-	Travelers []string `json:"travelers"`
-	Memo      string   `json:"memo,omitempty"`
+	ID                 string   `json:"id"`
+	Title              string   `json:"title"`
+	StartDate          string   `json:"startDate"`
+	EndDate            string   `json:"endDate"`
+	Travelers          []string `json:"travelers"`
+	DestinationCountry string   `json:"destinationCountry"`
+	Memo               string   `json:"memo,omitempty"`
 }
 
 type PublicTripResponse struct {
-	ID        string   `json:"id"`
-	Title     string   `json:"title"`
-	StartDate string   `json:"startDate"`
-	EndDate   string   `json:"endDate"`
-	Travelers []string `json:"travelers"`
+	ID                 string   `json:"id"`
+	Title              string   `json:"title"`
+	StartDate          string   `json:"startDate"`
+	EndDate            string   `json:"endDate"`
+	Travelers          []string `json:"travelers"`
+	DestinationCountry string   `json:"destinationCountry"`
 }
 
 type ScheduleResponse struct {

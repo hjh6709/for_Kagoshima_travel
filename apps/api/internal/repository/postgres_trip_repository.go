@@ -20,10 +20,10 @@ func NewPostgresTripRepository(pool *pgxpool.Pool) *PostgresTripRepository {
 
 func (r *PostgresTripRepository) FindTrip(id string) (model.Trip, error) {
 	row := r.pool.QueryRow(context.Background(),
-		`SELECT id::text, owner_id::text, title, start_date::text, end_date::text, travelers, COALESCE(memo,'') FROM trips WHERE id = $1`, id)
+		`SELECT id::text, owner_id::text, title, start_date::text, end_date::text, travelers, destination_country, COALESCE(memo,'') FROM trips WHERE id = $1`, id)
 
 	var t model.Trip
-	if err := row.Scan(&t.ID, &t.OwnerID, &t.Title, &t.StartDate, &t.EndDate, &t.Travelers, &t.Memo); err != nil {
+	if err := row.Scan(&t.ID, &t.OwnerID, &t.Title, &t.StartDate, &t.EndDate, &t.Travelers, &t.DestinationCountry, &t.Memo); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return model.Trip{}, ErrNotFound
 		}
@@ -34,7 +34,7 @@ func (r *PostgresTripRepository) FindTrip(id string) (model.Trip, error) {
 
 func (r *PostgresTripRepository) FindByOwner(ownerID string) ([]model.Trip, error) {
 	rows, err := r.pool.Query(context.Background(),
-		`SELECT id::text, owner_id::text, title, start_date::text, end_date::text, travelers, COALESCE(memo,'') FROM trips WHERE owner_id = $1 ORDER BY start_date`, ownerID)
+		`SELECT id::text, owner_id::text, title, start_date::text, end_date::text, travelers, destination_country, COALESCE(memo,'') FROM trips WHERE owner_id = $1 ORDER BY start_date`, ownerID)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func (r *PostgresTripRepository) FindByOwner(ownerID string) ([]model.Trip, erro
 	result := make([]model.Trip, 0)
 	for rows.Next() {
 		var t model.Trip
-		if err := rows.Scan(&t.ID, &t.OwnerID, &t.Title, &t.StartDate, &t.EndDate, &t.Travelers, &t.Memo); err != nil {
+		if err := rows.Scan(&t.ID, &t.OwnerID, &t.Title, &t.StartDate, &t.EndDate, &t.Travelers, &t.DestinationCountry, &t.Memo); err != nil {
 			return nil, err
 		}
 		result = append(result, t)
@@ -69,8 +69,8 @@ func (r *PostgresTripRepository) FindShareLinkByToken(token string) (model.Share
 
 func (r *PostgresTripRepository) Save(trip model.Trip) error {
 	_, err := r.pool.Exec(context.Background(),
-		`INSERT INTO trips (id, owner_id, title, start_date, end_date, travelers, memo) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-		trip.ID, trip.OwnerID, trip.Title, trip.StartDate, trip.EndDate, trip.Travelers, trip.Memo)
+		`INSERT INTO trips (id, owner_id, title, start_date, end_date, travelers, destination_country, memo) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+		trip.ID, trip.OwnerID, trip.Title, trip.StartDate, trip.EndDate, trip.Travelers, trip.DestinationCountry, trip.Memo)
 	return err
 }
 
@@ -274,8 +274,8 @@ func (r *PostgresTripRepository) DeleteFlight(tripID, flightID string) error {
 
 func (r *PostgresTripRepository) Update(trip model.Trip) error {
 	tag, err := r.pool.Exec(context.Background(),
-		`UPDATE trips SET title=$1, start_date=$2, end_date=$3, travelers=$4, memo=$5, updated_at=NOW() WHERE id=$6`,
-		trip.Title, trip.StartDate, trip.EndDate, trip.Travelers, trip.Memo, trip.ID)
+		`UPDATE trips SET title=$1, start_date=$2, end_date=$3, travelers=$4, destination_country=$5, memo=$6, updated_at=NOW() WHERE id=$7`,
+		trip.Title, trip.StartDate, trip.EndDate, trip.Travelers, trip.DestinationCountry, trip.Memo, trip.ID)
 	if err != nil {
 		return err
 	}

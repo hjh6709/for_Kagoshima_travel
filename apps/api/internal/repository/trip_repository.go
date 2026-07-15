@@ -54,12 +54,13 @@ func NewMemoryTripRepository() *MemoryTripRepository {
 	return &MemoryTripRepository{
 		trips: []model.Trip{
 			{
-				ID:        tripID,
-				Title:     "나의 여행",
-				StartDate: "2026-06-27",
-				EndDate:   "2026-06-30",
-				Travelers: []string{"여행자 1", "여행자 2"},
-				Memo:      "샘플 데이터입니다. 실제 일정으로 교체 예정입니다.",
+				ID:                 tripID,
+				Title:              "나의 여행",
+				StartDate:          "2026-06-27",
+				EndDate:            "2026-06-30",
+				Travelers:          []string{"여행자 1", "여행자 2"},
+				DestinationCountry: "JP",
+				Memo:               "샘플 데이터입니다. 실제 일정으로 교체 예정입니다.",
 			},
 		},
 		schedules: []model.Schedule{

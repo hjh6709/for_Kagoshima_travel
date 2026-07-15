@@ -99,6 +99,16 @@ func (s *TripService) GetSharedTrip(token string) (dto.SharedTripResponse, error
 	if err != nil {
 		return dto.SharedTripResponse{}, err
 	}
+
+	// 공유 화면에서는 민감한 항공 메모 마스킹 처리
+	sharedFlights := make([]dto.FlightResponse, len(flights))
+	copy(sharedFlights, flights)
+	for i := range sharedFlights {
+		if sharedFlights[i].Memo != "" {
+			sharedFlights[i].Memo = "[공유용 화면에서는 비공개 처리됨]"
+		}
+	}
+
 	routes, err := s.ListRoutes(link.TripID)
 	if err != nil {
 		return dto.SharedTripResponse{}, err
@@ -107,7 +117,7 @@ func (s *TripService) GetSharedTrip(token string) (dto.SharedTripResponse, error
 		Trip:      mapPublicTripResponse(trip),
 		Schedules: schedules,
 		Places:    places,
-		Flights:   flights,
+		Flights:   sharedFlights,
 		Routes:    routes,
 	}, nil
 }
@@ -454,14 +464,22 @@ func (s *TripService) CreateTrip(ownerID string, req dto.CreateTripRequest) (dto
 	if err != nil {
 		return dto.TripResponse{}, err
 	}
+	destCountry := req.DestinationCountry
+	// [시니어 코드리뷰 반영]: 입력값 유효성 검증 및 예방 조치
+	// 신규 생성 요청 시 목적지 국가 정보가 없거나 허용되지 않는 국가 코드일 경우,
+	// 기존 여행 데이터베이스의 무결성을 깨뜨리지 않고 하위 호환성을 갖추기 위해 디폴트인 일본('JP')으로 안전하게 귀결시킵니다.
+	if destCountry == "" || (destCountry != "JP" && destCountry != "CN") {
+		destCountry = "JP"
+	}
 	trip := model.Trip{
-		ID:        id,
-		OwnerID:   ownerID,
-		Title:     req.Title,
-		StartDate: req.StartDate,
-		EndDate:   req.EndDate,
-		Travelers: req.Travelers,
-		Memo:      req.Memo,
+		ID:                 id,
+		OwnerID:            ownerID,
+		Title:              req.Title,
+		StartDate:          req.StartDate,
+		EndDate:            req.EndDate,
+		Travelers:          req.Travelers,
+		DestinationCountry: destCountry,
+		Memo:               req.Memo,
 	}
 	if err := s.tripRepository.Save(trip); err != nil {
 		return dto.TripResponse{}, err
@@ -500,6 +518,16 @@ func (s *TripService) UpdateTrip(id, ownerID string, req dto.UpdateTripRequest) 
 	}
 	if req.Travelers != nil {
 		trip.Travelers = req.Travelers
+	}
+	if req.DestinationCountry != nil {
+		dc := *req.DestinationCountry
+		// [시니어 코드리뷰 반영]: 입력값 유효성 검증 레이어 구축
+		// 클라이언트가 잘못된 국가 코드나 빈 문자열("")을 보낼 경우 데이터의 일관성이 깨질 위험이 있으므로,
+		// 지원 가능한 규격 국가(일본: JP, 중국: CN)인지 체크하고 아닐 경우 안전하게 디폴트값 'JP'로 보정 처리합니다.
+		if dc == "" || (dc != "JP" && dc != "CN") {
+			dc = "JP"
+		}
+		trip.DestinationCountry = dc
 	}
 	if req.Memo != nil {
 		trip.Memo = *req.Memo
@@ -541,22 +569,24 @@ func mapRepositoryError(err error) error {
 
 func mapTripResponse(trip model.Trip) dto.TripResponse {
 	return dto.TripResponse{
-		ID:        trip.ID,
-		Title:     trip.Title,
-		StartDate: trip.StartDate,
-		EndDate:   trip.EndDate,
-		Travelers: trip.Travelers,
-		Memo:      trip.Memo,
+		ID:                 trip.ID,
+		Title:              trip.Title,
+		StartDate:          trip.StartDate,
+		EndDate:            trip.EndDate,
+		Travelers:          trip.Travelers,
+		DestinationCountry: trip.DestinationCountry,
+		Memo:               trip.Memo,
 	}
 }
 
 func mapPublicTripResponse(trip model.Trip) dto.PublicTripResponse {
 	return dto.PublicTripResponse{
-		ID:        trip.ID,
-		Title:     trip.Title,
-		StartDate: trip.StartDate,
-		EndDate:   trip.EndDate,
-		Travelers: trip.Travelers,
+		ID:                 trip.ID,
+		Title:              trip.Title,
+		StartDate:          trip.StartDate,
+		EndDate:            trip.EndDate,
+		Travelers:          trip.Travelers,
+		DestinationCountry: trip.DestinationCountry,
 	}
 }
 
