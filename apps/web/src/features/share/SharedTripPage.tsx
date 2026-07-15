@@ -183,17 +183,55 @@ export function SharedTripPage({ error, loading, sharedTrip }: SharedTripPagePro
                             {place.address && <p className="muted">{place.address}</p>}
                             {place.recommendedReason && <p>{place.recommendedReason}</p>}
                           </div>
-                          {place.googleMapsUrl && (
-                            <a
-                              className="secondary-button compact-button"
-                              href={place.googleMapsUrl}
-                              rel="noreferrer"
-                              target="_blank"
-                            >
-                              <ExternalLink size={16} />
-                              지도 열기
-                            </a>
-                          )}
+                          
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "8px" }}>
+                            {place.googleMapsUrl && (
+                              <a
+                                className="secondary-button compact-button"
+                                href={place.googleMapsUrl}
+                                rel="noreferrer"
+                                target="_blank"
+                              >
+                                <ExternalLink size={16} />
+                                지도 열기
+                              </a>
+                            )}
+
+                            {/* 
+                              중국(CN) 여행의 경우, 구글 지도 차단 현상을 우회할 수 있도록 
+                              고덕지도(Amap) 및 장소 주소 복사 버튼을 제공합니다.
+                            */}
+                            {sharedTrip.trip.destinationCountry === "CN" && (
+                              <>
+                                {place.longitude && place.latitude && (
+                                  <a
+                                    className="secondary-button compact-button"
+                                    href={`https://uri.amap.com/marker?position=${place.longitude},${place.latitude}&name=${encodeURIComponent(place.name)}`}
+                                    rel="noreferrer"
+                                    target="_blank"
+                                    style={{
+                                      background: "rgba(251, 191, 36, 0.15)",
+                                      border: "1px solid rgba(251, 191, 36, 0.3)",
+                                      color: "#fbbf24",
+                                    }}
+                                  >
+                                    🗺️ 고덕지도
+                                  </a>
+                                )}
+                                <button
+                                  className="secondary-button compact-button"
+                                  onClick={() => {
+                                    const copyString = `${place.name}${place.address ? ` (${place.address})` : ""}`;
+                                    navigator.clipboard.writeText(copyString);
+                                    alert("장소 이름과 주소가 복사되었습니다! 고덕지도 앱 등에 붙여넣어 검색하세요.");
+                                  }}
+                                  type="button"
+                                >
+                                  📋 정보 복사
+                                </button>
+                              </>
+                            )}
+                          </div>
                         </article>
                       ))}
                     </div>

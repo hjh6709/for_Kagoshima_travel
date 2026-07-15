@@ -60,7 +60,7 @@ export function SelectedTripDetailSection(props: SelectedTripDetailSectionProps)
 
         <ManagePlaceCreateForm {...props} />
 
-        <ManagePlaceList {...props} />
+        <ManagePlaceList {...props} destinationCountry={selectedOwnerTrip.destinationCountry} />
 
         <ManageFlightCreateForm
           {...props}

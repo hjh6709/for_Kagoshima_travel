@@ -93,6 +93,8 @@ export type SharedPlace = {
   address?: string;
   googleMapsUrl?: string;
   recommendedReason?: string;
+  latitude?: number;
+  longitude?: number;
 };
 
 export type SharedFlight = {
