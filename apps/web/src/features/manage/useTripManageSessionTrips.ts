@@ -190,8 +190,7 @@ export function useTripManageSessionTrips({
     event.preventDefault();
     if (!ownerAuth) return;
 
-    // [시니어 코드리뷰 반영]: 오프라인 환경 쓰기 동작 방어 가드
-    // 네트워크 단절 상태일 때는 API 호출을 원천 차단하여 로컬 캐시와의 데이터 싱크 불일치 및 무의미한 페일백을 방지합니다.
+    // 오프라인 상태일 때는 API 전송을 사전에 차단하여 로컬 캐시와의 상태 불일치 방지
     if (!isOnline()) {
       tripCreateForm.setTripCreateError("네트워크 연결이 끊겼습니다. 오프라인 상태에서는 여행을 생성할 수 없습니다.");
       return;
@@ -243,8 +242,7 @@ export function useTripManageSessionTrips({
     event.preventDefault();
     if (!ownerAuth || !selectedOwnerTrip) return;
 
-    // [시니어 코드리뷰 반영]: 오프라인 환경 쓰기 동작 방어 가드
-    // 네트워크 단절 상태일 때는 API 수정 호출을 사전에 차단하여 상태 불일치 리스크를 미연에 예방합니다.
+    // 오프라인 상태일 때는 API 전송을 사전에 차단하여 로컬 캐시와의 상태 불일치 방지
     if (!isOnline()) {
       tripEditForm.setTripEditError("네트워크 연결이 끊겼습니다. 오프라인 상태에서는 여행 정보를 수정할 수 없습니다.");
       return;
