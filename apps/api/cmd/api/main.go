@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/joho/godotenv"
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/server"
+	"github.com/joho/godotenv"
 )
 
 func main() {

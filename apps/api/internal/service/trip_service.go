@@ -99,7 +99,7 @@ func (s *TripService) GetSharedTrip(token string) (dto.SharedTripResponse, error
 	if err != nil {
 		return dto.SharedTripResponse{}, err
 	}
-	
+
 	// 공유 화면에서는 민감한 항공 메모 마스킹 처리
 	sharedFlights := make([]dto.FlightResponse, len(flights))
 	copy(sharedFlights, flights)
