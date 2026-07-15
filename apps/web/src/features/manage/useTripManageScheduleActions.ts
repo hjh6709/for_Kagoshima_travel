@@ -65,6 +65,8 @@ export function useTripManageScheduleActions({
     event.preventDefault();
     if (!ownerAuth || !selectedOwnerTrip) return;
 
+    // [시니어 코드리뷰 반영]: 오프라인 환경 쓰기 동작 방어 가드
+    // 오프라인 상태일 때는 일정 생성 API 전송을 사전에 차단하여 에러 및 데이터 손실 상태를 방지합니다.
     if (!isOnline()) {
       scheduleForm.setScheduleCreateError("네트워크 연결이 끊겼습니다. 오프라인 상태에서는 일정을 추가할 수 없습니다.");
       return;
@@ -120,6 +122,8 @@ export function useTripManageScheduleActions({
     event.preventDefault();
     if (!ownerAuth || !selectedOwnerTrip || !scheduleForm.editingScheduleID) return;
 
+    // [시니어 코드리뷰 반영]: 오프라인 환경 쓰기 동작 방어 가드
+    // 오프라인 상태일 때는 일정 수정 API 요청을 사전에 차단하여 로컬-서버 상태 불일치를 방지합니다.
     if (!isOnline()) {
       scheduleForm.setScheduleEditError("네트워크 연결이 끊겼습니다. 오프라인 상태에서는 일정을 수정할 수 없습니다.");
       return;
@@ -176,6 +180,8 @@ export function useTripManageScheduleActions({
   async function deleteOwnerSchedule(scheduleID: string) {
     if (!ownerAuth || !selectedOwnerTrip) return;
 
+    // [시니어 코드리뷰 반영]: 오프라인 환경 쓰기 동작 방어 가드
+    // 오프라인 상태일 때는 일정 삭제 API 요청을 전송하지 않도록 사전에 방어합니다.
     if (!isOnline()) {
       scheduleForm.setScheduleDeleteError("네트워크 연결이 끊겼습니다. 오프라인 상태에서는 일정을 삭제할 수 없습니다.");
       return;
