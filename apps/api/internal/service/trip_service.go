@@ -465,7 +465,8 @@ func (s *TripService) CreateTrip(ownerID string, req dto.CreateTripRequest) (dto
 		return dto.TripResponse{}, err
 	}
 	destCountry := req.DestinationCountry
-	if destCountry == "" {
+	// 빈 문자열이거나 지원하지 않는 규격 외 국가 코드인 경우 디폴트 'JP'로 자동 보정
+	if destCountry == "" || (destCountry != "JP" && destCountry != "CN") {
 		destCountry = "JP"
 	}
 	trip := model.Trip{
@@ -517,7 +518,12 @@ func (s *TripService) UpdateTrip(id, ownerID string, req dto.UpdateTripRequest) 
 		trip.Travelers = req.Travelers
 	}
 	if req.DestinationCountry != nil {
-		trip.DestinationCountry = *req.DestinationCountry
+		dc := *req.DestinationCountry
+		// 빈 문자열이거나 지원하지 않는 규격 외 국가 코드인 경우 디폴트 'JP'로 자동 보정
+		if dc == "" || (dc != "JP" && dc != "CN") {
+			dc = "JP"
+		}
+		trip.DestinationCountry = dc
 	}
 	if req.Memo != nil {
 		trip.Memo = *req.Memo
