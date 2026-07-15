@@ -25,10 +25,14 @@ cp apps/api/.env.example apps/api/.env
 Docker Compose로 PostgreSQL을 사용할 경우 `apps/api/.env`의 `DATABASE_URL`은 아래 값을 사용합니다.
 
 ```env
+# 1. 로컬 Docker 컨테이너 DB 사용 시
 DATABASE_URL=postgres://postgres:postgres@localhost:5433/kagoshima_travel?sslmode=disable
+
+# 2. 원격 Supabase 개발용 DB 연결 시 (추천)
+DATABASE_URL=postgresql://postgres.[Project-ID]:[PW]@aws-1-ap-northeast-2.pooler.supabase.com:6543/postgres
 ```
 
-## DB 실행
+## DB 실행 (로컬 DB 구동 시만 해당)
 
 ```bash
 docker compose up -d postgres
