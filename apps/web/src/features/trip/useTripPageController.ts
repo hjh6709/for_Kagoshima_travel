@@ -67,7 +67,12 @@ export function useTripPageController(): TripPageProps {
   );
   const completedScheduleCount = selectedSchedules.filter((item) => completedSchedules[item.id]).length;
   const allChecklist = useMemo(
-    () => [...checklist.filter((item) => !hiddenChecklistIDs.includes(item.id)), ...customChecklistItems],
+    () => [
+      ...checklist
+        .filter((item) => !item.destinationCountry || item.destinationCountry === trip.destinationCountry)
+        .filter((item) => !hiddenChecklistIDs.includes(item.id)),
+      ...customChecklistItems,
+    ],
     [customChecklistItems, hiddenChecklistIDs]
   );
   const completedCount = allChecklist.filter((item) => checkedItems[item.id]).length;

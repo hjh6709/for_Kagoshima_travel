@@ -85,6 +85,7 @@ export type ChecklistItem = {
   id: string;
   category: "before" | "airport" | "daily" | "return";
   title: string;
+  destinationCountry?: string;
   memo?: string;
 };
 
