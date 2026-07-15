@@ -99,6 +99,16 @@ func (s *TripService) GetSharedTrip(token string) (dto.SharedTripResponse, error
 	if err != nil {
 		return dto.SharedTripResponse{}, err
 	}
+	
+	// 공유 화면에서는 민감한 항공 메모 마스킹 처리
+	sharedFlights := make([]dto.FlightResponse, len(flights))
+	copy(sharedFlights, flights)
+	for i := range sharedFlights {
+		if sharedFlights[i].Memo != "" {
+			sharedFlights[i].Memo = "[공유용 화면에서는 비공개 처리됨]"
+		}
+	}
+
 	routes, err := s.ListRoutes(link.TripID)
 	if err != nil {
 		return dto.SharedTripResponse{}, err
@@ -107,7 +117,7 @@ func (s *TripService) GetSharedTrip(token string) (dto.SharedTripResponse, error
 		Trip:      mapPublicTripResponse(trip),
 		Schedules: schedules,
 		Places:    places,
-		Flights:   flights,
+		Flights:   sharedFlights,
 		Routes:    routes,
 	}, nil
 }
@@ -454,14 +464,19 @@ func (s *TripService) CreateTrip(ownerID string, req dto.CreateTripRequest) (dto
 	if err != nil {
 		return dto.TripResponse{}, err
 	}
+	destCountry := req.DestinationCountry
+	if destCountry == "" {
+		destCountry = "JP"
+	}
 	trip := model.Trip{
-		ID:        id,
-		OwnerID:   ownerID,
-		Title:     req.Title,
-		StartDate: req.StartDate,
-		EndDate:   req.EndDate,
-		Travelers: req.Travelers,
-		Memo:      req.Memo,
+		ID:                 id,
+		OwnerID:            ownerID,
+		Title:              req.Title,
+		StartDate:          req.StartDate,
+		EndDate:            req.EndDate,
+		Travelers:          req.Travelers,
+		DestinationCountry: destCountry,
+		Memo:               req.Memo,
 	}
 	if err := s.tripRepository.Save(trip); err != nil {
 		return dto.TripResponse{}, err
@@ -500,6 +515,9 @@ func (s *TripService) UpdateTrip(id, ownerID string, req dto.UpdateTripRequest) 
 	}
 	if req.Travelers != nil {
 		trip.Travelers = req.Travelers
+	}
+	if req.DestinationCountry != nil {
+		trip.DestinationCountry = *req.DestinationCountry
 	}
 	if req.Memo != nil {
 		trip.Memo = *req.Memo
@@ -541,22 +559,24 @@ func mapRepositoryError(err error) error {
 
 func mapTripResponse(trip model.Trip) dto.TripResponse {
 	return dto.TripResponse{
-		ID:        trip.ID,
-		Title:     trip.Title,
-		StartDate: trip.StartDate,
-		EndDate:   trip.EndDate,
-		Travelers: trip.Travelers,
-		Memo:      trip.Memo,
+		ID:                 trip.ID,
+		Title:              trip.Title,
+		StartDate:          trip.StartDate,
+		EndDate:            trip.EndDate,
+		Travelers:          trip.Travelers,
+		DestinationCountry: trip.DestinationCountry,
+		Memo:               trip.Memo,
 	}
 }
 
 func mapPublicTripResponse(trip model.Trip) dto.PublicTripResponse {
 	return dto.PublicTripResponse{
-		ID:        trip.ID,
-		Title:     trip.Title,
-		StartDate: trip.StartDate,
-		EndDate:   trip.EndDate,
-		Travelers: trip.Travelers,
+		ID:                 trip.ID,
+		Title:              trip.Title,
+		StartDate:          trip.StartDate,
+		EndDate:            trip.EndDate,
+		Travelers:          trip.Travelers,
+		DestinationCountry: trip.DestinationCountry,
 	}
 }
 

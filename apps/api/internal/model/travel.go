@@ -1,13 +1,14 @@
 package model
 
 type Trip struct {
-	ID        string   `json:"id"`
-	OwnerID   string   `json:"ownerId"`
-	Title     string   `json:"title"`
-	StartDate string   `json:"startDate"`
-	EndDate   string   `json:"endDate"`
-	Travelers []string `json:"travelers"`
-	Memo      string   `json:"memo,omitempty"`
+	ID                 string   `json:"id"`
+	OwnerID            string   `json:"ownerId"`
+	Title              string   `json:"title"`
+	StartDate          string   `json:"startDate"`
+	EndDate            string   `json:"endDate"`
+	Travelers          []string `json:"travelers"`
+	DestinationCountry string   `json:"destinationCountry"`
+	Memo               string   `json:"memo,omitempty"`
 }
 
 type Schedule struct {

@@ -5,10 +5,15 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/joho/godotenv"
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/server"
 )
 
 func main() {
+	if err := godotenv.Load(); err != nil {
+		log.Println(".env file not found, using system environment variables")
+	}
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
