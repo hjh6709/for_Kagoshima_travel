@@ -1,4 +1,4 @@
-import { ExternalLink, Plane, Compass, CalendarRange, Users, MapPin } from "lucide-react";
+import { ExternalLink, Plane, Compass, CalendarRange, Users } from "lucide-react";
 import { useEffect, useMemo } from "react";
 import type { SharedTripResponse } from "../../api/trips";
 import { formatKoreanDate, formatShortDate } from "../../shared/date";
