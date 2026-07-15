@@ -526,7 +526,11 @@ button:disabled {
 .empty-state-card {
   display: grid;
   gap: 10px;
-  place-items: start;
+  place-items: center;
+  text-align: center;
+  padding: 32px 24px;
+  background: linear-gradient(135deg, var(--c-surface) 0%, rgba(250, 248, 245, 0.5) 100%);
+  border: 1px dashed rgba(28, 50, 37, 0.15) !important;
 }
 
 .eyebrow {

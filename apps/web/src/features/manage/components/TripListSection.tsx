@@ -1,4 +1,4 @@
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Compass } from "lucide-react";
 import { formatKoreanDate } from "../../../shared/date";
 import type { TripListSectionProps } from "../manageTypes";
 
@@ -22,7 +22,9 @@ export function TripListSection({
 
       {!ownerTripsLoading && !ownerTripsError && ownerTrips.length === 0 && (
         <article className="info-card empty-state-card">
-          <PlusCircle size={28} />
+          <div className="brand-badge-circle" style={{ width: "44px", height: "44px", marginBottom: "8px" }}>
+            <Compass size={22} className="auth-hero-icon" />
+          </div>
           <h2>아직 만든 여행이 없습니다</h2>
           <p className="muted">아래 폼에서 첫 여행을 만들면 이 목록에 바로 표시됩니다.</p>
         </article>
