@@ -5,6 +5,7 @@ type EditableTrip = {
   startDate: string;
   endDate: string;
   travelers: string[];
+  destinationCountry?: string;
   memo?: string;
 };
 
@@ -14,6 +15,7 @@ export function useTripEditFormState() {
   const [tripEditStartDate, setTripEditStartDate] = useState("");
   const [tripEditEndDate, setTripEditEndDate] = useState("");
   const [tripEditTravelers, setTripEditTravelers] = useState("");
+  const [tripEditDestinationCountry, setTripEditDestinationCountry] = useState("JP");
   const [tripEditMemo, setTripEditMemo] = useState("");
   const [tripEditError, setTripEditError] = useState("");
   const [tripEditSubmitting, setTripEditSubmitting] = useState(false);
@@ -24,6 +26,7 @@ export function useTripEditFormState() {
     setTripEditStartDate("");
     setTripEditEndDate("");
     setTripEditTravelers("");
+    setTripEditDestinationCountry("JP");
     setTripEditMemo("");
     setTripEditError("");
   }
@@ -34,6 +37,7 @@ export function useTripEditFormState() {
     setTripEditStartDate(trip.startDate);
     setTripEditEndDate(trip.endDate);
     setTripEditTravelers(trip.travelers.join(", "));
+    setTripEditDestinationCountry(trip.destinationCountry ?? "JP");
     setTripEditMemo(trip.memo ?? "");
     setTripEditError("");
   }
@@ -47,6 +51,8 @@ export function useTripEditFormState() {
     setTripEditEndDate,
     tripEditTravelers,
     setTripEditTravelers,
+    tripEditDestinationCountry,
+    setTripEditDestinationCountry,
     tripEditMemo,
     setTripEditMemo,
     tripEditError,

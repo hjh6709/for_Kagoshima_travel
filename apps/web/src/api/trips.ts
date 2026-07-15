@@ -6,6 +6,7 @@ export type OwnerTrip = {
   startDate: string;
   endDate: string;
   travelers: string[];
+  destinationCountry: string;
   memo?: string;
 };
 
@@ -14,6 +15,7 @@ export type CreateTripPayload = {
   startDate: string;
   endDate: string;
   travelers: string[];
+  destinationCountry?: string;
   memo?: string;
 };
 
@@ -70,6 +72,7 @@ export type PublicTrip = {
   startDate: string;
   endDate: string;
   travelers: string[];
+  destinationCountry: string;
 };
 
 export type SharedSchedule = {

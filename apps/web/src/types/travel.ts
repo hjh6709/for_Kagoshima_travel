@@ -15,6 +15,7 @@ export type Trip = {
   startDate: string;
   endDate: string;
   travelers: string[];
+  destinationCountry?: string;
   memo?: string;
 };
 
@@ -41,7 +42,8 @@ export type UsefulPhrase = {
   id: string;
   situation: string;
   korean: string;
-  japanese: string;
+  japanese?: string;
+  chinese?: string;
 };
 
 export type ScheduleItem = {
