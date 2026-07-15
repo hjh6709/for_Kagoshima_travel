@@ -167,6 +167,16 @@ button:disabled {
   font-size: 15px;
   font-weight: 700;
   padding: 10px 12px;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+}
+
+.auth-form input:focus,
+.auth-form textarea:focus,
+.auth-form select:focus {
+  outline: none;
+  border-color: var(--c-gold);
+  box-shadow: 0 0 0 3px rgba(169, 132, 70, 0.2);
+  background: var(--c-surface);
 }
 
 .auth-form select {
@@ -564,11 +574,37 @@ p {
 .emergency-card,
 .place-card,
 .list-card,
-.schedule-card {
+.schedule-card,
+.flight-card,
+.owner-trip-card,
+.owner-linked-card {
   background: var(--c-surface);
   border: 1px solid rgba(36, 48, 47, 0.1);
   border-radius: 8px;
   box-shadow: 0 10px 26px rgba(28, 50, 37, 0.08);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hero-card:hover,
+.info-card:hover,
+.emergency-card:hover,
+.place-card:hover,
+.list-card:hover,
+.schedule-card:hover,
+.flight-card:hover,
+.owner-trip-card:hover,
+.owner-linked-card:hover,
+.hero-card:active,
+.info-card:active,
+.emergency-card:active,
+.place-card:active,
+.list-card:active,
+.schedule-card:active,
+.flight-card:active,
+.owner-trip-card:active,
+.owner-linked-card:active {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 34px rgba(28, 50, 37, 0.12);
 }
 
 .hero-card {
@@ -628,14 +664,12 @@ p {
 }
 
 .secondary-button {
-  margin-top: 12px;
   color: var(--c-green);
   background: var(--c-green-light);
   padding: 10px 14px;
 }
 
 .danger-button {
-  margin-top: 12px;
   color: var(--c-danger);
   background: var(--c-danger-light);
   padding: 10px 14px;
