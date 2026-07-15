@@ -10,6 +10,7 @@ import { ManageScheduleList } from "./ManageScheduleList";
 import { ManageShareActions } from "./ManageShareActions";
 import { TripBasicInfoForm } from "./TripBasicInfoForm";
 import { ManageChecklistSection } from "./ManageChecklistSection";
+import { ChinaPaymentHelper } from "./ChinaPaymentHelper";
 
 // 선택한 여행의 상세 관리 화면만 담당한다. 실제 저장/삭제 동작은 상위에서 받은 콜백으로 처리한다.
 export function SelectedTripDetailSection(props: SelectedTripDetailSectionProps) {
@@ -51,6 +52,8 @@ export function SelectedTripDetailSection(props: SelectedTripDetailSectionProps)
         </div>
 
         <ManageDetailStepGuide />
+
+        {selectedOwnerTrip.destinationCountry === "CN" && <ChinaPaymentHelper />}
 
         {/* 상세 섹션들은 같은 선택 여행 컨텍스트를 공유하므로 공통 props를 넘기고 각 컴포넌트 타입에서 필요한 값만 사용한다. */}
         <TripBasicInfoForm {...props} />
