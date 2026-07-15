@@ -1,10 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VM_IP="140.245.90.93"
+# 로컬 .env 파일 환경변수 로드
+if [ -f .env ]; then
+    export $(grep -v '^#' .env | xargs)
+fi
+
+VM_IP=${OCI_VM_IP:-""}
 VM_USER="opc"
-SSH_KEY="/Users/hanjeonghyun/.ssh/oracle_travel_api"
+SSH_KEY=${OCI_SSH_KEY:-"/Users/hanjeonghyun/.ssh/oracle_travel_api"}
 TARGET_DIR="/home/opc/travel-api"
+
+if [ -z "$VM_IP" ]; then
+    echo "🚨 에러: 로컬 .env 파일에 OCI_VM_IP 환경변수가 지정되지 않았습니다!"
+    exit 1
+fi
 
 echo "=== 1. Go API 빌드 시작 (target: Linux ARM64) ==="
 cd apps/api
