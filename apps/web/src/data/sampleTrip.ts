@@ -202,6 +202,17 @@ export const checklist: ChecklistItem[] = [
   { id: "check-tee-time", category: "daily", title: "티오프 시간 확인" },
   { id: "check-medicine", category: "daily", title: "상비약 챙기기" },
   { id: "check-souvenir", category: "return", title: "입국 전 짐과 선물 확인" },
+
+  // 일본 전용 필수 항목
+  { id: "check-jp-vjw", category: "before", title: "Visit Japan Web 동반가족 포함 사전 등록", destinationCountry: "JP" },
+  { id: "check-jp-coin", category: "before", title: "현금 및 100엔 동전지갑 준비", destinationCountry: "JP" },
+  { id: "check-jp-piggy", category: "before", title: "110V 11자 돼지코 콘센트 플러그", destinationCountry: "JP" },
+
+  // 중국 전용 필수 항목
+  { id: "check-cn-alipay", category: "before", title: "알리페이(Alipay)/위챗페이 앱 결제카드 사전 연동", destinationCountry: "CN" },
+  { id: "check-cn-vpn", category: "before", title: "VPN 우회 프로그램(인스타/구글 접속용) 설치", destinationCountry: "CN" },
+  { id: "check-cn-visa", category: "before", title: "여권 사본 및 중국 무비자/비자 증빙 서류 지참", destinationCountry: "CN" },
+  { id: "check-cn-card", category: "airport", title: "중국 기내 입국 신고서 작성용 필기도구 지참", destinationCountry: "CN" },
 ];
 
 export const emergencies: EmergencyInfo[] = [
