@@ -33,9 +33,9 @@ func DiscordAlert(next http.Handler) http.Handler {
 			if err := recover(); err != nil {
 				stack := debug.Stack()
 				errMsg := fmt.Sprintf("%v", err)
-				
+
 				sendDiscordAlert(webhookURL, r, errMsg, string(stack))
-				
+
 				w.Header().Set("Content-Type", "application/json; charset=utf-8")
 				w.WriteHeader(http.StatusInternalServerError)
 				_, _ = w.Write([]byte(`{"error":"Internal Server Error"}`))
