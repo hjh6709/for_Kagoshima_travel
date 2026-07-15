@@ -82,7 +82,7 @@ export function SharedTripPage({ error, loading, sharedTrip }: SharedTripPagePro
                       <p className="muted">공유된 일정이 없습니다.</p>
                     </article>
                   ) : (
-                    <div className="card-stack">
+                    <div className="card-stack timeline-stack">
                       {sharedTrip.schedules.map((schedule) => {
                         const place = placeByID.get(schedule.placeId ?? "");
                         return (
