@@ -16,6 +16,7 @@ type TripCreateFormState = {
   newTripStartDate: string;
   newTripTitle: string;
   newTripTravelers: string;
+  newTripDestinationCountry: string;
   resetTripCreateForm: () => void;
   setTripCreateError: Dispatch<SetStateAction<string>>;
   setTripCreateSubmitting: Dispatch<SetStateAction<boolean>>;
@@ -29,6 +30,7 @@ type TripEditFormState = {
   tripEditStartDate: string;
   tripEditTitle: string;
   tripEditTravelers: string;
+  tripEditDestinationCountry: string;
 };
 
 type UseTripManageSessionTripsParams = {
@@ -210,6 +212,7 @@ export function useTripManageSessionTrips({
         startDate,
         endDate,
         travelers,
+        destinationCountry: tripCreateForm.newTripDestinationCountry,
         memo,
       });
       setOwnerTrips((currentTrips) => [createdTrip, ...currentTrips.filter((item) => item.id !== createdTrip.id)]);
@@ -255,6 +258,7 @@ export function useTripManageSessionTrips({
         startDate,
         endDate,
         travelers,
+        destinationCountry: tripEditForm.tripEditDestinationCountry,
         memo,
       });
       setOwnerTrips((currentTrips) =>

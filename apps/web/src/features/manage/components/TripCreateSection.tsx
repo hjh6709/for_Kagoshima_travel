@@ -8,11 +8,13 @@ export function TripCreateSection({
   newTripStartDate,
   newTripTitle,
   newTripTravelers,
+  newTripDestinationCountry,
   onNewTripEndDateChange,
   onNewTripMemoChange,
   onNewTripStartDateChange,
   onNewTripTitleChange,
   onNewTripTravelersChange,
+  onNewTripDestinationCountryChange,
   onSubmitNewTrip,
   tripCreateError,
   tripCreateSubmitting,
@@ -36,6 +38,17 @@ export function TripCreateSection({
             type="text"
             value={newTripTitle}
           />
+        </label>
+
+        <label>
+          목적지 국가
+          <select
+            onChange={(event) => onNewTripDestinationCountryChange(event.target.value)}
+            value={newTripDestinationCountry}
+          >
+            <option value="JP">일본 (엔화/일어 지원)</option>
+            <option value="CN">중국 (위안화/중국어 지원)</option>
+          </select>
         </label>
 
         <div className="form-grid-two">

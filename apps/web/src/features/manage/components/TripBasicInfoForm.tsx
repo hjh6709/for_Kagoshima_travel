@@ -9,6 +9,7 @@ type TripBasicInfoFormProps = Pick<
   | "onTripEditStartDateChange"
   | "onTripEditTitleChange"
   | "onTripEditTravelersChange"
+  | "onTripEditDestinationCountryChange"
   | "tripEditEndDate"
   | "tripEditError"
   | "tripEditMemo"
@@ -16,6 +17,7 @@ type TripBasicInfoFormProps = Pick<
   | "tripEditSubmitting"
   | "tripEditTitle"
   | "tripEditTravelers"
+  | "tripEditDestinationCountry"
 >;
 
 // 선택된 여행의 기본 정보 수정 폼만 담당한다. 저장 로직과 상태 변경은 상위 콜백으로 위임한다.
@@ -26,6 +28,7 @@ export function TripBasicInfoForm({
   onTripEditStartDateChange,
   onTripEditTitleChange,
   onTripEditTravelersChange,
+  onTripEditDestinationCountryChange,
   tripEditEndDate,
   tripEditError,
   tripEditMemo,
@@ -33,6 +36,7 @@ export function TripBasicInfoForm({
   tripEditSubmitting,
   tripEditTitle,
   tripEditTravelers,
+  tripEditDestinationCountry,
 }: TripBasicInfoFormProps) {
   return (
     <form className="auth-form trip-edit-form" onSubmit={onSubmitTripEdit}>
@@ -51,6 +55,17 @@ export function TripBasicInfoForm({
           type="text"
           value={tripEditTitle}
         />
+      </label>
+
+      <label>
+        목적지 국가
+        <select
+          onChange={(event) => onTripEditDestinationCountryChange(event.target.value)}
+          value={tripEditDestinationCountry}
+        >
+          <option value="JP">일본 (엔화/일어 지원)</option>
+          <option value="CN">중국 (위안화/중국어 지원)</option>
+        </select>
       </label>
 
       <div className="form-grid-two">

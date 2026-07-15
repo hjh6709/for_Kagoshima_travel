@@ -32,11 +32,13 @@ export type TripCreateSectionProps = {
   newTripStartDate: string;
   newTripTitle: string;
   newTripTravelers: string;
+  newTripDestinationCountry: string;
   onNewTripEndDateChange: (value: string) => void;
   onNewTripMemoChange: (value: string) => void;
   onNewTripStartDateChange: (value: string) => void;
   onNewTripTitleChange: (value: string) => void;
   onNewTripTravelersChange: (value: string) => void;
+  onNewTripDestinationCountryChange: (value: string) => void;
   onSubmitNewTrip: (event: FormEvent<HTMLFormElement>) => void;
   tripCreateError: string;
   tripCreateSubmitting: boolean;
@@ -185,6 +187,7 @@ export type SelectedTripDetailSectionProps = {
   onTripEditStartDateChange: (value: string) => void;
   onTripEditTitleChange: (value: string) => void;
   onTripEditTravelersChange: (value: string) => void;
+  onTripEditDestinationCountryChange: (value: string) => void;
   ownerDetailDataError: string;
   ownerDetailDataLoading: boolean;
   ownerFlights: SharedFlight[];
@@ -212,6 +215,7 @@ export type SelectedTripDetailSectionProps = {
   tripEditSubmitting: boolean;
   tripEditTitle: string;
   tripEditTravelers: string;
+  tripEditDestinationCountry: string;
 };
 
 // useTripManageController가 계산한 여행 관리 화면 입력값과 이벤트 핸들러를 섹션별 props로 전달한다.
