@@ -1,4 +1,4 @@
-import { ExternalLink, Plane } from "lucide-react";
+import { ExternalLink, Plane, Compass, CalendarRange, Users, MapPin } from "lucide-react";
 import { useEffect, useMemo } from "react";
 import type { SharedTripResponse } from "../../api/trips";
 import { formatKoreanDate, formatShortDate } from "../../shared/date";
@@ -35,34 +35,47 @@ export function SharedTripPage({ error, loading, sharedTrip }: SharedTripPagePro
       <section className="phone-frame shared-frame">
         <div className="content">
           <section className="screen shared-screen">
-            <article className="hero-card shared-hero-card">
-              <span className="pill">읽기 전용 공유</span>
+            <article className="hero-card shared-hero-card premium-hero-card">
+              <div className="shared-brand-row">
+                <div className="brand-badge-circle">
+                  <Compass className="brand-logo-icon" size={20} />
+                </div>
+                <span className="pill subtle">동반자 공유 여정</span>
+              </div>
+
               {loading && (
-                <>
-                  <h1>공유 여행을 불러오는 중</h1>
-                  <p className="muted">잠시만 기다려주세요.</p>
-                </>
+                <div className="shared-loading-wrapper" style={{ display: "grid", placeItems: "center", textAlign: "center", gap: "10px", padding: "12px 0" }}>
+                  <Compass className="spin-slow" size={32} />
+                  <h1>여정을 불러오는 중입니다</h1>
+                  <p className="muted">잠시만 기다려 주세요.</p>
+                </div>
               )}
 
               {!loading && error && (
-                <>
-                  <h1>공유 링크를 확인하지 못했습니다</h1>
+                <div className="shared-error-wrapper">
+                  <h1>공유 링크 확인 실패</h1>
                   <p className="form-error">{error}</p>
-                </>
+                </div>
               )}
 
               {!loading && !error && sharedTrip && (
-                <>
-                  <h1>{sharedTrip.trip.title}</h1>
-                  <p className="trip-dates">
-                    {formatKoreanDate(sharedTrip.trip.startDate)} ~ {formatKoreanDate(sharedTrip.trip.endDate)}
-                  </p>
-                  <p className="muted">
-                    {sharedTrip.trip.travelers.length > 0
-                      ? `${sharedTrip.trip.travelers.join(", ")}와 공유된 여행입니다.`
-                      : "공유된 여행 정보입니다."}
-                  </p>
-                </>
+                <div className="shared-success-content">
+                  <h1 className="trip-title-premium" style={{ marginBottom: "12px" }}>{sharedTrip.trip.title}</h1>
+                  <div className="trip-meta-premium-row" style={{ display: "grid", gap: "8px" }}>
+                    <div className="trip-meta-item" style={{ display: "flex", alignItems: "center", gap: "8px", color: "var(--c-text)", fontSize: "14px", fontWeight: 700 }}>
+                      <CalendarRange size={16} className="muted" />
+                      <span>
+                        {formatKoreanDate(sharedTrip.trip.startDate)} ~ {formatKoreanDate(sharedTrip.trip.endDate)}
+                      </span>
+                    </div>
+                    {sharedTrip.trip.travelers.length > 0 && (
+                      <div className="trip-meta-item" style={{ display: "flex", alignItems: "center", gap: "8px", color: "var(--c-muted)", fontSize: "13px", fontWeight: 700 }}>
+                        <Users size={16} />
+                        <span>동행인: {sharedTrip.trip.travelers.join(", ")}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               )}
             </article>
 

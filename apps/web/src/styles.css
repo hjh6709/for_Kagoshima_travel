@@ -1613,3 +1613,43 @@ p {
 .input-with-icon input {
   padding-left: 40px !important;
 }
+
+/* 프리미엄 동반자 공유 화면 리브랜딩 스타일 */
+.premium-hero-card {
+  border-top: none !important;
+  background: linear-gradient(135deg, var(--c-surface) 0%, rgba(250, 248, 245, 0.95) 100%) !important;
+  border: 1px solid rgba(169, 132, 70, 0.12) !important;
+  box-shadow: 0 16px 40px rgba(28, 50, 37, 0.06) !important;
+  border-radius: 16px !important;
+  padding: 24px !important;
+}
+
+.shared-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.brand-badge-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--c-gold-light);
+  color: var(--c-gold);
+}
+
+.brand-logo-icon {
+  color: var(--c-gold);
+}
+
+.trip-title-premium {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--c-text);
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
