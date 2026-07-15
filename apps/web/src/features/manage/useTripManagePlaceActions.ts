@@ -55,7 +55,6 @@ export function useTripManagePlaceActions({
     event.preventDefault();
     if (!ownerAuth || !selectedOwnerTrip) return;
 
-    // 오프라인 상태일 때는 API 전송을 사전에 차단하여 로컬 캐시와의 상태 불일치 방지
     if (!isOnline()) {
        placeForm.setPlaceCreateError("네트워크 연결이 끊겼습니다. 오프라인 상태에서는 장소를 추가할 수 없습니다.");
        return;
@@ -104,7 +103,6 @@ export function useTripManagePlaceActions({
     event.preventDefault();
     if (!ownerAuth || !selectedOwnerTrip || !placeForm.editingPlaceID) return;
 
-    // 오프라인 상태일 때는 API 전송을 사전에 차단하여 로컬 캐시와의 상태 불일치 방지
     if (!isOnline()) {
       placeForm.setPlaceEditError("네트워크 연결이 끊겼습니다. 오프라인 상태에서는 장소를 수정할 수 없습니다.");
       return;
@@ -149,7 +147,6 @@ export function useTripManagePlaceActions({
   async function deleteOwnerPlace(placeID: string) {
     if (!ownerAuth || !selectedOwnerTrip) return;
 
-    // 오프라인 상태일 때는 API 전송을 사전에 차단하여 로컬 캐시와의 상태 불일치 방지
     if (!isOnline()) {
       placeForm.setPlaceDeleteError("네트워크 연결이 끊겼습니다. 오프라인 상태에서는 장소를 삭제할 수 없습니다.");
       return;
