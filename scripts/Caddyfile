@@ -1,0 +1,13 @@
+# OCI VM IP 또는 개인 소유 도메인 주소
+# Caddy 실행 전 SERVER_DOMAIN 환경변수를 설정하거나, 서버 내 Caddyfile을 직접 수정하십시오.
+{$SERVER_DOMAIN:localhost} {
+    reverse_proxy localhost:8080
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-XSS-Protection "1; mode=block"
+        X-Frame-Options "DENY"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+}

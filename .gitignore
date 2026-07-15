@@ -18,3 +18,12 @@ test-results/
 .agents/
 .claude/
 skills-lock.json
+
+# Security & Credentials
+*.pem
+*.key
+.oci/
+.ssh/
+
+# Compiled binaries
+apps/api/travel-api

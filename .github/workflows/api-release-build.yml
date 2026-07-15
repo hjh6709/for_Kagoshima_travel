@@ -1,4 +1,4 @@
-name: api release build
+name: api release build and deploy
 
 on:
   pull_request:
@@ -57,3 +57,60 @@ jobs:
           name: travel-api-linux-${{ matrix.goarch }}
           path: apps/api/dist/travel-api-linux-${{ matrix.goarch }}
           if-no-files-found: error
+
+  deploy:
+    name: OCI VM 무중단 자동 배포 (CD)
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Download Linux ARM64 API binary
+        uses: actions/download-artifact@v7
+        with:
+          name: travel-api-linux-arm64
+          path: deploy-dist
+
+      - name: Prepare deployment artifacts
+        run: |
+          # 다운로드한 바이너리명 표준화 및 실행 권한 복구
+          mv deploy-dist/travel-api-linux-arm64 deploy-dist/travel-api
+          # systemd 서비스 설정 파일도 배포 묶음에 복사
+          cp scripts/travel-api.service deploy-dist/
+
+      - name: Rename active binary on VM (Unlock Text file busy)
+        uses: appleboy/ssh-action@029f5b4aeeeb58fdfe1410a5d17f967dacf36262 # v1.0.3
+        with:
+          host: ${{ secrets.OCI_VM_IP }}
+          username: ${{ secrets.OCI_VM_USER }}
+          key: ${{ secrets.OCI_SSH_KEY }}
+          script: |
+            mkdir -p /home/opc/travel-api
+            [ ! -f /home/opc/travel-api/travel-api ] || mv /home/opc/travel-api/travel-api /home/opc/travel-api/travel-api.old
+
+      - name: Copy new binary and service to VM via SCP
+        uses: appleboy/scp-action@917f8b81dfc1ccd331fef9e2d61bdc6c8be94634 # v0.1.7
+        with:
+          host: ${{ secrets.OCI_VM_IP }}
+          username: ${{ secrets.OCI_VM_USER }}
+          key: ${{ secrets.OCI_SSH_KEY }}
+          source: "deploy-dist/*"
+          target: "/home/opc/travel-api"
+          strip_components: 1
+
+      - name: Launch systemd service and cleanup backup on VM
+        uses: appleboy/ssh-action@029f5b4aeeeb58fdfe1410a5d17f967dacf36262 # v1.0.3
+        with:
+          host: ${{ secrets.OCI_VM_IP }}
+          username: ${{ secrets.OCI_VM_USER }}
+          key: ${{ secrets.OCI_SSH_KEY }}
+          script: |
+            [ -f /home/opc/travel-api/.env ] || echo -e 'PORT=8080\nJWT_SECRET=super-secret-key-change-me' > /home/opc/travel-api/.env
+            chmod +x /home/opc/travel-api/travel-api
+            sudo cp /home/opc/travel-api/travel-api.service /etc/systemd/system/travel-api.service
+            sudo systemctl daemon-reload
+            sudo systemctl enable travel-api
+            sudo systemctl restart travel-api
+            rm -f /home/opc/travel-api/travel-api.old
+
