@@ -1,126 +1,66 @@
-# 배포 가이드
+# 배포 아키텍처 및 운영 가이드
 
-1차 MVP는 비용을 줄이기 위해 백엔드 없이 Vercel Hobby 무료 플랜에 정적 PWA로 배포한다.
+이 문서는 가고시마 여행 공유 서비스의 실제 운영 서버 배포 구조와 관리 방법을 명세합니다.
 
-## 1. 현재 배포 방식
+---
 
-```text
-React + Vite + PWA
-  -> cd apps/web && npm run build
-  -> apps/web/dist/
-  -> Vercel Hobby
-```
+## 1. 현재 운영 배포 아키텍처
 
-Go 백엔드와 PostgreSQL은 2차 확장 준비물로 유지하되, 지금은 운영 배포하지 않는다.
-
-## 2. 배포 전 확인
-
-```bash
-npm install
-cd apps/web
-npm run build
-```
-
-빌드가 성공하면 `apps/web/dist/`가 생성된다. `dist/`는 빌드 결과물이므로 git에는 커밋하지 않는다.
-
-## 3. Vercel 설정
-
-Vercel에서 GitHub 저장소를 import한 뒤 아래 설정을 사용한다.
-
-| 항목 | 값 |
-| --- | --- |
-| Framework Preset | Vite |
-| Install Command | `cd apps/web && npm ci` |
-| Build Command | `cd apps/web && npm run build` |
-| Output Directory | `apps/web/dist` |
-| Install Command | `npm install` |
-
-현재 1차 MVP에서는 API 서버를 사용하지 않으므로 Vercel 환경변수는 필수는 아니다.
-
-2차 확장으로 Go API를 붙이면 아래 환경변수를 Vercel에 추가한다.
+서비스는 비용 효율성과 안정성을 극대화하기 위해 백엔드 계산 엔진(오라클 VM)과 데이터 저장소(Supabase)를 분리하는 이원화 아키텍처를 채택하고 있습니다.
 
 ```text
-VITE_API_BASE_URL=https://api.example.com
+[ 유저 브라우저 (PWA) ] 
+       │
+       ├──(HTTPS: api.hjh-dev.site)──> [ Oracle Cloud VM (Go API + Caddy Proxy) ]
+       │                                                     │
+       │                                                (PostgreSQL)
+       │                                                     ▼
+       └─(HTTPS: kagoshima.hjh-dev.site)──> [ Supabase Cloud Database (Seoul) ]
 ```
 
-`VITE_`로 시작하는 값은 브라우저에 노출될 수 있으므로 비밀값을 넣지 않는다.
+* **Frontend**: React + Vite + PWA ➡️ **Vercel Hobby** 배포 및 도메인 연결 완료 (`https://kagoshima.hjh-dev.site`)
+* **Backend API**: Go REST API ➡️ **Oracle Cloud VM (ARM A1)** 호스트 및 도메인 연결 완료 (`https://api.hjh-dev.site`)
+* **Database**: PostgreSQL 17 ➡️ **Supabase Cloud DB** (Northeast Asia - Seoul 리전)
 
-## 4. 민감정보 주의
+---
 
-Vercel Hobby로 배포된 앱은 URL을 아는 사람이 접근할 수 있는 공개 웹앱으로 본다.
+## 2. 프론트엔드 배포 (Vercel)
 
-앱 데이터에 넣기 전 다시 확인할 정보:
-- 예약번호
-- 여권 정보
-- 여행자보험 상세 정보
-- 가족 전화번호
-- 숙소 예약자명
+Vercel에서 GitHub 리포지토리의 `main` 브랜치를 기준으로 자동 빌드 및 배포(CD)됩니다.
 
-1차 MVP에서는 민감정보를 최소화하고, 필요한 경우 부모님께 별도로 전달한다.
+### Vercel 빌드 설정
+* **Framework Preset**: Vite
+* **Build Command**: `cd apps/web && npm run build`
+* **Output Directory**: `apps/web/dist`
+* **Install Command**: `cd apps/web && npm ci`
 
-## 5. 부모님 폰 설치
+### 필수 환경 변수
+* **`VITE_API_BASE_URL`**: `https://api.hjh-dev.site` (운영계 Go API 서버 도메인)
 
-안드로이드 Chrome:
-1. 배포 URL 접속
-2. 브라우저 메뉴 열기
-3. 홈 화면에 추가 선택
-4. 앱 아이콘으로 실행 확인
+---
 
-iPhone Safari:
-1. 배포 URL 접속
-2. 공유 버튼 선택
-3. 홈 화면에 추가 선택
-4. 앱 아이콘으로 실행 확인
+## 3. 백엔드 배포 (Oracle Cloud VM)
 
-## 6. 커스텀 도메인 연결
+오라클 클라우드 ARM 인스턴스 환경에서 24시간 안정적으로 무중단 가동됩니다.
 
-보유 도메인 `hjh-dev.site`를 사용할 수 있다. 1차 여행 앱은 메인 도메인보다 서브도메인으로 분리한다.
+### 인프라 구성 실체
+* **Caddy 웹서버**: 외부 80/443 포트로 들어오는 HTTPS 트래픽을 인수하여 내부 `127.0.0.1:8080` Go API 포트로 프록싱하며 SSL 인증서를 자동 갱신합니다.
+* **systemd 서비스**: Go 바이너리를 `travel-api.service` 데몬 시스템 서비스로 등록하여, 서버가 재부팅되어도 자동으로 백그라운드 구동되도록 제어합니다.
+  - 서비스 파일 위치: `/etc/systemd/system/travel-api.service`
+  - 환경변수 주입 파일: `/etc/travel-api/travel-api.env`
 
-추천 주소:
+### 필수 주입 환경 변수 (`travel-api.env`)
+* `APP_ENV`: `production`
+* `PORT`: `8080`
+* `DATABASE_URL`: `postgresql://postgres.[Project-ID]:[PW]@aws-1-ap-northeast-2.pooler.supabase.com:6543/postgres` (Supabase 트랜잭션 풀러 URI)
+* `JWT_SECRET`: 로그인 세션 서명용 시크릿 키
+* `ALLOWED_ORIGINS`: `https://kagoshima.hjh-dev.site`
 
-```text
-kagoshima.hjh-dev.site
-```
+---
 
-Vercel 공식 문서 기준으로 서브도메인은 보통 CNAME 레코드로 연결한다.
+## 4. 데이터베이스 마이그레이션 (Supabase)
 
-Vercel에서:
-1. Project Settings로 이동
-2. Domains 메뉴 선택
-3. `kagoshima.hjh-dev.site` 추가
-4. Vercel이 안내하는 DNS 레코드 값을 확인
+데이터베이스의 모든 영속성 스키마는 **Supabase PostgreSQL**에서 관리합니다.
 
-Gabia DNS 관리툴에서:
-
-```text
-Type: CNAME
-Name: kagoshima
-Value: Vercel이 안내하는 CNAME 값
-TTL: 기본값 또는 300초
-```
-
-Vercel 문서의 일반 예시는 `cname.vercel-dns-0.com` 또는 프로젝트별 CNAME 값을 사용한다. 실제 연결 시에는 Vercel 화면에 표시되는 값을 우선한다.
-
-참고:
-- Vercel 공식 문서: [Setting up a custom domain](https://vercel.com/docs/domains/set-up-custom-domain)
-- Vercel 공식 문서: [Add a custom domain](https://vercel.com/docs/concepts/projects/domains/add-a-domain)
-
-주의:
-- DNS 전파는 수분에서 길게는 24-48시간 걸릴 수 있다.
-- 설정 직후 안 된다고 여러 번 바꾸기보다 Vercel의 domain verification 상태를 확인한다.
-- HTTPS 인증서는 Vercel이 자동 발급한다.
-- 앱 URL이 예뻐져도 공개 웹앱이라는 점은 변하지 않으므로 민감정보는 계속 최소화한다.
-
-## 7. 2차 확장 배포
-
-Go 백엔드를 붙이는 시점에는 아래 구조로 확장한다.
-
-```text
-Vercel PWA
-  -> Go API
-  -> PostgreSQL
-```
-
-후보:
-- Go API: Fly.io Tokyo region
-- DB: Fly Postgres 또는 저비용 PostgreSQL
+* **테이블 구조 갱신**: 신규 테이블(예: checklists) 생성 또는 변경 시, 로컬의 Go DDL 마이그레이션 유틸리티(`scratch/migrate_db.go`)를 원격 DB 커넥션으로 구동하거나 Supabase SQL Editor를 통해 최종 쿼리를 반영합니다.
+* **데이터 보존 안정성**: 백엔드 서버(오라클 VM)에 문제가 생겨 VM 인스턴스를 재생성하더라도 모든 여행 데이터는 Supabase 클라우드에 고스란히 영구 보존됩니다.
