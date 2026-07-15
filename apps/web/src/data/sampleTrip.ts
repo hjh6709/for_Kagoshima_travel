@@ -15,6 +15,7 @@ export const trip: Trip = {
   startDate: "2026-06-27",
   endDate: "2026-06-30",
   travelers: ["여행자 1", "여행자 2"],
+  destinationCountry: "JP",
   memo: "샘플 데이터입니다. 실제 항공편, 숙소, 예약 정보로 교체하세요.",
 };
 

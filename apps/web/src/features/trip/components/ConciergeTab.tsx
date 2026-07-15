@@ -1,6 +1,6 @@
-import { Copy, ExternalLink, Languages, Phone } from "lucide-react";
-import { translationLinks } from "../../../shared/travelOptions";
+import { Copy, Phone } from "lucide-react";
 import type { TripPageProps } from "../tripPageTypes";
+import { QuickTravelHelper } from "./QuickTravelHelper";
 
 // 긴급/여행 정보 탭 렌더링만 담당한다. 주소 복사는 상위 핸들러를 호출한다.
 export function ConciergeTab({
@@ -8,7 +8,7 @@ export function ConciergeTab({
   addressCopied,
   copyAccommodationAddress,
   emergencies,
-  phrases,
+  trip,
 }: TripPageProps) {
   return (
     <section className="screen">
@@ -46,31 +46,9 @@ export function ConciergeTab({
             {addressCopied ? "복사됨" : "주소 복사"}
           </button>
         </article>
-        <article className="info-card">
-          <h2>일본어 문장</h2>
-          {phrases.map((phrase) => (
-            <p key={phrase.id}>
-              <strong>{phrase.situation}</strong>
-              <br />
-              {phrase.korean} · {phrase.japanese}
-            </p>
-          ))}
-          <div className="translation-actions" aria-label="번역 서비스 바로가기">
-            {translationLinks.map((link) => (
-              <a
-                className="secondary-button translation-button"
-                href={link.href}
-                key={link.id}
-                rel="noopener noreferrer"
-                target="_blank"
-              >
-                <Languages size={18} />
-                <span>{link.label}</span>
-                <ExternalLink className="trailing-icon" size={16} />
-              </a>
-            ))}
-          </div>
-        </article>
+
+        {/* 다국어 환율 & 서바이벌 회화 퀵 위젯 탑재 */}
+        <QuickTravelHelper destinationCountry={trip.destinationCountry || "JP"} />
       </section>
     </section>
   );

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type Dispatch, type FormEvent, type SetStateAction } from "react";
 import { ApiError, getCurrentUser, login, register, type AuthResponse } from "../../api/auth";
 import { createTrip, listMyTrips, updateTrip, type OwnerTrip } from "../../api/trips";
+import { isOnline } from "../../utils/offlineCache";
 import {
   handleManageApiError,
   isEndDateBeforeStartDate,
@@ -189,6 +190,11 @@ export function useTripManageSessionTrips({
     event.preventDefault();
     if (!ownerAuth) return;
 
+    if (!isOnline()) {
+      tripCreateForm.setTripCreateError("네트워크 연결이 끊겼습니다. 오프라인 상태에서는 여행을 생성할 수 없습니다.");
+      return;
+    }
+
     const title = tripCreateForm.newTripTitle.trim();
     const startDate = tripCreateForm.newTripStartDate;
     const endDate = tripCreateForm.newTripEndDate || tripCreateForm.newTripStartDate;
@@ -234,6 +240,11 @@ export function useTripManageSessionTrips({
   async function submitTripEdit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!ownerAuth || !selectedOwnerTrip) return;
+
+    if (!isOnline()) {
+      tripEditForm.setTripEditError("네트워크 연결이 끊겼습니다. 오프라인 상태에서는 여행 정보를 수정할 수 없습니다.");
+      return;
+    }
 
     const title = tripEditForm.tripEditTitle.trim();
     const startDate = tripEditForm.tripEditStartDate;

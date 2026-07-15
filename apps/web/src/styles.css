@@ -1226,3 +1226,242 @@ p {
     box-shadow: none;
   }
 }
+
+/* Quick Travel Helper (Exchange & Survival Translation) Styles */
+.quick-helper-container {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.exchange-widget {
+  background: var(--c-surface);
+  border: 1px solid rgba(36, 48, 47, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(28, 50, 37, 0.05);
+}
+
+.rate-editor {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--c-muted);
+  margin-bottom: 14px;
+}
+
+.rate-input {
+  width: 70px;
+  height: 28px;
+  border: 1px solid rgba(36, 48, 47, 0.15);
+  border-radius: 6px;
+  padding: 2px 6px;
+  text-align: center;
+  font-weight: 900;
+}
+
+.exchange-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+}
+
+.exchange-inputs .input-group {
+  display: flex;
+  align-items: center;
+  background: var(--c-bg);
+  border: 1px solid rgba(36, 48, 47, 0.1);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.unit-label {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--c-muted);
+  min-width: 90px;
+}
+
+.calc-input {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  text-align: right;
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--c-text);
+  padding: 0;
+  width: 100%;
+}
+
+.calc-input:focus {
+  outline: none;
+}
+
+.swap-icon {
+  align-self: center;
+  background: var(--c-green-light);
+  color: var(--c-green);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  margin: -4px 0;
+  z-index: 2;
+}
+
+.translation-widget {
+  background: var(--c-surface);
+  border: 1px solid rgba(36, 48, 47, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(28, 50, 37, 0.05);
+}
+
+.translation-widget .title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.phrase-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.phrase-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--c-bg);
+  border: 1px solid rgba(36, 48, 47, 0.06);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.phrase-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.korean-text {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--c-muted);
+}
+
+.foreign-text {
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--c-text);
+}
+
+.pronun-text {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--c-gold);
+}
+
+.phrase-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.phrase-actions .icon-button {
+  background: var(--c-green-light);
+  color: var(--c-green);
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  position: relative;
+}
+
+.tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--c-text);
+  color: #fff;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  margin-bottom: 6px;
+  animation: fadeIn 0.15s ease-out;
+}
+
+/* Modal Overlay for Magnified Display */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: grid;
+  place-items: center;
+  z-index: 999;
+  padding: 24px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.zoom-modal-card {
+  background: var(--c-surface);
+  width: 100%;
+  max-width: 480px;
+  border-radius: 16px;
+  position: relative;
+  padding: 40px 24px 24px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  text-align: center;
+}
+
+.zoom-modal-card .close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: transparent;
+  border: 0;
+  color: var(--c-muted);
+  cursor: pointer;
+}
+
+.zoom-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.zoom-korean {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--c-muted);
+}
+
+.zoom-foreign {
+  font-size: 38px;
+  font-weight: 900;
+  color: var(--c-text);
+  line-height: 1.2;
+}
+
+.zoom-pronun {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--c-gold);
+}
+
+.zoom-instruction {
+  font-size: 13px;
+  color: var(--c-muted);
+  font-weight: 800;
+  margin: 16px 0 0;
+  border-top: 1px dashed rgba(36, 48, 47, 0.1);
+  padding-top: 12px;
+}

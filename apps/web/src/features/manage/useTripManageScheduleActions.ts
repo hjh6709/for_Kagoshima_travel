@@ -10,6 +10,7 @@ import {
 import { sortSharedSchedules } from "../../shared/sort";
 import type { ScheduleItem } from "../../types/travel";
 import { handleManageApiError, isDateOutsideTrip, optionalTrimmedText } from "./manageFormUtils";
+import { isOnline } from "../../utils/offlineCache";
 
 type ScheduleFormState = {
   newScheduleDate: string;
@@ -64,6 +65,11 @@ export function useTripManageScheduleActions({
     event.preventDefault();
     if (!ownerAuth || !selectedOwnerTrip) return;
 
+    if (!isOnline()) {
+      scheduleForm.setScheduleCreateError("네트워크 연결이 끊겼습니다. 오프라인 상태에서는 일정을 추가할 수 없습니다.");
+      return;
+    }
+
     const date = scheduleForm.newScheduleDate;
     const time = scheduleForm.newScheduleTime.trim();
     const title = scheduleForm.newScheduleTitle.trim();
@@ -113,6 +119,11 @@ export function useTripManageScheduleActions({
   async function submitScheduleEdit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!ownerAuth || !selectedOwnerTrip || !scheduleForm.editingScheduleID) return;
+
+    if (!isOnline()) {
+      scheduleForm.setScheduleEditError("네트워크 연결이 끊겼습니다. 오프라인 상태에서는 일정을 수정할 수 없습니다.");
+      return;
+    }
 
     const date = scheduleForm.editingScheduleDate;
     const time = scheduleForm.editingScheduleTime.trim();
@@ -164,6 +175,11 @@ export function useTripManageScheduleActions({
   // 일정 목록의 편집 모드에서 사용자가 선택한 일정을 삭제한다.
   async function deleteOwnerSchedule(scheduleID: string) {
     if (!ownerAuth || !selectedOwnerTrip) return;
+
+    if (!isOnline()) {
+      scheduleForm.setScheduleDeleteError("네트워크 연결이 끊겼습니다. 오프라인 상태에서는 일정을 삭제할 수 없습니다.");
+      return;
+    }
 
     const schedule = ownerSchedules.find((item) => item.id === scheduleID);
     const confirmed = window.confirm(schedule ? `"${schedule.title}" 일정을 삭제할까요?` : "일정을 삭제할까요?");
