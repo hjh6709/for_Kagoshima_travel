@@ -31,6 +31,10 @@ type ManagePlaceListProps = Pick<
   | "placeEditSubmitting"
 >;
 
+type ExtraManagePlaceListProps = {
+  destinationCountry?: string;
+};
+
 // 서버에 저장되어 일정에서 참조되는 장소 목록만 담당한다. 수정/삭제 버튼은 편집 모드에서만 노출한다.
 export function ManagePlaceList({
   deletingPlaceID,
@@ -57,7 +61,8 @@ export function ManagePlaceList({
   placeDeleteError,
   placeEditError,
   placeEditSubmitting,
-}: ManagePlaceListProps) {
+  destinationCountry,
+}: ManagePlaceListProps & ExtraManagePlaceListProps) {
   return (
     <section className="owner-linked-data-section">
       <div className="section-title-row compact-title-row">
@@ -102,6 +107,42 @@ export function ManagePlaceList({
                     지도 열기
                   </a>
                 )}
+                
+                {/* 
+                  중국(CN) 여행의 경우, 구글 지도 차단 현상을 우회할 수 있도록 
+                  고덕지도(Amap) 웹 마커 라우팅 버튼 및 장소 텍스트 즉시 복사 도구를 렌더링합니다.
+                */}
+                {destinationCountry === "CN" && (
+                  <>
+                    {place.longitude && place.latitude && (
+                      <a
+                        className="secondary-button compact-button"
+                        href={`https://uri.amap.com/marker?position=${place.longitude},${place.latitude}&name=${encodeURIComponent(place.name)}`}
+                        rel="noreferrer"
+                        target="_blank"
+                        style={{
+                          background: "rgba(251, 191, 36, 0.15)",
+                          border: "1px solid rgba(251, 191, 36, 0.3)",
+                          color: "#fbbf24",
+                        }}
+                      >
+                        🗺️ 고덕지도
+                      </a>
+                    )}
+                    <button
+                      className="secondary-button compact-button"
+                      onClick={() => {
+                        const copyString = `${place.name}${place.address ? ` (${place.address})` : ""}`;
+                        navigator.clipboard.writeText(copyString);
+                        alert("장소 이름과 주소가 복사되었습니다! 고덕지도 앱 등에 붙여넣어 검색하세요.");
+                      }}
+                      type="button"
+                    >
+                      📋 정보 복사
+                    </button>
+                  </>
+                )}
+
                 {isPlaceListEditing && (
                   <>
                     <button className="secondary-button compact-button" onClick={() => onStartPlaceEdit(place)} type="button">
