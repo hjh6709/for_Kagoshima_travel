@@ -1,4 +1,4 @@
-import { PlusCircle, Compass } from "lucide-react";
+import { Compass } from "lucide-react";
 import { formatKoreanDate } from "../../../shared/date";
 import type { TripListSectionProps } from "../manageTypes";
 
