@@ -62,7 +62,7 @@ func New() *Server {
 }
 
 func (s *Server) Routes() http.Handler {
-	return withCORS(s.rateLimiter.Limit(s.mux))
+	return withCORS(s.rateLimiter.Limit(middleware.DiscordAlert(s.mux)))
 }
 
 func (s *Server) registerRoutes(jwtSecret string) {
