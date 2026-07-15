@@ -9,11 +9,14 @@ import (
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/repository"
 )
 
+// ChecklistService는 준비물(Checklist) 관련 비즈니스 로직을 처리하는 서비스 구조체입니다.
+// 여행 소유자 인가(ensureTripOwner) 가드를 사용하여 비인가 접근을 원격 제어합니다.
 type ChecklistService struct {
 	checklistRepository repository.ChecklistRepository
 	tripRepository      repository.TripRepository
 }
 
+// NewChecklistService는 ChecklistService의 새로운 생성자 인스턴스를 반환합니다.
 func NewChecklistService(checklistRepository repository.ChecklistRepository, tripRepository repository.TripRepository) *ChecklistService {
 	return &ChecklistService{
 		checklistRepository: checklistRepository,
@@ -21,6 +24,8 @@ func NewChecklistService(checklistRepository repository.ChecklistRepository, tri
 	}
 }
 
+// ensureTripOwner는 특정 여행 ID의 소유자(Owner)가 로그인한 사용자(userID)인지 검증하는 내부 도우미 메서드입니다.
+// 일치하지 않으면 ErrForbidden(403) 또는 ErrTripNotFound(404) 에러를 반환합니다.
 func (s *ChecklistService) ensureTripOwner(tripID, userID string) error {
 	trip, err := s.tripRepository.FindTrip(tripID)
 	if err != nil {
@@ -32,6 +37,7 @@ func (s *ChecklistService) ensureTripOwner(tripID, userID string) error {
 	return nil
 }
 
+// ListChecklist는 특정 여행 ID에 등록된 준비물 목록을 조회하여 DTO 배열 규격으로 가공한 뒤 반환합니다.
 func (s *ChecklistService) ListChecklist(tripID, userID string) ([]dto.ChecklistItemResponse, error) {
 	if err := s.ensureTripOwner(tripID, userID); err != nil {
 		return nil, err
@@ -49,10 +55,12 @@ func (s *ChecklistService) ListChecklist(tripID, userID string) ([]dto.Checklist
 	return responses, nil
 }
 
+// CreateChecklistCustomItem은 여행 소유자가 수동으로 입력한 커스텀 준비물 항목을 유효성 검증 후 DB에 생성 및 저장합니다.
 func (s *ChecklistService) CreateChecklistCustomItem(tripID, userID string, req dto.CreateChecklistItemRequest) (dto.ChecklistItemResponse, error) {
 	if err := s.ensureTripOwner(tripID, userID); err != nil {
 		return dto.ChecklistItemResponse{}, err
 	}
+	// 카테고리 유효성 및 타이틀 공백 검증
 	if req.Title == "" || (req.Category != "before" && req.Category != "airport" && req.Category != "daily" && req.Category != "return") {
 		return dto.ChecklistItemResponse{}, errors.New("invalid checklist item input")
 	}
@@ -78,6 +86,7 @@ func (s *ChecklistService) CreateChecklistCustomItem(tripID, userID string, req 
 	return mapChecklistItemResponse(item), nil
 }
 
+// UpdateChecklistItem은 기존 준비물 레코드의 체크 완료 여부(isCompleted) 또는 타이틀을 변경 처리합니다.
 func (s *ChecklistService) UpdateChecklistItem(checklistID, userID string, req dto.UpdateChecklistItemRequest) (dto.ChecklistItemResponse, error) {
 	item, err := s.checklistRepository.FindChecklist(checklistID)
 	if err != nil {
@@ -88,6 +97,7 @@ func (s *ChecklistService) UpdateChecklistItem(checklistID, userID string, req d
 		return dto.ChecklistItemResponse{}, err
 	}
 
+	// PATCH 스펙을 고려하여 전달된 선택 항목만 부분 변경 적용
 	if req.Title != nil {
 		item.Title = *req.Title
 	}
@@ -101,6 +111,7 @@ func (s *ChecklistService) UpdateChecklistItem(checklistID, userID string, req d
 	return mapChecklistItemResponse(item), nil
 }
 
+// DeleteChecklistItem은 지정한 준비물 항목을 인가 검증 후 완전히 삭제합니다.
 func (s *ChecklistService) DeleteChecklistItem(checklistID, userID string) error {
 	item, err := s.checklistRepository.FindChecklist(checklistID)
 	if err != nil {
@@ -114,6 +125,7 @@ func (s *ChecklistService) DeleteChecklistItem(checklistID, userID string) error
 	return s.checklistRepository.Delete(checklistID)
 }
 
+// mapChecklistItemResponse는 도메인 모델 ChecklistItem 구조체를 DTO ChecklistItemResponse 구조체로 맵핑합니다.
 func mapChecklistItemResponse(item model.ChecklistItem) dto.ChecklistItemResponse {
 	return dto.ChecklistItemResponse{
 		ID:                 item.ID,

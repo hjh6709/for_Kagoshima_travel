@@ -10,14 +10,18 @@ import (
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/model"
 )
 
+// PostgresChecklistRepository는 pgx connection pool을 기반으로 PostgreSQL 데이터베이스와 통신하여
+// checklists 테이블 데이터를 조작하는 실제 DB 리포지토리 구현체입니다.
 type PostgresChecklistRepository struct {
 	pool *pgxpool.Pool
 }
 
+// NewPostgresChecklistRepository는 PostgresChecklistRepository의 새로운 생성자 인스턴스를 반환합니다.
 func NewPostgresChecklistRepository(pool *pgxpool.Pool) *PostgresChecklistRepository {
 	return &PostgresChecklistRepository{pool: pool}
 }
 
+// Save는 하나의 신규 준비물 레코드를 PostgreSQL에 삽입합니다.
 func (r *PostgresChecklistRepository) Save(item model.ChecklistItem) error {
 	var destCountry *string
 	if item.DestinationCountry != "" {
@@ -31,6 +35,7 @@ func (r *PostgresChecklistRepository) Save(item model.ChecklistItem) error {
 	return err
 }
 
+// SaveAll은 트랜잭션을 구동하여 제공된 여러 준비물 리스트를 벌크로 빠르게 삽입합니다. (여행 첫 생성 시 프리셋 인서트에 사용)
 func (r *PostgresChecklistRepository) SaveAll(items []model.ChecklistItem) error {
 	ctx := context.Background()
 	tx, err := r.pool.Begin(ctx)
@@ -56,6 +61,7 @@ func (r *PostgresChecklistRepository) SaveAll(items []model.ChecklistItem) error
 	return tx.Commit(ctx)
 }
 
+// FindChecklist는 단일 준비물 ID로 checklists 레코드를 조회하여 model.ChecklistItem으로 반환합니다.
 func (r *PostgresChecklistRepository) FindChecklist(id string) (model.ChecklistItem, error) {
 	row := r.pool.QueryRow(context.Background(),
 		`SELECT id, trip_id, category, title, is_completed, custom, COALESCE(destination_country, ''), created_at 
@@ -72,6 +78,7 @@ func (r *PostgresChecklistRepository) FindChecklist(id string) (model.ChecklistI
 	return item, nil
 }
 
+// FindByTrip은 한 여행(trip_id)에 연결된 전체 준비물 항목 목록을 가져옵니다. 생성 시간 순서로 정렬하여 반환합니다.
 func (r *PostgresChecklistRepository) FindByTrip(tripID string) ([]model.ChecklistItem, error) {
 	rows, err := r.pool.Query(context.Background(),
 		`SELECT id, trip_id, category, title, is_completed, custom, COALESCE(destination_country, ''), created_at 
@@ -93,6 +100,7 @@ func (r *PostgresChecklistRepository) FindByTrip(tripID string) ([]model.Checkli
 	return items, nil
 }
 
+// Update는 기존 준비물 레코드의 내용(완료 여부, 타이틀 등)을 갱신합니다.
 func (r *PostgresChecklistRepository) Update(item model.ChecklistItem) error {
 	var destCountry *string
 	if item.DestinationCountry != "" {
@@ -106,6 +114,7 @@ func (r *PostgresChecklistRepository) Update(item model.ChecklistItem) error {
 	return err
 }
 
+// Delete는 지정한 준비물 항목 ID의 레코드를 완전히 물리 삭제합니다.
 func (r *PostgresChecklistRepository) Delete(id string) error {
 	_, err := r.pool.Exec(context.Background(), `DELETE FROM checklists WHERE id = $1`, id)
 	return err
