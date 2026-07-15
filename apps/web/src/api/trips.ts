@@ -119,12 +119,15 @@ export type SharedRoute = {
   estimatedDuration?: string;
 };
 
+import type { ChecklistItemResponse } from "./checklist";
+
 export type SharedTripResponse = {
   trip: PublicTrip;
   schedules: SharedSchedule[];
   places: SharedPlace[];
   flights: SharedFlight[];
   routes: SharedRoute[];
+  checklist: ChecklistItemResponse[];
 };
 
 export function listMyTrips(accessToken: string) {

@@ -9,6 +9,7 @@ import { ManageScheduleCreateForm } from "./ManageScheduleCreateForm";
 import { ManageScheduleList } from "./ManageScheduleList";
 import { ManageShareActions } from "./ManageShareActions";
 import { TripBasicInfoForm } from "./TripBasicInfoForm";
+import { ManageChecklistSection } from "./ManageChecklistSection";
 
 // 선택한 여행의 상세 관리 화면만 담당한다. 실제 저장/삭제 동작은 상위에서 받은 콜백으로 처리한다.
 export function SelectedTripDetailSection(props: SelectedTripDetailSectionProps) {
@@ -73,6 +74,20 @@ export function SelectedTripDetailSection(props: SelectedTripDetailSectionProps)
         />
 
         <ManageScheduleList {...props} />
+
+        <ManageChecklistSection
+          checklistItems={props.checklistItems}
+          checklistLoading={props.checklistLoading}
+          checklistError={props.checklistError}
+          newChecklistTitle={props.newChecklistTitle}
+          setNewChecklistTitle={props.onNewChecklistTitleChange}
+          newChecklistCategory={props.newChecklistCategory}
+          setNewChecklistCategory={props.onNewChecklistCategoryChange}
+          checklistSubmitting={props.checklistSubmitting}
+          handleAddChecklistItem={props.onAddChecklistItem}
+          handleToggleChecklistItem={props.onToggleChecklistItem}
+          handleDeleteChecklistItem={props.onDeleteChecklistItem}
+        />
 
         <ManageShareActions {...props} />
       </article>

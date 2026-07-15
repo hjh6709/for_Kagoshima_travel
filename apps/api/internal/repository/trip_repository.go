@@ -263,7 +263,15 @@ func (r *MemoryTripRepository) Save(trip model.Trip) error {
 func (r *MemoryTripRepository) SaveShareLink(link model.ShareLink) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	r.shares = append(r.shares, link)
+
+	// 동일한 trip_id를 가진 기존 공유 토큰들을 메모리 슬라이스에서 삭제(무효화)합니다.
+	var updatedShares []model.ShareLink
+	for _, share := range r.shares {
+		if share.TripID != link.TripID {
+			updatedShares = append(updatedShares, share)
+		}
+	}
+	r.shares = append(updatedShares, link)
 	return nil
 }
 

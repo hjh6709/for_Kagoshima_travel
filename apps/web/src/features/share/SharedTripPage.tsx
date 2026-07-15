@@ -1,5 +1,5 @@
 import { ExternalLink, Plane } from "lucide-react";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import type { SharedTripResponse } from "../../api/trips";
 import { formatKoreanDate, formatShortDate } from "../../shared/date";
 import { sortSharedFlights } from "../../shared/sort";
@@ -12,6 +12,18 @@ type SharedTripPageProps = {
 };
 
 export function SharedTripPage({ error, loading, sharedTrip }: SharedTripPageProps) {
+  useEffect(() => {
+    // 검색엔진 크롤링 색인 방지 (noindex, nofollow) 메타 태그 동적 삽입
+    const meta = document.createElement("meta");
+    meta.name = "robots";
+    meta.content = "noindex, nofollow";
+    document.head.appendChild(meta);
+
+    return () => {
+      document.head.removeChild(meta);
+    };
+  }, []);
+
   const placeByID = useMemo(() => {
     if (!sharedTrip) return new Map<string, SharedTripResponse["places"][number]>();
     return new Map(sharedTrip.places.map((place) => [place.id, place]));
@@ -209,6 +221,42 @@ export function SharedTripPage({ error, loading, sharedTrip }: SharedTripPagePro
                           {route.description && <p>{route.description}</p>}
                           {route.transportMemo && <p className="muted">{route.transportMemo}</p>}
                           {route.estimatedDuration && <span className="pill subtle">{route.estimatedDuration}</span>}
+                        </article>
+                      ))}
+                    </div>
+                  )}
+                </section>
+
+                <section className="section-block shared-checklist-section">
+                  <div className="section-title-row">
+                    <div>
+                      <h2>준비물 체크리스트</h2>
+                      <p className="section-caption">여행을 떠나기 전 챙겨야 할 필수 준비물 목록입니다. (읽기 전용)</p>
+                    </div>
+                    <span className="pill subtle">
+                      {sharedTrip.checklist ? sharedTrip.checklist.length : 0}개
+                    </span>
+                  </div>
+
+                  {(!sharedTrip.checklist || sharedTrip.checklist.length === 0) ? (
+                    <article className="empty-state-card list-card">
+                      <p className="muted">등록된 준비물이 없습니다.</p>
+                    </article>
+                  ) : (
+                    <div className="card-stack">
+                      {sharedTrip.checklist.map((item) => (
+                        <article className={`checklist-item-row ${item.isCompleted ? "completed" : ""}`} style={{ pointerEvents: 'none' }} key={item.id}>
+                          <label className="checkbox-container read-only-checkbox">
+                            <input
+                              type="checkbox"
+                              checked={item.isCompleted}
+                              readOnly
+                              disabled
+                            />
+                            <span className="checkmark"></span>
+                            <span className="item-title">{item.title}</span>
+                          </label>
+                          <span className="pill subtle category-pill">{item.category}</span>
                         </article>
                       ))}
                     </div>

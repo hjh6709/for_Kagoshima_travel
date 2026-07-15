@@ -75,7 +75,13 @@ func (r *PostgresTripRepository) Save(trip model.Trip) error {
 }
 
 func (r *PostgresTripRepository) SaveShareLink(link model.ShareLink) error {
-	_, err := r.pool.Exec(context.Background(),
+	// 기존 해당 여행에 발급된 모든 공유 링크를 삭제하여 이전 링크를 강제 만료(무효화)시킵니다.
+	_, err := r.pool.Exec(context.Background(), `DELETE FROM share_links WHERE trip_id = $1`, link.TripID)
+	if err != nil {
+		return err
+	}
+
+	_, err = r.pool.Exec(context.Background(),
 		`INSERT INTO share_links (id, trip_id, token, created_at, expires_at) VALUES ($1,$2,$3,$4,$5)`,
 		link.ID, link.TripID, link.Token, link.CreatedAt, link.ExpiresAt)
 	return err

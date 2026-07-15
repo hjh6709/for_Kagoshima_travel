@@ -102,3 +102,16 @@ CREATE INDEX ON schedules (trip_id, date, sort_order);
 CREATE INDEX ON places (trip_id, category);
 CREATE INDEX ON flights (trip_id, departure_date, sort_order);
 CREATE UNIQUE INDEX ON share_links (token);
+
+CREATE TABLE checklists (
+    id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    trip_id             UUID NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
+    category            TEXT NOT NULL,
+    title               TEXT NOT NULL,
+    is_completed        BOOLEAN NOT NULL DEFAULT FALSE,
+    custom              BOOLEAN NOT NULL DEFAULT FALSE,
+    destination_country TEXT,
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX ON checklists (trip_id);

@@ -11,6 +11,7 @@ import {
 } from "./useTripManageFormState";
 import { useTripManageSessionTrips } from "./useTripManageSessionTrips";
 import { useTripManageShareLink } from "./useTripManageShareLink";
+import { useTripManageChecklistActions } from "./useTripManageChecklistActions";
 
 type UseTripManageControllerParams = {
   currentPath: string;
@@ -405,6 +406,24 @@ export function useTripManageController({
     selectedOwnerTrip,
   });
 
+  const {
+    checklistItems,
+    checklistLoading,
+    checklistError,
+    newChecklistTitle,
+    setNewChecklistTitle,
+    newChecklistCategory,
+    setNewChecklistCategory,
+    checklistSubmitting,
+    handleAddChecklistItem,
+    handleToggleChecklistItem,
+    handleDeleteChecklistItem,
+  } = useTripManageChecklistActions({
+    tripID: selectedOwnerTrip ? selectedOwnerTrip.id : null,
+    accessToken: ownerAuth ? ownerAuth.accessToken : null,
+    clearOwnerSession,
+  });
+
   useSelectedOwnerTripLifecycle({
     fillTripEditForm,
     prepareFlightManageForm,
@@ -540,6 +559,12 @@ export function useTripManageController({
     flightEditSubmitting,
     placeCreateError,
     placeCreateSubmitting,
+    checklistItems,
+    checklistLoading,
+    checklistError,
+    newChecklistTitle,
+    newChecklistCategory,
+    checklistSubmitting,
     placeDeleteError,
     placeEditError,
     placeEditSubmitting,
@@ -652,5 +677,12 @@ export function useTripManageController({
     onSubmitFlightEdit: submitFlightEdit,
     onSubmitScheduleEdit: submitScheduleEdit,
     onSubmitTripEdit: submitTripEdit,
+
+    // 체크리스트 고도화 핸들러
+    onNewChecklistTitleChange: setNewChecklistTitle,
+    onNewChecklistCategoryChange: setNewChecklistCategory,
+    onAddChecklistItem: handleAddChecklistItem,
+    onToggleChecklistItem: handleToggleChecklistItem,
+    onDeleteChecklistItem: handleDeleteChecklistItem,
   };
 }

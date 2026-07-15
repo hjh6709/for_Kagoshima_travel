@@ -27,3 +27,6 @@ skills-lock.json
 
 # Compiled binaries
 apps/api/travel-api
+
+# Patches
+*.patch
