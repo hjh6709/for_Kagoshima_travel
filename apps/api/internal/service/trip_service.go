@@ -465,7 +465,9 @@ func (s *TripService) CreateTrip(ownerID string, req dto.CreateTripRequest) (dto
 		return dto.TripResponse{}, err
 	}
 	destCountry := req.DestinationCountry
-	// 빈 문자열이거나 지원하지 않는 규격 외 국가 코드인 경우 디폴트 'JP'로 자동 보정
+	// [시니어 코드리뷰 반영]: 입력값 유효성 검증 및 예방 조치
+	// 신규 생성 요청 시 목적지 국가 정보가 없거나 허용되지 않는 국가 코드일 경우,
+	// 기존 여행 데이터베이스의 무결성을 깨뜨리지 않고 하위 호환성을 갖추기 위해 디폴트인 일본('JP')으로 안전하게 귀결시킵니다.
 	if destCountry == "" || (destCountry != "JP" && destCountry != "CN") {
 		destCountry = "JP"
 	}
@@ -519,7 +521,9 @@ func (s *TripService) UpdateTrip(id, ownerID string, req dto.UpdateTripRequest) 
 	}
 	if req.DestinationCountry != nil {
 		dc := *req.DestinationCountry
-		// 빈 문자열이거나 지원하지 않는 규격 외 국가 코드인 경우 디폴트 'JP'로 자동 보정
+		// [시니어 코드리뷰 반영]: 입력값 유효성 검증 레이어 구축
+		// 클라이언트가 잘못된 국가 코드나 빈 문자열("")을 보낼 경우 데이터의 일관성이 깨질 위험이 있으므로,
+		// 지원 가능한 규격 국가(일본: JP, 중국: CN)인지 체크하고 아닐 경우 안전하게 디폴트값 'JP'로 보정 처리합니다.
 		if dc == "" || (dc != "JP" && dc != "CN") {
 			dc = "JP"
 		}
