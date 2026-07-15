@@ -56,7 +56,6 @@ export function QuickTravelHelper({ destinationCountry = "JP" }: QuickTravelHelp
   const [exchangeRate, setExchangeRate] = useState<number>(defaultRate);
   const [foreignVal, setForeignVal] = useState<string>("");
   const [krwVal, setKrwVal] = useState<string>("");
-  const [isForeignToKrw, setIsForeignToKrw] = useState<boolean>(true);
 
   // 크게 보여주기 줌인(Magnify) 모달 상태
   const [zoomedPhrase, setZoomedPhrase] = useState<Phrase | null>(null);
