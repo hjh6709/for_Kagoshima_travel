@@ -1,16 +1,24 @@
-// Local storage cache utility for offline first behavior
+// [시니어 엔지니어링 가이드라인]: 오프라인 PWA 복원용 로컬 스토리지 캐싱 유틸리티
+// 네트워크 연결이 오프라인 상태일 때도 사용자가 여행 정보를 막힘 없이 조회할 수 있도록
+// 응답 결과를 로컬 브라우저 디렉토리에 캐싱하고 검증하는 상태 헬퍼들로 구성되어 있습니다.
 
 export const OFFLINE_CACHE_KEYS = {
-  SHARED_TRIP: (token: string) => `shared-trip-${token}`,
-  OWNER_TRIP: (tripId: string) => `owner-trip-${tripId}`,
-  MY_TRIPS: "my-trips",
+  SHARED_TRIP: (token: string) => `shared-trip-${token}`, // 공유용 페이지 전용 키
+  OWNER_TRIP: (tripId: string) => `owner-trip-${tripId}`,   // 여행 소유자(관리자)용 데이터 키
+  MY_TRIPS: "my-trips",                                     // 로그인한 소유자의 여행 목록 키
 };
 
+// 캐싱 데이터 저장 시 기록 시간(timestamp)을 래핑하는 봉투 구조체
 interface CacheEnvelope<T> {
   data: T;
   timestamp: number;
 }
 
+/**
+ * 데이터를 브라우저 LocalStorage에 안전하게 캐싱합니다.
+ * @param key 스토리지 식별 키
+ * @param data 캐싱할 제네릭 데이터
+ */
 export function setLocalCache<T>(key: string, data: T): void {
   try {
     const envelope: CacheEnvelope<T> = {
@@ -19,10 +27,14 @@ export function setLocalCache<T>(key: string, data: T): void {
     };
     localStorage.setItem(key, JSON.stringify(envelope));
   } catch (e) {
-    console.error("Error setting local cache", e);
+    console.error("로컬 캐시를 저장하는 도중 오류가 발생했습니다.", e);
   }
 }
 
+/**
+ * 브라우저 LocalStorage에 저장되어 있는 캐시 데이터를 안전하게 역직렬화하여 읽어옵니다.
+ * @param key 스토리지 식별 키
+ */
 export function getLocalCache<T>(key: string): T | null {
   try {
     const item = localStorage.getItem(key);
@@ -30,11 +42,14 @@ export function getLocalCache<T>(key: string): T | null {
     const envelope = JSON.parse(item) as CacheEnvelope<T>;
     return envelope.data;
   } catch (e) {
-    console.error("Error getting local cache", e);
+    console.error("로컬 캐시를 읽어오는 도중 오류가 발생했습니다.", e);
     return null;
   }
 }
 
+/**
+ * 브라우저의 navigator API를 사용하여 실시간 네트워크 연결 여부를 검사합니다.
+ */
 export function isOnline(): boolean {
   return typeof navigator !== "undefined" && navigator.onLine;
 }
