@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -118,7 +119,7 @@ func (s *TripService) GetSharedTrip(token string) (dto.SharedTripResponse, error
 		return dto.SharedTripResponse{}, err
 	}
 
-	checklistItems, err := s.checklistRepository.FindByTrip(link.TripID)
+	checklistItems, err := s.checklistRepository.FindByTrip(context.Background(), link.TripID)
 	if err != nil {
 		return dto.SharedTripResponse{}, err
 	}
@@ -546,7 +547,7 @@ func (s *TripService) CreateTrip(ownerID string, req dto.CreateTripRequest) (dto
 			})
 		}
 	}
-	if err := s.checklistRepository.SaveAll(presetItems); err != nil {
+	if err := s.checklistRepository.SaveAll(context.Background(), presetItems); err != nil {
 		return dto.TripResponse{}, err
 	}
 

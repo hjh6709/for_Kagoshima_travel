@@ -3,6 +3,7 @@ import type { AuthResponse } from "../../api/auth";
 import type { OwnerTrip, SharedFlight, SharedPlace, SharedSchedule } from "../../api/trips";
 import type { FlightDirection } from "../../shared/travelOptions";
 import type { PlaceCategory, ScheduleItem } from "../../types/travel";
+import type { ChecklistItemResponse } from "../../api/checklist";
 
 export type AuthMode = "login" | "register";
 
@@ -218,7 +219,7 @@ export type SelectedTripDetailSectionProps = {
 	tripEditDestinationCountry: string;
 
 	// 체크리스트 고도화 필드
-	checklistItems: any[];
+	checklistItems: ChecklistItemResponse[];
 	checklistLoading: boolean;
 	checklistError: string;
 	newChecklistTitle: string;

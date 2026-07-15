@@ -1,5 +1,5 @@
 import { ExternalLink, Plane } from "lucide-react";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import type { SharedTripResponse } from "../../api/trips";
 import { formatKoreanDate, formatShortDate } from "../../shared/date";
 import { sortSharedFlights } from "../../shared/sort";
@@ -12,6 +12,18 @@ type SharedTripPageProps = {
 };
 
 export function SharedTripPage({ error, loading, sharedTrip }: SharedTripPageProps) {
+  useEffect(() => {
+    // 검색엔진 크롤링 색인 방지 (noindex, nofollow) 메타 태그 동적 삽입
+    const meta = document.createElement("meta");
+    meta.name = "robots";
+    meta.content = "noindex, nofollow";
+    document.head.appendChild(meta);
+
+    return () => {
+      document.head.removeChild(meta);
+    };
+  }, []);
+
   const placeByID = useMemo(() => {
     if (!sharedTrip) return new Map<string, SharedTripResponse["places"][number]>();
     return new Map(sharedTrip.places.map((place) => [place.id, place]));

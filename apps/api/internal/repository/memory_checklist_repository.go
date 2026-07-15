@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"sync"
 
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/model"
@@ -21,7 +22,7 @@ func NewMemoryChecklistRepository() *MemoryChecklistRepository {
 }
 
 // Save는 메모리 슬라이스에 새로운 준비물 항목을 덧붙여 저장합니다.
-func (r *MemoryChecklistRepository) Save(item model.ChecklistItem) error {
+func (r *MemoryChecklistRepository) Save(ctx context.Context, item model.ChecklistItem) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -30,7 +31,7 @@ func (r *MemoryChecklistRepository) Save(item model.ChecklistItem) error {
 }
 
 // SaveAll은 여러 항목을 메모리 슬라이스에 벌크로 추가합니다.
-func (r *MemoryChecklistRepository) SaveAll(items []model.ChecklistItem) error {
+func (r *MemoryChecklistRepository) SaveAll(ctx context.Context, items []model.ChecklistItem) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -39,7 +40,7 @@ func (r *MemoryChecklistRepository) SaveAll(items []model.ChecklistItem) error {
 }
 
 // FindChecklist는 메모리 슬라이스에서 일치하는 ID의 준비물 데이터를 선형 검색으로 조회합니다.
-func (r *MemoryChecklistRepository) FindChecklist(id string) (model.ChecklistItem, error) {
+func (r *MemoryChecklistRepository) FindChecklist(ctx context.Context, id string) (model.ChecklistItem, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -52,7 +53,7 @@ func (r *MemoryChecklistRepository) FindChecklist(id string) (model.ChecklistIte
 }
 
 // FindByTrip은 특정 여행 ID에 묶인 전체 준비물들을 검색해서 슬라이스로 모아 반환합니다.
-func (r *MemoryChecklistRepository) FindByTrip(tripID string) ([]model.ChecklistItem, error) {
+func (r *MemoryChecklistRepository) FindByTrip(ctx context.Context, tripID string) ([]model.ChecklistItem, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -66,7 +67,7 @@ func (r *MemoryChecklistRepository) FindByTrip(tripID string) ([]model.Checklist
 }
 
 // Update는 메모리 슬라이스 내 매칭되는 기존 항목을 찾아 새로운 상태의 구조체로 덮어씁니다.
-func (r *MemoryChecklistRepository) Update(item model.ChecklistItem) error {
+func (r *MemoryChecklistRepository) Update(ctx context.Context, item model.ChecklistItem) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -80,7 +81,7 @@ func (r *MemoryChecklistRepository) Update(item model.ChecklistItem) error {
 }
 
 // Delete는 메모리 슬라이스 내 매칭되는 ID의 인덱스를 찾아 슬라이스 슬라이싱 연산으로 항목을 제거합니다.
-func (r *MemoryChecklistRepository) Delete(id string) error {
+func (r *MemoryChecklistRepository) Delete(ctx context.Context, id string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -26,7 +27,7 @@ func NewChecklistService(checklistRepository repository.ChecklistRepository, tri
 
 // ensureTripOwner는 특정 여행 ID의 소유자(Owner)가 로그인한 사용자(userID)인지 검증하는 내부 도우미 메서드입니다.
 // 일치하지 않으면 ErrForbidden(403) 또는 ErrTripNotFound(404) 에러를 반환합니다.
-func (s *ChecklistService) ensureTripOwner(tripID, userID string) error {
+func (s *ChecklistService) ensureTripOwner(ctx context.Context, tripID, userID string) error {
 	trip, err := s.tripRepository.FindTrip(tripID)
 	if err != nil {
 		return ErrTripNotFound
@@ -38,12 +39,12 @@ func (s *ChecklistService) ensureTripOwner(tripID, userID string) error {
 }
 
 // ListChecklist는 특정 여행 ID에 등록된 준비물 목록을 조회하여 DTO 배열 규격으로 가공한 뒤 반환합니다.
-func (s *ChecklistService) ListChecklist(tripID, userID string) ([]dto.ChecklistItemResponse, error) {
-	if err := s.ensureTripOwner(tripID, userID); err != nil {
+func (s *ChecklistService) ListChecklist(ctx context.Context, tripID, userID string) ([]dto.ChecklistItemResponse, error) {
+	if err := s.ensureTripOwner(ctx, tripID, userID); err != nil {
 		return nil, err
 	}
 
-	items, err := s.checklistRepository.FindByTrip(tripID)
+	items, err := s.checklistRepository.FindByTrip(ctx, tripID)
 	if err != nil {
 		return nil, err
 	}
@@ -56,8 +57,8 @@ func (s *ChecklistService) ListChecklist(tripID, userID string) ([]dto.Checklist
 }
 
 // CreateChecklistCustomItem은 여행 소유자가 수동으로 입력한 커스텀 준비물 항목을 유효성 검증 후 DB에 생성 및 저장합니다.
-func (s *ChecklistService) CreateChecklistCustomItem(tripID, userID string, req dto.CreateChecklistItemRequest) (dto.ChecklistItemResponse, error) {
-	if err := s.ensureTripOwner(tripID, userID); err != nil {
+func (s *ChecklistService) CreateChecklistCustomItem(ctx context.Context, tripID, userID string, req dto.CreateChecklistItemRequest) (dto.ChecklistItemResponse, error) {
+	if err := s.ensureTripOwner(ctx, tripID, userID); err != nil {
 		return dto.ChecklistItemResponse{}, err
 	}
 	// 카테고리 유효성 및 타이틀 공백 검증
@@ -80,20 +81,20 @@ func (s *ChecklistService) CreateChecklistCustomItem(tripID, userID string, req 
 		CreatedAt:   time.Now(),
 	}
 
-	if err := s.checklistRepository.Save(item); err != nil {
+	if err := s.checklistRepository.Save(ctx, item); err != nil {
 		return dto.ChecklistItemResponse{}, err
 	}
 	return mapChecklistItemResponse(item), nil
 }
 
 // UpdateChecklistItem은 기존 준비물 레코드의 체크 완료 여부(isCompleted) 또는 타이틀을 변경 처리합니다.
-func (s *ChecklistService) UpdateChecklistItem(checklistID, userID string, req dto.UpdateChecklistItemRequest) (dto.ChecklistItemResponse, error) {
-	item, err := s.checklistRepository.FindChecklist(checklistID)
+func (s *ChecklistService) UpdateChecklistItem(ctx context.Context, checklistID, userID string, req dto.UpdateChecklistItemRequest) (dto.ChecklistItemResponse, error) {
+	item, err := s.checklistRepository.FindChecklist(ctx, checklistID)
 	if err != nil {
 		return dto.ChecklistItemResponse{}, err
 	}
 
-	if err := s.ensureTripOwner(item.TripID, userID); err != nil {
+	if err := s.ensureTripOwner(ctx, item.TripID, userID); err != nil {
 		return dto.ChecklistItemResponse{}, err
 	}
 
@@ -105,24 +106,24 @@ func (s *ChecklistService) UpdateChecklistItem(checklistID, userID string, req d
 		item.IsCompleted = *req.IsCompleted
 	}
 
-	if err := s.checklistRepository.Update(item); err != nil {
+	if err := s.checklistRepository.Update(ctx, item); err != nil {
 		return dto.ChecklistItemResponse{}, err
 	}
 	return mapChecklistItemResponse(item), nil
 }
 
 // DeleteChecklistItem은 지정한 준비물 항목을 인가 검증 후 완전히 삭제합니다.
-func (s *ChecklistService) DeleteChecklistItem(checklistID, userID string) error {
-	item, err := s.checklistRepository.FindChecklist(checklistID)
+func (s *ChecklistService) DeleteChecklistItem(ctx context.Context, checklistID, userID string) error {
+	item, err := s.checklistRepository.FindChecklist(ctx, checklistID)
 	if err != nil {
 		return err
 	}
 
-	if err := s.ensureTripOwner(item.TripID, userID); err != nil {
+	if err := s.ensureTripOwner(ctx, item.TripID, userID); err != nil {
 		return err
 	}
 
-	return s.checklistRepository.Delete(checklistID)
+	return s.checklistRepository.Delete(ctx, checklistID)
 }
 
 // mapChecklistItemResponse는 도메인 모델 ChecklistItem 구조체를 DTO ChecklistItemResponse 구조체로 맵핑합니다.

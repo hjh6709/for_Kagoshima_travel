@@ -27,7 +27,7 @@ func (h *ChecklistHandler) ListChecklist(w http.ResponseWriter, r *http.Request)
 	claims := middleware.GetClaims(r)
 	tripID := r.PathValue("tripID")
 
-	items, err := h.checklistService.ListChecklist(tripID, claims.UserID)
+	items, err := h.checklistService.ListChecklist(r.Context(), tripID, claims.UserID)
 	if err != nil {
 		writeServiceError(w, err)
 		return
@@ -47,7 +47,7 @@ func (h *ChecklistHandler) CreateChecklistCustomItem(w http.ResponseWriter, r *h
 		return
 	}
 
-	item, err := h.checklistService.CreateChecklistCustomItem(tripID, claims.UserID, req)
+	item, err := h.checklistService.CreateChecklistCustomItem(r.Context(), tripID, claims.UserID, req)
 	if err != nil {
 		writeServiceError(w, err)
 		return
@@ -67,7 +67,7 @@ func (h *ChecklistHandler) UpdateChecklistItem(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	item, err := h.checklistService.UpdateChecklistItem(checklistID, claims.UserID, req)
+	item, err := h.checklistService.UpdateChecklistItem(r.Context(), checklistID, claims.UserID, req)
 	if err != nil {
 		writeServiceError(w, err)
 		return
@@ -81,7 +81,7 @@ func (h *ChecklistHandler) DeleteChecklistItem(w http.ResponseWriter, r *http.Re
 	claims := middleware.GetClaims(r)
 	checklistID := r.PathValue("checklistID")
 
-	err := h.checklistService.DeleteChecklistItem(checklistID, claims.UserID)
+	err := h.checklistService.DeleteChecklistItem(r.Context(), checklistID, claims.UserID)
 	if err != nil {
 		writeServiceError(w, err)
 		return
