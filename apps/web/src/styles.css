@@ -18,6 +18,7 @@
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
 }
 
 * {
@@ -100,7 +101,7 @@ button:disabled {
 
 .status-card span {
   font-size: 20px;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: -0.02em;
 }
 
@@ -123,7 +124,7 @@ button:disabled {
   gap: 6px;
   color: var(--c-muted);
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .date-form input {
@@ -135,7 +136,7 @@ button:disabled {
   color: var(--c-text);
   font: inherit;
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
   padding: 8px 10px;
 }
 
@@ -150,7 +151,7 @@ button:disabled {
   gap: 6px;
   color: var(--c-muted);
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .auth-form input,
@@ -164,7 +165,7 @@ button:disabled {
   color: var(--c-text);
   font: inherit;
   font-size: 15px;
-  font-weight: 800;
+  font-weight: 700;
   padding: 10px 12px;
 }
 
@@ -222,7 +223,7 @@ button:disabled {
 
 .auth-help code {
   color: var(--c-green);
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .form-error {
@@ -231,7 +232,7 @@ button:disabled {
   background: var(--c-danger-light);
   color: var(--c-danger);
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
   padding: 10px 12px;
 }
 
@@ -241,7 +242,7 @@ button:disabled {
   background: var(--c-green-light);
   color: var(--c-green);
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
   padding: 10px 12px;
 }
 
@@ -337,7 +338,7 @@ button:disabled {
   margin-top: 2px;
   color: var(--c-muted);
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.45;
 }
 
@@ -374,7 +375,7 @@ button:disabled {
   background: var(--c-green-light);
   color: var(--c-green);
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 700;
   text-align: center;
 }
 
@@ -431,14 +432,14 @@ button:disabled {
   background: rgba(255, 255, 255, 0.62);
   color: var(--c-green);
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .muted-label {
   color: var(--c-muted);
   display: block;
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 700;
   margin-bottom: 4px;
 }
 
@@ -485,7 +486,7 @@ button:disabled {
   gap: 6px;
   color: var(--c-muted);
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .share-link-panel input {
@@ -497,7 +498,7 @@ button:disabled {
   color: var(--c-text);
   font: inherit;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
   padding: 8px 10px;
 }
 
@@ -520,7 +521,7 @@ button:disabled {
 
 .eyebrow {
   color: var(--c-gold);
-  font-weight: 800;
+  font-weight: 700;
   margin: 0 0 8px;
 }
 
@@ -596,7 +597,7 @@ p {
   background: var(--c-gold-light);
   color: var(--c-gold);
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .pill.subtle {
@@ -615,7 +616,7 @@ p {
   justify-content: center;
   gap: 8px;
   text-decoration: none;
-  font-weight: 800;
+  font-weight: 700;
   border-radius: 10px;
 }
 
@@ -678,7 +679,7 @@ p {
   margin: 4px 0 0;
   color: var(--c-muted);
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.5;
 }
 
@@ -710,7 +711,7 @@ p {
   background: transparent;
   color: var(--c-muted);
   border-radius: 8px;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .date-tabs button.active {
@@ -749,7 +750,7 @@ p {
 .place-label {
   color: var(--c-muted);
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .completed-pill {
@@ -768,7 +769,7 @@ p {
 }
 
 .schedule-summary span {
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .schedule-summary small {
@@ -806,7 +807,7 @@ p {
 }
 
 .time {
-  font-weight: 900;
+  font-weight: 700;
   color: var(--c-green);
 }
 
@@ -887,7 +888,7 @@ p {
   border-top: 1px solid rgba(36, 48, 47, 0.08);
   color: var(--c-muted);
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .compact-button {
@@ -972,7 +973,7 @@ p {
   gap: 10px;
   padding: 10px 12px;
   text-align: left;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .date-details {
@@ -985,7 +986,7 @@ p {
 .date-details summary {
   cursor: pointer;
   color: var(--c-muted);
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .info-card,
@@ -1030,13 +1031,13 @@ p {
   margin-bottom: 4px;
   color: var(--c-muted);
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .flight-details dd {
   margin: 0;
   color: var(--c-text);
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .check-row {
@@ -1049,7 +1050,7 @@ p {
   gap: 8px;
   padding: 8px;
   text-align: left;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .check-toggle {
@@ -1063,7 +1064,7 @@ p {
   gap: 12px;
   padding: 8px;
   text-align: left;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .icon-button {
@@ -1106,7 +1107,7 @@ p {
   background: var(--c-green);
   color: #ffffff;
   font-size: 13px;
-  font-weight: 900;
+  font-weight: 700;
   padding: 6px 10px;
   text-align: center;
 }
@@ -1126,7 +1127,7 @@ p {
   gap: 6px;
   color: var(--c-muted);
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .check-add-form input,
@@ -1139,7 +1140,7 @@ p {
   color: var(--c-text);
   font: inherit;
   font-size: 15px;
-  font-weight: 800;
+  font-weight: 700;
   padding: 10px 12px;
 }
 
@@ -1175,7 +1176,7 @@ p {
   gap: 2px;
   padding: 8px 2px;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .bottom-tabs button.active {
@@ -1246,7 +1247,7 @@ p {
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--c-muted);
   margin-bottom: 14px;
 }
@@ -1258,7 +1259,7 @@ p {
   border-radius: 6px;
   padding: 2px 6px;
   text-align: center;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .exchange-inputs {
@@ -1279,7 +1280,7 @@ p {
 
 .unit-label {
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--c-muted);
   min-width: 90px;
 }
@@ -1290,7 +1291,7 @@ p {
   background: transparent;
   text-align: right;
   font-size: 18px;
-  font-weight: 900;
+  font-weight: 700;
   color: var(--c-text);
   padding: 0;
   width: 100%;
@@ -1351,19 +1352,19 @@ p {
 
 .korean-text {
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--c-muted);
 }
 
 .foreign-text {
   font-size: 16px;
-  font-weight: 900;
+  font-weight: 700;
   color: var(--c-text);
 }
 
 .pronun-text {
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--c-gold);
 }
 
@@ -1440,27 +1441,27 @@ p {
 
 .zoom-korean {
   font-size: 18px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--c-muted);
 }
 
 .zoom-foreign {
   font-size: 38px;
-  font-weight: 900;
+  font-weight: 700;
   color: var(--c-text);
   line-height: 1.2;
 }
 
 .zoom-pronun {
   font-size: 22px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--c-gold);
 }
 
 .zoom-instruction {
   font-size: 13px;
   color: var(--c-muted);
-  font-weight: 800;
+  font-weight: 700;
   margin: 16px 0 0;
   border-top: 1px dashed rgba(36, 48, 47, 0.1);
   padding-top: 12px;
