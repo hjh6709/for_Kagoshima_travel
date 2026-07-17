@@ -368,6 +368,12 @@ export function ManageAuthSection({
           </div>
         </label>
 
+        {authMode === "register" && authPassword && !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/.test(authPassword) && (
+          <p className="form-error" style={{ fontSize: "11px", marginTop: "4px", color: "var(--c-muted)" }}>
+            ⚠️ 영문 대/소문자, 숫자, 특수문자를 각각 최소 1개 이상 포함해야 합니다.
+          </p>
+        )}
+
         {authMode === "register" && (
           <label className="auth-field-label" style={{ marginTop: "12px" }}>
             <span>사람 인증 (수학 퀴즈 방지)</span>

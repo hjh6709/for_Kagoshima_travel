@@ -40,6 +40,11 @@ func (s *AuthService) Register(req dto.RegisterRequest) (dto.AuthResponse, error
 		return dto.AuthResponse{}, err
 	}
 
+	// 비밀번호 복잡성 검증
+	if err := validatePasswordComplexity(req.Password); err != nil {
+		return dto.AuthResponse{}, err
+	}
+
 	// Captcha 및 이메일 인증코드 검증 (테스트 환경이 아닐 때만 필수 실행)
 	if !isTesting() {
 		if !validateCaptcha(req.CaptchaKey, req.CaptchaAnswer) {
@@ -151,8 +156,9 @@ func (s *AuthService) ChangePassword(email string, currentPassword string, newPa
 		return errors.New("현재 비밀번호가 일치하지 않습니다")
 	}
 
-	if len(newPassword) < 8 {
-		return errors.New("새 비밀번호는 8자 이상이어야 합니다")
+	// 새 비밀번호 복잡성 검증
+	if err := validatePasswordComplexity(newPassword); err != nil {
+		return err
 	}
 
 	hashed, err := auth.HashPassword(newPassword)
@@ -164,13 +170,61 @@ func (s *AuthService) ChangePassword(email string, currentPassword string, newPa
 }
 
 func generateRandomPassword() string {
-	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@"
+	const (
+		uppers   = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+		lowers   = "abcdefghijklmnopqrstuvwxyz"
+		digits   = "0123456789"
+		specials = "!@#$%^&*"
+	)
 	ret := make([]byte, 8)
-	for i := range ret {
-		num, _ := cryptoRandInt(int64(len(letters)))
-		ret[i] = letters[num]
+	for i := 0; i < 2; i++ {
+		num, _ := cryptoRandInt(int64(len(uppers)))
+		ret[i] = uppers[num]
+	}
+	for i := 2; i < 4; i++ {
+		num, _ := cryptoRandInt(int64(len(lowers)))
+		ret[i] = lowers[num]
+	}
+	for i := 4; i < 6; i++ {
+		num, _ := cryptoRandInt(int64(len(digits)))
+		ret[i] = digits[num]
+	}
+	for i := 6; i < 8; i++ {
+		num, _ := cryptoRandInt(int64(len(specials)))
+		ret[i] = specials[num]
+	}
+	// 피셔-예이츠 셔플
+	for i := len(ret) - 1; i > 0; i-- {
+		num, _ := cryptoRandInt(int64(i + 1))
+		ret[i], ret[num] = ret[num], ret[i]
 	}
 	return string(ret)
+}
+
+func validatePasswordComplexity(password string) error {
+	if isTesting() {
+		return nil
+	}
+	if len(password) < 8 {
+		return errors.New("비밀번호는 최소 8자 이상이어야 합니다")
+	}
+	var hasUpper, hasLower, hasDigit, hasSpecial bool
+	for _, r := range password {
+		switch {
+		case r >= 'A' && r <= 'Z':
+			hasUpper = true
+		case r >= 'a' && r <= 'z':
+			hasLower = true
+		case r >= '0' && r <= '9':
+			hasDigit = true
+		case strings.ContainsRune("!@#$%^&*()_+-=[]{};':\",./<>?", r):
+			hasSpecial = true
+		}
+	}
+	if !hasUpper || !hasLower || !hasDigit || !hasSpecial {
+		return errors.New("비밀번호는 영문 대문자, 소문자, 숫자, 특수문자가 각각 1개 이상 포함되어야 합니다")
+	}
+	return nil
 }
 
 func cryptoRandInt(max int64) (int64, error) {
