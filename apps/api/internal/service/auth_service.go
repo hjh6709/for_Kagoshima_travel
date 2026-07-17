@@ -339,7 +339,6 @@ func (s *AuthService) SendVerificationCode(email string, purpose string) (string
 		}
 
 		header := mail.Header{
-			"To":           []string{cleanEmail},
 			"Subject":      []string{cleanSubject},
 			"Content-Type": []string{"text/plain; charset=UTF-8"},
 		}
