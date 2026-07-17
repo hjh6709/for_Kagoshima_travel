@@ -84,9 +84,9 @@ func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tempPass, err := h.authService.ForgotPassword(req.Email)
+	tempPass, err := h.authService.ForgotPassword(req.Email, req.Code)
 	if err != nil {
-		httpjson.WriteError(w, http.StatusNotFound, err.Error())
+		httpjson.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
