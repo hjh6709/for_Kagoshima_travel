@@ -75,10 +75,11 @@ export function getCurrentUser(accessToken: string) {
   });
 }
 
-export function sendVerificationCode(email: string) {
+// 이메일 인증코드 발송 시, 가입(register) 또는 분실(forgot) 목적 구분 파라미터(purpose)를 실어서 보냅니다.
+export function sendVerificationCode(email: string, purpose: string) {
   return apiRequest<{ code: string }>("/api/auth/send-verification-code", {
     method: "POST",
-    body: JSON.stringify({ email }),
+    body: JSON.stringify({ email, purpose }),
   });
 }
 

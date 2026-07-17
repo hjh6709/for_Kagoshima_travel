@@ -6,6 +6,8 @@ import (
 	"flag"
 	"fmt"
 	"math/big"
+	"net/smtp"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -235,16 +237,70 @@ func cryptoRandInt(max int64) (int64, error) {
 	return nBig.Int64(), nil
 }
 
-func (s *AuthService) SendVerificationCode(email string) (string, error) {
+// 이메일 주소로 회원가입 또는 비밀번호 재설정 목적의 6자리 인증코드를 전송하는 메서드입니다.
+// SMTP 환경 변수가 주입되어 있다면 실제 메일이 전송되고, 그렇지 않다면 가상 시뮬레이터 연동용 코드를 반환합니다.
+func (s *AuthService) SendVerificationCode(email string, purpose string) (string, error) {
 	if email == "" {
 		return "", errors.New("이메일을 입력해 주세요")
 	}
+
+	normalizedEmail := strings.ToLower(email)
+
+	// 목적별 이메일 존재 유무 사전 확인 (중복 가입 방어 및 유효 계정 타겟 발송)
+	_, findErr := s.userRepo.FindByEmail(normalizedEmail)
+	if purpose == "register" {
+		if findErr == nil {
+			return "", errors.New("이미 등록된 이메일 주소입니다")
+		}
+	} else if purpose == "forgot" {
+		if findErr != nil {
+			return "", errors.New("가입되어 있지 않은 이메일 주소입니다")
+		}
+	}
+
 	num, err := rand.Int(rand.Reader, big.NewInt(900000))
 	if err != nil {
 		return "", err
 	}
 	code := fmt.Sprintf("%06d", num.Int64()+100000) // 100000 ~ 999999
-	s.verificationCodes.Store(strings.ToLower(email), code)
+	s.verificationCodes.Store(normalizedEmail, code)
+
+	// OS 환경 변수를 통해 SMTP 자격 증명을 획득합니다.
+	smtpHost := os.Getenv("SMTP_HOST")
+	smtpPort := os.Getenv("SMTP_PORT")
+	smtpUser := os.Getenv("SMTP_USER")
+	smtpPass := os.Getenv("SMTP_PASS")
+
+	// SMTP 설정이 모두 등록되어 있고, 테스트 환경이 아니라면 실제 이메일을 발송합니다.
+	if smtpHost != "" && smtpPort != "" && smtpUser != "" && smtpPass != "" && !isTesting() {
+		addr := smtpHost + ":" + smtpPort
+		authClient := smtp.PlainAuth("", smtpUser, smtpPass, smtpHost)
+		
+		var emailSubject string
+		if purpose == "register" {
+			emailSubject = "[여정 플래너] 회원가입 인증 코드 안내"
+		} else {
+			emailSubject = "[여정 플래너] 비밀번호 찾기 인증 코드 안내"
+		}
+
+		msg := []byte("To: " + email + "\r\n" +
+			"Subject: " + emailSubject + "\r\n" +
+			"Content-Type: text/plain; charset=UTF-8\r\n\r\n" +
+			"안녕하세요. 스마트 여정 플래너입니다.\r\n\r\n" +
+			"본인 인증 및 요청 처리를 위한 6자리 인증 코드를 다음과 같이 보내드립니다.\r\n\r\n" +
+			"인증 코드: [" + code + "]\r\n\r\n" +
+			"해당 인증 코드는 발급된 후 5분 동안만 유효합니다.\r\n" +
+			"감사합니다.\r\n")
+
+		if err := smtp.SendMail(addr, authClient, smtpUser, []string{email}, msg); err != nil {
+			return "", fmt.Errorf("실제 이메일 인증코드 발송 도중 오류가 발생했습니다: %v", err)
+		}
+
+		// 실제 이메일 발송에 성공했다면 브라우저 네트워크 응답에 인증 코드가 노출되지 않도록 은닉 처리합니다.
+		return "", nil
+	}
+
+	// SMTP 설정이 없는 로컬 개발/테스트 모드인 경우 시뮬레이터 배너 노출용 원본 코드를 그대로 반환합니다.
 	return code, nil
 }
 
