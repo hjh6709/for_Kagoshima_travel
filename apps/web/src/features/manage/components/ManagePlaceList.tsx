@@ -1,4 +1,5 @@
-import { Edit3, ExternalLink, Save, Trash2, X } from "lucide-react";
+import { useState } from "react";
+import { Edit3, ExternalLink, Save, Trash2, X, Maximize2 } from "lucide-react";
 import { placeCategoryOptions } from "../../../shared/travelOptions";
 import type { PlaceCategory } from "../../../types/travel";
 import type { TripManagePageProps } from "../manageTypes";
@@ -63,6 +64,8 @@ export function ManagePlaceList({
   placeEditSubmitting,
   destinationCountry,
 }: ManagePlaceListProps & ExtraManagePlaceListProps) {
+  const [zoomedPlace, setZoomedPlace] = useState<{ name: string; address?: string } | null>(null);
+
   return (
     <section className="owner-linked-data-section">
       <div className="section-title-row compact-title-row">
@@ -139,6 +142,14 @@ export function ManagePlaceList({
                       type="button"
                     >
                       📋 정보 복사
+                    </button>
+                    <button
+                      className="secondary-button compact-button"
+                      onClick={() => setZoomedPlace({ name: place.name, address: place.address })}
+                      type="button"
+                      title="큰 글씨로 보기"
+                    >
+                      <Maximize2 size={14} /> 큰 글씨
                     </button>
                   </>
                 )}
@@ -236,6 +247,27 @@ export function ManagePlaceList({
               )}
             </article>
           ))}
+        </div>
+      )}
+
+      {/* 대화면 텍스트 줌 모달 */}
+      {zoomedPlace && (
+        <div className="modal-overlay" onClick={() => setZoomedPlace(null)}>
+          <div className="zoom-modal-card" onClick={(e) => e.stopPropagation()}>
+            <button className="close-btn" onClick={() => setZoomedPlace(null)}>
+              <X size={24} />
+            </button>
+            <div className="zoom-modal-content">
+              <span className="zoom-korean">목적지 안내</span>
+              <span className="zoom-foreign" style={{ fontSize: "32px", fontWeight: 700 }}>{zoomedPlace.name}</span>
+              {zoomedPlace.address && (
+                <span className="zoom-pronun" style={{ fontSize: "16px", marginTop: "12px", color: "var(--c-muted)", wordBreak: "break-all" }}>
+                  주소: {zoomedPlace.address}
+                </span>
+              )}
+            </div>
+            <p className="zoom-instruction">현지 직원에게 스마트폰 화면을 직접 보여주세요!</p>
+          </div>
         </div>
       )}
     </section>
