@@ -73,6 +73,33 @@ export function ManageAuthSection({
     }
   };
 
+  const [forgotCode, setForgotCode] = useState("");
+
+  const handleSendForgotCode = async () => {
+    if (!forgotEmail || !forgotEmail.includes("@")) {
+      alert("올바른 이메일 주소를 입력하고 코드를 요청해 주세요.");
+      return;
+    }
+    setSendSubmitting(true);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || "/api"}/auth/send-verification-code`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotEmail }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "인증코드 전송에 실패했습니다.");
+      }
+      setVerificationPopup(data.code);
+      setCodeSent(true);
+    } catch (err: any) {
+      alert(err.message || "인증코드 발송 중 오류가 발생했습니다.");
+    } finally {
+      setSendSubmitting(false);
+    }
+  };
+
   const handleForgotPasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setForgotSubmitting(true);
@@ -82,7 +109,7 @@ export function ManageAuthSection({
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || "/api"}/auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: forgotEmail }),
+        body: JSON.stringify({ email: forgotEmail, code: forgotCode }),
       });
       const data = await response.json();
       if (!response.ok) {
@@ -140,6 +167,31 @@ export function ManageAuthSection({
                   type="email"
                   value={forgotEmail}
                 />
+              </div>
+            </label>
+
+            <label className="auth-field-label" style={{ marginTop: "12px" }}>
+              <span>이메일 인증 코드 (6자리)</span>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <input
+                  name="verificationCode"
+                  onChange={(event) => setForgotCode(event.target.value)}
+                  placeholder="시뮬레이터 코드를 입력하세요"
+                  required
+                  type="text"
+                  maxLength={6}
+                  value={forgotCode}
+                  style={{ flex: 1 }}
+                />
+                <button
+                  className="secondary-button"
+                  disabled={sendSubmitting}
+                  onClick={handleSendForgotCode}
+                  type="button"
+                  style={{ marginTop: 0, padding: "0 12px", whiteSpace: "nowrap", height: "42px", fontSize: "12px" }}
+                >
+                  {sendSubmitting ? "전송 중" : codeSent ? "재전송" : "인증코드 전송"}
+                </button>
               </div>
             </label>
 

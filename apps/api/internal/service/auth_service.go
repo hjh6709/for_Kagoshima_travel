@@ -114,10 +114,18 @@ func validateRegister(req dto.RegisterRequest) error {
 }
 
 // 비밀번호 토글 및 찾기 기능 관련 유틸 및 비즈니스 로직
-func (s *AuthService) ForgotPassword(email string) (string, error) {
+func (s *AuthService) ForgotPassword(email string, code string) (string, error) {
 	user, err := s.userRepo.FindByEmail(strings.ToLower(email))
 	if err != nil {
 		return "", errors.New("존재하지 않는 이메일 주소입니다")
+	}
+
+	// 비밀번호 재설정 시 이메일 인증코드 대조 검증 (테스트 아닐 때 필수)
+	if !isTesting() {
+		storedCode, ok := s.verificationCodes.Load(strings.ToLower(email))
+		if !ok || storedCode.(string) != code {
+			return "", errors.New("이메일 인증코드가 일치하지 않거나 만료되었습니다")
+		}
 	}
 
 	tempPassword := generateRandomPassword()
