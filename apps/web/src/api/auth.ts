@@ -88,3 +88,14 @@ export function forgotPassword(email: string, code: string) {
     body: JSON.stringify({ email, code }),
   });
 }
+
+// 마이페이지에서 본인의 비밀번호를 변경하기 위한 API 호출 헬퍼입니다.
+export function changePassword(accessToken: string, currentPassword: string, newPassword: string) {
+  return apiRequest<void>("/api/auth/change-password", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+}
