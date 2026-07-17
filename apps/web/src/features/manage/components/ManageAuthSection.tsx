@@ -1,4 +1,5 @@
-import { LockKeyhole, Mail, Key, Compass } from "lucide-react";
+import { useState } from "react";
+import { LockKeyhole, Mail, Key, Compass, Eye, EyeOff } from "lucide-react";
 import type { ManageAuthSectionProps } from "../manageTypes";
 
 // 인증 화면만 분리한다. 로그인/회원가입 요청은 App.tsx가 넘긴 콜백이 처리한다.
@@ -15,6 +16,7 @@ export function ManageAuthSection({
   onAuthPasswordChange,
   onSubmitAuth,
 }: ManageAuthSectionProps) {
+  const [showPassword, setShowPassword] = useState(false);
   if (authChecked && auth) {
     return null;
   }
@@ -66,13 +68,23 @@ export function ManageAuthSection({
             <Key size={16} className="field-icon" />
             <input
               autoComplete={authMode === "login" ? "current-password" : "new-password"}
+              className="with-password-toggle"
               minLength={8}
               onChange={(event) => onAuthPasswordChange(event.target.value)}
               placeholder="8자 이상 입력"
               required
-              type="password"
+              type={showPassword ? "text" : "password"}
               value={authPassword}
             />
+            <button
+              className="password-toggle-btn"
+              onClick={() => setShowPassword(!showPassword)}
+              type="button"
+              tabIndex={-1}
+              title={showPassword ? "비밀번호 숨기기" : "비밀번호 보기"}
+            >
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
           </div>
         </label>
 

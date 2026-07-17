@@ -1752,3 +1752,30 @@ p {
   color: var(--c-muted);
   padding-top: 4px;
 }
+
+/* 비밀번호 보기/숨기기 토글 관련 스타일 */
+.password-toggle-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--c-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 4px;
+  transition: color 0.15s, opacity 0.15s;
+}
+
+.password-toggle-btn:hover {
+  color: var(--c-text);
+  opacity: 0.85;
+}
+
+.input-with-icon input.with-password-toggle {
+  padding-right: 42px !important;
+}
