@@ -139,37 +139,57 @@ export function SharedTripPage({ error, loading, sharedTrip }: SharedTripPagePro
                   ) : (
                     <div className="card-stack">
                       {sharedFlights.map((flight) => (
-                        <article className="flight-card shared-flight-card" key={flight.id}>
-                          <div className="flight-card-header">
-                            <span className="pill">{getFlightDirectionLabel(flight.direction)}</span>
-                            <Plane size={20} />
+                        <article className="flight-card-premium" key={flight.id} style={{ marginBottom: "16px" }}>
+                          <div className="flight-card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                            <span className="pill" style={{ background: "var(--c-green-light)", color: "var(--c-green)" }}>
+                              {getFlightDirectionLabel(flight.direction)}
+                            </span>
+                            <span className="muted" style={{ fontSize: "13px", fontWeight: 700 }}>
+                              {flight.flightNumber || "편명 미정"}
+                            </span>
                           </div>
-                          <h2>
-                            {flight.label}
-                            {flight.flightNumber ? ` · ${flight.flightNumber}` : ""}
-                          </h2>
-                          {(flight.airline || flight.memo) && (
-                            <p className="muted">{[flight.airline, flight.memo].filter(Boolean).join(" · ")}</p>
-                          )}
-                          <dl className="flight-details">
-                            <div>
-                              <dt>출발</dt>
-                              <dd>
-                                {flight.departureAirport}
-                                <br />
-                                {formatKoreanDate(flight.departureDate)} {flight.departureTime}
-                              </dd>
+
+                          <div className="ticket-airport-row">
+                            <div className="airport-box" style={{ textAlign: "left" }}>
+                              <span className="airport-code">{flight.departureAirport || "DEP"}</span>
+                              <span className="airport-name">출발 공항</span>
                             </div>
+                            <div className="ticket-plane-divider">
+                              <div className="plane-line"></div>
+                              <div className="plane-icon-wrapper">
+                                <Plane size={16} />
+                              </div>
+                            </div>
+                            <div className="airport-box" style={{ textAlign: "right" }}>
+                              <span className="airport-code">{flight.arrivalAirport || "ARR"}</span>
+                              <span className="airport-name">도착 공항</span>
+                            </div>
+                          </div>
+
+                          <div className="ticket-time-detail">
                             <div>
-                              <dt>도착</dt>
-                              <dd>
-                                {flight.arrivalAirport}
-                                <br />
-                                {flight.arrivalDate ? formatKoreanDate(flight.arrivalDate) : "날짜 미정"}{" "}
+                              <span style={{ display: "block", fontSize: "11px", color: "var(--c-muted)", marginBottom: "2px" }}>출발 시각</span>
+                              <span>{formatShortDate(flight.departureDate)} {flight.departureTime}</span>
+                            </div>
+                            <div style={{ textAlign: "right" }}>
+                              <span style={{ display: "block", fontSize: "11px", color: "var(--c-muted)", marginBottom: "2px" }}>도착 시각</span>
+                              <span>
+                                {flight.arrivalDate ? formatShortDate(flight.arrivalDate) : "날짜 미정"}{" "}
                                 {flight.arrivalTime || "시간 미정"}
-                              </dd>
+                              </span>
                             </div>
-                          </dl>
+                          </div>
+
+                          <div className="ticket-bottom-info">
+                            <span>{flight.airline || "항공사 미정"}</span>
+                            <span>{flight.label}</span>
+                          </div>
+                          
+                          {flight.memo && (
+                            <div style={{ borderTop: "1px dashed rgba(28, 50, 37, 0.08)", paddingTop: "8px", marginTop: "4px", fontSize: "12px", color: "var(--c-muted)" }}>
+                              메모: {flight.memo}
+                            </div>
+                          )}
                         </article>
                       ))}
                     </div>
