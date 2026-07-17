@@ -317,7 +317,7 @@ func (s *AuthService) SendVerificationCode(email string, purpose string) (string
 	if smtpHost != "" && smtpPort != "" && smtpUser != "" && smtpPass != "" && !isTesting() {
 		addr := smtpHost + ":" + smtpPort
 		authClient := smtp.PlainAuth("", smtpUser, smtpPass, smtpHost)
-		
+
 		var emailSubject string
 		if purpose == "register" {
 			emailSubject = "[여정 플래너] 회원가입 인증 코드 안내"
