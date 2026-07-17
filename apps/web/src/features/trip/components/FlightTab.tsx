@@ -2,35 +2,78 @@ import { CheckCircle2, Plane } from "lucide-react";
 import type { TripPageProps } from "../tripPageTypes";
 
 // 항공 탭 렌더링만 담당한다. 공항 체크리스트 상태 변경은 상위 핸들러를 호출한다.
-export function FlightTab({ allChecklist, checkedItems, flights, toggleCheck }: TripPageProps) {
+export function FlightTab({ allChecklist, checkedItems, flights, toggleCheck, trip }: TripPageProps) {
+  const destCode = trip?.destinationCountry === "CN" ? "PVG" : "KOJ";
+  const destName = trip?.destinationCountry === "CN" ? "상하이 푸동" : "가고시마 공항";
+
   return (
     <section className="screen">
       <h1>항공편</h1>
       <p className="muted">공항에서 바로 확인할 수 있도록 출국·입국 항공편을 따로 모았습니다.</p>
 
       <div className="card-stack">
-        {flights.map((flight) => (
-          <article className="flight-card" key={flight.id}>
-            <div className="flight-card-header">
-              <span className="pill">{flight.label}</span>
-              <Plane size={28} />
-            </div>
-            <h2>
-              {flight.airline} {flight.flightNumber}
-            </h2>
-            <dl className="flight-details">
-              <div>
-                <dt>날짜</dt>
-                <dd>{flight.date}</dd>
+        {flights.map((flight) => {
+          const isOutbound = flight.label?.includes("출국") || flight.label?.includes("가는");
+          const depCode = isOutbound ? "ICN" : destCode;
+          const depName = isOutbound ? "인천공항" : destName;
+          const arrCode = isOutbound ? destCode : "ICN";
+          const arrName = isOutbound ? destName : "인천공항";
+
+          return (
+            <article className="flight-card-premium" key={flight.id} style={{ marginBottom: "16px" }}>
+              <div className="flight-card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                <span className="pill" style={{ background: "var(--c-green-light)", color: "var(--c-green)" }}>
+                  {flight.label}
+                </span>
+                <span className="muted" style={{ fontSize: "13px", fontWeight: 700 }}>
+                  {flight.flightNumber || "편명 미정"}
+                </span>
               </div>
-              <div>
-                <dt>시간</dt>
-                <dd>{flight.time}</dd>
+
+              <div className="ticket-airport-row">
+                <div className="airport-box" style={{ textAlign: "left" }}>
+                  <span className="airport-code">{depCode}</span>
+                  <span className="airport-name">{depName}</span>
+                </div>
+                <div className="ticket-plane-divider">
+                  <div className="plane-line"></div>
+                  <div className="plane-icon-wrapper">
+                    <Plane size={16} />
+                  </div>
+                </div>
+                <div className="airport-box" style={{ textAlign: "right" }}>
+                  <span className="airport-code">{arrCode}</span>
+                  <span className="airport-name">{arrName}</span>
+                </div>
               </div>
-            </dl>
-            {flight.memo && <p className="schedule-detail danger-note">{flight.memo}</p>}
-          </article>
-        ))}
+
+              <div className="ticket-time-detail">
+                <div>
+                  <span style={{ display: "block", fontSize: "11px", color: "var(--c-muted)", marginBottom: "2px" }}>출발 정보</span>
+                  <span>
+                    {flight.date || "날짜 미정"}{" "}
+                    {flight.time || "시간 미정"}
+                  </span>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <span style={{ display: "block", fontSize: "11px", color: "var(--c-muted)", marginBottom: "2px" }}>도착 정보</span>
+                  <span>상세 일정 참조</span>
+                </div>
+              </div>
+
+              <div className="ticket-bottom-info">
+                <span>{flight.airline || "항공사 미정"}</span>
+                <span>비행 정보</span>
+              </div>
+              
+              {flight.memo && (
+                <div style={{ borderTop: "1px dashed rgba(28, 50, 37, 0.08)", paddingTop: "8px", marginTop: "4px", fontSize: "12px", color: "var(--c-muted)" }}>
+                  메모: {flight.memo}
+                </div>
+              )}
+            </article>
+          );
+        })}
       </div>
 
       <section className="section-block">

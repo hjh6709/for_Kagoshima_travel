@@ -1657,3 +1657,98 @@ p {
   line-height: 1.25;
   letter-spacing: -0.02em;
 }
+
+/* 보딩패스 스타일 항공권 티켓 */
+.flight-card-premium {
+  border-top: none !important;
+  background: linear-gradient(135deg, var(--c-surface) 0%, rgba(245, 247, 250, 0.95) 100%) !important;
+  border: 1px solid rgba(28, 50, 37, 0.08) !important;
+  box-shadow: 0 10px 30px rgba(28, 50, 37, 0.04) !important;
+  border-radius: 16px !important;
+  padding: 20px !important;
+  display: grid;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.flight-card-premium::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 56px;
+  border-bottom: 1px dashed rgba(28, 50, 37, 0.08);
+}
+
+.ticket-airport-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: center;
+}
+
+.airport-box {
+  display: grid;
+  gap: 2px;
+}
+
+.airport-code {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--c-text);
+  letter-spacing: -0.02em;
+}
+
+.airport-name {
+  font-size: 11px;
+  color: var(--c-muted);
+  font-weight: 700;
+}
+
+.ticket-plane-divider {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin: 0 16px;
+}
+
+.plane-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  border-top: 1px dashed rgba(28, 50, 37, 0.15);
+}
+
+.plane-icon-wrapper {
+  background: var(--c-surface);
+  padding: 0 8px;
+  z-index: 1;
+  color: var(--c-green);
+  transform: rotate(90deg);
+}
+
+.ticket-time-detail {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: var(--c-text);
+  font-weight: 700;
+  border-top: 1px solid rgba(28, 50, 37, 0.05);
+  padding-top: 12px;
+  margin-top: 4px;
+}
+
+.ticket-bottom-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--c-muted);
+  padding-top: 4px;
+}
