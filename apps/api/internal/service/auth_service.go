@@ -83,6 +83,11 @@ func (s *AuthService) Register(req dto.RegisterRequest) (dto.AuthResponse, error
 		return dto.AuthResponse{}, err
 	}
 
+	// 회원가입 성공 후, 동일 코드가 재사용되는 것을 방어하기 위해 인증 캐시를 즉시 삭제합니다.
+	if !isTesting() {
+		s.verificationCodes.Delete(strings.ToLower(req.Email))
+	}
+
 	return s.issueAuthResponse(user)
 }
 
@@ -143,6 +148,11 @@ func (s *AuthService) ForgotPassword(email string, code string) (string, error) 
 
 	if err := s.userRepo.UpdatePassword(user.Email, hashed); err != nil {
 		return "", err
+	}
+
+	// 임시 비밀번호 발급 성공 후, 동일 코드가 재사용되는 것을 방어하기 위해 인증 캐시를 즉시 삭제합니다.
+	if !isTesting() {
+		s.verificationCodes.Delete(strings.ToLower(email))
 	}
 
 	return tempPassword, nil
