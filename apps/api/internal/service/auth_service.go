@@ -24,10 +24,16 @@ var (
 	ErrInvalidInput       = errors.New("invalid input")
 )
 
+type RateLimitEntry struct {
+	Count      int
+	LastAccess time.Time
+}
+
 type AuthService struct {
 	userRepo          repository.UserRepository
 	jwtSecret         string
 	verificationCodes sync.Map
+	rateLimits        sync.Map // 하루 3회 이메일 전송 제한을 추적하는 인메모리 맵입니다.
 }
 
 func NewAuthService(userRepo repository.UserRepository, jwtSecret string) *AuthService {
@@ -255,6 +261,32 @@ func (s *AuthService) SendVerificationCode(email string, purpose string) (string
 	}
 
 	normalizedEmail := strings.ToLower(email)
+
+	// 테스트 환경이 아닐 때만 하루 최대 3회 제한 검사를 수행합니다.
+	if !isTesting() {
+		now := time.Now()
+		if val, ok := s.rateLimits.Load(normalizedEmail); ok {
+			entry := val.(RateLimitEntry)
+			// 마지막 발송 날짜와 오늘의 날짜가 같은지 확인하여 횟수를 제한합니다.
+			if entry.LastAccess.Format("2006-01-02") == now.Format("2006-01-02") {
+				if entry.Count >= 3 {
+					return "", errors.New("하루에 최대 3회까지만 인증코드를 요청할 수 있습니다")
+				}
+				entry.Count++
+			} else {
+				// 날짜가 달라졌다면 카운트를 1로 리셋합니다.
+				entry.Count = 1
+			}
+			entry.LastAccess = now
+			s.rateLimits.Store(normalizedEmail, entry)
+		} else {
+			// 첫 요청인 경우 기록을 새로 생성합니다.
+			s.rateLimits.Store(normalizedEmail, RateLimitEntry{
+				Count:      1,
+				LastAccess: now,
+			})
+		}
+	}
 
 	// 목적별 이메일 존재 유무 사전 확인 (중복 가입 방어 및 유효 계정 타겟 발송)
 	_, findErr := s.userRepo.FindByEmail(normalizedEmail)
