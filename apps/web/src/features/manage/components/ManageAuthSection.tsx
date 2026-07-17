@@ -60,9 +60,14 @@ export function ManageAuthSection({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: authEmail }),
       });
-      const data = await response.json();
+      
+      let data: any = {};
+      if (response.headers.get("content-type")?.includes("application/json")) {
+        data = await response.json();
+      }
+      
       if (!response.ok) {
-        throw new Error(data.error || "인증코드 전송에 실패했습니다.");
+        throw new Error(data.error || `인증코드 전송에 실패했습니다. (HTTP ${response.status})`);
       }
       setVerificationPopup(data.code);
       setCodeSent(true);
@@ -87,9 +92,14 @@ export function ManageAuthSection({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotEmail }),
       });
-      const data = await response.json();
+      
+      let data: any = {};
+      if (response.headers.get("content-type")?.includes("application/json")) {
+        data = await response.json();
+      }
+      
       if (!response.ok) {
-        throw new Error(data.error || "인증코드 전송에 실패했습니다.");
+        throw new Error(data.error || `인증코드 전송에 실패했습니다. (HTTP ${response.status})`);
       }
       setVerificationPopup(data.code);
       setCodeSent(true);
@@ -111,9 +121,14 @@ export function ManageAuthSection({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotEmail, code: forgotCode }),
       });
-      const data = await response.json();
+      
+      let data: any = {};
+      if (response.headers.get("content-type")?.includes("application/json")) {
+        data = await response.json();
+      }
+      
       if (!response.ok) {
-        throw new Error(data.error || "비밀번호 찾기 요청에 실패했습니다.");
+        throw new Error(data.error || `비밀번호 찾기 요청에 실패했습니다. (HTTP ${response.status})`);
       }
       setTemporaryPassword(data.temporaryPassword);
     } catch (err: any) {
@@ -367,6 +382,12 @@ export function ManageAuthSection({
             </button>
           </div>
         </label>
+
+        {authMode === "register" && authPassword && !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/.test(authPassword) && (
+          <p className="form-error" style={{ fontSize: "11px", marginTop: "4px", color: "var(--c-muted)" }}>
+            ⚠️ 영문 대/소문자, 숫자, 특수문자를 각각 최소 1개 이상 포함해야 합니다.
+          </p>
+        )}
 
         {authMode === "register" && (
           <label className="auth-field-label" style={{ marginTop: "12px" }}>

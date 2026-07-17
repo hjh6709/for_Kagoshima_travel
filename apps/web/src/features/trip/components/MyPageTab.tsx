@@ -24,8 +24,8 @@ export function MyPageTab({ trip, onLogout }: MyPageTabProps) {
       setError("새 비밀번호와 확인 비밀번호가 일치하지 않습니다.");
       return;
     }
-    if (newPassword.length < 8) {
-      setError("새 비밀번호는 8자 이상이어야 합니다.");
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/.test(newPassword)) {
+      setError("새 비밀번호는 영문 대/소문자, 숫자, 특수문자를 각각 최소 1개 이상 포함하여 8자 이상이어야 합니다.");
       return;
     }
 
@@ -150,6 +150,12 @@ export function MyPageTab({ trip, onLogout }: MyPageTabProps) {
               </button>
             </div>
           </label>
+
+          {newPassword && !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/.test(newPassword) && (
+            <p className="form-error" style={{ fontSize: "11px", marginTop: "4px", color: "var(--c-muted)", paddingLeft: "42px" }}>
+              ⚠️ 영문 대/소문자, 숫자, 특수문자를 각각 최소 1개 이상 포함해야 합니다.
+            </p>
+          )}
 
           <label className="auth-field-label" style={{ marginTop: "12px" }}>
             <span>새 비밀번호 확인</span>
