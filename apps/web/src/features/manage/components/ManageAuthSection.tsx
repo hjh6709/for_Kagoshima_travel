@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { LockKeyhole, Mail, Key, Compass, Eye, EyeOff } from "lucide-react";
 import type { ManageAuthSectionProps } from "../manageTypes";
+import { sendVerificationCode, forgotPassword } from "../../../api/auth";
 
 // 인증 화면만 분리한다. 로그인/회원가입 요청은 App.tsx가 넘긴 콜백이 처리한다.
 export function ManageAuthSection({
@@ -55,20 +56,7 @@ export function ManageAuthSection({
     }
     setSendSubmitting(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || "/api"}/auth/send-verification-code`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: authEmail }),
-      });
-      
-      let data: any = {};
-      if (response.headers.get("content-type")?.includes("application/json")) {
-        data = await response.json();
-      }
-      
-      if (!response.ok) {
-        throw new Error(data.error || `인증코드 전송에 실패했습니다. (HTTP ${response.status})`);
-      }
+      const data = await sendVerificationCode(authEmail);
       setVerificationPopup(data.code);
       setCodeSent(true);
     } catch (err: any) {
@@ -87,20 +75,7 @@ export function ManageAuthSection({
     }
     setSendSubmitting(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || "/api"}/auth/send-verification-code`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: forgotEmail }),
-      });
-      
-      let data: any = {};
-      if (response.headers.get("content-type")?.includes("application/json")) {
-        data = await response.json();
-      }
-      
-      if (!response.ok) {
-        throw new Error(data.error || `인증코드 전송에 실패했습니다. (HTTP ${response.status})`);
-      }
+      const data = await sendVerificationCode(forgotEmail);
       setVerificationPopup(data.code);
       setCodeSent(true);
     } catch (err: any) {
@@ -116,20 +91,7 @@ export function ManageAuthSection({
     setForgotError("");
     setTemporaryPassword("");
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || "/api"}/auth/forgot-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: forgotEmail, code: forgotCode }),
-      });
-      
-      let data: any = {};
-      if (response.headers.get("content-type")?.includes("application/json")) {
-        data = await response.json();
-      }
-      
-      if (!response.ok) {
-        throw new Error(data.error || `비밀번호 찾기 요청에 실패했습니다. (HTTP ${response.status})`);
-      }
+      const data = await forgotPassword(forgotEmail, forgotCode);
       setTemporaryPassword(data.temporaryPassword);
     } catch (err: any) {
       setForgotError(err.message || "서버 통신 오류가 발생했습니다.");

@@ -76,3 +76,17 @@ export function getCurrentUser(accessToken: string) {
     },
   });
 }
+
+export function sendVerificationCode(email: string) {
+  return apiRequest<{ code: string }>("/api/auth/send-verification-code", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
+export function forgotPassword(email: string, code: string) {
+  return apiRequest<{ temporaryPassword: string }>("/api/auth/forgot-password", {
+    method: "POST",
+    body: JSON.stringify({ email, code }),
+  });
+}
