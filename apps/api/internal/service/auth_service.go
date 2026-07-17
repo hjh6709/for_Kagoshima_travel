@@ -3,9 +3,9 @@ package service
 import (
 	"crypto/rand"
 	"errors"
+	"flag"
 	"fmt"
 	"math/big"
-	"os"
 	"strings"
 	"sync"
 	"time"
@@ -41,7 +41,7 @@ func (s *AuthService) Register(req dto.RegisterRequest) (dto.AuthResponse, error
 	}
 
 	// Captcha 및 이메일 인증코드 검증 (테스트 환경이 아닐 때만 필수 실행)
-	if os.Getenv("APP_ENV") != "test" {
+	if !isTesting() {
 		if !validateCaptcha(req.CaptchaKey, req.CaptchaAnswer) {
 			return dto.AuthResponse{}, errors.New("캡차 정답이 올바르지 않습니다")
 		}
@@ -121,7 +121,7 @@ func (s *AuthService) ForgotPassword(email string, code string) (string, error) 
 	}
 
 	// 비밀번호 재설정 시 이메일 인증코드 대조 검증 (테스트 아닐 때 필수)
-	if os.Getenv("APP_ENV") != "test" {
+	if !isTesting() {
 		storedCode, ok := s.verificationCodes.Load(strings.ToLower(email))
 		if !ok || storedCode.(string) != code {
 			return "", errors.New("이메일 인증코드가 일치하지 않거나 만료되었습니다")
@@ -205,4 +205,8 @@ func validateCaptcha(key string, answer int) bool {
 		return valA-valB == answer
 	}
 	return false
+}
+
+func isTesting() bool {
+	return flag.Lookup("test.v") != nil
 }
