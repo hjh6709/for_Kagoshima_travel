@@ -25,9 +25,7 @@ export class ApiError extends Error {
 const apiBaseURL = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") ?? "";
 
 function getApiBaseURL() {
-  if (!apiBaseURL) {
-    throw new ApiError("API 주소가 설정되지 않았습니다. VITE_API_BASE_URL을 확인해주세요.");
-  }
+  // VITE_API_BASE_URL이 생략된 경우, 상대 경로(/api/...) 통신을 보장하기 위해 빈 문자열을 리턴합니다.
   return apiBaseURL;
 }
 
