@@ -3,8 +3,11 @@ package service
 import (
 	"crypto/rand"
 	"errors"
+	"fmt"
 	"math/big"
+	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/auth"
@@ -20,17 +23,33 @@ var (
 )
 
 type AuthService struct {
-	userRepo  repository.UserRepository
-	jwtSecret string
+	userRepo          repository.UserRepository
+	jwtSecret         string
+	verificationCodes sync.Map
 }
 
 func NewAuthService(userRepo repository.UserRepository, jwtSecret string) *AuthService {
-	return &AuthService{userRepo: userRepo, jwtSecret: jwtSecret}
+	return &AuthService{
+		userRepo:  userRepo,
+		jwtSecret: jwtSecret,
+	}
 }
 
 func (s *AuthService) Register(req dto.RegisterRequest) (dto.AuthResponse, error) {
 	if err := validateRegister(req); err != nil {
 		return dto.AuthResponse{}, err
+	}
+
+	// Captcha 및 이메일 인증코드 검증 (테스트 환경이 아닐 때만 필수 실행)
+	if os.Getenv("APP_ENV") != "test" {
+		if !validateCaptcha(req.CaptchaKey, req.CaptchaAnswer) {
+			return dto.AuthResponse{}, errors.New("캡차 정답이 올바르지 않습니다")
+		}
+
+		storedCode, ok := s.verificationCodes.Load(strings.ToLower(req.Email))
+		if !ok || storedCode.(string) != req.Code {
+			return dto.AuthResponse{}, errors.New("이메일 인증코드가 일치하지 않거나 만료되었습니다")
+		}
 	}
 
 	hashed, err := auth.HashPassword(req.Password)
@@ -152,4 +171,30 @@ func cryptoRandInt(max int64) (int64, error) {
 		return 0, err
 	}
 	return nBig.Int64(), nil
+}
+
+func (s *AuthService) SendVerificationCode(email string) (string, error) {
+	if email == "" {
+		return "", errors.New("이메일을 입력해 주세요")
+	}
+	num, err := rand.Int(rand.Reader, big.NewInt(900000))
+	if err != nil {
+		return "", err
+	}
+	code := fmt.Sprintf("%06d", num.Int64()+100000) // 100000 ~ 999999
+	s.verificationCodes.Store(strings.ToLower(email), code)
+	return code, nil
+}
+
+func validateCaptcha(key string, answer int) bool {
+	var valA, valB int
+	n, err := fmt.Sscanf(key, "%d+%d", &valA, &valB)
+	if err == nil && n == 2 {
+		return valA+valB == answer
+	}
+	n, err = fmt.Sscanf(key, "%d-%d", &valA, &valB)
+	if err == nil && n == 2 {
+		return valA-valB == answer
+	}
+	return false
 }

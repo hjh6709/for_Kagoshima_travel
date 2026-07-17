@@ -116,3 +116,19 @@ func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 
 	httpjson.Write(w, http.StatusOK, map[string]string{"message": "비밀번호가 성공적으로 변경되었습니다."})
 }
+
+func (h *AuthHandler) SendVerificationCode(w http.ResponseWriter, r *http.Request) {
+	var req dto.SendVerificationCodeRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httpjson.WriteError(w, http.StatusBadRequest, "요청 형식이 올바르지 않습니다.")
+		return
+	}
+
+	code, err := h.authService.SendVerificationCode(req.Email)
+	if err != nil {
+		httpjson.WriteError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	httpjson.Write(w, http.StatusOK, dto.SendVerificationCodeResponse{Code: code})
+}

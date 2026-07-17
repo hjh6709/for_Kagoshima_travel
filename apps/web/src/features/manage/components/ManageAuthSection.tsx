@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LockKeyhole, Mail, Key, Compass, Eye, EyeOff } from "lucide-react";
 import type { ManageAuthSectionProps } from "../manageTypes";
 
@@ -22,6 +22,56 @@ export function ManageAuthSection({
   const [forgotSubmitting, setForgotSubmitting] = useState(false);
   const [temporaryPassword, setTemporaryPassword] = useState("");
   const [forgotError, setForgotError] = useState("");
+
+  const [captchaQuestion, setCaptchaQuestion] = useState("");
+  const [sendSubmitting, setSendSubmitting] = useState(false);
+  const [codeSent, setCodeSent] = useState(false);
+  const [verificationPopup, setVerificationPopup] = useState("");
+
+  const regenerateCaptcha = () => {
+    const valA = Math.floor(Math.random() * 15) + 1;
+    const valB = Math.floor(Math.random() * 9) + 1;
+    const isAdd = Math.random() > 0.5;
+    if (isAdd) {
+      setCaptchaQuestion(`${valA}+${valB}`);
+    } else {
+      setCaptchaQuestion(`${valA + valB}-${valA}`);
+    }
+  };
+
+  useEffect(() => {
+    if (authMode === "register") {
+      regenerateCaptcha();
+    } else {
+      setVerificationPopup("");
+      setCodeSent(false);
+    }
+  }, [authMode]);
+
+  const handleSendCode = async () => {
+    if (!authEmail || !authEmail.includes("@")) {
+      alert("올바른 이메일 주소를 입력하고 코드를 요청해 주세요.");
+      return;
+    }
+    setSendSubmitting(true);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || "/api"}/auth/send-verification-code`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: authEmail }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "인증코드 전송에 실패했습니다.");
+      }
+      setVerificationPopup(data.code);
+      setCodeSent(true);
+    } catch (err: any) {
+      alert(err.message || "인증코드 발송 중 오류가 발생했습니다.");
+    } finally {
+      setSendSubmitting(false);
+    }
+  };
 
   const handleForgotPasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,7 +189,53 @@ export function ManageAuthSection({
   }
 
   return (
-    <article className="info-card auth-card auth-card-premium">
+    <>
+      {verificationPopup && (
+        <div style={{
+          position: "fixed",
+          top: "16px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          zIndex: 9999,
+          background: "var(--c-surface)",
+          border: "1px dashed var(--c-green)",
+          borderRadius: "12px",
+          padding: "14px 20px",
+          boxShadow: "0 8px 30px rgba(0,0,0,0.15)",
+          width: "90%",
+          maxWidth: "360px"
+        }}>
+          <span style={{ display: "block", fontSize: "11px", fontWeight: 700, color: "var(--c-green)", marginBottom: "4px" }}>
+            📨 가상 이메일 수신 시뮬레이터
+          </span>
+          <p style={{ fontSize: "13px", margin: 0, color: "var(--c-text)" }}>
+            인증 코드가 발급되었습니다: <strong style={{ fontSize: "16px", color: "var(--c-green)" }}>{verificationPopup}</strong>
+          </p>
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(verificationPopup);
+              alert("인증코드가 클립보드에 복사되었습니다!");
+              setVerificationPopup("");
+            }}
+            type="button"
+            style={{
+              marginTop: "10px",
+              width: "100%",
+              padding: "6px",
+              fontSize: "11px",
+              background: "var(--c-green)",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontWeight: 700
+            }}
+          >
+            📋 인증코드 복사 및 팝업 닫기
+          </button>
+        </div>
+      )}
+      <article className="info-card auth-card auth-card-premium">
       <div className="auth-brand-row">
         <div className="auth-brand-circle">
           <Compass className="auth-hero-icon" size={24} />
@@ -168,6 +264,31 @@ export function ManageAuthSection({
             />
           </div>
         </label>
+
+        {authMode === "register" && (
+          <label className="auth-field-label" style={{ marginTop: "12px" }}>
+            <span>이메일 인증 코드 (6자리)</span>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <input
+                name="verificationCode"
+                placeholder="시뮬레이터 코드를 입력하세요"
+                required
+                type="text"
+                maxLength={6}
+                style={{ flex: 1 }}
+              />
+              <button
+                className="secondary-button"
+                disabled={sendSubmitting}
+                onClick={handleSendCode}
+                type="button"
+                style={{ marginTop: 0, padding: "0 12px", whiteSpace: "nowrap", height: "42px", fontSize: "12px" }}
+              >
+                {sendSubmitting ? "전송 중" : codeSent ? "재전송" : "인증코드 전송"}
+              </button>
+            </div>
+          </label>
+        )}
         
         <label className="auth-field-label">
           <span>비밀번호</span>
@@ -194,6 +315,34 @@ export function ManageAuthSection({
             </button>
           </div>
         </label>
+
+        {authMode === "register" && (
+          <label className="auth-field-label" style={{ marginTop: "12px" }}>
+            <span>사람 인증 (수학 퀴즈 방지)</span>
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <span style={{ fontWeight: 700, fontSize: "15px", whiteSpace: "nowrap", color: "var(--c-green)" }}>
+                {captchaQuestion} =
+              </span>
+              <input
+                name="captchaAnswer"
+                placeholder="정답 입력"
+                required
+                type="number"
+                style={{ flex: 1 }}
+              />
+              <input type="hidden" name="captchaKey" value={captchaQuestion} />
+              <button
+                className="secondary-button"
+                onClick={regenerateCaptcha}
+                type="button"
+                title="새 캡차 문제 생성"
+                style={{ marginTop: 0, padding: "0 10px", height: "42px" }}
+              >
+                🔄
+              </button>
+            </div>
+          </label>
+        )}
 
         {authError && <p className="form-error">{authError}</p>}
 
@@ -230,5 +379,6 @@ export function ManageAuthSection({
         </p>
       )}
     </article>
+    </>
   );
 }

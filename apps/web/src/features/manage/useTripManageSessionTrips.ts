@@ -173,7 +173,15 @@ export function useTripManageSessionTrips({
     setAuthSubmitting(true);
     try {
       const email = authEmail.trim();
-      const response = authMode === "login" ? await login(email, authPassword) : await register(email, authPassword);
+      const formData = new FormData(event.currentTarget);
+      const code = (formData.get("verificationCode") as string) || "";
+      const captchaAnswer = parseInt((formData.get("captchaAnswer") as string) || "0");
+      const captchaKey = (formData.get("captchaKey") as string) || "";
+
+      const response =
+        authMode === "login"
+          ? await login(email, authPassword)
+          : await register(email, authPassword, code, captchaAnswer, captchaKey);
       setOwnerAuth(response);
       setAuthPassword("");
       window.localStorage.setItem(ownerAuthStorageKey, JSON.stringify(response));
