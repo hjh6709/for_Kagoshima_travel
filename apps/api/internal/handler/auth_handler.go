@@ -124,7 +124,7 @@ func (h *AuthHandler) SendVerificationCode(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	code, err := h.authService.SendVerificationCode(req.Email)
+	code, err := h.authService.SendVerificationCode(req.Email, req.Purpose)
 	if err != nil {
 		httpjson.WriteError(w, http.StatusBadRequest, err.Error())
 		return

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { LockKeyhole, Mail, Key, Compass, Eye, EyeOff } from "lucide-react";
 import type { ManageAuthSectionProps } from "../manageTypes";
+import { sendVerificationCode, forgotPassword } from "../../../api/auth";
 
 // 인증 화면만 분리한다. 로그인/회원가입 요청은 App.tsx가 넘긴 콜백이 처리한다.
 export function ManageAuthSection({
@@ -48,6 +49,8 @@ export function ManageAuthSection({
     }
   }, [authMode]);
 
+  // 회원가입 폼에서 입력한 이메일 주소로 6자리 가상/실제 인증코드를 요청하는 핸들러입니다.
+  // api/auth.ts 내 공통화된 통신 함수를 호출하여 주소 중복을 막고, catch 블록에서 세부 에러 응답을 매핑합니다.
   const handleSendCode = async () => {
     if (!authEmail || !authEmail.includes("@")) {
       alert("올바른 이메일 주소를 입력하고 코드를 요청해 주세요.");
@@ -55,24 +58,31 @@ export function ManageAuthSection({
     }
     setSendSubmitting(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || "/api"}/auth/send-verification-code`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: authEmail }),
-      });
+      // 가입(register) 목적의 인증코드 발송임을 명시하여 중복 이메일 가입 방지 검증을 활성화합니다.
+      const data = await sendVerificationCode(authEmail, "register");
       
-      let data: any = {};
-      if (response.headers.get("content-type")?.includes("application/json")) {
-        data = await response.json();
+      // 실제 SMTP로 발송 완료하여 코드값이 비어있을 때는 가상 시뮬레이터 배너를 띄우지 않습니다.
+      if (data.code) {
+        setVerificationPopup(data.code);
+        setCodeSent(true);
+      } else {
+        setVerificationPopup("");
+        setCodeSent(false);
+        alert("기재하신 이메일 주소로 인증 메일이 실제로 전송되었습니다. 메일함을 확인해 주세요.");
       }
-      
-      if (!response.ok) {
-        throw new Error(data.error || `인증코드 전송에 실패했습니다. (HTTP ${response.status})`);
-      }
-      setVerificationPopup(data.code);
-      setCodeSent(true);
     } catch (err: any) {
-      alert(err.message || "인증코드 발송 중 오류가 발생했습니다.");
+      // 헬퍼가 반환한 ApiError의 HTTP status 코드를 기반으로, 발생 가능한 오류 원인을 구체적으로 설명합니다.
+      if (err.status === 409) {
+        alert("이미 등록된 이메일 주소입니다. 다른 이메일로 가입해 주세요.");
+      } else if (err.status === 404) {
+        alert("인증코드 발송 엔드포인트를 찾을 수 없습니다. (404 Not Found)");
+      } else if (err.status === 405) {
+        alert("허용되지 않은 요청 메서드(Method)입니다. 서버 라우팅 상태를 확인해 주세요. (405 Method Not Allowed)");
+      } else if (err.status === 502 || err.status === 504) {
+        alert("서버 게이트웨이가 응답하지 않습니다. 네트워크 연결을 확인하세요.");
+      } else {
+        alert(err.message || "인증코드 발송에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+      }
     } finally {
       setSendSubmitting(false);
     }
@@ -80,6 +90,7 @@ export function ManageAuthSection({
 
   const [forgotCode, setForgotCode] = useState("");
 
+  // 비밀번호 찾기(임시 비번 발급) 진행 전, 사용자의 이메일 소유권을 확인하기 위해 인증코드를 요청하는 핸들러입니다.
   const handleSendForgotCode = async () => {
     if (!forgotEmail || !forgotEmail.includes("@")) {
       alert("올바른 이메일 주소를 입력하고 코드를 요청해 주세요.");
@@ -87,52 +98,49 @@ export function ManageAuthSection({
     }
     setSendSubmitting(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || "/api"}/auth/send-verification-code`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: forgotEmail }),
-      });
+      // 비밀번호 재설정(forgot) 목적의 인증코드 발송임을 명시하여 미등록 이메일 발송 낭비를 차단합니다.
+      const data = await sendVerificationCode(forgotEmail, "forgot");
       
-      let data: any = {};
-      if (response.headers.get("content-type")?.includes("application/json")) {
-        data = await response.json();
+      if (data.code) {
+        setVerificationPopup(data.code);
+        setCodeSent(true);
+      } else {
+        setVerificationPopup("");
+        setCodeSent(false);
+        alert("기재하신 이메일 주소로 비밀번호 찾기 인증 메일이 실제로 전송되었습니다. 메일함을 확인해 주세요.");
       }
-      
-      if (!response.ok) {
-        throw new Error(data.error || `인증코드 전송에 실패했습니다. (HTTP ${response.status})`);
-      }
-      setVerificationPopup(data.code);
-      setCodeSent(true);
     } catch (err: any) {
-      alert(err.message || "인증코드 발송 중 오류가 발생했습니다.");
+      if (err.status === 400 || err.status === 404) {
+        alert("가입되어 있지 않은 이메일 주소입니다. 가입 정보를 확인해 주세요.");
+      } else if (err.status === 405) {
+        alert("요청이 거절되었습니다. API 설정을 체크해 주세요. (405 Method Not Allowed)");
+      } else if (err.status === 502 || err.status === 504) {
+        alert("네트워크 통신망 일시 오류입니다. 잠시 후 재전송을 시도하세요.");
+      } else {
+        alert(err.message || "인증코드 발송 중 알 수 없는 에러가 발생했습니다.");
+      }
     } finally {
       setSendSubmitting(false);
     }
   };
 
+  // 사용자가 입력한 이메일과 6자리 인증코드가 일치하는지 백엔드에서 대조한 뒤, 규격을 만족하는 임시 비밀번호를 최종 발급받는 핸들러입니다.
   const handleForgotPasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setForgotSubmitting(true);
     setForgotError("");
     setTemporaryPassword("");
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || "/api"}/auth/forgot-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: forgotEmail, code: forgotCode }),
-      });
-      
-      let data: any = {};
-      if (response.headers.get("content-type")?.includes("application/json")) {
-        data = await response.json();
-      }
-      
-      if (!response.ok) {
-        throw new Error(data.error || `비밀번호 찾기 요청에 실패했습니다. (HTTP ${response.status})`);
-      }
+      const data = await forgotPassword(forgotEmail, forgotCode);
       setTemporaryPassword(data.temporaryPassword);
     } catch (err: any) {
-      setForgotError(err.message || "서버 통신 오류가 발생했습니다.");
+      if (err.status === 400) {
+        setForgotError("입력하신 이메일 인증 코드가 일치하지 않거나 만료되었습니다. 인증번호를 다시 확인해 주세요.");
+      } else if (err.status === 404) {
+        setForgotError("서비스 데이터베이스에 등록되지 않은 이메일 주소입니다. 가입 정보를 확인하세요.");
+      } else {
+        setForgotError(err.message || "임시 비밀번호 발급 요청을 처리하지 못했습니다. (서버 오류)");
+      }
     } finally {
       setForgotSubmitting(false);
     }

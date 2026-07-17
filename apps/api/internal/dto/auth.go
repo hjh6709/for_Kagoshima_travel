@@ -42,7 +42,8 @@ type ChangePasswordRequest struct {
 }
 
 type SendVerificationCodeRequest struct {
-	Email string `json:"email"`
+	Email   string `json:"email"`
+	Purpose string `json:"purpose"` // "register" 또는 "forgot" 목적 분기
 }
 
 type SendVerificationCodeResponse struct {
