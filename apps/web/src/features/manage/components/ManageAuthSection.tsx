@@ -17,6 +17,35 @@ export function ManageAuthSection({
   onSubmitAuth,
 }: ManageAuthSectionProps) {
   const [showPassword, setShowPassword] = useState(false);
+  const [isForgotMode, setIsForgotMode] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotSubmitting, setForgotSubmitting] = useState(false);
+  const [temporaryPassword, setTemporaryPassword] = useState("");
+  const [forgotError, setForgotError] = useState("");
+
+  const handleForgotPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotSubmitting(true);
+    setForgotError("");
+    setTemporaryPassword("");
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || "/api"}/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotEmail }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "비밀번호 찾기 요청에 실패했습니다.");
+      }
+      setTemporaryPassword(data.temporaryPassword);
+    } catch (err: any) {
+      setForgotError(err.message || "서버 통신 오류가 발생했습니다.");
+    } finally {
+      setForgotSubmitting(false);
+    }
+  };
+
   if (authChecked && auth) {
     return null;
   }
@@ -27,6 +56,84 @@ export function ManageAuthSection({
         <Compass className="auth-hero-icon spin-slow" size={42} />
         <h1 style={{ marginTop: "12px" }}>로그인 확인 중</h1>
         <p className="muted">저장된 로그인 정보를 안전하게 확인하고 있습니다.</p>
+      </article>
+    );
+  }
+
+  if (isForgotMode) {
+    return (
+      <article className="info-card auth-card auth-card-premium">
+        <div className="auth-brand-row">
+          <div className="auth-brand-circle">
+            <Compass className="auth-hero-icon" size={24} />
+          </div>
+          <span className="pill subtle">비밀번호 찾기</span>
+        </div>
+        
+        <h1>임시 비밀번호 발급</h1>
+        <p className="muted">
+          가입된 이메일 주소를 입력하시면 즉시 복사하여 로그인할 수 있는 8자리 임시 비밀번호를 발급해 드립니다.
+        </p>
+
+        {!temporaryPassword ? (
+          <form className="auth-form" onSubmit={handleForgotPasswordSubmit}>
+            <label className="auth-field-label">
+              <span>이메일 주소</span>
+              <div className="input-with-icon">
+                <Mail size={16} className="field-icon" />
+                <input
+                  autoComplete="email"
+                  inputMode="email"
+                  onChange={(event) => setForgotEmail(event.target.value)}
+                  placeholder="you@example.com"
+                  required
+                  type="email"
+                  value={forgotEmail}
+                />
+              </div>
+            </label>
+
+            {forgotError && <p className="form-error">{forgotError}</p>}
+
+            <button className="primary-button" disabled={forgotSubmitting} type="submit" style={{ marginTop: "12px" }}>
+              <LockKeyhole size={18} />
+              {forgotSubmitting ? "발급 중..." : "임시 비밀번호 발급"}
+            </button>
+          </form>
+        ) : (
+          <div style={{ display: "grid", gap: "14px", marginTop: "12px", textAlign: "center" }}>
+            <div style={{ padding: "16px", background: "var(--c-surface)", border: "1px dashed var(--c-green)", borderRadius: "8px" }}>
+              <span style={{ display: "block", fontSize: "12px", color: "var(--c-muted)", marginBottom: "4px" }}>발급된 임시 비밀번호</span>
+              <strong style={{ fontSize: "20px", letterSpacing: "1px", color: "var(--c-green)" }}>{temporaryPassword}</strong>
+            </div>
+            <button
+              className="primary-button"
+              onClick={() => {
+                navigator.clipboard.writeText(temporaryPassword);
+                alert("임시 비밀번호가 클립보드에 복사되었습니다! 로그인 창에 붙여넣어 접속하세요.");
+                setIsForgotMode(false);
+                setTemporaryPassword("");
+                setForgotEmail("");
+              }}
+              type="button"
+            >
+              📋 복사하고 로그인하러 가기
+            </button>
+          </div>
+        )}
+
+        <button
+          className="secondary-button auth-switch-button"
+          onClick={() => {
+            setIsForgotMode(false);
+            setTemporaryPassword("");
+            setForgotError("");
+          }}
+          type="button"
+          style={{ marginTop: "14px" }}
+        >
+          로그인 화면으로 돌아가기
+        </button>
       </article>
     );
   }
@@ -96,14 +203,26 @@ export function ManageAuthSection({
         </button>
       </form>
 
-      <button
-        className="secondary-button auth-switch-button"
-        onClick={() => onAuthModeChange(authMode === "login" ? "register" : "login")}
-        type="button"
-        style={{ marginTop: "12px" }}
-      >
-        {authMode === "login" ? "계정이 없으면 회원가입" : "이미 계정이 있으면 로그인"}
-      </button>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "12px", gap: "8px" }}>
+        <button
+          className="secondary-button auth-switch-button"
+          onClick={() => onAuthModeChange(authMode === "login" ? "register" : "login")}
+          type="button"
+          style={{ marginTop: 0, flex: 1, fontSize: "12px" }}
+        >
+          {authMode === "login" ? "회원가입" : "로그인"}
+        </button>
+        {authMode === "login" && (
+          <button
+            className="secondary-button auth-switch-button"
+            onClick={() => setIsForgotMode(true)}
+            type="button"
+            style={{ marginTop: 0, flex: 1, fontSize: "12px", color: "var(--c-muted)" }}
+          >
+            비밀번호 분실
+          </button>
+        )}
+      </div>
 
       {window.location.hostname === "localhost" && (
         <p className="auth-help">

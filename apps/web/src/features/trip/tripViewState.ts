@@ -3,7 +3,7 @@ import type { TripDates } from "../../shared/date";
 import { checklistCategoryLabels } from "../../shared/travelOptions";
 import type { ChecklistItem } from "../../types/travel";
 
-export type Tab = "today" | "schedule" | "flight" | "map" | "concierge";
+export type Tab = "today" | "schedule" | "flight" | "map" | "concierge" | "mypage";
 export type ChecklistCategory = ChecklistItem["category"];
 export type CustomChecklistItem = ChecklistItem & { custom: true };
 export type ScheduleOrderByDate = Record<string, string[]>;

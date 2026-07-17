@@ -76,3 +76,43 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 		},
 	})
 }
+
+func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
+	var req dto.ForgotPasswordRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httpjson.WriteError(w, http.StatusBadRequest, "요청 형식이 올바르지 않습니다.")
+		return
+	}
+
+	tempPass, err := h.authService.ForgotPassword(req.Email)
+	if err != nil {
+		httpjson.WriteError(w, http.StatusNotFound, err.Error())
+		return
+	}
+
+	httpjson.Write(w, http.StatusOK, dto.ForgotPasswordResponse{
+		TemporaryPassword: tempPass,
+	})
+}
+
+func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.GetClaims(r)
+	if claims == nil {
+		httpjson.WriteError(w, http.StatusUnauthorized, "인증이 필요합니다.")
+		return
+	}
+
+	var req dto.ChangePasswordRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httpjson.WriteError(w, http.StatusBadRequest, "요청 형식이 올바르지 않습니다.")
+		return
+	}
+
+	err := h.authService.ChangePassword(claims.Email, req.CurrentPassword, req.NewPassword)
+	if err != nil {
+		httpjson.WriteError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	httpjson.Write(w, http.StatusOK, map[string]string{"message": "비밀번호가 성공적으로 변경되었습니다."})
+}

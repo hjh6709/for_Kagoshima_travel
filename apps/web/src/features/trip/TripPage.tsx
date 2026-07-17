@@ -4,6 +4,7 @@ import { FlightTab } from "./components/FlightTab";
 import { MapTab } from "./components/MapTab";
 import { ScheduleTab } from "./components/ScheduleTab";
 import { TodayTab } from "./components/TodayTab";
+import { MyPageTab } from "./components/MyPageTab";
 import type { TripPageProps } from "./tripPageTypes";
 
 // 일반 여행 화면의 탭 컴포넌트를 조립한다. 상태 저장과 API 흐름은 App.tsx가 관리한다.
@@ -19,6 +20,7 @@ export function TripPage(props: TripPageProps) {
           {activeTab === "flight" && <FlightTab {...props} />}
           {activeTab === "map" && <MapTab {...props} />}
           {activeTab === "concierge" && <ConciergeTab {...props} />}
+          {activeTab === "mypage" && <MyPageTab {...props} />}
         </div>
 
         <BottomTabs activeTab={activeTab} setActiveTab={setActiveTab} />
