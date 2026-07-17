@@ -56,10 +56,16 @@ export function login(email: string, password: string) {
   });
 }
 
-export function register(email: string, password: string) {
+export function register(
+  email: string,
+  password: string,
+  code?: string,
+  captchaAnswer?: number,
+  captchaKey?: string
+) {
   return apiRequest<AuthResponse>("/api/auth/register", {
     method: "POST",
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email, password, code, captchaAnswer, captchaKey }),
   });
 }
 
