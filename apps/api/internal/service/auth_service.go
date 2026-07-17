@@ -325,8 +325,12 @@ func (s *AuthService) SendVerificationCode(email string, purpose string) (string
 			emailSubject = "[여정 플래너] 비밀번호 찾기 인증 코드 안내"
 		}
 
-		msg := []byte("To: " + email + "\r\n" +
-			"Subject: " + emailSubject + "\r\n" +
+		// 이메일 헤더 인젝션 방지를 위해 외부 입력값에서 개행문자(\r, \n)를 완벽하게 제거하여 살균합니다.
+		cleanEmail := strings.ReplaceAll(strings.ReplaceAll(email, "\r", ""), "\n", "")
+		cleanSubject := strings.ReplaceAll(strings.ReplaceAll(emailSubject, "\r", ""), "\n", "")
+
+		msg := []byte("To: " + cleanEmail + "\r\n" +
+			"Subject: " + cleanSubject + "\r\n" +
 			"Content-Type: text/plain; charset=UTF-8\r\n\r\n" +
 			"안녕하세요. 스마트 여정 플래너입니다.\r\n\r\n" +
 			"본인 인증 및 요청 처리를 위한 6자리 인증 코드를 다음과 같이 보내드립니다.\r\n\r\n" +
@@ -334,7 +338,7 @@ func (s *AuthService) SendVerificationCode(email string, purpose string) (string
 			"해당 인증 코드는 발급된 후 5분 동안만 유효합니다.\r\n" +
 			"감사합니다.\r\n")
 
-		if err := smtp.SendMail(addr, authClient, smtpUser, []string{email}, msg); err != nil {
+		if err := smtp.SendMail(addr, authClient, smtpUser, []string{cleanEmail}, msg); err != nil {
 			return "", fmt.Errorf("실제 이메일 인증코드 발송 도중 오류가 발생했습니다: %v", err)
 		}
 
