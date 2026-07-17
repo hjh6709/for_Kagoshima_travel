@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Key, Eye, EyeOff, Lock, User, LogOut } from "lucide-react";
 import type { TripPageProps } from "../tripPageTypes";
+import { changePassword } from "../../../api/auth";
 
 type MyPageTabProps = TripPageProps & {
   onLogout?: () => void;
@@ -18,6 +19,8 @@ export function MyPageTab({ trip, onLogout }: MyPageTabProps) {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
+  // 사용자가 마이페이지에서 기존 비밀번호와 새 비밀번호를 입력해 비밀번호 변경을 요청하는 핸들러입니다.
+  // api/auth.ts 내 공통화된 통신 함수를 호출하여 주소 오타를 차단하고, catch 블록에서 세부 에러를 매핑합니다.
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
@@ -35,29 +38,23 @@ export function MyPageTab({ trip, onLogout }: MyPageTabProps) {
 
     try {
       const token = localStorage.getItem("accessToken") || "";
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || "/api"}/auth/change-password`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          currentPassword,
-          newPassword,
-        }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || "비밀번호 변경에 실패했습니다.");
-      }
+      await changePassword(token, currentPassword, newPassword);
 
       setMessage("비밀번호가 성공적으로 변경되었습니다.");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch (err: any) {
-      setError(err.message || "서버 통신 오류가 발생했습니다.");
+      // ApiError에서 맵핑된 HTTP status 코드를 기반으로, 세부 원인을 구체적으로 설명합니다.
+      if (err.status === 400) {
+        setError("현재 사용 중인 비밀번호가 일치하지 않거나 입력 규격이 잘못되었습니다.");
+      } else if (err.status === 401) {
+        setError("로그인 세션이 만료되었습니다. 다시 로그인한 뒤 변경을 시도해 주세요.");
+      } else if (err.status === 404) {
+        setError("존재하지 않거나 삭제된 사용자 정보입니다.");
+      } else {
+        setError(err.message || "서버 통신 오류가 발생했습니다. 네트워크 상태를 확인해 주세요.");
+      }
     } finally {
       setSubmitting(false);
     }

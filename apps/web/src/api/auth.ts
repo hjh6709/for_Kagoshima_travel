@@ -25,9 +25,7 @@ export class ApiError extends Error {
 const apiBaseURL = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") ?? "";
 
 function getApiBaseURL() {
-  if (!apiBaseURL) {
-    throw new ApiError("API 주소가 설정되지 않았습니다. VITE_API_BASE_URL을 확인해주세요.");
-  }
+  // VITE_API_BASE_URL이 생략된 경우, 상대 경로(/api/...) 통신을 보장하기 위해 빈 문자열을 리턴합니다.
   return apiBaseURL;
 }
 
@@ -74,5 +72,30 @@ export function getCurrentUser(accessToken: string) {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
+  });
+}
+
+export function sendVerificationCode(email: string) {
+  return apiRequest<{ code: string }>("/api/auth/send-verification-code", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
+export function forgotPassword(email: string, code: string) {
+  return apiRequest<{ temporaryPassword: string }>("/api/auth/forgot-password", {
+    method: "POST",
+    body: JSON.stringify({ email, code }),
+  });
+}
+
+// 마이페이지에서 본인의 비밀번호를 변경하기 위한 API 호출 헬퍼입니다.
+export function changePassword(accessToken: string, currentPassword: string, newPassword: string) {
+  return apiRequest<void>("/api/auth/change-password", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ currentPassword, newPassword }),
   });
 }
