@@ -60,9 +60,14 @@ export function ManageAuthSection({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: authEmail }),
       });
-      const data = await response.json();
+      
+      let data: any = {};
+      if (response.headers.get("content-type")?.includes("application/json")) {
+        data = await response.json();
+      }
+      
       if (!response.ok) {
-        throw new Error(data.error || "인증코드 전송에 실패했습니다.");
+        throw new Error(data.error || `인증코드 전송에 실패했습니다. (HTTP ${response.status})`);
       }
       setVerificationPopup(data.code);
       setCodeSent(true);
@@ -87,9 +92,14 @@ export function ManageAuthSection({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotEmail }),
       });
-      const data = await response.json();
+      
+      let data: any = {};
+      if (response.headers.get("content-type")?.includes("application/json")) {
+        data = await response.json();
+      }
+      
       if (!response.ok) {
-        throw new Error(data.error || "인증코드 전송에 실패했습니다.");
+        throw new Error(data.error || `인증코드 전송에 실패했습니다. (HTTP ${response.status})`);
       }
       setVerificationPopup(data.code);
       setCodeSent(true);
@@ -111,9 +121,14 @@ export function ManageAuthSection({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotEmail, code: forgotCode }),
       });
-      const data = await response.json();
+      
+      let data: any = {};
+      if (response.headers.get("content-type")?.includes("application/json")) {
+        data = await response.json();
+      }
+      
       if (!response.ok) {
-        throw new Error(data.error || "비밀번호 찾기 요청에 실패했습니다.");
+        throw new Error(data.error || `비밀번호 찾기 요청에 실패했습니다. (HTTP ${response.status})`);
       }
       setTemporaryPassword(data.temporaryPassword);
     } catch (err: any) {
