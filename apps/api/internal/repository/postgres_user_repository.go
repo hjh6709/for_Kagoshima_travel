@@ -44,3 +44,9 @@ func (r *PostgresUserRepository) Save(user model.User) error {
 	}
 	return nil
 }
+
+func (r *PostgresUserRepository) UpdatePassword(email string, passwordHash string) error {
+	_, err := r.pool.Exec(context.Background(),
+		`UPDATE users SET password = $1 WHERE email = $2`, passwordHash, email)
+	return err
+}

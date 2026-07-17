@@ -1,4 +1,4 @@
-import { CalendarDays, Home, Map as MapIcon, Plane, Shield } from "lucide-react";
+import { CalendarDays, Home, Map as MapIcon, Plane, Shield, User } from "lucide-react";
 import type { Tab } from "../tripViewState";
 
 type BottomTabsProps = {
@@ -12,6 +12,7 @@ const tabs: Array<{ id: Tab; label: string; icon: typeof Home }> = [
   { id: "flight", label: "항공", icon: Plane },
   { id: "map", label: "지도", icon: MapIcon },
   { id: "concierge", label: "긴급", icon: Shield },
+  { id: "mypage", label: "마이페이지", icon: User },
 ];
 
 // 하단 탭 내비게이션만 담당한다. 현재 탭 상태는 상위에서 관리한다.

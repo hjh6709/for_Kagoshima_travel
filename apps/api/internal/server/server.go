@@ -80,10 +80,12 @@ func (s *Server) registerRoutes(jwtSecret string) {
 	s.mux.HandleFunc("GET /openapi.json", handler.OpenAPISpec)
 	s.mux.HandleFunc("POST /api/auth/register", s.authHandler.Register)
 	s.mux.HandleFunc("POST /api/auth/login", s.authHandler.Login)
+	s.mux.HandleFunc("POST /api/auth/forgot-password", s.authHandler.ForgotPassword)
 	s.mux.HandleFunc("GET /api/share/{token}", s.tripHandler.GetSharedTrip)
 
 	// 인증 필요 엔드포인트
 	s.mux.Handle("GET /api/auth/me", requireAuth(http.HandlerFunc(s.authHandler.Me)))
+	s.mux.Handle("POST /api/auth/change-password", requireAuth(http.HandlerFunc(s.authHandler.ChangePassword)))
 	s.mux.Handle("GET /api/trips", requireAuth(http.HandlerFunc(s.tripHandler.ListMyTrips)))
 	s.mux.Handle("POST /api/trips", requireAuth(http.HandlerFunc(s.tripHandler.CreateTrip)))
 	s.mux.Handle("GET /api/trips/{tripID}", requireAuth(http.HandlerFunc(s.tripHandler.GetTrip)))

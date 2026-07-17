@@ -9,6 +9,7 @@ import (
 type UserRepository interface {
 	FindByEmail(email string) (model.User, error)
 	Save(user model.User) error
+	UpdatePassword(email string, passwordHash string) error
 }
 
 type MemoryUserRepository struct {
@@ -43,4 +44,17 @@ func (r *MemoryUserRepository) Save(user model.User) error {
 	}
 	r.users = append(r.users, user)
 	return nil
+}
+
+func (r *MemoryUserRepository) UpdatePassword(email string, passwordHash string) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	for i, u := range r.users {
+		if u.Email == email {
+			r.users[i].Password = passwordHash
+			return nil
+		}
+	}
+	return ErrNotFound
 }

@@ -1,7 +1,9 @@
 package service
 
 import (
+	"crypto/rand"
 	"errors"
+	"math/big"
 	"strings"
 	"time"
 
@@ -90,4 +92,64 @@ func validateRegister(req dto.RegisterRequest) error {
 		return ErrInvalidInput
 	}
 	return nil
+}
+
+// 비밀번호 토글 및 찾기 기능 관련 유틸 및 비즈니스 로직
+func (s *AuthService) ForgotPassword(email string) (string, error) {
+	user, err := s.userRepo.FindByEmail(strings.ToLower(email))
+	if err != nil {
+		return "", errors.New("존재하지 않는 이메일 주소입니다")
+	}
+
+	tempPassword := generateRandomPassword()
+	hashed, err := auth.HashPassword(tempPassword)
+	if err != nil {
+		return "", err
+	}
+
+	if err := s.userRepo.UpdatePassword(user.Email, hashed); err != nil {
+		return "", err
+	}
+
+	return tempPassword, nil
+}
+
+func (s *AuthService) ChangePassword(email string, currentPassword string, newPassword string) error {
+	user, err := s.userRepo.FindByEmail(strings.ToLower(email))
+	if err != nil {
+		return errors.New("존재하지 않는 사용자입니다")
+	}
+
+	if !auth.CheckPassword(currentPassword, user.Password) {
+		return errors.New("현재 비밀번호가 일치하지 않습니다")
+	}
+
+	if len(newPassword) < 8 {
+		return errors.New("새 비밀번호는 8자 이상이어야 합니다")
+	}
+
+	hashed, err := auth.HashPassword(newPassword)
+	if err != nil {
+		return err
+	}
+
+	return s.userRepo.UpdatePassword(user.Email, hashed)
+}
+
+func generateRandomPassword() string {
+	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@"
+	ret := make([]byte, 8)
+	for i := range ret {
+		num, _ := cryptoRandInt(int64(len(letters)))
+		ret[i] = letters[num]
+	}
+	return string(ret)
+}
+
+func cryptoRandInt(max int64) (int64, error) {
+	nBig, err := rand.Int(rand.Reader, big.NewInt(max))
+	if err != nil {
+		return 0, err
+	}
+	return nBig.Int64(), nil
 }
