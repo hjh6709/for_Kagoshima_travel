@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"math/big"
+	"net/mail"
 	"net/smtp"
 	"os"
 	"strings"
@@ -262,10 +263,17 @@ func (s *AuthService) SendVerificationCode(email string, purpose string) (string
 
 	normalizedEmail := strings.ToLower(email)
 
+	// RFC 5322 이메일 포맷 규격을 준수하는지 net/mail 패키지로 정밀 구문 파싱 검증하여 인젝션 공격을 예방합니다.
+	parsedAddr, err := mail.ParseAddress(normalizedEmail)
+	if err != nil || parsedAddr.Address != normalizedEmail {
+		return "", errors.New("올바르지 않은 이메일 형식입니다")
+	}
+	cleanEmail := parsedAddr.Address
+
 	// 테스트 환경이 아닐 때만 하루 최대 3회 제한 검사를 수행합니다.
 	if !isTesting() {
 		now := time.Now()
-		if val, ok := s.rateLimits.Load(normalizedEmail); ok {
+		if val, ok := s.rateLimits.Load(cleanEmail); ok {
 			entry := val.(RateLimitEntry)
 			// 마지막 발송 날짜와 오늘의 날짜가 같은지 확인하여 횟수를 제한합니다.
 			if entry.LastAccess.Format("2006-01-02") == now.Format("2006-01-02") {
@@ -278,10 +286,10 @@ func (s *AuthService) SendVerificationCode(email string, purpose string) (string
 				entry.Count = 1
 			}
 			entry.LastAccess = now
-			s.rateLimits.Store(normalizedEmail, entry)
+			s.rateLimits.Store(cleanEmail, entry)
 		} else {
 			// 첫 요청인 경우 기록을 새로 생성합니다.
-			s.rateLimits.Store(normalizedEmail, RateLimitEntry{
+			s.rateLimits.Store(cleanEmail, RateLimitEntry{
 				Count:      1,
 				LastAccess: now,
 			})
@@ -289,7 +297,7 @@ func (s *AuthService) SendVerificationCode(email string, purpose string) (string
 	}
 
 	// 목적별 이메일 존재 유무 사전 확인 (중복 가입 방어 및 유효 계정 타겟 발송)
-	_, findErr := s.userRepo.FindByEmail(normalizedEmail)
+	_, findErr := s.userRepo.FindByEmail(cleanEmail)
 	if purpose == "register" {
 		if findErr == nil {
 			return "", errors.New("이미 등록된 이메일 주소입니다")
@@ -305,7 +313,7 @@ func (s *AuthService) SendVerificationCode(email string, purpose string) (string
 		return "", err
 	}
 	code := fmt.Sprintf("%06d", num.Int64()+100000) // 100000 ~ 999999
-	s.verificationCodes.Store(normalizedEmail, code)
+	s.verificationCodes.Store(cleanEmail, code)
 
 	// OS 환경 변수를 통해 SMTP 자격 증명을 획득합니다.
 	smtpHost := os.Getenv("SMTP_HOST")
@@ -318,16 +326,12 @@ func (s *AuthService) SendVerificationCode(email string, purpose string) (string
 		addr := smtpHost + ":" + smtpPort
 		authClient := smtp.PlainAuth("", smtpUser, smtpPass, smtpHost)
 
-		var emailSubject string
+		var cleanSubject string
 		if purpose == "register" {
-			emailSubject = "[여정 플래너] 회원가입 인증 코드 안내"
+			cleanSubject = "[여정 플래너] 회원가입 인증 코드 안내"
 		} else {
-			emailSubject = "[여정 플래너] 비밀번호 찾기 인증 코드 안내"
+			cleanSubject = "[여정 플래너] 비밀번호 찾기 인증 코드 안내"
 		}
-
-		// 이메일 헤더 인젝션 방지를 위해 외부 입력값에서 개행문자(\r, \n)를 완벽하게 제거하여 살균합니다.
-		cleanEmail := strings.ReplaceAll(strings.ReplaceAll(email, "\r", ""), "\n", "")
-		cleanSubject := strings.ReplaceAll(strings.ReplaceAll(emailSubject, "\r", ""), "\n", "")
 
 		msg := []byte("To: " + cleanEmail + "\r\n" +
 			"Subject: " + cleanSubject + "\r\n" +
