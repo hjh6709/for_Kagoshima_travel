@@ -1,5 +1,6 @@
 import { CheckCircle2, Plane } from "lucide-react";
 import type { TripPageProps } from "../tripPageTypes";
+import { MaskedText } from "../../../shared/components/MaskedText";
 
 // 항공 탭 렌더링만 담당한다. 공항 체크리스트 상태 변경은 상위 핸들러를 호출한다.
 export function FlightTab({ allChecklist, checkedItems, flights, toggleCheck, trip }: TripPageProps) {
@@ -68,7 +69,7 @@ export function FlightTab({ allChecklist, checkedItems, flights, toggleCheck, tr
               
               {flight.memo && (
                 <div style={{ borderTop: "1px dashed rgba(28, 50, 37, 0.08)", paddingTop: "8px", marginTop: "4px", fontSize: "12px", color: "var(--c-muted)" }}>
-                  메모: {flight.memo}
+                  <MaskedText text={flight.memo} label="메모/예약번호:" />
                 </div>
               )}
             </article>

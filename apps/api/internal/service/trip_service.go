@@ -105,12 +105,23 @@ func (s *TripService) GetSharedTrip(token string) (dto.SharedTripResponse, error
 		return dto.SharedTripResponse{}, err
 	}
 
-	// 공유 화면에서는 민감한 항공 메모 마스킹 처리
+	// 공유 화면에서는 민감한 항공 메모 및 일정 예약번호 마스킹 처리
 	sharedFlights := make([]dto.FlightResponse, len(flights))
 	copy(sharedFlights, flights)
 	for i := range sharedFlights {
 		if sharedFlights[i].Memo != "" {
-			sharedFlights[i].Memo = "[공유용 화면에서는 비공개 처리됨]"
+			sharedFlights[i].Memo = maskSensitiveText(sharedFlights[i].Memo)
+		}
+	}
+
+	sharedSchedules := make([]dto.ScheduleResponse, len(schedules))
+	copy(sharedSchedules, schedules)
+	for i := range sharedSchedules {
+		if sharedSchedules[i].GuideMemo != "" {
+			sharedSchedules[i].GuideMemo = maskSensitiveText(sharedSchedules[i].GuideMemo)
+		}
+		if sharedSchedules[i].TransportMemo != "" {
+			sharedSchedules[i].TransportMemo = maskSensitiveText(sharedSchedules[i].TransportMemo)
 		}
 	}
 
@@ -130,12 +141,23 @@ func (s *TripService) GetSharedTrip(token string) (dto.SharedTripResponse, error
 
 	return dto.SharedTripResponse{
 		Trip:      mapPublicTripResponse(trip),
-		Schedules: schedules,
+		Schedules: sharedSchedules,
 		Places:    places,
 		Flights:   sharedFlights,
 		Routes:    routes,
 		Checklist: sharedChecklist,
 	}, nil
+}
+
+func maskSensitiveText(text string) string {
+	if text == "" {
+		return ""
+	}
+	runes := []rune(text)
+	if len(runes) <= 3 {
+		return "••••"
+	}
+	return string(runes[:3]) + "••••"
 }
 
 func (s *TripService) ListSchedules(tripID string) ([]dto.ScheduleResponse, error) {

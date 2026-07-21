@@ -1,6 +1,7 @@
 import { ArrowDown, ArrowUp, CheckCircle2, MapPin } from "lucide-react";
 import { scheduleTypeLabels } from "../../../shared/travelOptions";
 import type { Place, ScheduleItem } from "../../../types/travel";
+import { MaskedText } from "../../../shared/components/MaskedText";
 
 type ScheduleCardProps = {
   index: number;
@@ -42,11 +43,15 @@ export function ScheduleCard({
         )}
         {item.reservationMemo && (
           <p className="schedule-detail">
-            <strong>예약</strong>
-            {item.reservationMemo}
+            <strong style={{ marginRight: "6px" }}>예약</strong>
+            <MaskedText text={item.reservationMemo} />
           </p>
         )}
-        {item.guideMemo && <p className="muted">{item.guideMemo}</p>}
+        {item.guideMemo && (
+          <div className="muted" style={{ marginTop: "4px", fontSize: "12px" }}>
+            <MaskedText text={item.guideMemo} label="안내:" />
+          </div>
+        )}
         <div className="schedule-actions">
           <button
             className="secondary-button compact-button"
