@@ -329,18 +329,18 @@ func (s *AuthService) SendVerificationCode(email string, purpose string) (string
 	if resendKey != "" && !isTesting() {
 		fromAddr := os.Getenv("RESEND_FROM")
 		if fromAddr == "" {
-			fromAddr = "여정 플래너 <noreply@hjh-dev.site>"
+			fromAddr = "Map Planner <noreply@hjh-dev.site>"
 		}
 
 		var cleanSubject string
 		if purpose == "register" {
-			cleanSubject = "[여정 플래너] 회원가입 인증 코드 안내"
+			cleanSubject = "[Map Planner] 회원가입 인증 코드 안내"
 		} else {
-			cleanSubject = "[여정 플래너] 비밀번호 찾기 인증 코드 안내"
+			cleanSubject = "[Map Planner] 비밀번호 찾기 인증 코드 안내"
 		}
 
 		bodyText := fmt.Sprintf(
-			"안녕하세요. 스마트 여정 플래너입니다.\n\n"+
+			"안녕하세요. Map Planner입니다.\n\n"+
 				"본인 인증 및 요청 처리를 위한 6자리 인증 코드를 다음과 같이 보내드립니다.\n\n"+
 				"인증 코드: [%s]\n\n"+
 				"해당 인증 코드는 발급된 후 5분 동안만 유효합니다.\n감사합니다.\n",
@@ -386,9 +386,9 @@ func (s *AuthService) SendVerificationCode(email string, purpose string) (string
 
 		var cleanSubject string
 		if purpose == "register" {
-			cleanSubject = "[여정 플래너] 회원가입 인증 코드 안내"
+			cleanSubject = "[Map Planner] 회원가입 인증 코드 안내"
 		} else {
-			cleanSubject = "[여정 플래너] 비밀번호 찾기 인증 코드 안내"
+			cleanSubject = "[Map Planner] 비밀번호 찾기 인증 코드 안내"
 		}
 
 		header := mail.Header{

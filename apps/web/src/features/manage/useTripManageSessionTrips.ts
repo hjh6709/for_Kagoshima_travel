@@ -174,7 +174,7 @@ export function useTripManageSessionTrips({
     try {
       const email = authEmail.trim();
       const formData = new FormData(event.currentTarget);
-      const code = (formData.get("verificationCode") as string) || "";
+      const code = (formData.get("code") as string) || (formData.get("verificationCode") as string) || "";
       const captchaAnswer = parseInt((formData.get("captchaAnswer") as string) || "0");
       const captchaKey = (formData.get("captchaKey") as string) || "";
 
