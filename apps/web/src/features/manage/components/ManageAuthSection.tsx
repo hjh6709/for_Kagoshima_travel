@@ -180,6 +180,23 @@ export function ManageAuthSection({
     }
   };
 
+  const handleSubmitForm = (e: React.FormEvent<HTMLFormElement>) => {
+    if (authMode === "register") {
+      if (!isCodeVerified) {
+        e.preventDefault();
+        showToast("이메일 인증 코드 검증을 먼저 진행해 주세요.", "warning", "이메일 인증 필요");
+        return;
+      }
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+      if (!passwordRegex.test(authPassword)) {
+        e.preventDefault();
+        showToast("비밀번호 규칙(영문 대/소문자, 숫자, 특수문자 조합 8자 이상)을 만족해야 합니다.", "warning", "비밀번호 규칙 미충족");
+        return;
+      }
+    }
+    onSubmitAuth(e);
+  };
+
   if (authChecked && auth) {
     return null;
   }
@@ -400,7 +417,7 @@ export function ManageAuthSection({
         처음 사용하는 경우 계정을 만든 뒤 여행을 생성합니다. 공유 링크를 받은 동반자는 로그인 없이 일정을 읽기 전용으로 바로 확인합니다.
       </p>
 
-      <form className="auth-form" onSubmit={onSubmitAuth}>
+      <form className="auth-form" onSubmit={handleSubmitForm}>
         <label className="auth-field-label">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span>이메일 주소</span>

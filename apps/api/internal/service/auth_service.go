@@ -30,6 +30,7 @@ var (
 	ErrEmailTaken              = errors.New("email already taken")
 	ErrInvalidInput            = errors.New("invalid input")
 	ErrInvalidVerificationCode = errors.New("invalid verification code")
+	ErrPasswordComplexity      = errors.New("비밀번호는 영문 대문자, 소문자, 숫자, 특수문자가 각각 1개 이상 포함되어야 합니다")
 )
 
 type RateLimitEntry struct {
@@ -248,7 +249,7 @@ func validatePasswordComplexity(password string) error {
 		}
 	}
 	if !hasUpper || !hasLower || !hasDigit || !hasSpecial {
-		return errors.New("비밀번호는 영문 대문자, 소문자, 숫자, 특수문자가 각각 1개 이상 포함되어야 합니다")
+		return ErrPasswordComplexity
 	}
 	return nil
 }
