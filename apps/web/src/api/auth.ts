@@ -83,6 +83,14 @@ export function sendVerificationCode(email: string, purpose: string) {
   });
 }
 
+// 입력한 이메일과 6자리 인증코드가 일치하는지 백엔드와 사전 대조합니다.
+export function verifyCode(email: string, code: string) {
+  return apiRequest<{ verified: boolean }>("/api/auth/verify-code", {
+    method: "POST",
+    body: JSON.stringify({ email, code }),
+  });
+}
+
 export function forgotPassword(email: string, code: string) {
   return apiRequest<{ temporaryPassword: string }>("/api/auth/forgot-password", {
     method: "POST",

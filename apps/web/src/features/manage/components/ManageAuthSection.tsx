@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { LockKeyhole, Mail, Key, Compass, Eye, EyeOff } from "lucide-react";
+import { LockKeyhole, Mail, Key, Compass, Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import type { ManageAuthSectionProps } from "../manageTypes";
-import { sendVerificationCode, forgotPassword } from "../../../api/auth";
+import { sendVerificationCode, forgotPassword, verifyCode } from "../../../api/auth";
 import { ToastNotification, type ToastMessage, type ToastType } from "../../../shared/components/ToastNotification";
 
 // 인증 화면만 분리한다. 로그인/회원가입 요청은 App.tsx가 넘긴 콜백이 처리한다.
@@ -28,6 +28,9 @@ export function ManageAuthSection({
   const [captchaQuestion, setCaptchaQuestion] = useState("");
   const [sendSubmitting, setSendSubmitting] = useState(false);
   const [codeSent, setCodeSent] = useState(false);
+  const [inputCode, setInputCode] = useState("");
+  const [isCodeVerified, setIsCodeVerified] = useState(false);
+  const [verifyingSubmitting, setVerifyingSubmitting] = useState(false);
   const [verificationPopup, setVerificationPopup] = useState("");
   const [toast, setToast] = useState<ToastMessage | null>(null);
 
@@ -62,27 +65,47 @@ export function ManageAuthSection({
 
   // 회원가입 폼에서 입력한 이메일 주소로 6자리 가상/실제 인증코드를 요청하는 핸들러입니다.
   // api/auth.ts 내 공통화된 통신 함수를 호출하여 주소 중복을 막고, catch 블록에서 세부 에러 응답을 매핑합니다.
+  // 사용자가 입력한 6자리 인증 코드가 유효한지 백엔드와 사전 검증하는 핸들러입니다.
+  const handleVerifyCodeSubmit = async () => {
+    const targetEmail = isForgotMode ? forgotEmail : authEmail;
+    const targetCode = isForgotMode ? forgotCode : inputCode;
+
+    if (!targetCode || targetCode.length < 6) {
+      showToast("6자리 인증 코드를 정확히 입력해 주세요.", "warning", "코드 입력 필요");
+      return;
+    }
+    setVerifyingSubmitting(true);
+    try {
+      await verifyCode(targetEmail, targetCode);
+      setIsCodeVerified(true);
+      showToast("이메일 소유권 인증이 성공적으로 완료되었습니다!", "success", "인증 완료");
+    } catch (err: any) {
+      setIsCodeVerified(false);
+      showToast(err.message || "인증 코드가 일치하지 않거나 만료되었습니다.", "error", "검증 실패");
+    } finally {
+      setVerifyingSubmitting(false);
+    }
+  };
+
   const handleSendCode = async () => {
     if (!authEmail || !authEmail.includes("@")) {
       showToast("올바른 이메일 주소를 입력하고 코드를 요청해 주세요.", "warning", "입력 오류");
       return;
     }
     setSendSubmitting(true);
+    setIsCodeVerified(false);
     try {
       // 가입(register) 목적의 인증코드 발송임을 명시하여 중복 이메일 가입 방지 검증을 활성화합니다.
       const data = await sendVerificationCode(authEmail, "register");
       
-      // 실제 SMTP로 발송 완료하여 코드값이 비어있을 때는 가상 시뮬레이터 배너를 띄우지 않습니다.
+      setCodeSent(true);
       if (data.code) {
         setVerificationPopup(data.code);
-        setCodeSent(true);
       } else {
         setVerificationPopup("");
-        setCodeSent(false);
         showToast("기재하신 이메일 주소로 인증 메일이 실제로 전송되었습니다. 메일함을 확인해 주세요.", "success", "인증 메일 발송 완료");
       }
     } catch (err: any) {
-      // 헬퍼가 반환한 ApiError의 HTTP status 코드를 기반으로, 발생 가능한 오류 원인을 구체적으로 설명합니다.
       if (err.status === 409) {
         showToast("이미 등록된 이메일 주소입니다. 다른 이메일로 가입해 주세요.", "error", "가입 불가");
       } else if (err.status === 404) {
@@ -209,23 +232,66 @@ export function ManageAuthSection({
               <div style={{ display: "flex", gap: "8px" }}>
                 <input
                   name="verificationCode"
+                  readOnly={isCodeVerified}
                   onChange={(event) => setForgotCode(event.target.value)}
-                  placeholder="시뮬레이터 코드를 입력하세요"
+                  placeholder="수신된 6자리 코드를 입력하세요"
                   required
                   type="text"
                   maxLength={6}
                   value={forgotCode}
                   style={{ flex: 1 }}
                 />
-                <button
-                  className="secondary-button"
-                  disabled={sendSubmitting}
-                  onClick={handleSendForgotCode}
-                  type="button"
-                  style={{ marginTop: 0, padding: "0 12px", whiteSpace: "nowrap", height: "42px", fontSize: "12px" }}
-                >
-                  {sendSubmitting ? "전송 중" : codeSent ? "재전송" : "인증코드 전송"}
-                </button>
+                {!codeSent ? (
+                  <button
+                    className="secondary-button"
+                    disabled={sendSubmitting}
+                    onClick={handleSendForgotCode}
+                    type="button"
+                    style={{ marginTop: 0, padding: "0 12px", whiteSpace: "nowrap", height: "42px", fontSize: "12px" }}
+                  >
+                    {sendSubmitting ? "전송 중" : "인증코드 전송"}
+                  </button>
+                ) : isCodeVerified ? (
+                  <button
+                    className="secondary-button"
+                    disabled
+                    type="button"
+                    style={{
+                      marginTop: 0,
+                      padding: "0 12px",
+                      whiteSpace: "nowrap",
+                      height: "42px",
+                      fontSize: "12px",
+                      backgroundColor: "rgba(16, 185, 129, 0.15)",
+                      color: "var(--c-green)",
+                      borderColor: "var(--c-green)",
+                    }}
+                  >
+                    인증 완료 ✓
+                  </button>
+                ) : (
+                  <div style={{ display: "flex", gap: "4px" }}>
+                    <button
+                      className="primary-button"
+                      disabled={verifyingSubmitting || forgotCode.length < 6}
+                      onClick={handleVerifyCodeSubmit}
+                      type="button"
+                      style={{ marginTop: 0, padding: "0 12px", whiteSpace: "nowrap", height: "42px", fontSize: "12px" }}
+                    >
+                      {verifyingSubmitting ? "검증 중" : "코드 확인"}
+                    </button>
+                    <button
+                      className="secondary-button"
+                      disabled={sendSubmitting}
+                      onClick={handleSendForgotCode}
+                      type="button"
+                      title="인증코드 재전송"
+                      style={{ marginTop: 0, padding: "0 8px", whiteSpace: "nowrap", height: "42px", fontSize: "11px" }}
+                    >
+                      재전송
+                    </button>
+                  </div>
+                )}
               </div>
             </label>
 
@@ -336,17 +402,26 @@ export function ManageAuthSection({
 
       <form className="auth-form" onSubmit={onSubmitAuth}>
         <label className="auth-field-label">
-          <span>이메일 주소</span>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span>이메일 주소</span>
+            {isCodeVerified && (
+              <span style={{ fontSize: "11px", color: "var(--c-green)", fontWeight: 600, display: "flex", alignItems: "center", gap: "2px" }}>
+                <CheckCircle2 size={12} /> 이메일 인증 완료
+              </span>
+            )}
+          </div>
           <div className="input-with-icon">
             <Mail size={16} className="field-icon" />
             <input
               autoComplete="email"
               inputMode="email"
+              readOnly={isCodeVerified}
               onChange={(event) => onAuthEmailChange(event.target.value)}
               placeholder="you@example.com"
               required
               type="email"
               value={authEmail}
+              style={isCodeVerified ? { backgroundColor: "rgba(16, 185, 129, 0.08)", borderColor: "var(--c-green)" } : undefined}
             />
           </div>
         </label>
@@ -356,22 +431,67 @@ export function ManageAuthSection({
             <span>이메일 인증 코드 (6자리)</span>
             <div style={{ display: "flex", gap: "8px" }}>
               <input
-                name="verificationCode"
-                placeholder="시뮬레이터 코드를 입력하세요"
+                name="code"
+                readOnly={isCodeVerified}
+                onChange={(e) => setInputCode(e.target.value)}
+                placeholder="수신된 6자리 코드를 입력하세요"
                 required
                 type="text"
                 maxLength={6}
+                value={inputCode}
                 style={{ flex: 1 }}
               />
-              <button
-                className="secondary-button"
-                disabled={sendSubmitting}
-                onClick={handleSendCode}
-                type="button"
-                style={{ marginTop: 0, padding: "0 12px", whiteSpace: "nowrap", height: "42px", fontSize: "12px" }}
-              >
-                {sendSubmitting ? "전송 중" : codeSent ? "재전송" : "인증코드 전송"}
-              </button>
+              {!codeSent ? (
+                <button
+                  className="secondary-button"
+                  disabled={sendSubmitting}
+                  onClick={handleSendCode}
+                  type="button"
+                  style={{ marginTop: 0, padding: "0 12px", whiteSpace: "nowrap", height: "42px", fontSize: "12px" }}
+                >
+                  {sendSubmitting ? "전송 중" : "인증코드 전송"}
+                </button>
+              ) : isCodeVerified ? (
+                <button
+                  className="secondary-button"
+                  disabled
+                  type="button"
+                  style={{
+                    marginTop: 0,
+                    padding: "0 12px",
+                    whiteSpace: "nowrap",
+                    height: "42px",
+                    fontSize: "12px",
+                    backgroundColor: "rgba(16, 185, 129, 0.15)",
+                    color: "var(--c-green)",
+                    borderColor: "var(--c-green)",
+                  }}
+                >
+                  인증 완료 ✓
+                </button>
+              ) : (
+                <div style={{ display: "flex", gap: "4px" }}>
+                  <button
+                    className="primary-button"
+                    disabled={verifyingSubmitting || inputCode.length < 6}
+                    onClick={handleVerifyCodeSubmit}
+                    type="button"
+                    style={{ marginTop: 0, padding: "0 12px", whiteSpace: "nowrap", height: "42px", fontSize: "12px" }}
+                  >
+                    {verifyingSubmitting ? "검증 중" : "코드 확인"}
+                  </button>
+                  <button
+                    className="secondary-button"
+                    disabled={sendSubmitting}
+                    onClick={handleSendCode}
+                    type="button"
+                    title="인증코드 재전송"
+                    style={{ marginTop: 0, padding: "0 8px", whiteSpace: "nowrap", height: "42px", fontSize: "11px" }}
+                  >
+                    재전송
+                  </button>
+                </div>
+              )}
             </div>
           </label>
         )}

@@ -132,3 +132,18 @@ func (h *AuthHandler) SendVerificationCode(w http.ResponseWriter, r *http.Reques
 
 	httpjson.Write(w, http.StatusOK, dto.SendVerificationCodeResponse{Code: code})
 }
+
+func (h *AuthHandler) VerifyCode(w http.ResponseWriter, r *http.Request) {
+	var req dto.VerifyCodeRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		httpjson.WriteError(w, http.StatusBadRequest, "요청 형식이 올바르지 않습니다.")
+		return
+	}
+
+	if err := h.authService.VerifyCode(req.Email, req.Code); err != nil {
+		httpjson.WriteError(w, http.StatusBadRequest, "인증 코드가 일치하지 않거나 만료되었습니다.")
+		return
+	}
+
+	httpjson.Write(w, http.StatusOK, map[string]bool{"verified": true})
+}

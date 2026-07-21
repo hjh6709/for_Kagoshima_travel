@@ -49,3 +49,8 @@ type SendVerificationCodeRequest struct {
 type SendVerificationCodeResponse struct {
 	Code string `json:"code"`
 }
+
+type VerifyCodeRequest struct {
+	Email string `json:"email"`
+	Code  string `json:"code"`
+}

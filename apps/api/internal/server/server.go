@@ -82,6 +82,7 @@ func (s *Server) registerRoutes(jwtSecret string) {
 	s.mux.HandleFunc("POST /api/auth/login", s.authHandler.Login)
 	s.mux.HandleFunc("POST /api/auth/forgot-password", s.authHandler.ForgotPassword)
 	s.mux.HandleFunc("POST /api/auth/send-verification-code", s.authHandler.SendVerificationCode)
+	s.mux.HandleFunc("POST /api/auth/verify-code", s.authHandler.VerifyCode)
 	s.mux.HandleFunc("GET /api/share/{token}", s.tripHandler.GetSharedTrip)
 
 	// 인증 필요 엔드포인트

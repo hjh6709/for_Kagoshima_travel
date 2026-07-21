@@ -26,9 +26,10 @@ import (
 )
 
 var (
-	ErrInvalidCredentials = errors.New("invalid email or password")
-	ErrEmailTaken         = errors.New("email already taken")
-	ErrInvalidInput       = errors.New("invalid input")
+	ErrInvalidCredentials      = errors.New("invalid email or password")
+	ErrEmailTaken              = errors.New("email already taken")
+	ErrInvalidInput            = errors.New("invalid input")
+	ErrInvalidVerificationCode = errors.New("invalid verification code")
 )
 
 type RateLimitEntry struct {
@@ -439,6 +440,26 @@ func validateCaptcha(key string, answer int) bool {
 		return valA-valB == answer
 	}
 	return false
+}
+
+func (s *AuthService) VerifyCode(email, code string) error {
+	cleanEmail := strings.ToLower(strings.TrimSpace(email))
+	cleanCode := strings.TrimSpace(code)
+	if cleanEmail == "" || cleanCode == "" {
+		return ErrInvalidInput
+	}
+
+	val, ok := s.verificationCodes.Load(cleanEmail)
+	if !ok {
+		return ErrInvalidVerificationCode
+	}
+
+	storedCode, ok := val.(string)
+	if !ok || storedCode != cleanCode {
+		return ErrInvalidVerificationCode
+	}
+
+	return nil
 }
 
 func isTesting() bool {
