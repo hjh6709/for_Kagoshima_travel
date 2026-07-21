@@ -117,6 +117,6 @@ jobs:
       - uses: actions/checkout@v7
 
       # pr-check-doctor v0.1.2 pinned to an immutable commit for CodeQL.
-      - uses: hjh6709/pr-check-doctor@ad92599d882bcba618d6c5c03853185c6202adff
+      - uses: hjh6709/pr-check-doctor@94e04c08d97a857c1a26c76cdb523fb90ecace29
         with:
           github-token: ${{ github.token }}
