@@ -29,6 +29,10 @@
   ],
   "rewrites": [
     {
+      "source": "/api/:path*",
+      "destination": "https://api.hjh-dev.site/api/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
