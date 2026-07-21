@@ -3,6 +3,7 @@ import { formatKoreanDate } from "../../../shared/date";
 import { getScheduleTypeLabel, scheduleTypeOptions } from "../../../shared/travelOptions";
 import type { ScheduleItem } from "../../../types/travel";
 import type { TripManagePageProps } from "../manageTypes";
+import { MaskedText } from "../../../shared/components/MaskedText";
 
 type ManageScheduleListProps = Pick<
   TripManagePageProps,
@@ -119,7 +120,11 @@ export function ManageScheduleList({
                     {place ? ` · ${place.name}` : ""}
                   </p>
                 </div>
-                {schedule.guideMemo && <p className="muted">{schedule.guideMemo}</p>}
+                {schedule.guideMemo && (
+                  <div className="muted mt-1 text-xs">
+                    <MaskedText text={schedule.guideMemo} label="안내/예약메모:" />
+                  </div>
+                )}
                 {isScheduleListEditing && (
                   <div className="owner-linked-actions">
                     <button

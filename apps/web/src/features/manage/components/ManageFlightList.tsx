@@ -2,6 +2,7 @@ import { Edit3, Save, Trash2, X } from "lucide-react";
 import { formatKoreanDate } from "../../../shared/date";
 import { flightDirectionOptions, getFlightDirectionLabel, type FlightDirection } from "../../../shared/travelOptions";
 import type { TripManagePageProps } from "../manageTypes";
+import { MaskedText } from "../../../shared/components/MaskedText";
 
 type ManageFlightListProps = Pick<
   TripManagePageProps,
@@ -146,7 +147,11 @@ export function ManageFlightList({
                   </button>
                 </div>
               )}
-              {flight.memo && <p className="muted">{flight.memo}</p>}
+              {flight.memo && (
+                <div className="muted mt-1 text-xs">
+                  <MaskedText text={flight.memo} label="메모/예약번호:" />
+                </div>
+              )}
               {isFlightListEditing && editingFlightID === flight.id && selectedOwnerTrip && (
                 <form className="auth-form compact-owner-form owner-inline-edit-form" onSubmit={onSubmitFlightEdit}>
                   <div className="form-grid-two">
