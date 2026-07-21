@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { LockKeyhole, Mail, Key, Compass, Eye, EyeOff } from "lucide-react";
 import type { ManageAuthSectionProps } from "../manageTypes";
 import { sendVerificationCode, forgotPassword } from "../../../api/auth";
+import { ToastNotification, type ToastMessage, type ToastType } from "../../../shared/components/ToastNotification";
 
 // 인증 화면만 분리한다. 로그인/회원가입 요청은 App.tsx가 넘긴 콜백이 처리한다.
 export function ManageAuthSection({
@@ -28,6 +29,16 @@ export function ManageAuthSection({
   const [sendSubmitting, setSendSubmitting] = useState(false);
   const [codeSent, setCodeSent] = useState(false);
   const [verificationPopup, setVerificationPopup] = useState("");
+  const [toast, setToast] = useState<ToastMessage | null>(null);
+
+  const showToast = (message: string, type: ToastType = "info", title?: string) => {
+    setToast({
+      id: Date.now().toString(),
+      type,
+      title,
+      message,
+    });
+  };
 
   const regenerateCaptcha = () => {
     const valA = Math.floor(Math.random() * 15) + 1;
@@ -53,7 +64,7 @@ export function ManageAuthSection({
   // api/auth.ts 내 공통화된 통신 함수를 호출하여 주소 중복을 막고, catch 블록에서 세부 에러 응답을 매핑합니다.
   const handleSendCode = async () => {
     if (!authEmail || !authEmail.includes("@")) {
-      alert("올바른 이메일 주소를 입력하고 코드를 요청해 주세요.");
+      showToast("올바른 이메일 주소를 입력하고 코드를 요청해 주세요.", "warning", "입력 오류");
       return;
     }
     setSendSubmitting(true);
@@ -68,20 +79,20 @@ export function ManageAuthSection({
       } else {
         setVerificationPopup("");
         setCodeSent(false);
-        alert("기재하신 이메일 주소로 인증 메일이 실제로 전송되었습니다. 메일함을 확인해 주세요.");
+        showToast("기재하신 이메일 주소로 인증 메일이 실제로 전송되었습니다. 메일함을 확인해 주세요.", "success", "인증 메일 발송 완료");
       }
     } catch (err: any) {
       // 헬퍼가 반환한 ApiError의 HTTP status 코드를 기반으로, 발생 가능한 오류 원인을 구체적으로 설명합니다.
       if (err.status === 409) {
-        alert("이미 등록된 이메일 주소입니다. 다른 이메일로 가입해 주세요.");
+        showToast("이미 등록된 이메일 주소입니다. 다른 이메일로 가입해 주세요.", "error", "가입 불가");
       } else if (err.status === 404) {
-        alert("인증코드 발송 엔드포인트를 찾을 수 없습니다. (404 Not Found)");
+        showToast("인증코드 발송 엔드포인트를 찾을 수 없습니다. (404 Not Found)", "error", "통신 오류");
       } else if (err.status === 405) {
-        alert("허용되지 않은 요청 메서드(Method)입니다. 서버 라우팅 상태를 확인해 주세요. (405 Method Not Allowed)");
+        showToast("허용되지 않은 요청 메서드(Method)입니다. 서버 라우팅 상태를 확인해 주세요. (405 Method Not Allowed)", "error", "라우팅 오류");
       } else if (err.status === 502 || err.status === 504) {
-        alert("서버 게이트웨이가 응답하지 않습니다. 네트워크 연결을 확인하세요.");
+        showToast("서버 게이트웨이가 응답하지 않습니다. 네트워크 연결을 확인하세요.", "error", "네트워크 오류");
       } else {
-        alert(err.message || "인증코드 발송에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+        showToast(err.message || "인증코드 발송에 실패했습니다. 잠시 후 다시 시도해 주세요.", "error", "전송 실패");
       }
     } finally {
       setSendSubmitting(false);
@@ -93,7 +104,7 @@ export function ManageAuthSection({
   // 비밀번호 찾기(임시 비번 발급) 진행 전, 사용자의 이메일 소유권을 확인하기 위해 인증코드를 요청하는 핸들러입니다.
   const handleSendForgotCode = async () => {
     if (!forgotEmail || !forgotEmail.includes("@")) {
-      alert("올바른 이메일 주소를 입력하고 코드를 요청해 주세요.");
+      showToast("올바른 이메일 주소를 입력하고 코드를 요청해 주세요.", "warning", "입력 오류");
       return;
     }
     setSendSubmitting(true);
@@ -107,17 +118,17 @@ export function ManageAuthSection({
       } else {
         setVerificationPopup("");
         setCodeSent(false);
-        alert("기재하신 이메일 주소로 비밀번호 찾기 인증 메일이 실제로 전송되었습니다. 메일함을 확인해 주세요.");
+        showToast("기재하신 이메일 주소로 비밀번호 찾기 인증 메일이 실제로 전송되었습니다. 메일함을 확인해 주세요.", "success", "비밀번호 찾기 메일 발송");
       }
     } catch (err: any) {
       if (err.status === 400 || err.status === 404) {
-        alert("가입되어 있지 않은 이메일 주소입니다. 가입 정보를 확인해 주세요.");
+        showToast("가입되어 있지 않은 이메일 주소입니다. 가입 정보를 확인해 주세요.", "error", "계정 미존재");
       } else if (err.status === 405) {
-        alert("요청이 거절되었습니다. API 설정을 체크해 주세요. (405 Method Not Allowed)");
+        showToast("요청이 거절되었습니다. API 설정을 체크해 주세요. (405 Method Not Allowed)", "error", "요청 거절");
       } else if (err.status === 502 || err.status === 504) {
-        alert("네트워크 통신망 일시 오류입니다. 잠시 후 재전송을 시도하세요.");
+        showToast("네트워크 통신망 일시 오류입니다. 잠시 후 재전송을 시도하세요.", "error", "네트워크 오류");
       } else {
-        alert(err.message || "인증코드 발송 중 알 수 없는 에러가 발생했습니다.");
+        showToast(err.message || "인증코드 발송 중 알 수 없는 에러가 발생했습니다.", "error", "전송 오류");
       }
     } finally {
       setSendSubmitting(false);
@@ -459,6 +470,8 @@ export function ManageAuthSection({
           로컬 개발은 <code>VITE_API_BASE_URL=http://localhost:8080</code> 설정이 필요합니다.
         </p>
       )}
+
+      <ToastNotification toast={toast} onClose={() => setToast(null)} />
     </article>
     </>
   );
