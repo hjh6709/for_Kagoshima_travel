@@ -4,11 +4,13 @@ import (
 	"bufio"
 	"bytes"
 	"crypto/rand"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
 	"html"
 	"math/big"
+	"net/http"
 	"net/mail"
 	"net/smtp"
 	"net/textproto"
@@ -319,6 +321,55 @@ func (s *AuthService) SendVerificationCode(email string, purpose string) (string
 	}
 	code := fmt.Sprintf("%06d", num.Int64()+100000) // 100000 ~ 999999
 	s.verificationCodes.Store(cleanEmail, code)
+
+	// Resend API 키가 주입되어 있고 테스트 환경이 아니라면 Resend HTTP API로 실제 메일을 전송합니다.
+	resendKey := os.Getenv("RESEND_API_KEY")
+	if resendKey != "" && !isTesting() {
+		fromAddr := os.Getenv("RESEND_FROM")
+		if fromAddr == "" {
+			fromAddr = "여정 플래너 <noreply@hjh-dev.site>"
+		}
+
+		var cleanSubject string
+		if purpose == "register" {
+			cleanSubject = "[여정 플래너] 회원가입 인증 코드 안내"
+		} else {
+			cleanSubject = "[여정 플래너] 비밀번호 찾기 인증 코드 안내"
+		}
+
+		bodyText := fmt.Sprintf(
+			"안녕하세요. 스마트 여정 플래너입니다.\n\n"+
+				"본인 인증 및 요청 처리를 위한 6자리 인증 코드를 다음과 같이 보내드립니다.\n\n"+
+				"인증 코드: [%s]\n\n"+
+				"해당 인증 코드는 발급된 후 5분 동안만 유효합니다.\n감사합니다.\n",
+			code,
+		)
+
+		payload := map[string]interface{}{
+			"from":    fromAddr,
+			"to":      []string{cleanEmail},
+			"subject": cleanSubject,
+			"text":    bodyText,
+		}
+		jsonBytes, err := json.Marshal(payload)
+		if err == nil {
+			req, err := http.NewRequest("POST", "https://api.resend.com/emails", bytes.NewBuffer(jsonBytes))
+			if err == nil {
+				req.Header.Set("Authorization", "Bearer "+resendKey)
+				req.Header.Set("Content-Type", "application/json")
+
+				client := &http.Client{Timeout: 10 * time.Second}
+				resp, err := client.Do(req)
+				if err == nil {
+					defer resp.Body.Close()
+					if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+						// 실제 이메일 발송 성공 시 코드 은닉
+						return "", nil
+					}
+				}
+			}
+		}
+	}
 
 	// OS 환경 변수를 통해 SMTP 자격 증명을 획득합니다.
 	smtpHost := os.Getenv("SMTP_HOST")
