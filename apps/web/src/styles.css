@@ -55,7 +55,7 @@ button:disabled {
 
 .phone-frame {
   width: min(100%, 430px);
-  min-height: min(860px, calc(100vh - 48px));
+  height: min(860px, calc(100vh - 48px));
   background: var(--c-bg);
   border: 1px solid rgba(36, 48, 47, 0.1);
   box-shadow: 0 24px 80px rgba(28, 50, 37, 0.16);
@@ -1323,7 +1323,7 @@ p {
 
   .phone-frame {
     width: 100%;
-    min-height: 100vh;
+    height: 100vh;
     border: 0;
     box-shadow: none;
   }
