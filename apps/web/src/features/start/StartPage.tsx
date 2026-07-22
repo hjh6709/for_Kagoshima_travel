@@ -12,7 +12,7 @@ export function StartPage() {
               <div className="brand-badge-circle" style={{ width: "48px", height: "48px", background: "var(--c-green-light)", color: "var(--c-green)" }}>
                 <Compass className="auth-hero-icon" size={26} />
               </div>
-              <span className="pill subtle" style={{ marginTop: "4px" }}>스마트 여정 플래너</span>
+              <span className="pill subtle" style={{ marginTop: "4px" }}>Map Planner</span>
               <h1 style={{ fontSize: "24px", fontWeight: 700, lineHeight: 1.3, letterSpacing: "-0.02em" }}>여정을 그리는 가장 설레는 방법</h1>
               <p className="muted" style={{ fontSize: "14px", lineHeight: 1.5, margin: "0 10px" }}>
                 일정, 장소, 항공편을 입력하여 나만의 여행 가이드를 완성하고, 공유 링크로 가족이나 동행자에게 간편하게 전달하세요.

@@ -409,7 +409,7 @@ func (s *AuthService) SendVerificationCode(email string, purpose string) (string
 			return "", fmt.Errorf("이메일 본문 생성 중 오류가 발생했습니다: %v", err)
 		}
 		if _, err := buf.WriteString(
-			"안녕하세요. 스마트 여정 플래너입니다.\r\n\r\n" +
+			"안녕하세요. Map Planner입니다.\r\n\r\n" +
 				"본인 인증 및 요청 처리를 위한 6자리 인증 코드를 다음과 같이 보내드립니다.\r\n\r\n" +
 				"인증 코드: [" + code + "]\r\n\r\n" +
 				"해당 인증 코드는 발급된 후 5분 동안만 유효합니다.\r\n" +
