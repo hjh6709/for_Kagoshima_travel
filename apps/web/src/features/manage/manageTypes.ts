@@ -46,7 +46,6 @@ export type TripCreateSectionProps = {
 };
 
 export type TripListSectionProps = {
-  onSelectOwnerTrip: (tripID: string) => void;
   ownerTrips: OwnerTrip[];
   ownerTripsError: string;
   ownerTripsLoading: boolean;
@@ -232,9 +231,17 @@ export type SelectedTripDetailSectionProps = {
 	onDeleteChecklistItem: (itemID: string) => void;
 };
 
+// /manage/trips/:id, /manage/trips/:id/edit가 URL의 tripId로 여행을 자동 선택할 때 쓴다.
+// TripListSection은 더 이상 이 콜백을 쓰지 않지만(링크로 이동), 다른 페이지가 재사용하므로
+// TripManagePageProps 계약에는 남겨둔다.
+export type ManageTripSelectionProps = {
+  onSelectOwnerTrip: (tripID: string) => void;
+};
+
 // useTripManageController가 계산한 여행 관리 화면 입력값과 이벤트 핸들러를 섹션별 props로 전달한다.
 export type TripManagePageProps = ManageAuthSectionProps &
   ManageSessionActionProps &
+  ManageTripSelectionProps &
   TripCreateSectionProps &
   TripListSectionProps &
   SelectedTripDetailSectionProps;
