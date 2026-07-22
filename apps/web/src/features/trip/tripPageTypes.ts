@@ -24,6 +24,7 @@ export type TripPageProps = {
   completedSchedules: Record<string, boolean>;
   contentRef: RefObject<HTMLDivElement | null>;
   dates: string[];
+  editTripHref?: string;
   emergencies: EmergencyInfo[];
   flights: FlightInfo[];
   focusCompletedScheduleCount: number;
