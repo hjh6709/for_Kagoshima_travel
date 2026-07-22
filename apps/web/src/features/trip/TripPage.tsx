@@ -7,9 +7,13 @@ import { TodayTab } from "./components/TodayTab";
 import { MyPageTab } from "./components/MyPageTab";
 import type { TripPageProps } from "./tripPageTypes";
 
+type TripPageComponentProps = TripPageProps & {
+  onLogout?: () => void;
+};
+
 // 일반 여행 화면의 탭 컴포넌트를 조립한다. 상태 저장과 API 흐름은 App.tsx가 관리한다.
-export function TripPage(props: TripPageProps) {
-  const { activeTab, contentRef, setActiveTab } = props;
+export function TripPage(props: TripPageComponentProps) {
+  const { activeTab, contentRef, onLogout, setActiveTab } = props;
 
   return (
     <main className="app-shell">
@@ -20,7 +24,7 @@ export function TripPage(props: TripPageProps) {
           {activeTab === "flight" && <FlightTab {...props} />}
           {activeTab === "map" && <MapTab {...props} />}
           {activeTab === "concierge" && <ConciergeTab {...props} />}
-          {activeTab === "mypage" && <MyPageTab {...props} />}
+          {activeTab === "mypage" && <MyPageTab {...props} onLogout={onLogout} />}
         </div>
 
         <BottomTabs activeTab={activeTab} setActiveTab={setActiveTab} />

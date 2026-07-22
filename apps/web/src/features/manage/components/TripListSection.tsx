@@ -2,13 +2,8 @@ import { Compass } from "lucide-react";
 import { formatKoreanDate } from "../../../shared/date";
 import type { TripListSectionProps } from "../manageTypes";
 
-// 여행 목록 렌더링만 담당한다. 선택 시 상세 데이터 로딩은 상위 콜백이 처리한다.
-export function TripListSection({
-  onSelectOwnerTrip,
-  ownerTrips,
-  ownerTripsError,
-  ownerTripsLoading,
-}: TripListSectionProps) {
+// 여행 목록 렌더링만 담당한다. 관리 상세 화면 이동은 링크(전체 페이지 이동)로 처리한다.
+export function TripListSection({ ownerTrips, ownerTripsError, ownerTripsLoading }: TripListSectionProps) {
   return (
     <section className="section-block">
       <div className="section-title-row">
@@ -42,13 +37,9 @@ export function TripListSection({
                 </p>
                 <p>{ownerTrip.travelers.length > 0 ? ownerTrip.travelers.join(", ") : "여행자 미입력"}</p>
               </div>
-              <button
-                className="secondary-button compact-button"
-                onClick={() => onSelectOwnerTrip(ownerTrip.id)}
-                type="button"
-              >
+              <a className="secondary-button compact-button" href={`/manage/trips/${ownerTrip.id}`}>
                 관리하기
-              </button>
+              </a>
             </article>
           ))}
         </div>

@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { Key, Eye, EyeOff, Lock, User, LogOut } from "lucide-react";
+import { Key, Eye, EyeOff, Lock, User, LogOut, Settings2 } from "lucide-react";
 import type { TripPageProps } from "../tripPageTypes";
 import { changePassword } from "../../../api/auth";
+import { getSavedOwnerAuth } from "../../manage/ownerAuthStorage";
 
 type MyPageTabProps = TripPageProps & {
   onLogout?: () => void;
 };
 
-export function MyPageTab({ trip, onLogout }: MyPageTabProps) {
+export function MyPageTab({ trip, onLogout, editTripHref }: MyPageTabProps) {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -18,6 +19,8 @@ export function MyPageTab({ trip, onLogout }: MyPageTabProps) {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+
+  const savedAuth = getSavedOwnerAuth();
 
   // 사용자가 마이페이지에서 기존 비밀번호와 새 비밀번호를 입력해 비밀번호 변경을 요청하는 핸들러입니다.
   // api/auth.ts 내 공통화된 통신 함수를 호출하여 주소 오타를 차단하고, catch 블록에서 세부 에러를 매핑합니다.
@@ -37,7 +40,7 @@ export function MyPageTab({ trip, onLogout }: MyPageTabProps) {
     setMessage("");
 
     try {
-      const token = localStorage.getItem("accessToken") || "";
+      const token = savedAuth?.accessToken ?? "";
       await changePassword(token, currentPassword, newPassword);
 
       setMessage("비밀번호가 성공적으로 변경되었습니다.");
@@ -64,7 +67,6 @@ export function MyPageTab({ trip, onLogout }: MyPageTabProps) {
     if (onLogout) {
       onLogout();
     } else {
-      localStorage.removeItem("accessToken");
       window.location.reload();
     }
   };
@@ -81,7 +83,7 @@ export function MyPageTab({ trip, onLogout }: MyPageTabProps) {
           </div>
           <div>
             <span style={{ display: "block", fontSize: "11px", color: "var(--c-muted)", fontWeight: 700 }}>접속 계정</span>
-            <strong style={{ fontSize: "15px", color: "var(--c-text)" }}>{localStorage.getItem("userEmail") || "인증된 사용자"}</strong>
+            <strong style={{ fontSize: "15px", color: "var(--c-text)" }}>{savedAuth?.user.email ?? "인증된 사용자"}</strong>
           </div>
         </div>
 
@@ -98,6 +100,17 @@ export function MyPageTab({ trip, onLogout }: MyPageTabProps) {
           </button>
         </div>
       </article>
+
+      {editTripHref && (
+        <article className="info-card" style={{ marginBottom: "16px" }}>
+          <h2>{trip.title}</h2>
+          <p className="muted">이 여행의 기본정보, 장소, 항공편, 일정, 체크리스트를 편집합니다.</p>
+          <a className="primary-button" href={editTripHref} style={{ marginTop: "8px" }}>
+            <Settings2 size={18} />
+            이 여행 편집하기
+          </a>
+        </article>
+      )}
 
       <section className="section-block">
         <h2>비밀번호 변경</h2>
