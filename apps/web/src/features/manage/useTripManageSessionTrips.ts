@@ -114,12 +114,14 @@ export function useTripManageSessionTrips({
       })
       .catch((error) => {
         if (cancelled) return;
-        if (error instanceof ApiError && error.status === undefined) {
-          setAuthError(error.message);
+        if (error instanceof ApiError && error.status === 401) {
+          window.localStorage.removeItem(ownerAuthStorageKey);
+          setOwnerAuth(null);
           return;
         }
-        window.localStorage.removeItem(ownerAuthStorageKey);
-        setOwnerAuth(null);
+        // 401(진짜 만료/무효 토큰)이 아니면 네트워크/프록시 오류로 보고 세션을 그대로 둔다.
+        setOwnerAuth(savedAuth);
+        setAuthError(error instanceof Error ? error.message : "세션 확인에 실패했습니다. 잠시 후 다시 시도해주세요.");
       })
       .finally(() => {
         if (!cancelled) setAuthChecked(true);
