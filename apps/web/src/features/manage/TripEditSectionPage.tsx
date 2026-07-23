@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { Compass } from "lucide-react";
 import { formatKoreanDate } from "../../shared/date";
 import type { EditSection } from "../../shared/manageRoute";
-import { ChinaPaymentHelper } from "./components/ChinaPaymentHelper";
 import { ManageAuthSection } from "./components/ManageAuthSection";
 import { ManageChecklistSection } from "./components/ManageChecklistSection";
 import { ManageFlightCreateForm } from "./components/ManageFlightCreateForm";
@@ -107,12 +106,7 @@ export function TripEditSectionPage({ tripId, section }: TripEditSectionPageProp
               </a>
             </div>
 
-            {section === "basic" && (
-              <>
-                {selectedOwnerTrip.destinationCountry === "CN" && <ChinaPaymentHelper />}
-                <TripBasicInfoForm {...manage} />
-              </>
-            )}
+            {section === "basic" && <TripBasicInfoForm {...manage} />}
 
             {section === "places" && (
               <>
