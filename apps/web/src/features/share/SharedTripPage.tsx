@@ -56,9 +56,25 @@ export function SharedTripPage({ error, warning, loading, sharedTrip }: SharedTr
               )}
 
               {!loading && error && (
-                <div className="shared-error-wrapper">
-                  <h1>공유 링크 확인 실패</h1>
-                  <p className="form-error">{error}</p>
+                <div className="shared-error-wrapper" style={{ textAlign: "center", padding: "24px 0" }}>
+                  <h1 style={{ fontSize: "20px", fontWeight: 800, color: "var(--c-rose)", marginBottom: "12px" }}>공유 링크 확인 실패</h1>
+                  <p className="form-error" style={{ marginBottom: "24px", fontSize: "14px", lineHeight: 1.5 }}>{error}</p>
+                  <div style={{ display: "grid", gap: "10px" }}>
+                    <button
+                      onClick={() => window.location.reload()}
+                      className="primary-button"
+                      type="button"
+                    >
+                      다시 시도하기
+                    </button>
+                    <a
+                      href="/"
+                      className="secondary-button"
+                      style={{ textDecoration: "none", textAlign: "center", display: "block" }}
+                    >
+                      서비스 홈으로 이동
+                    </a>
+                  </div>
                 </div>
               )}
 

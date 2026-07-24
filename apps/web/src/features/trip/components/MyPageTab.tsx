@@ -160,7 +160,8 @@ export function MyPageTab({ trip, onLogout, editTripHref, isDemo }: MyPageTabPro
                 className="password-toggle-btn"
                 onClick={() => setShowCurrent(!showCurrent)}
                 type="button"
-                tabIndex={-1}
+                aria-label={showCurrent ? "현재 비밀번호 숨기기" : "현재 비밀번호 보기"}
+                tabIndex={0}
               >
                 {showCurrent ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -183,7 +184,8 @@ export function MyPageTab({ trip, onLogout, editTripHref, isDemo }: MyPageTabPro
                 className="password-toggle-btn"
                 onClick={() => setShowNew(!showNew)}
                 type="button"
-                tabIndex={-1}
+                aria-label={showNew ? "새 비밀번호 숨기기" : "새 비밀번호 보기"}
+                tabIndex={0}
               >
                 {showNew ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -212,7 +214,8 @@ export function MyPageTab({ trip, onLogout, editTripHref, isDemo }: MyPageTabPro
                 className="password-toggle-btn"
                 onClick={() => setShowConfirm(!showConfirm)}
                 type="button"
-                tabIndex={-1}
+                aria-label={showConfirm ? "새 비밀번호 확인 숨기기" : "새 비밀번호 확인 보기"}
+                tabIndex={0}
               >
                 {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
