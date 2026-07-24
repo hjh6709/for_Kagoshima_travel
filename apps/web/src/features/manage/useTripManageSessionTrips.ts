@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type Dispatch, type FormEvent, type SetStateAction } from "react";
 import { ApiError, getCurrentUser, login, register, type AuthResponse } from "../../api/auth";
-import { createTrip, listMyTrips, updateTrip, type OwnerTrip } from "../../api/trips";
+import { createTrip, listMyTrips, updateTrip, deleteTrip, type OwnerTrip } from "../../api/trips";
 import { isOnline } from "../../utils/offlineCache";
 import {
   handleManageApiError,
@@ -298,6 +298,26 @@ export function useTripManageSessionTrips({
     }
   }
 
+  const [deletingTripID, setDeletingTripID] = useState("");
+
+  async function deleteOwnerTrip(tripID: string) {
+    if (!ownerAuth) return;
+    if (!isOnline()) {
+      setOwnerTripsError("네트워크 연결이 끊겼습니다. 오프라인 상태에서는 여행을 삭제할 수 없습니다.");
+      return;
+    }
+    setDeletingTripID(tripID);
+    setOwnerTripsError("");
+    try {
+      await deleteTrip(ownerAuth.accessToken, tripID);
+      setOwnerTrips((prev) => prev.filter((t) => t.id !== tripID));
+    } catch (error) {
+      setOwnerTripsError(error instanceof Error ? error.message : "여행 일정을 삭제하지 못했습니다.");
+    } finally {
+      setDeletingTripID("");
+    }
+  }
+
   return {
     authChecked,
     authEmail,
@@ -319,5 +339,7 @@ export function useTripManageSessionTrips({
     submitAuth,
     submitNewTrip,
     submitTripEdit,
+    deletingTripID,
+    deleteOwnerTrip,
   };
 }

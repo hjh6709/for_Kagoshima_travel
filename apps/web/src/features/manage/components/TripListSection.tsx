@@ -1,9 +1,15 @@
-import { Compass } from "lucide-react";
+import { Compass, Trash2 } from "lucide-react";
 import { formatKoreanDate } from "../../../shared/date";
 import type { TripListSectionProps } from "../manageTypes";
 
 // 여행 목록 렌더링만 담당한다. 관리 상세 화면 이동은 링크(전체 페이지 이동)로 처리한다.
-export function TripListSection({ ownerTrips, ownerTripsError, ownerTripsLoading }: TripListSectionProps) {
+export function TripListSection({
+  ownerTrips,
+  ownerTripsError,
+  ownerTripsLoading,
+  deletingTripID,
+  onDeleteTrip,
+}: TripListSectionProps) {
   return (
     <section className="section-block">
       <div className="section-title-row">
@@ -27,21 +33,40 @@ export function TripListSection({ ownerTrips, ownerTripsError, ownerTripsLoading
 
       {!ownerTripsLoading && !ownerTripsError && ownerTrips.length > 0 && (
         <div className="card-stack">
-          {ownerTrips.map((ownerTrip) => (
-            <article className="owner-trip-card" key={ownerTrip.id}>
-              <div>
-                <span className="pill subtle">여행</span>
-                <h2>{ownerTrip.title}</h2>
-                <p className="muted">
-                  {formatKoreanDate(ownerTrip.startDate)} ~ {formatKoreanDate(ownerTrip.endDate)}
-                </p>
-                <p>{ownerTrip.travelers.length > 0 ? ownerTrip.travelers.join(", ") : "여행자 미입력"}</p>
-              </div>
-              <a className="secondary-button compact-button" href={`/manage/trips/${ownerTrip.id}`}>
-                관리하기
-              </a>
-            </article>
-          ))}
+          {ownerTrips.map((ownerTrip) => {
+            const isDeleting = deletingTripID === ownerTrip.id;
+            return (
+              <article className="owner-trip-card" key={ownerTrip.id} style={isDeleting ? { opacity: 0.6 } : undefined}>
+                <div style={{ flex: 1 }}>
+                  <span className="pill subtle">여행</span>
+                  <h2>{ownerTrip.title}</h2>
+                  <p className="muted">
+                    {formatKoreanDate(ownerTrip.startDate)} ~ {formatKoreanDate(ownerTrip.endDate)}
+                  </p>
+                  <p>{ownerTrip.travelers.length > 0 ? ownerTrip.travelers.join(", ") : "여행자 미입력"}</p>
+                </div>
+                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                  <button
+                    className="danger-button compact-button"
+                    disabled={isDeleting}
+                    onClick={() => {
+                      if (window.confirm(`정말로 '${ownerTrip.title}' 여행 일정을 영구 삭제하시겠습니까?`)) {
+                        onDeleteTrip(ownerTrip.id);
+                      }
+                    }}
+                    type="button"
+                    style={{ padding: "8px" }}
+                    aria-label="여행 삭제"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                  <a className="secondary-button compact-button" href={`/manage/trips/${ownerTrip.id}`}>
+                    관리하기
+                  </a>
+                </div>
+              </article>
+            );
+          })}
         </div>
       )}
     </section>

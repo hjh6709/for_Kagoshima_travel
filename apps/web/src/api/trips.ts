@@ -293,3 +293,12 @@ export function deleteTripFlight(accessToken: string, tripID: string, flightID: 
 export function getSharedTrip(token: string) {
   return apiRequest<SharedTripResponse>(`/api/share/${encodeURIComponent(token)}`);
 }
+
+export function deleteTrip(accessToken: string, tripID: string) {
+  return apiRequest<void>(`/api/trips/${tripID}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+}
