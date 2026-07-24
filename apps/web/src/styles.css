@@ -1888,3 +1888,52 @@ p {
   color: var(--c-green);
   white-space: nowrap;
 }
+
+/* 헤더 탈출 복귀 링크 */
+.back-to-list-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--c-muted);
+  background: rgba(28, 50, 37, 0.05);
+  padding: 4px 8px 4px 6px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.back-to-list-link:hover {
+  color: var(--c-green);
+  background: rgba(28, 50, 37, 0.1);
+  transform: translateX(-2px);
+}
+
+.back-to-list-link svg {
+  display: block;
+}
+
+/* 여행 목록 삭제용 위험 버튼 */
+.danger-button {
+  background: rgba(166, 75, 69, 0.1);
+  color: var(--c-danger);
+  border: 1px solid rgba(166, 75, 69, 0.15);
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.danger-button:hover:not(:disabled) {
+  background: var(--c-danger);
+  color: #ffffff;
+  border-color: var(--c-danger);
+}
+
+.danger-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

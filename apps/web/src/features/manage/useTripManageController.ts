@@ -87,6 +87,8 @@ export function useTripManageController({
     submitAuth,
     submitNewTrip,
     submitTripEdit,
+    deletingTripID,
+    deleteOwnerTrip,
   } = useTripManageSessionTrips({
     currentPath,
     isLegacyOwnerRoute,
@@ -666,6 +668,8 @@ export function useTripManageController({
     onTripEditTitleChange: setTripEditTitle,
     onTripEditTravelersChange: setTripEditTravelers,
     onTripEditDestinationCountryChange: setTripEditDestinationCountry,
+    deletingTripID,
+    onDeleteTrip: deleteOwnerTrip,
     onLogout: logoutOwner,
     onSelectOwnerTrip: setSelectedOwnerTripID,
     onSubmitAuth: submitAuth,

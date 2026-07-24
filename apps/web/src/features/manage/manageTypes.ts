@@ -49,6 +49,8 @@ export type TripListSectionProps = {
   ownerTrips: OwnerTrip[];
   ownerTripsError: string;
   ownerTripsLoading: boolean;
+  deletingTripID: string;
+  onDeleteTrip: (id: string) => void;
 };
 
 // 선택 여행 상세 화면은 일정/장소/항공/공유/기본정보 섹션을 다시 감싸는 상위 섹션이다.

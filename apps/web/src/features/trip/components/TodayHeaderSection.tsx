@@ -1,3 +1,4 @@
+import { ChevronLeft } from "lucide-react";
 import { formatKoreanDate, type TripDates } from "../../../shared/date";
 import type { Trip } from "../../../types/travel";
 
@@ -50,7 +51,10 @@ export function TodayHeaderSection({ travelStatus, trip, tripDates }: TodayHeade
   return (
     <div className="trip-header">
       <div className="trip-header-meta">
-        <span className="eyebrow">공유 여행 일정</span>
+        <a href="/manage" className="back-to-list-link" aria-label="여행 목록으로 이동">
+          <ChevronLeft size={16} />
+          <span>목록으로</span>
+        </a>
         <div className="trip-badges">
           <span className="badge-item country-badge">{countryBadge}</span>
           <span className={`badge-item dday-badge ${dday.className}`}>{dday.text}</span>
