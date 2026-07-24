@@ -2005,3 +2005,21 @@ p {
 .masked-toggle-btn:focus-visible {
   outline: 2px solid #10b981;
 }
+
+/* 대화형 인터랙티브 요소 포커스 접근성 링 스타일 */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+}
+
+/* 마우스 클릭 시 생기는 브라우저 기본 포커스 아웃라인은 세련되게 소거 */
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible),
+input:focus:not(:focus-visible) {
+  outline: none;
+}
