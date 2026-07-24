@@ -154,8 +154,7 @@ func (s *AuthService) ForgotPassword(email string, code string) (string, error) 
 
 	// 비밀번호 재설정 시 이메일 인증코드 대조 검증 (테스트 아닐 때 필수)
 	if !isTesting() {
-		storedCode, ok := s.verificationCodes.Load(strings.ToLower(email))
-		if !ok || storedCode.(string) != code {
+		if err := s.VerifyCode(email, code); err != nil {
 			return "", errors.New("이메일 인증코드가 일치하지 않거나 만료되었습니다")
 		}
 	}
