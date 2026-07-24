@@ -22,6 +22,10 @@ export function HomeChecklistSection({
   setActiveTab,
   toggleCheck,
 }: HomeChecklistSectionProps) {
+  const totalItems = focusScheduleCount + homeChecklistItems.length;
+  const completedItems = focusCompletedScheduleCount + homeChecklistCompletedCount;
+  const percentage = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+
   return (
     <section className="section-block">
       <div className="section-title-row">
@@ -36,6 +40,15 @@ export function HomeChecklistSection({
           전체 보기
         </button>
       </div>
+
+      {totalItems > 0 && (
+        <div className="progress-container">
+          <div className="progress-track">
+            <div className="progress-fill" style={{ width: `${percentage}%` }} />
+          </div>
+          <span className="progress-percentage">{percentage}% 달성</span>
+        </div>
+      )}
 
       <div className="home-checklist-card">
         {homeChecklistItems.length > 0 ? (

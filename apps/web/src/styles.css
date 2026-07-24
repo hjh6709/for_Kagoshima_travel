@@ -1802,3 +1802,89 @@ p {
 .input-with-icon input.with-password-toggle {
   padding-right: 42px !important;
 }
+
+/* D-Day & 국가 뱃지 스타일 */
+.trip-header-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  width: 100%;
+}
+
+.trip-badges {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.badge-item {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+
+.country-badge {
+  background: var(--c-gold-light);
+  color: var(--c-gold);
+  border: 1px solid rgba(169, 132, 70, 0.15);
+}
+
+.dday-badge {
+  border: 1px solid transparent;
+}
+
+.dday-upcoming {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.dday-active {
+  background: rgba(59, 130, 246, 0.12);
+  color: #3b82f6;
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+.dday-past {
+  background: rgba(107, 107, 107, 0.12);
+  color: var(--c-muted);
+}
+
+/* 다이내믹 프로그레스 바 스타일 */
+.progress-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 10px 0 18px;
+  background: rgba(28, 50, 37, 0.04);
+  border-radius: 12px;
+  padding: 8px 12px;
+  border: 1px solid rgba(28, 50, 37, 0.06);
+}
+
+.progress-track {
+  flex: 1;
+  height: 8px;
+  background: rgba(28, 50, 37, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #3b82f6);
+  border-radius: 4px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progress-percentage {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--c-green);
+  white-space: nowrap;
+}
