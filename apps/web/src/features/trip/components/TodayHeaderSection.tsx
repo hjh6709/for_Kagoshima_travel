@@ -1,4 +1,4 @@
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, User } from "lucide-react";
 import { formatKoreanDate, type TripDates } from "../../../shared/date";
 import type { Trip } from "../../../types/travel";
 
@@ -6,6 +6,7 @@ type TodayHeaderSectionProps = {
   travelStatus: { phase: string; label: string; description: string };
   trip: Trip;
   tripDates: TripDates;
+  onNavigateToMyPage?: () => void;
 };
 
 // 국가 국기 뱃지 헬퍼
@@ -44,7 +45,7 @@ function getDDayLabel(startDateStr: string, endDateStr: string): { text: string;
 }
 
 // 여행 홈 상단의 제목, 기간, 현재 여행 상태를 더 풍부하게 표시한다.
-export function TodayHeaderSection({ travelStatus, trip, tripDates }: TodayHeaderSectionProps) {
+export function TodayHeaderSection({ travelStatus, trip, tripDates, onNavigateToMyPage }: TodayHeaderSectionProps) {
   const countryBadge = getCountryBadge(trip.destinationCountry);
   const dday = getDDayLabel(tripDates.startDate, tripDates.endDate);
 
@@ -58,6 +59,16 @@ export function TodayHeaderSection({ travelStatus, trip, tripDates }: TodayHeade
         <div className="trip-badges">
           <span className="badge-item country-badge">{countryBadge}</span>
           <span className={`badge-item dday-badge ${dday.className}`}>{dday.text}</span>
+          {onNavigateToMyPage && (
+            <button
+              onClick={onNavigateToMyPage}
+              className="header-profile-btn"
+              title="마이페이지 열기"
+              type="button"
+            >
+              <User size={14} />
+            </button>
+          )}
         </div>
       </div>
       <h1>{trip.title}</h1>

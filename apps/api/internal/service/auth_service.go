@@ -38,6 +38,11 @@ type RateLimitEntry struct {
 	LastAccess time.Time
 }
 
+type verificationItem struct {
+	code      string
+	expiresAt time.Time
+}
+
 type AuthService struct {
 	userRepo          repository.UserRepository
 	jwtSecret         string
@@ -322,7 +327,11 @@ func (s *AuthService) SendVerificationCode(email string, purpose string) (string
 		return "", err
 	}
 	code := fmt.Sprintf("%06d", num.Int64()+100000) // 100000 ~ 999999
-	s.verificationCodes.Store(cleanEmail, code)
+	expiresAt := time.Now().Add(5 * time.Minute)
+	s.verificationCodes.Store(cleanEmail, verificationItem{
+		code:      code,
+		expiresAt: expiresAt,
+	})
 
 	// Resend API 키가 주입되어 있고 테스트 환경이 아니라면 Resend HTTP API로 실제 메일을 전송합니다.
 	resendKey := os.Getenv("RESEND_API_KEY")
@@ -426,6 +435,11 @@ func (s *AuthService) SendVerificationCode(email string, purpose string) (string
 		return "", nil
 	}
 
+	// 운영 환경에서는 SMTP/Resend 설정이 없거나 발송이 실패하더라도 보안상 인증 코드를 절대 반환하지 않습니다.
+	if isProduction() {
+		return "", errors.New("이메일 발송 장치 설정이 비정상적이거나 발송에 실패했습니다. 관리자에게 문의하세요")
+	}
+
 	// SMTP 설정이 없는 로컬 개발/테스트 모드인 경우 시뮬레이터 배너 노출용 원본 코드를 그대로 반환합니다.
 	return code, nil
 }
@@ -455,12 +469,34 @@ func (s *AuthService) VerifyCode(email, code string) error {
 		return ErrInvalidVerificationCode
 	}
 
-	storedCode, ok := val.(string)
-	if !ok || storedCode != cleanCode {
+	item, ok := val.(verificationItem)
+	if !ok {
+		storedCode, ok := val.(string)
+		if !ok || storedCode != cleanCode {
+			return ErrInvalidVerificationCode
+		}
+		return nil
+	}
+
+	if time.Now().After(item.expiresAt) {
+		s.verificationCodes.Delete(cleanEmail)
+		return errors.New("인증 코드가 만료되었습니다. 다시 발송해 주세요")
+	}
+
+	if item.code != cleanCode {
 		return ErrInvalidVerificationCode
 	}
 
+	s.verificationCodes.Delete(cleanEmail)
 	return nil
+}
+
+func isProduction() bool {
+	env := os.Getenv("APP_ENV")
+	if env == "" {
+		env = os.Getenv("ENV")
+	}
+	return strings.ToLower(env) == "production" || strings.ToLower(env) == "prod"
 }
 
 func isTesting() bool {

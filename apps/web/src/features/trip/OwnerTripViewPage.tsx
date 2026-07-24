@@ -152,5 +152,5 @@ type OwnerTripViewContentProps = Parameters<typeof useOwnerTripPageAdapter>[0] &
 // "데이터 준비 완료" 상태만 들어오는 별도 컴포넌트로 분리해 훅 순서 규칙을 지킨다.
 function OwnerTripViewContent({ onLogout, ...adapterParams }: OwnerTripViewContentProps) {
   const tripPageProps = useOwnerTripPageAdapter(adapterParams);
-  return <TripPage {...tripPageProps} onLogout={onLogout} />;
+  return <TripPage {...tripPageProps} onLogout={onLogout} isDemo={false} />;
 }

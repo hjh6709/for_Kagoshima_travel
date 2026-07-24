@@ -61,4 +61,6 @@ export type TripPageProps = {
   toggleCheck: (id: string) => void;
   toggleScheduleComplete: (id: string) => void;
   updateTripDate: (field: "startDate" | "endDate", value: string) => void;
+  onNavigateToMyPage?: () => void;
+  isDemo?: boolean;
 };

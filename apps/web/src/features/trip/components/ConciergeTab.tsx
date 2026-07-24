@@ -21,11 +21,17 @@ export function ConciergeTab({
             <article className="emergency-card" key={item.id}>
               <h2>{item.title}</h2>
               <p>{item.description}</p>
-              {item.phone && (
+              {item.phone ? (
                 <a className="primary-button" href={`tel:${item.phone}`}>
                   <Phone size={18} />
                   전화하기
                 </a>
+              ) : (
+                item.id !== "emergency-passport" && (
+                  <span className="pill subtle" style={{ display: "inline-flex", marginTop: "8px", alignSelf: "flex-start" }}>
+                    연락처 미등록
+                  </span>
+                )
               )}
             </article>
           ))}

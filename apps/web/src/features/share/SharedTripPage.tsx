@@ -7,11 +7,12 @@ import { getFlightDirectionLabel, getScheduleTypeLabel } from "../../shared/trav
 
 type SharedTripPageProps = {
   error: string;
+  warning: string;
   loading: boolean;
   sharedTrip: SharedTripResponse | null;
 };
 
-export function SharedTripPage({ error, loading, sharedTrip }: SharedTripPageProps) {
+export function SharedTripPage({ error, warning, loading, sharedTrip }: SharedTripPageProps) {
   const [zoomedPlace, setZoomedPlace] = useState<{ name: string; address?: string } | null>(null);
 
   useEffect(() => {
@@ -63,6 +64,11 @@ export function SharedTripPage({ error, loading, sharedTrip }: SharedTripPagePro
 
               {!loading && !error && sharedTrip && (
                 <div className="shared-success-content">
+                  {warning && (
+                    <div className="offline-warning-banner" style={{ marginBottom: "16px", padding: "12px", background: "rgba(220, 100, 0, 0.1)", border: "1px solid rgba(220, 100, 0, 0.3)", borderRadius: "8px", color: "#ffa500", fontSize: "13px", fontWeight: 700, lineHeight: 1.4 }}>
+                      ⚠️ {warning}
+                    </div>
+                  )}
                   <h1 className="trip-title-premium" style={{ marginBottom: "12px" }}>{sharedTrip.trip.title}</h1>
                   <div className="trip-meta-premium-row" style={{ display: "grid", gap: "8px" }}>
                     <div className="trip-meta-item" style={{ display: "flex", alignItems: "center", gap: "8px", color: "var(--c-text)", fontSize: "14px", fontWeight: 700 }}>
