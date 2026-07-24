@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Key, Eye, EyeOff, Lock, User, LogOut, Settings2 } from "lucide-react";
+import { Key, Eye, EyeOff, List, Lock, User, LogOut, Settings2 } from "lucide-react";
 import type { TripPageProps } from "../tripPageTypes";
 import { changePassword } from "../../../api/auth";
 import { getSavedOwnerAuth } from "../../manage/ownerAuthStorage";
@@ -108,6 +108,10 @@ export function MyPageTab({ trip, onLogout, editTripHref }: MyPageTabProps) {
           <a className="primary-button" href={editTripHref} style={{ marginTop: "8px" }}>
             <Settings2 size={18} />
             이 여행 편집하기
+          </a>
+          <a className="secondary-button" href="/manage" style={{ marginTop: "8px" }}>
+            <List size={18} />
+            여행 목록
           </a>
         </article>
       )}

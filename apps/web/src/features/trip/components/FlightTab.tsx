@@ -12,6 +12,12 @@ export function FlightTab({ allChecklist, checkedItems, flights, toggleCheck, tr
       <h1>항공편</h1>
       <p className="muted">공항에서 바로 확인할 수 있도록 출국·입국 항공편을 따로 모았습니다.</p>
 
+      {flights.length === 0 && (
+        <article className="empty-state-card list-card">
+          <p className="muted">등록된 항공편이 없습니다. 편집 화면에서 항공편을 추가해보세요.</p>
+        </article>
+      )}
+
       <div className="card-stack">
         {flights.map((flight) => {
           const isOutbound = flight.label?.includes("출국") || flight.label?.includes("가는");

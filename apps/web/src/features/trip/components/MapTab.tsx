@@ -21,6 +21,12 @@ export function MapTab({ getMapUrl, places }: TripPageProps) {
           </a>
         ))}
       </div>
+      {places.length === 0 && (
+        <article className="empty-state-card list-card">
+          <p className="muted">등록된 장소가 없습니다. 편집 화면에서 장소를 추가해보세요.</p>
+        </article>
+      )}
+
       <div className="card-stack">
         {places.map((place) => (
           <article className="place-card" key={place.id}>

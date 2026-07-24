@@ -1,5 +1,6 @@
 import { Copy, Phone } from "lucide-react";
 import type { TripPageProps } from "../tripPageTypes";
+import { ChinaPaymentHelper } from "../../manage/components/ChinaPaymentHelper";
 import { QuickTravelHelper } from "./QuickTravelHelper";
 
 // 긴급/여행 정보 탭 렌더링만 담당한다. 주소 복사는 상위 핸들러를 호출한다.
@@ -30,6 +31,8 @@ export function ConciergeTab({
           ))}
         </div>
       </section>
+
+      {trip.destinationCountry === "CN" && <ChinaPaymentHelper />}
 
       <section className="section-block">
         <h2>여행 정보</h2>
