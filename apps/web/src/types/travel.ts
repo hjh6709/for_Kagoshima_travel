@@ -70,6 +70,11 @@ export type Place = {
   openingMemo?: string;
   budgetMemo?: string;
   cautionMemo?: string;
+  googlePlaceId?: string;
+  chineseName?: string;
+  chineseAddress?: string;
+  subwayExit?: string;
+  taxiPhrase?: string;
 };
 
 export type RecommendedRoute = {

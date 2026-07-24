@@ -39,6 +39,13 @@ export type CreatePlacePayload = {
   address?: string;
   googleMapsUrl?: string;
   recommendedReason?: string;
+  latitude?: number;
+  longitude?: number;
+  googlePlaceId?: string;
+  chineseName?: string;
+  chineseAddress?: string;
+  subwayExit?: string;
+  taxiPhrase?: string;
 };
 
 export type UpdatePlacePayload = Partial<CreatePlacePayload>;
@@ -95,6 +102,11 @@ export type SharedPlace = {
   recommendedReason?: string;
   latitude?: number;
   longitude?: number;
+  googlePlaceId?: string;
+  chineseName?: string;
+  chineseAddress?: string;
+  subwayExit?: string;
+  taxiPhrase?: string;
 };
 
 export type SharedFlight = {

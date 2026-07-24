@@ -29,6 +29,13 @@ func TestPlaceCreateBoundaries(t *testing.T) {
 		"address":           "공항 1층",
 		"googleMapsUrl":     "https://www.google.com/maps/search/?api=1&query=airport",
 		"recommendedReason": "도착 후 바로 이동할 장소",
+		"latitude":          31.2304,
+		"longitude":         121.4737,
+		"googlePlaceId":     "ChIJiS4Ocx9zsjUR3vS7i71J1x0",
+		"chineseName":       "浦东国际机场",
+		"chineseAddress":    "上海市浦东新区启航路900号",
+		"subwayExit":        "2호선 푸동공항역 1번 출구",
+		"taxiPhrase":        "请去浦东机场",
 	}
 
 	created := createPlace(t, httpServer.URL, ownerToken, tripID, payload)
@@ -41,6 +48,27 @@ func TestPlaceCreateBoundaries(t *testing.T) {
 	}
 	if created.body["name"] != payload["name"] {
 		t.Fatalf("created place name = %#v, want %#v", created.body["name"], payload["name"])
+	}
+	if created.body["latitude"].(float64) != payload["latitude"] {
+		t.Fatalf("created place latitude = %#v, want %#v", created.body["latitude"], payload["latitude"])
+	}
+	if created.body["longitude"].(float64) != payload["longitude"] {
+		t.Fatalf("created place longitude = %#v, want %#v", created.body["longitude"], payload["longitude"])
+	}
+	if created.body["googlePlaceId"] != payload["googlePlaceId"] {
+		t.Fatalf("created place googlePlaceId = %#v, want %#v", created.body["googlePlaceId"], payload["googlePlaceId"])
+	}
+	if created.body["chineseName"] != payload["chineseName"] {
+		t.Fatalf("created place chineseName = %#v, want %#v", created.body["chineseName"], payload["chineseName"])
+	}
+	if created.body["chineseAddress"] != payload["chineseAddress"] {
+		t.Fatalf("created place chineseAddress = %#v, want %#v", created.body["chineseAddress"], payload["chineseAddress"])
+	}
+	if created.body["subwayExit"] != payload["subwayExit"] {
+		t.Fatalf("created place subwayExit = %#v, want %#v", created.body["subwayExit"], payload["subwayExit"])
+	}
+	if created.body["taxiPhrase"] != payload["taxiPhrase"] {
+		t.Fatalf("created place taxiPhrase = %#v, want %#v", created.body["taxiPhrase"], payload["taxiPhrase"])
 	}
 
 	list := getJSON(t, httpServer.URL+"/api/trips/"+tripID+"/places", ownerToken)
@@ -60,8 +88,10 @@ func TestPlaceCreateBoundaries(t *testing.T) {
 
 	// 장소 편집 UI가 기대하는 부분 수정 동작: 보낸 필드만 바뀌고 나머지는 유지된다.
 	updated := updatePlace(t, httpServer.URL, ownerToken, tripID, placeID, map[string]any{
-		"name":    "공항 렌터카 센터 변경",
-		"address": "공항 2층",
+		"name":        "공항 렌터카 센터 변경",
+		"address":     "공항 2층",
+		"chineseName": "浦东国际机场 변경",
+		"latitude":    31.5966,
 	})
 	if updated.status != http.StatusOK {
 		t.Fatalf("owner update place status = %d, want %d, body = %#v", updated.status, http.StatusOK, updated.body)
@@ -74,6 +104,12 @@ func TestPlaceCreateBoundaries(t *testing.T) {
 	}
 	if updated.body["address"] != "공항 2층" {
 		t.Fatalf("updated place address = %#v, want changed address", updated.body["address"])
+	}
+	if updated.body["chineseName"] != "浦东国际机场 변경" {
+		t.Fatalf("updated place chineseName = %#v, want changed chineseName", updated.body["chineseName"])
+	}
+	if updated.body["latitude"].(float64) != 31.5966 {
+		t.Fatalf("updated place latitude = %#v, want changed latitude", updated.body["latitude"])
 	}
 
 	otherUpdate := updatePlace(t, httpServer.URL, otherToken, tripID, placeID, map[string]any{

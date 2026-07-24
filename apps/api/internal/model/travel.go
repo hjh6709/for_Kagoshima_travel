@@ -24,13 +24,20 @@ type Schedule struct {
 }
 
 type Place struct {
-	ID                string `json:"id"`
-	TripID            string `json:"tripId"`
-	Name              string `json:"name"`
-	Category          string `json:"category"`
-	Address           string `json:"address,omitempty"`
-	GoogleMapsURL     string `json:"googleMapsUrl,omitempty"`
-	RecommendedReason string `json:"recommendedReason,omitempty"`
+	ID                string   `json:"id"`
+	TripID            string   `json:"tripId"`
+	Name              string   `json:"name"`
+	Category          string   `json:"category"`
+	Address           string   `json:"address,omitempty"`
+	GoogleMapsURL     string   `json:"googleMapsUrl,omitempty"`
+	RecommendedReason string   `json:"recommendedReason,omitempty"`
+	Latitude          *float64 `json:"latitude,omitempty"`
+	Longitude         *float64 `json:"longitude,omitempty"`
+	GooglePlaceID     string   `json:"googlePlaceId,omitempty"`
+	ChineseName       string   `json:"chineseName,omitempty"`
+	ChineseAddress    string   `json:"chineseAddress,omitempty"`
+	SubwayExit        string   `json:"subwayExit,omitempty"`
+	TaxiPhrase        string   `json:"taxiPhrase,omitempty"`
 }
 
 type Flight struct {
