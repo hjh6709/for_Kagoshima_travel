@@ -889,56 +889,139 @@ p {
   color: var(--c-green);
 }
 
-.map-preview {
-  height: 230px;
-  position: relative;
-  margin: 20px 0;
-  border: 1px solid rgba(36, 48, 47, 0.12);
-  background:
-    linear-gradient(90deg, rgba(47, 111, 115, 0.12) 1px, transparent 1px),
-    linear-gradient(rgba(47, 111, 115, 0.12) 1px, transparent 1px),
-    var(--c-green-light);
-  background-size: 42px 42px;
-  overflow: hidden;
+/* 지도 탭 상단 세그먼트 스위치 */
+.map-segment-control {
+  display: flex;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 4px;
+  border-radius: 12px;
+  gap: 4px;
+  margin-bottom: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.map-preview::before {
-  content: "";
-  position: absolute;
-  inset: 36px -30px auto;
-  height: 44px;
-  transform: rotate(-14deg);
-  background: rgba(169, 132, 70, 0.22);
+.map-segment-control button {
+  flex: 1;
+  padding: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--c-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.map-pin {
-  position: absolute;
-  width: 44px;
-  height: 44px;
-  border: 0;
+.map-segment-control button.active {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+/* 오늘 동선 타임라인 및 노선 경로 가이드 */
+.timeline-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 30px;
+}
+
+.timeline-connector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 0;
+  color: var(--c-muted);
+}
+
+.timeline-line {
+  width: 2px;
+  height: 24px;
+  background: linear-gradient(180deg, #10b981, rgba(16, 185, 129, 0.2));
+}
+
+.timeline-arrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--c-muted);
+}
+
+/* 택시 제시용 초대형 블랙아웃 오버레이 모달 */
+.taxi-phrase-overlay {
+  position: fixed;
+  inset: 0;
+  background: #000000;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 24px;
   color: #ffffff;
-  background: var(--c-danger);
+}
+
+.taxi-phrase-header {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+}
+
+.taxi-phrase-close {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  display: grid;
-  place-items: center;
-  text-decoration: none;
-  box-shadow: 0 8px 18px rgba(28, 50, 37, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
 }
 
-.pin-1 {
-  left: 18%;
-  top: 58%;
+.taxi-phrase-content {
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto;
+  width: 100%;
 }
 
-.pin-2 {
-  left: 52%;
-  top: 24%;
+.taxi-phrase-label {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--c-muted);
+  margin-bottom: 16px;
 }
 
-.pin-3 {
-  right: 18%;
-  bottom: 22%;
+.taxi-phrase-title {
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 32px;
+  color: #ffffff;
+  word-break: keep-all;
 }
+
+.taxi-phrase-address {
+  font-size: 26px;
+  line-height: 1.4;
+  color: #9ca3af;
+  word-break: keep-all;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
 
 .place-card {
   display: grid;
