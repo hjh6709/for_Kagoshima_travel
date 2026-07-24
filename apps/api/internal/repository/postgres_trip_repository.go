@@ -142,9 +142,11 @@ func (r *PostgresTripRepository) UpdateSchedule(schedule model.Schedule) error {
 
 func (r *PostgresTripRepository) SavePlace(place model.Place) error {
 	_, err := r.pool.Exec(context.Background(),
-		`INSERT INTO places (id, trip_id, name, category, address, google_maps_url, recommended_reason)
-		 VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-		place.ID, place.TripID, place.Name, place.Category, place.Address, place.GoogleMapsURL, place.RecommendedReason)
+		`INSERT INTO places (id, trip_id, name, category, address, google_maps_url, recommended_reason, 
+		                     latitude, longitude, google_place_id, chinese_name, chinese_address, subway_exit, taxi_phrase)
+		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+		place.ID, place.TripID, place.Name, place.Category, place.Address, place.GoogleMapsURL, place.RecommendedReason,
+		place.Latitude, place.Longitude, place.GooglePlaceID, place.ChineseName, place.ChineseAddress, place.SubwayExit, place.TaxiPhrase)
 	return err
 }
 
@@ -152,12 +154,15 @@ func (r *PostgresTripRepository) SavePlace(place model.Place) error {
 func (r *PostgresTripRepository) FindPlace(tripID, placeID string) (model.Place, error) {
 	row := r.pool.QueryRow(context.Background(),
 		`SELECT id::text, trip_id::text, name, category, COALESCE(address,''),
-		        COALESCE(google_maps_url,''), COALESCE(recommended_reason,'')
+		        COALESCE(google_maps_url,''), COALESCE(recommended_reason,''),
+		        latitude, longitude, COALESCE(google_place_id,''), COALESCE(chinese_name,''),
+		        COALESCE(chinese_address,''), COALESCE(subway_exit,''), COALESCE(taxi_phrase,'')
 		 FROM places WHERE trip_id = $1 AND id = $2`, tripID, placeID)
 
 	var place model.Place
 	if err := row.Scan(&place.ID, &place.TripID, &place.Name, &place.Category, &place.Address,
-		&place.GoogleMapsURL, &place.RecommendedReason); err != nil {
+		&place.GoogleMapsURL, &place.RecommendedReason, &place.Latitude, &place.Longitude,
+		&place.GooglePlaceID, &place.ChineseName, &place.ChineseAddress, &place.SubwayExit, &place.TaxiPhrase); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return model.Place{}, ErrNotFound
 		}
@@ -170,10 +175,13 @@ func (r *PostgresTripRepository) FindPlace(tripID, placeID string) (model.Place,
 func (r *PostgresTripRepository) UpdatePlace(place model.Place) error {
 	tag, err := r.pool.Exec(context.Background(),
 		`UPDATE places
-		 SET name = $1, category = $2, address = $3, google_maps_url = $4, recommended_reason = $5
-		 WHERE trip_id = $6 AND id = $7`,
+		 SET name = $1, category = $2, address = $3, google_maps_url = $4, recommended_reason = $5,
+		     latitude = $6, longitude = $7, google_place_id = $8, chinese_name = $9, chinese_address = $10,
+		     subway_exit = $11, taxi_phrase = $12
+		 WHERE trip_id = $13 AND id = $14`,
 		place.Name, place.Category, place.Address, place.GoogleMapsURL, place.RecommendedReason,
-		place.TripID, place.ID)
+		place.Latitude, place.Longitude, place.GooglePlaceID, place.ChineseName, place.ChineseAddress,
+		place.SubwayExit, place.TaxiPhrase, place.TripID, place.ID)
 	if err != nil {
 		return err
 	}
@@ -327,7 +335,9 @@ func (r *PostgresTripRepository) FindSchedules(tripID string) ([]model.Schedule,
 func (r *PostgresTripRepository) FindPlaces(tripID string) ([]model.Place, error) {
 	rows, err := r.pool.Query(context.Background(),
 		`SELECT id::text, trip_id::text, name, category, COALESCE(address,''),
-		        COALESCE(google_maps_url,''), COALESCE(recommended_reason,'')
+		        COALESCE(google_maps_url,''), COALESCE(recommended_reason,''),
+		        latitude, longitude, COALESCE(google_place_id,''), COALESCE(chinese_name,''),
+		        COALESCE(chinese_address,''), COALESCE(subway_exit,''), COALESCE(taxi_phrase,'')
 		 FROM places WHERE trip_id = $1 ORDER BY category`, tripID)
 	if err != nil {
 		return nil, err
@@ -338,7 +348,8 @@ func (r *PostgresTripRepository) FindPlaces(tripID string) ([]model.Place, error
 	for rows.Next() {
 		var p model.Place
 		if err := rows.Scan(&p.ID, &p.TripID, &p.Name, &p.Category, &p.Address,
-			&p.GoogleMapsURL, &p.RecommendedReason); err != nil {
+			&p.GoogleMapsURL, &p.RecommendedReason, &p.Latitude, &p.Longitude,
+			&p.GooglePlaceID, &p.ChineseName, &p.ChineseAddress, &p.SubwayExit, &p.TaxiPhrase); err != nil {
 			return nil, err
 		}
 		result = append(result, p)

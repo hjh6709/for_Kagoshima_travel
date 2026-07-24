@@ -280,6 +280,13 @@ func (s *TripService) CreatePlace(tripID, ownerID string, req dto.CreatePlaceReq
 		Address:           req.Address,
 		GoogleMapsURL:     req.GoogleMapsURL,
 		RecommendedReason: req.RecommendedReason,
+		Latitude:          req.Latitude,
+		Longitude:         req.Longitude,
+		GooglePlaceID:     req.GooglePlaceID,
+		ChineseName:       req.ChineseName,
+		ChineseAddress:    req.ChineseAddress,
+		SubwayExit:        req.SubwayExit,
+		TaxiPhrase:        req.TaxiPhrase,
 	}
 	if err := s.tripRepository.SavePlace(place); err != nil {
 		return dto.PlaceResponse{}, err
@@ -312,6 +319,27 @@ func (s *TripService) UpdatePlace(tripID, placeID, ownerID string, req dto.Updat
 	}
 	if req.RecommendedReason != nil {
 		place.RecommendedReason = *req.RecommendedReason
+	}
+	if req.Latitude != nil {
+		place.Latitude = req.Latitude
+	}
+	if req.Longitude != nil {
+		place.Longitude = req.Longitude
+	}
+	if req.GooglePlaceID != nil {
+		place.GooglePlaceID = *req.GooglePlaceID
+	}
+	if req.ChineseName != nil {
+		place.ChineseName = *req.ChineseName
+	}
+	if req.ChineseAddress != nil {
+		place.ChineseAddress = *req.ChineseAddress
+	}
+	if req.SubwayExit != nil {
+		place.SubwayExit = *req.SubwayExit
+	}
+	if req.TaxiPhrase != nil {
+		place.TaxiPhrase = *req.TaxiPhrase
 	}
 
 	// 장소 카드가 화면에 의미 있게 표시되려면 이름과 분류는 수정 후에도 필수다.
@@ -709,6 +737,13 @@ func mapPlaceResponse(place model.Place) dto.PlaceResponse {
 		Address:           place.Address,
 		GoogleMapsURL:     place.GoogleMapsURL,
 		RecommendedReason: place.RecommendedReason,
+		Latitude:          place.Latitude,
+		Longitude:         place.Longitude,
+		GooglePlaceID:     place.GooglePlaceID,
+		ChineseName:       place.ChineseName,
+		ChineseAddress:    place.ChineseAddress,
+		SubwayExit:        place.SubwayExit,
+		TaxiPhrase:        place.TaxiPhrase,
 	}
 }
 

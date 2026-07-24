@@ -40,20 +40,34 @@ type UpdateScheduleRequest struct {
 }
 
 type CreatePlaceRequest struct {
-	Name              string `json:"name"`
-	Category          string `json:"category"`
-	Address           string `json:"address"`
-	GoogleMapsURL     string `json:"googleMapsUrl"`
-	RecommendedReason string `json:"recommendedReason"`
+	Name              string   `json:"name"`
+	Category          string   `json:"category"`
+	Address           string   `json:"address"`
+	GoogleMapsURL     string   `json:"googleMapsUrl"`
+	RecommendedReason string   `json:"recommendedReason"`
+	Latitude          *float64 `json:"latitude"`
+	Longitude         *float64 `json:"longitude"`
+	GooglePlaceID     string   `json:"googlePlaceId"`
+	ChineseName       string   `json:"chineseName"`
+	ChineseAddress    string   `json:"chineseAddress"`
+	SubwayExit        string   `json:"subwayExit"`
+	TaxiPhrase        string   `json:"taxiPhrase"`
 }
 
 // UpdatePlaceRequest는 장소 수정 화면에서 바뀐 필드만 PATCH로 보낼 수 있게 포인터로 받는다.
 type UpdatePlaceRequest struct {
-	Name              *string `json:"name"`
-	Category          *string `json:"category"`
-	Address           *string `json:"address"`
-	GoogleMapsURL     *string `json:"googleMapsUrl"`
-	RecommendedReason *string `json:"recommendedReason"`
+	Name              *string  `json:"name"`
+	Category          *string  `json:"category"`
+	Address           *string  `json:"address"`
+	GoogleMapsURL     *string  `json:"googleMapsUrl"`
+	RecommendedReason *string  `json:"recommendedReason"`
+	Latitude          *float64 `json:"latitude"`
+	Longitude         *float64 `json:"longitude"`
+	GooglePlaceID     *string  `json:"googlePlaceId"`
+	ChineseName       *string  `json:"chineseName"`
+	ChineseAddress    *string  `json:"chineseAddress"`
+	SubwayExit        *string  `json:"subwayExit"`
+	TaxiPhrase        *string  `json:"taxiPhrase"`
 }
 
 type CreateFlightRequest struct {
@@ -116,12 +130,19 @@ type ScheduleResponse struct {
 }
 
 type PlaceResponse struct {
-	ID                string `json:"id"`
-	Name              string `json:"name"`
-	Category          string `json:"category"`
-	Address           string `json:"address,omitempty"`
-	GoogleMapsURL     string `json:"googleMapsUrl,omitempty"`
-	RecommendedReason string `json:"recommendedReason,omitempty"`
+	ID                string   `json:"id"`
+	Name              string   `json:"name"`
+	Category          string   `json:"category"`
+	Address           string   `json:"address,omitempty"`
+	GoogleMapsURL     string   `json:"googleMapsUrl,omitempty"`
+	RecommendedReason string   `json:"recommendedReason,omitempty"`
+	Latitude          *float64 `json:"latitude,omitempty"`
+	Longitude         *float64 `json:"longitude,omitempty"`
+	GooglePlaceID     string   `json:"googlePlaceId,omitempty"`
+	ChineseName       string   `json:"chineseName,omitempty"`
+	ChineseAddress    string   `json:"chineseAddress,omitempty"`
+	SubwayExit        string   `json:"subwayExit,omitempty"`
+	TaxiPhrase        string   `json:"taxiPhrase,omitempty"`
 }
 
 type FlightResponse struct {
