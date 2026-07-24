@@ -7,27 +7,34 @@ import { TodayHeaderSection } from "./TodayHeaderSection";
 import { TripDateEditor } from "./TripDateEditor";
 
 // 오늘 탭 렌더링만 담당한다. 상태 변경은 상위에서 전달한 핸들러를 호출한다.
-export function TodayTab({
-  checkedItems,
-  focusCompletedScheduleCount,
-  focusSchedules,
-  getDisplayDate,
-  getMapUrl,
-  getPlace,
-  homeChecklistCompletedCount,
-  homeChecklistItems,
-  nextSchedule,
-  routes,
-  setActiveTab,
-  toggleCheck,
-  trip,
-  tripDates,
-  travelStatus,
-  updateTripDate,
-}: TripPageProps) {
+export function TodayTab(props: TripPageProps) {
+  const {
+    checkedItems,
+    focusCompletedScheduleCount,
+    focusSchedules,
+    getDisplayDate,
+    getMapUrl,
+    getPlace,
+    homeChecklistCompletedCount,
+    homeChecklistItems,
+    nextSchedule,
+    routes,
+    setActiveTab,
+    toggleCheck,
+    trip,
+    tripDates,
+    travelStatus,
+    updateTripDate,
+    onNavigateToMyPage,
+  } = props;
   return (
     <section className="screen">
-      <TodayHeaderSection travelStatus={travelStatus} trip={trip} tripDates={tripDates} />
+      <TodayHeaderSection
+        travelStatus={travelStatus}
+        trip={trip}
+        tripDates={tripDates}
+        onNavigateToMyPage={onNavigateToMyPage}
+      />
       <NextScheduleCard
         getDisplayDate={getDisplayDate}
         getMapUrl={getMapUrl}

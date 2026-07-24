@@ -1240,7 +1240,7 @@ p {
 .bottom-tabs {
   height: 68px;
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   background: rgba(28, 50, 37, 0.85);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -1260,8 +1260,8 @@ p {
   align-items: center;
   justify-content: center;
   gap: 4px;
-  padding: 6px 1px;
-  font-size: 10.5px;
+  padding: 6px 2px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1936,4 +1936,72 @@ p {
 .danger-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* 상단 프로필 헤더 내 마이페이지 버튼 */
+.header-profile-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.2s ease;
+  margin-left: 4px;
+}
+
+.header-profile-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: #10b981;
+  color: #10b981;
+}
+
+/* 민감정보 마스킹 컴포넌트 */
+.masked-text-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: monospace;
+}
+
+.masked-text-label {
+  color: var(--c-muted);
+  font-size: 11px;
+  font-family: sans-serif;
+  margin-right: 2px;
+}
+
+.masked-text-value {
+  letter-spacing: 0.05em;
+  transition: all 0.2s;
+  color: var(--c-text);
+}
+
+.masked-toggle-btn {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--c-muted);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.masked-toggle-btn:hover {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.masked-toggle-btn:focus-visible {
+  outline: 2px solid #10b981;
 }

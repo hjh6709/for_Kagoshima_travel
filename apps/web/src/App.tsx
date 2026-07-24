@@ -17,12 +17,12 @@ function App() {
   const isManageRoute = currentPath === "/manage" || currentPath.startsWith("/manage/") || isLegacyOwnerRoute;
   const isDemoRoute = currentPath === "/demo" || currentPath.startsWith("/demo/");
   const shareToken = getShareTokenFromPath(currentPath);
-  const { isShareRoute, sharedTrip, sharedTripError, sharedTripLoading } = useSharedTripController({ shareToken });
+  const { isShareRoute, sharedTrip, sharedTripError, sharedTripWarning, sharedTripLoading } = useSharedTripController({ shareToken });
   const managePageProps = useTripManageController({ currentPath, isLegacyOwnerRoute, isManageRoute });
   const tripPageProps = useTripPageController();
 
   if (isShareRoute) {
-    return <SharedTripPage error={sharedTripError} loading={sharedTripLoading} sharedTrip={sharedTrip} />;
+    return <SharedTripPage error={sharedTripError} warning={sharedTripWarning} loading={sharedTripLoading} sharedTrip={sharedTrip} />;
   }
 
   if (isManageRoute && !isLegacyOwnerRoute) {
@@ -45,7 +45,7 @@ function App() {
   }
 
   if (isDemoRoute) {
-    return <TripPage {...tripPageProps} />;
+    return <TripPage {...tripPageProps} isDemo={true} />;
   }
 
   return <StartPage />;
