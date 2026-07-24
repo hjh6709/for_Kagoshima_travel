@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MapPin, Navigation, Copy, Maximize2, Train, Compass, Landmark, AlertTriangle, X } from "lucide-react";
+import { Navigation, Copy, Maximize2, Train, AlertTriangle, X } from "lucide-react";
 import { placeCategoryLabels } from "../../../shared/travelOptions";
 import type { TripPageProps } from "../tripPageTypes";
 import { getDirectionUrl, getPlaceMarkerUrl } from "../../../utils/mapLinks";
