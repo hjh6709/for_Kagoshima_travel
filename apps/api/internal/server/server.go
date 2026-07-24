@@ -41,6 +41,9 @@ func New() *Server {
 		if err := pool.Ping(context.Background()); err != nil {
 			log.Fatalf("DB ping 실패: %v", err)
 		}
+		if err := db.RunMigrations(context.Background(), pool); err != nil {
+			log.Fatalf("DB migration 실패: %v", err)
+		}
 		log.Println("PostgreSQL 연결됨")
 		tripRepository = repository.NewPostgresTripRepository(pool)
 		userRepository = repository.NewPostgresUserRepository(pool)
