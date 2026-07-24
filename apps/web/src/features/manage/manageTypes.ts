@@ -77,6 +77,10 @@ export type SelectedTripDetailSectionProps = {
   editingPlaceID: string;
   editingPlaceName: string;
   editingPlaceRecommendedReason: string;
+  editingPlaceChineseName: string;
+  editingPlaceChineseAddress: string;
+  editingPlaceSubwayExit: string;
+  editingPlaceTaxiPhrase: string;
   editingScheduleDate: string;
   editingScheduleGuideMemo: string;
   editingScheduleID: string;
@@ -109,6 +113,10 @@ export type SelectedTripDetailSectionProps = {
   newPlaceGoogleMapsURL: string;
   newPlaceName: string;
   newPlaceRecommendedReason: string;
+  newPlaceChineseName: string;
+  newPlaceChineseAddress: string;
+  newPlaceSubwayExit: string;
+  newPlaceTaxiPhrase: string;
   newScheduleDate: string;
   newScheduleGuideMemo: string;
   newSchedulePlaceID: string;
@@ -141,6 +149,10 @@ export type SelectedTripDetailSectionProps = {
   onEditingPlaceGoogleMapsURLChange: (value: string) => void;
   onEditingPlaceNameChange: (value: string) => void;
   onEditingPlaceRecommendedReasonChange: (value: string) => void;
+  onEditingPlaceChineseNameChange: (value: string) => void;
+  onEditingPlaceChineseAddressChange: (value: string) => void;
+  onEditingPlaceSubwayExitChange: (value: string) => void;
+  onEditingPlaceTaxiPhraseChange: (value: string) => void;
   onEditingScheduleDateChange: (value: string) => void;
   onEditingScheduleGuideMemoChange: (value: string) => void;
   onEditingSchedulePlaceIDChange: (value: string) => void;
@@ -164,6 +176,10 @@ export type SelectedTripDetailSectionProps = {
   onNewPlaceGoogleMapsURLChange: (value: string) => void;
   onNewPlaceNameChange: (value: string) => void;
   onNewPlaceRecommendedReasonChange: (value: string) => void;
+  onNewPlaceChineseNameChange: (value: string) => void;
+  onNewPlaceChineseAddressChange: (value: string) => void;
+  onNewPlaceSubwayExitChange: (value: string) => void;
+  onNewPlaceTaxiPhraseChange: (value: string) => void;
   onNewScheduleDateChange: (value: string) => void;
   onNewScheduleGuideMemoChange: (value: string) => void;
   onNewSchedulePlaceIDChange: (value: string) => void;

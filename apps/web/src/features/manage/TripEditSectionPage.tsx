@@ -110,7 +110,7 @@ export function TripEditSectionPage({ tripId, section }: TripEditSectionPageProp
 
             {section === "places" && (
               <>
-                <ManagePlaceCreateForm {...manage} />
+                <ManagePlaceCreateForm {...manage} destinationCountry={selectedOwnerTrip.destinationCountry} />
                 <ManagePlaceList {...manage} destinationCountry={selectedOwnerTrip.destinationCountry} />
               </>
             )}

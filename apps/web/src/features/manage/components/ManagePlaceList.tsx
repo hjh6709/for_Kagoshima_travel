@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Edit3, ExternalLink, Save, Trash2, X, Maximize2 } from "lucide-react";
+import { Check, Copy, Edit3, ExternalLink, Maximize2, Navigation, Save, Trash2, X } from "lucide-react";
+import { getAmapDirectionsUrl, getAmapSearchUrl, getPlaceCopyText } from "../../../utils/mapLinks";
 import { placeCategoryOptions } from "../../../shared/travelOptions";
 import type { PlaceCategory } from "../../../types/travel";
 import type { TripManagePageProps } from "../manageTypes";
@@ -13,6 +14,10 @@ type ManagePlaceListProps = Pick<
   | "editingPlaceID"
   | "editingPlaceName"
   | "editingPlaceRecommendedReason"
+  | "editingPlaceChineseName"
+  | "editingPlaceChineseAddress"
+  | "editingPlaceSubwayExit"
+  | "editingPlaceTaxiPhrase"
   | "isPlaceListEditing"
   | "onCancelPlaceEdit"
   | "onDeletePlace"
@@ -21,6 +26,10 @@ type ManagePlaceListProps = Pick<
   | "onEditingPlaceGoogleMapsURLChange"
   | "onEditingPlaceNameChange"
   | "onEditingPlaceRecommendedReasonChange"
+  | "onEditingPlaceChineseNameChange"
+  | "onEditingPlaceChineseAddressChange"
+  | "onEditingPlaceSubwayExitChange"
+  | "onEditingPlaceTaxiPhraseChange"
   | "onPlaceListEditingChange"
   | "onStartPlaceEdit"
   | "onSubmitPlaceEdit"
@@ -45,6 +54,10 @@ export function ManagePlaceList({
   editingPlaceID,
   editingPlaceName,
   editingPlaceRecommendedReason,
+  editingPlaceChineseName,
+  editingPlaceChineseAddress,
+  editingPlaceSubwayExit,
+  editingPlaceTaxiPhrase,
   isPlaceListEditing,
   onCancelPlaceEdit,
   onDeletePlace,
@@ -53,6 +66,10 @@ export function ManagePlaceList({
   onEditingPlaceGoogleMapsURLChange,
   onEditingPlaceNameChange,
   onEditingPlaceRecommendedReasonChange,
+  onEditingPlaceChineseNameChange,
+  onEditingPlaceChineseAddressChange,
+  onEditingPlaceSubwayExitChange,
+  onEditingPlaceTaxiPhraseChange,
   onPlaceListEditingChange,
   onStartPlaceEdit,
   onSubmitPlaceEdit,
@@ -64,7 +81,28 @@ export function ManagePlaceList({
   placeEditSubmitting,
   destinationCountry,
 }: ManagePlaceListProps & ExtraManagePlaceListProps) {
-  const [zoomedPlace, setZoomedPlace] = useState<{ name: string; address?: string } | null>(null);
+  const [copiedPlaceID, setCopiedPlaceID] = useState("");
+  const [zoomedPlace, setZoomedPlace] = useState<{
+    name: string;
+    address?: string;
+    chineseName?: string;
+    chineseAddress?: string;
+    taxiPhrase?: string;
+  } | null>(null);
+
+  async function copyPlaceInfo(placeID: string) {
+    const place = ownerPlaces.find((item) => item.id === placeID);
+    const copyText = place ? getPlaceCopyText(place, destinationCountry === "CN") : "";
+    if (!copyText || !navigator.clipboard) return;
+
+    try {
+      await navigator.clipboard.writeText(copyText);
+      setCopiedPlaceID(placeID);
+      window.setTimeout(() => setCopiedPlaceID(""), 2000);
+    } catch {
+      setCopiedPlaceID("");
+    }
+  }
 
   return (
     <section className="owner-linked-data-section">
@@ -101,7 +139,11 @@ export function ManagePlaceList({
               <div>
                 <span className="muted-label">{place.category}</span>
                 <h2>{place.name}</h2>
+                {destinationCountry === "CN" && place.chineseName && <p className="place-local-name">{place.chineseName}</p>}
                 {place.address && <p className="section-caption">{place.address}</p>}
+                {destinationCountry === "CN" && place.chineseAddress && (
+                  <p className="place-local-address">{place.chineseAddress}</p>
+                )}
               </div>
               <div className="owner-linked-actions">
                 {place.googleMapsUrl && (
@@ -111,41 +153,37 @@ export function ManagePlaceList({
                   </a>
                 )}
                 
-                {/* 
-                  중국(CN) 여행의 경우, 구글 지도 차단 현상을 우회할 수 있도록 
-                  고덕지도(Amap) 웹 마커 라우팅 버튼 및 장소 텍스트 즉시 복사 도구를 렌더링합니다.
-                */}
+                {/* 중국 여행은 저장된 좌표와 현지 정보를 그대로 활용해 고덕지도 길찾기와 복사를 제공한다. */}
                 {destinationCountry === "CN" && (
                   <>
-                    {place.longitude && place.latitude && (
+                    {(getAmapDirectionsUrl(place) || getAmapSearchUrl(place)) && (
                       <a
-                        className="secondary-button compact-button"
-                        href={`https://uri.amap.com/marker?position=${place.longitude},${place.latitude}&name=${encodeURIComponent(place.name)}`}
+                        className="primary-button compact-button"
+                        href={getAmapDirectionsUrl(place) || getAmapSearchUrl(place)}
                         rel="noreferrer"
                         target="_blank"
-                        style={{
-                          background: "rgba(251, 191, 36, 0.15)",
-                          border: "1px solid rgba(251, 191, 36, 0.3)",
-                          color: "#fbbf24",
-                        }}
                       >
-                        🗺️ 고덕지도
+                        <Navigation size={16} />
+                        {getAmapDirectionsUrl(place) ? "고덕지도 길찾기" : "고덕지도 장소 검색"}
                       </a>
                     )}
                     <button
                       className="secondary-button compact-button"
-                      onClick={() => {
-                        const copyString = `${place.name}${place.address ? ` (${place.address})` : ""}`;
-                        navigator.clipboard.writeText(copyString);
-                        alert("장소 이름과 주소가 복사되었습니다! 고덕지도 앱 등에 붙여넣어 검색하세요.");
-                      }}
+                      onClick={() => void copyPlaceInfo(place.id)}
                       type="button"
                     >
-                      📋 정보 복사
+                      {copiedPlaceID === place.id ? <Check size={16} /> : <Copy size={16} />}
+                      {copiedPlaceID === place.id ? "복사됨" : "현지정보 복사"}
                     </button>
                     <button
                       className="secondary-button compact-button"
-                      onClick={() => setZoomedPlace({ name: place.name, address: place.address })}
+                      onClick={() => setZoomedPlace({
+                        name: place.name,
+                        address: place.address,
+                        chineseName: place.chineseName,
+                        chineseAddress: place.chineseAddress,
+                        taxiPhrase: place.taxiPhrase,
+                      })}
                       type="button"
                       title="큰 글씨로 보기"
                     >
@@ -217,6 +255,46 @@ export function ManagePlaceList({
                     />
                   </label>
 
+                  {destinationCountry === "CN" && (
+                    <fieldset className="local-place-fieldset">
+                      <legend>상하이 현지 사용 정보</legend>
+                      <label>
+                        중국어 장소명
+                        <input
+                          onChange={(event) => onEditingPlaceChineseNameChange(event.target.value)}
+                          type="text"
+                          value={editingPlaceChineseName}
+                        />
+                      </label>
+                      <label>
+                        중국어 주소
+                        <input
+                          onChange={(event) => onEditingPlaceChineseAddressChange(event.target.value)}
+                          type="text"
+                          value={editingPlaceChineseAddress}
+                        />
+                      </label>
+                      <div className="form-grid-two">
+                        <label>
+                          가까운 지하철 출구
+                          <input
+                            onChange={(event) => onEditingPlaceSubwayExitChange(event.target.value)}
+                            type="text"
+                            value={editingPlaceSubwayExit}
+                          />
+                        </label>
+                        <label>
+                          택시 문구
+                          <input
+                            onChange={(event) => onEditingPlaceTaxiPhraseChange(event.target.value)}
+                            type="text"
+                            value={editingPlaceTaxiPhrase}
+                          />
+                        </label>
+                      </div>
+                    </fieldset>
+                  )}
+
                   <label>
                     추천 이유
                     <textarea
@@ -259,12 +337,14 @@ export function ManagePlaceList({
             </button>
             <div className="zoom-modal-content">
               <span className="zoom-korean">목적지 안내</span>
-              <span className="zoom-foreign" style={{ fontSize: "32px", fontWeight: 700 }}>{zoomedPlace.name}</span>
-              {zoomedPlace.address && (
+              <span className="zoom-korean">{zoomedPlace.name}</span>
+              <span className="zoom-foreign">{zoomedPlace.chineseName || zoomedPlace.name}</span>
+              {(zoomedPlace.chineseAddress || zoomedPlace.address) && (
                 <span className="zoom-pronun" style={{ fontSize: "16px", marginTop: "12px", color: "var(--c-muted)", wordBreak: "break-all" }}>
-                  주소: {zoomedPlace.address}
+                  {zoomedPlace.chineseAddress || zoomedPlace.address}
                 </span>
               )}
+              {zoomedPlace.taxiPhrase && <span className="zoom-taxi-phrase">{zoomedPlace.taxiPhrase}</span>}
             </div>
             <p className="zoom-instruction">현지 직원에게 스마트폰 화면을 직접 보여주세요!</p>
           </div>

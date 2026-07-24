@@ -56,6 +56,10 @@ type UseTripManageDetailDataParams = {
     newPlaceGoogleMapsURL: string;
     newPlaceName: string;
     newPlaceRecommendedReason: string;
+    newPlaceChineseName: string;
+    newPlaceChineseAddress: string;
+    newPlaceSubwayExit: string;
+    newPlaceTaxiPhrase: string;
     cancelPlaceEdit: () => void;
     editingPlaceAddress: string;
     editingPlaceCategory: PlaceCategory;
@@ -63,6 +67,10 @@ type UseTripManageDetailDataParams = {
     editingPlaceID: string;
     editingPlaceName: string;
     editingPlaceRecommendedReason: string;
+    editingPlaceChineseName: string;
+    editingPlaceChineseAddress: string;
+    editingPlaceSubwayExit: string;
+    editingPlaceTaxiPhrase: string;
     setDeletingPlaceID: Dispatch<SetStateAction<string>>;
     setPlaceEditError: Dispatch<SetStateAction<string>>;
     setPlaceEditSubmitting: Dispatch<SetStateAction<boolean>>;
@@ -70,6 +78,10 @@ type UseTripManageDetailDataParams = {
     setNewPlaceGoogleMapsURL: Dispatch<SetStateAction<string>>;
     setNewPlaceName: Dispatch<SetStateAction<string>>;
     setNewPlaceRecommendedReason: Dispatch<SetStateAction<string>>;
+    setNewPlaceChineseName: Dispatch<SetStateAction<string>>;
+    setNewPlaceChineseAddress: Dispatch<SetStateAction<string>>;
+    setNewPlaceSubwayExit: Dispatch<SetStateAction<string>>;
+    setNewPlaceTaxiPhrase: Dispatch<SetStateAction<string>>;
     setNewSchedulePlaceID: Dispatch<SetStateAction<string>>;
     setPlaceCreateError: Dispatch<SetStateAction<string>>;
     setPlaceCreateSubmitting: Dispatch<SetStateAction<boolean>>;
