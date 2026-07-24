@@ -2,6 +2,7 @@ import { places, schedules, trip } from "../../data/sampleTrip";
 import type { TripDates } from "../../shared/date";
 import { checklistCategoryLabels } from "../../shared/travelOptions";
 import type { ChecklistItem } from "../../types/travel";
+import { getGoogleDirectionsUrl } from "../../utils/mapLinks";
 
 export type Tab = "today" | "schedule" | "flight" | "map" | "concierge" | "mypage";
 export type ChecklistCategory = ChecklistItem["category"];
@@ -22,10 +23,7 @@ export function getPlace(placeId?: string) {
 }
 
 export function getMapUrl(place?: ReturnType<typeof getPlace>) {
-  const destination = place?.latitude && place?.longitude
-    ? `${place.latitude},${place.longitude}`
-    : (place?.address || place?.name || "여행지");
-  return `https://www.google.com/maps/dir/?api=1&origin=current+location&destination=${encodeURIComponent(destination)}`;
+  return getGoogleDirectionsUrl(place);
 }
 
 function isDateValue(value: unknown): value is string {

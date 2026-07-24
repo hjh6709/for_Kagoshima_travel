@@ -1,73 +1,124 @@
 export type TravelMode = "walking" | "driving" | "transit";
+export type MapTravelMode = TravelMode;
 
-export interface MapLinkParams {
+export type MappablePlace = {
   destinationCountry?: string;
   latitude?: number;
   longitude?: number;
-  name: string;
+  name?: string;
+  address?: string;
+  googleMapsUrl?: string;
+  googlePlaceId?: string;
+  chineseName?: string;
+  chineseAddress?: string;
+  subwayExit?: string;
+  taxiPhrase?: string;
+};
+
+export type MapLinkParams = MappablePlace & { name: string };
+
+const amapModeByTravelMode: Record<TravelMode, "walk" | "car" | "bus"> = {
+  walking: "walk",
+  driving: "car",
+  transit: "bus",
+};
+
+export function hasPlaceCoordinates(place?: MappablePlace): place is MappablePlace & {
+  latitude: number;
+  longitude: number;
+} {
+  return Number.isFinite(place?.latitude) && Number.isFinite(place?.longitude);
 }
 
-/**
- * 국가 코드 및 사용자 조작 목적에 맞는 지도 서비스 URL(길찾기 또는 위치 보기)을 반환합니다.
- */
+export function getAmapDirectionsUrl(place: MappablePlace, mode: TravelMode = "transit") {
+  if (!hasPlaceCoordinates(place)) return undefined;
+
+  const destinationName = place.chineseName || place.name || "目的地";
+  const params = new URLSearchParams({
+    from: "",
+    to: `${place.longitude},${place.latitude},${destinationName}`,
+    mode: amapModeByTravelMode[mode],
+    src: "map-planner",
+    callnative: "1",
+  });
+  return `https://uri.amap.com/navigation?${params.toString()}`;
+}
+
+export function getAmapSearchUrl(place: MappablePlace) {
+  const keyword = place.chineseName || place.chineseAddress || place.name || place.address;
+  if (!keyword) return undefined;
+
+  const params = new URLSearchParams({
+    keyword,
+    city: "310000",
+    view: "map",
+    src: "map-planner",
+    callnative: "1",
+  });
+  return `https://uri.amap.com/search?${params.toString()}`;
+}
+
+export function getGoogleDirectionsUrl(place?: MappablePlace, mode: TravelMode = "transit") {
+  if (!place) return "https://www.google.com/maps/dir/?api=1";
+
+  const destination = hasPlaceCoordinates(place)
+    ? `${place.latitude},${place.longitude}`
+    : place.address || place.name;
+  if (!destination) return place.googleMapsUrl || "https://www.google.com/maps/dir/?api=1";
+
+  const params = new URLSearchParams({ api: "1", destination, travelmode: mode });
+  if (place.googlePlaceId) params.set("destination_place_id", place.googlePlaceId);
+  return `https://www.google.com/maps/dir/?${params.toString()}`;
+}
+
+/** 국가와 이동 수단에 맞는 외부 지도 URL을 반환한다. 좌표가 없으면 검색 화면으로 안전하게 대체한다. */
 export function getDirectionUrl(
   provider: "amap" | "google" | "apple",
   params: MapLinkParams,
   mode: TravelMode
 ): string {
-  const { latitude, longitude, name } = params;
-  if (latitude === undefined || longitude === undefined) {
-    return "";
+  if (provider === "amap") {
+    return getAmapDirectionsUrl(params, mode) || getAmapSearchUrl(params) || "https://uri.amap.com/search";
   }
+  if (provider === "google") return getGoogleDirectionsUrl(params, mode);
 
-  const encodedName = encodeURIComponent(name);
-
-  switch (provider) {
-    case "amap": {
-      // 고덕지도는 경도, 위도 (lon, lat) 순서입니다.
-      // mode: walk, car, bus
-      let amapMode = "walk";
-      if (mode === "driving") amapMode = "car";
-      if (mode === "transit") amapMode = "bus";
-      return `https://uri.amap.com/navigation?to=${longitude},${latitude},${encodedName}&mode=${amapMode}&src=mapplanner`;
-    }
-    case "apple": {
-      // Apple Maps: dirflg w(도보), d(자동차), r(대중교통)
-      let appleMode = "w";
-      if (mode === "driving") appleMode = "d";
-      if (mode === "transit") appleMode = "r";
-      return `https://maps.apple.com/?daddr=${latitude},${longitude}&dirflg=${appleMode}`;
-    }
-    case "google":
-    default: {
-      // Google Maps: walking, driving, transit
-      return `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}&travelmode=${mode}`;
-    }
+  if (!hasPlaceCoordinates(params)) {
+    const query = params.address || params.name;
+    return `https://maps.apple.com/?q=${encodeURIComponent(query)}`;
   }
+  const appleMode = mode === "walking" ? "w" : mode === "driving" ? "d" : "r";
+  return `https://maps.apple.com/?daddr=${params.latitude},${params.longitude}&dirflg=${appleMode}`;
 }
 
-/**
- * 단순히 지도에서 특정 장소의 위치 핀을 띄우는 URL을 반환합니다.
- */
-export function getPlaceMarkerUrl(
-  provider: "amap" | "google" | "apple",
-  params: MapLinkParams
-): string {
-  const { latitude, longitude, name } = params;
-  if (latitude === undefined || longitude === undefined) {
-    // 좌표가 없으면 주소/지명 기반의 검색 URL을 구글 맵으로 리턴합니다.
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}`;
+/** 외부 지도에서 장소 위치를 연다. 좌표가 없으면 동일 제공자의 장소 검색으로 대체한다. */
+export function getPlaceMarkerUrl(provider: "amap" | "google" | "apple", params: MapLinkParams): string {
+  if (provider === "amap") {
+    if (!hasPlaceCoordinates(params)) return getAmapSearchUrl(params) || "https://uri.amap.com/search";
+    const markerParams = new URLSearchParams({
+      position: `${params.longitude},${params.latitude}`,
+      name: params.chineseName || params.name,
+      src: "map-planner",
+      callnative: "1",
+    });
+    return `https://uri.amap.com/marker?${markerParams.toString()}`;
   }
 
-  const encodedName = encodeURIComponent(name);
-
-  switch (provider) {
-    case "amap":
-      return `https://uri.amap.com/marker?position=${longitude},${latitude}&name=${encodedName}&src=mapplanner`;
-    case "apple":
-      return `https://maps.apple.com/?q=${encodedName}&ll=${latitude},${longitude}`;
-    case "google":
-    default:
-      return `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
+  if (provider === "apple") {
+    const query = params.address || params.name;
+    if (!hasPlaceCoordinates(params)) return `https://maps.apple.com/?q=${encodeURIComponent(query)}`;
+    return `https://maps.apple.com/?q=${encodeURIComponent(params.name)}&ll=${params.latitude},${params.longitude}`;
   }
+
+  const query = hasPlaceCoordinates(params)
+    ? `${params.latitude},${params.longitude}`
+    : params.address || params.name;
+  const googleParams = new URLSearchParams({ api: "1", query });
+  if (params.googlePlaceId) googleParams.set("query_place_id", params.googlePlaceId);
+  return `https://www.google.com/maps/search/?${googleParams.toString()}`;
+}
+
+export function getPlaceCopyText(place: MappablePlace, preferChinese = false) {
+  const name = preferChinese ? place.chineseName || place.name : place.name || place.chineseName;
+  const address = preferChinese ? place.chineseAddress || place.address : place.address || place.chineseAddress;
+  return [name, address, place.subwayExit, place.taxiPhrase].filter(Boolean).join("\n");
 }

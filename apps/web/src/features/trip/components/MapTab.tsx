@@ -183,7 +183,8 @@ export function MapTab({ selectedSchedules, getPlace, places, trip }: TripPagePr
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
                             {/* 고덕지도 (중국 메인) */}
                             {isChina && (
-                              <>
+                              hasCoords ? (
+                                <>
                                 <a
                                   href={getDirectionUrl("amap", place, "walking")}
                                   className="primary-button compact-button"
@@ -202,7 +203,18 @@ export function MapTab({ selectedSchedules, getPlace, places, trip }: TripPagePr
                                 >
                                   🚗 고덕 차
                                 </a>
-                              </>
+                                </>
+                              ) : (
+                                <a
+                                  href={getPlaceMarkerUrl("amap", place)}
+                                  className="primary-button compact-button"
+                                  style={{ gridColumn: "1 / -1", fontSize: "11px", textAlign: "center", textDecoration: "none", background: "rgba(16, 185, 129, 0.2)", color: "#10b981", borderColor: "#10b981" }}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  🔎 고덕 장소 검색
+                                </a>
+                              )
                             )}
 
                             {/* 구글 지도 (공통/일본 메인) */}
@@ -365,7 +377,8 @@ export function MapTab({ selectedSchedules, getPlace, places, trip }: TripPagePr
                         <span style={{ fontSize: "11px", color: "var(--c-muted)", fontWeight: 700 }}>지도 앱 및 이동 수단 선택</span>
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
                           {isChina && (
-                            <>
+                            hasCoords ? (
+                              <>
                               <a
                                 href={getDirectionUrl("amap", place, "walking")}
                                 className="primary-button compact-button"
@@ -384,7 +397,18 @@ export function MapTab({ selectedSchedules, getPlace, places, trip }: TripPagePr
                               >
                                 🚗 고덕 차
                               </a>
-                            </>
+                              </>
+                            ) : (
+                              <a
+                                href={getPlaceMarkerUrl("amap", place)}
+                                className="primary-button compact-button"
+                                style={{ gridColumn: "1 / -1", fontSize: "11px", textAlign: "center", textDecoration: "none", background: "rgba(16, 185, 129, 0.2)", color: "#10b981", borderColor: "#10b981" }}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                🔎 고덕 장소 검색
+                              </a>
+                            )
                           )}
                           <a
                             href={getDirectionUrl("google", place, "walking")}

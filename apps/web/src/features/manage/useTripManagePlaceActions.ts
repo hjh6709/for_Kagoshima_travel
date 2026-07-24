@@ -12,6 +12,10 @@ type PlaceFormState = {
   newPlaceGoogleMapsURL: string;
   newPlaceName: string;
   newPlaceRecommendedReason: string;
+  newPlaceChineseName: string;
+  newPlaceChineseAddress: string;
+  newPlaceSubwayExit: string;
+  newPlaceTaxiPhrase: string;
   cancelPlaceEdit: () => void;
   editingPlaceAddress: string;
   editingPlaceCategory: PlaceCategory;
@@ -19,6 +23,10 @@ type PlaceFormState = {
   editingPlaceID: string;
   editingPlaceName: string;
   editingPlaceRecommendedReason: string;
+  editingPlaceChineseName: string;
+  editingPlaceChineseAddress: string;
+  editingPlaceSubwayExit: string;
+  editingPlaceTaxiPhrase: string;
   setDeletingPlaceID: Dispatch<SetStateAction<string>>;
   setPlaceEditError: Dispatch<SetStateAction<string>>;
   setPlaceEditSubmitting: Dispatch<SetStateAction<boolean>>;
@@ -26,6 +34,10 @@ type PlaceFormState = {
   setNewPlaceGoogleMapsURL: Dispatch<SetStateAction<string>>;
   setNewPlaceName: Dispatch<SetStateAction<string>>;
   setNewPlaceRecommendedReason: Dispatch<SetStateAction<string>>;
+  setNewPlaceChineseName: Dispatch<SetStateAction<string>>;
+  setNewPlaceChineseAddress: Dispatch<SetStateAction<string>>;
+  setNewPlaceSubwayExit: Dispatch<SetStateAction<string>>;
+  setNewPlaceTaxiPhrase: Dispatch<SetStateAction<string>>;
   setNewSchedulePlaceID: Dispatch<SetStateAction<string>>;
   setPlaceCreateError: Dispatch<SetStateAction<string>>;
   setPlaceCreateSubmitting: Dispatch<SetStateAction<boolean>>;
@@ -64,6 +76,10 @@ export function useTripManagePlaceActions({
     const address = optionalTrimmedText(placeForm.newPlaceAddress);
     const googleMapsUrl = optionalTrimmedText(placeForm.newPlaceGoogleMapsURL);
     const recommendedReason = optionalTrimmedText(placeForm.newPlaceRecommendedReason);
+    const chineseName = optionalTrimmedText(placeForm.newPlaceChineseName);
+    const chineseAddress = optionalTrimmedText(placeForm.newPlaceChineseAddress);
+    const subwayExit = optionalTrimmedText(placeForm.newPlaceSubwayExit);
+    const taxiPhrase = optionalTrimmedText(placeForm.newPlaceTaxiPhrase);
 
     if (!name) {
       placeForm.setPlaceCreateError("장소 이름을 입력해주세요.");
@@ -79,6 +95,10 @@ export function useTripManagePlaceActions({
         address,
         googleMapsUrl,
         recommendedReason,
+        chineseName,
+        chineseAddress,
+        subwayExit,
+        taxiPhrase,
       });
       setOwnerPlaces((currentPlaces) => sortSharedPlaces([...currentPlaces, createdPlace]));
       placeForm.setNewSchedulePlaceID(createdPlace.id);
@@ -86,6 +106,10 @@ export function useTripManagePlaceActions({
       placeForm.setNewPlaceAddress("");
       placeForm.setNewPlaceGoogleMapsURL("");
       placeForm.setNewPlaceRecommendedReason("");
+      placeForm.setNewPlaceChineseName("");
+      placeForm.setNewPlaceChineseAddress("");
+      placeForm.setNewPlaceSubwayExit("");
+      placeForm.setNewPlaceTaxiPhrase("");
       placeForm.setPlaceCreateError("");
     } catch (error) {
       handleManageApiError(error, {
@@ -112,6 +136,10 @@ export function useTripManagePlaceActions({
     const address = optionalTrimmedText(placeForm.editingPlaceAddress);
     const googleMapsUrl = optionalTrimmedText(placeForm.editingPlaceGoogleMapsURL);
     const recommendedReason = optionalTrimmedText(placeForm.editingPlaceRecommendedReason);
+    const chineseName = placeForm.editingPlaceChineseName.trim();
+    const chineseAddress = placeForm.editingPlaceChineseAddress.trim();
+    const subwayExit = placeForm.editingPlaceSubwayExit.trim();
+    const taxiPhrase = placeForm.editingPlaceTaxiPhrase.trim();
 
     if (!name) {
       placeForm.setPlaceEditError("장소 이름을 입력해주세요.");
@@ -127,6 +155,10 @@ export function useTripManagePlaceActions({
         address,
         googleMapsUrl,
         recommendedReason,
+        chineseName,
+        chineseAddress,
+        subwayExit,
+        taxiPhrase,
       });
       setOwnerPlaces((currentPlaces) =>
         sortSharedPlaces(currentPlaces.map((item) => (item.id === updatedPlace.id ? updatedPlace : item)))

@@ -58,7 +58,7 @@ export function SelectedTripDetailSection(props: SelectedTripDetailSectionProps)
         {/* 상세 섹션들은 같은 선택 여행 컨텍스트를 공유하므로 공통 props를 넘기고 각 컴포넌트 타입에서 필요한 값만 사용한다. */}
         <TripBasicInfoForm {...props} />
 
-        <ManagePlaceCreateForm {...props} />
+        <ManagePlaceCreateForm {...props} destinationCountry={selectedOwnerTrip.destinationCountry} />
 
         <ManagePlaceList {...props} destinationCountry={selectedOwnerTrip.destinationCountry} />
 

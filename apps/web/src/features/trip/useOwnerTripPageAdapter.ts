@@ -10,6 +10,7 @@ import {
   type TripDates,
 } from "../../shared/date";
 import { checklistCategories } from "../../shared/travelOptions";
+import { getGoogleDirectionsUrl } from "../../utils/mapLinks";
 import { phrases } from "../../data/sampleTrip";
 import type { ChecklistItem, ScheduleItem } from "../../types/travel";
 import {
@@ -183,12 +184,14 @@ export function useOwnerTripPageAdapter({
     return shiftDate(tripDates.startDate, getDateOffset(trip.startDate, dateStr));
   }
 
-  function getMapUrl(place?: { latitude?: number; longitude?: number; address?: string; name?: string }) {
-    const destination =
-      place?.latitude && place?.longitude
-        ? `${place.latitude},${place.longitude}`
-        : place?.address || place?.name || "여행지";
-    return `https://www.google.com/maps/dir/?api=1&origin=current+location&destination=${encodeURIComponent(destination)}`;
+  function getMapUrl(place?: {
+    latitude?: number;
+    longitude?: number;
+    address?: string;
+    name?: string;
+    googlePlaceId?: string;
+  }) {
+    return getGoogleDirectionsUrl(place);
   }
 
   function getPlace(placeId?: string) {

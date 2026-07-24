@@ -1651,6 +1651,63 @@ p {
   padding-top: 12px;
 }
 
+.place-local-name {
+  margin: 4px 0 0;
+  color: var(--c-green);
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.place-local-address,
+.place-subway-exit {
+  margin: 4px 0 0;
+  color: var(--c-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.zoom-taxi-phrase {
+  display: block;
+  margin-top: 18px;
+  padding: 14px;
+  border-radius: 10px;
+  background: var(--c-gold-light);
+  color: var(--c-text);
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.field-help {
+  margin: -4px 0 0;
+  color: var(--c-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.local-place-fieldset {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  margin: 2px 0 0;
+  padding: 14px;
+  border: 1px solid rgba(169, 132, 70, 0.24);
+  border-radius: 12px;
+  background: var(--c-gold-light);
+}
+
+.local-place-fieldset legend {
+  padding: 0 6px;
+  color: var(--c-gold);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.shared-place-card .primary-button.compact-button {
+  width: auto;
+}
+
 /* 프리미엄 로그인/회원가입 카드 리브랜딩 스타일 */
 .auth-card-premium {
   border-top: none !important;

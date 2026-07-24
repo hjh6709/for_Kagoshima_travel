@@ -9,6 +9,10 @@ export function usePlaceManageFormState() {
   const [newPlaceAddress, setNewPlaceAddress] = useState("");
   const [newPlaceGoogleMapsURL, setNewPlaceGoogleMapsURL] = useState("");
   const [newPlaceRecommendedReason, setNewPlaceRecommendedReason] = useState("");
+  const [newPlaceChineseName, setNewPlaceChineseName] = useState("");
+  const [newPlaceChineseAddress, setNewPlaceChineseAddress] = useState("");
+  const [newPlaceSubwayExit, setNewPlaceSubwayExit] = useState("");
+  const [newPlaceTaxiPhrase, setNewPlaceTaxiPhrase] = useState("");
   const [placeCreateError, setPlaceCreateError] = useState("");
   const [placeCreateSubmitting, setPlaceCreateSubmitting] = useState(false);
   const [isPlaceListEditing, setIsPlaceListEditing] = useState(false);
@@ -20,6 +24,10 @@ export function usePlaceManageFormState() {
   const [editingPlaceAddress, setEditingPlaceAddress] = useState("");
   const [editingPlaceGoogleMapsURL, setEditingPlaceGoogleMapsURL] = useState("");
   const [editingPlaceRecommendedReason, setEditingPlaceRecommendedReason] = useState("");
+  const [editingPlaceChineseName, setEditingPlaceChineseName] = useState("");
+  const [editingPlaceChineseAddress, setEditingPlaceChineseAddress] = useState("");
+  const [editingPlaceSubwayExit, setEditingPlaceSubwayExit] = useState("");
+  const [editingPlaceTaxiPhrase, setEditingPlaceTaxiPhrase] = useState("");
   const [placeEditError, setPlaceEditError] = useState("");
   const [placeEditSubmitting, setPlaceEditSubmitting] = useState(false);
 
@@ -31,6 +39,10 @@ export function usePlaceManageFormState() {
     setEditingPlaceAddress("");
     setEditingPlaceGoogleMapsURL("");
     setEditingPlaceRecommendedReason("");
+    setEditingPlaceChineseName("");
+    setEditingPlaceChineseAddress("");
+    setEditingPlaceSubwayExit("");
+    setEditingPlaceTaxiPhrase("");
     setPlaceEditError("");
     setPlaceEditSubmitting(false);
   }
@@ -43,6 +55,10 @@ export function usePlaceManageFormState() {
     setEditingPlaceAddress(place.address ?? "");
     setEditingPlaceGoogleMapsURL(place.googleMapsUrl ?? "");
     setEditingPlaceRecommendedReason(place.recommendedReason ?? "");
+    setEditingPlaceChineseName(place.chineseName ?? "");
+    setEditingPlaceChineseAddress(place.chineseAddress ?? "");
+    setEditingPlaceSubwayExit(place.subwayExit ?? "");
+    setEditingPlaceTaxiPhrase(place.taxiPhrase ?? "");
     setPlaceEditError("");
   }
 
@@ -53,6 +69,10 @@ export function usePlaceManageFormState() {
     setNewPlaceAddress("");
     setNewPlaceGoogleMapsURL("");
     setNewPlaceRecommendedReason("");
+    setNewPlaceChineseName("");
+    setNewPlaceChineseAddress("");
+    setNewPlaceSubwayExit("");
+    setNewPlaceTaxiPhrase("");
     setPlaceCreateError("");
     setIsPlaceListEditing(false);
     setPlaceDeleteError("");
@@ -71,6 +91,14 @@ export function usePlaceManageFormState() {
     setNewPlaceGoogleMapsURL,
     newPlaceRecommendedReason,
     setNewPlaceRecommendedReason,
+    newPlaceChineseName,
+    setNewPlaceChineseName,
+    newPlaceChineseAddress,
+    setNewPlaceChineseAddress,
+    newPlaceSubwayExit,
+    setNewPlaceSubwayExit,
+    newPlaceTaxiPhrase,
+    setNewPlaceTaxiPhrase,
     placeCreateError,
     setPlaceCreateError,
     placeCreateSubmitting,
@@ -92,6 +120,14 @@ export function usePlaceManageFormState() {
     setEditingPlaceGoogleMapsURL,
     editingPlaceRecommendedReason,
     setEditingPlaceRecommendedReason,
+    editingPlaceChineseName,
+    setEditingPlaceChineseName,
+    editingPlaceChineseAddress,
+    setEditingPlaceChineseAddress,
+    editingPlaceSubwayExit,
+    setEditingPlaceSubwayExit,
+    editingPlaceTaxiPhrase,
+    setEditingPlaceTaxiPhrase,
     placeEditError,
     setPlaceEditError,
     placeEditSubmitting,

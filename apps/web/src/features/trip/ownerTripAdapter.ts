@@ -37,6 +37,11 @@ export function mapOwnerPlace(place: SharedPlace): Place {
     longitude: place.longitude,
     googleMapsUrl: place.googleMapsUrl,
     recommendedReason: place.recommendedReason,
+    googlePlaceId: place.googlePlaceId,
+    chineseName: place.chineseName,
+    chineseAddress: place.chineseAddress,
+    subwayExit: place.subwayExit,
+    taxiPhrase: place.taxiPhrase,
   };
 }
 

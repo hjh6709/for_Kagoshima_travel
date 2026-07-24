@@ -10,15 +10,23 @@ type ManagePlaceCreateFormProps = Pick<
   | "newPlaceGoogleMapsURL"
   | "newPlaceName"
   | "newPlaceRecommendedReason"
+  | "newPlaceChineseName"
+  | "newPlaceChineseAddress"
+  | "newPlaceSubwayExit"
+  | "newPlaceTaxiPhrase"
   | "onNewPlaceAddressChange"
   | "onNewPlaceCategoryChange"
   | "onNewPlaceGoogleMapsURLChange"
   | "onNewPlaceNameChange"
   | "onNewPlaceRecommendedReasonChange"
+  | "onNewPlaceChineseNameChange"
+  | "onNewPlaceChineseAddressChange"
+  | "onNewPlaceSubwayExitChange"
+  | "onNewPlaceTaxiPhraseChange"
   | "onSubmitNewPlace"
   | "placeCreateError"
   | "placeCreateSubmitting"
->;
+> & { destinationCountry?: string };
 
 // 여행 관리 화면의 장소 추가 폼만 담당한다. 생성 요청과 입력 상태 변경은 상위 콜백으로 위임한다.
 export function ManagePlaceCreateForm({
@@ -27,15 +35,26 @@ export function ManagePlaceCreateForm({
   newPlaceGoogleMapsURL,
   newPlaceName,
   newPlaceRecommendedReason,
+  newPlaceChineseName,
+  newPlaceChineseAddress,
+  newPlaceSubwayExit,
+  newPlaceTaxiPhrase,
   onNewPlaceAddressChange,
   onNewPlaceCategoryChange,
   onNewPlaceGoogleMapsURLChange,
   onNewPlaceNameChange,
   onNewPlaceRecommendedReasonChange,
+  onNewPlaceChineseNameChange,
+  onNewPlaceChineseAddressChange,
+  onNewPlaceSubwayExitChange,
+  onNewPlaceTaxiPhraseChange,
   onSubmitNewPlace,
   placeCreateError,
   placeCreateSubmitting,
+  destinationCountry,
 }: ManagePlaceCreateFormProps) {
+  const isChinaTrip = destinationCountry === "CN";
+
   return (
     <section className="owner-linked-data-section">
       <div className="section-title-row compact-title-row">
@@ -92,6 +111,55 @@ export function ManagePlaceCreateForm({
             value={newPlaceGoogleMapsURL}
           />
         </label>
+        {isChinaTrip && (
+          <p className="field-help">
+            고덕지도에서는 중국어 장소명과 주소로 검색하므로 현지 표기를 함께 저장해주세요.
+          </p>
+        )}
+
+        {isChinaTrip && (
+          <fieldset className="local-place-fieldset">
+            <legend>상하이 현지 사용 정보</legend>
+            <label>
+              중국어 장소명
+              <input
+                onChange={(event) => onNewPlaceChineseNameChange(event.target.value)}
+                placeholder="예: 上海博物馆"
+                type="text"
+                value={newPlaceChineseName}
+              />
+            </label>
+            <label>
+              중국어 주소
+              <input
+                onChange={(event) => onNewPlaceChineseAddressChange(event.target.value)}
+                placeholder="현지 지도 검색 또는 기사님께 보여줄 주소"
+                type="text"
+                value={newPlaceChineseAddress}
+              />
+            </label>
+            <div className="form-grid-two">
+              <label>
+                가까운 지하철 출구
+                <input
+                  onChange={(event) => onNewPlaceSubwayExitChange(event.target.value)}
+                  placeholder="예: 1호선 3번 출구"
+                  type="text"
+                  value={newPlaceSubwayExit}
+                />
+              </label>
+              <label>
+                택시 문구
+                <input
+                  onChange={(event) => onNewPlaceTaxiPhraseChange(event.target.value)}
+                  placeholder="예: 请带我去上海博物馆"
+                  type="text"
+                  value={newPlaceTaxiPhrase}
+                />
+              </label>
+            </div>
+          </fieldset>
+        )}
 
         <label>
           추천/안내 메모
