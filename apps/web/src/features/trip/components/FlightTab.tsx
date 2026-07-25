@@ -1,6 +1,7 @@
-import { CheckCircle2, Plane, User } from "lucide-react";
+import { CheckCircle2, Plane } from "lucide-react";
 import type { TripPageProps } from "../tripPageTypes";
 import { MaskedText } from "../../../shared/components/MaskedText";
+import { ProfileShortcutButton } from "./ProfileShortcutButton";
 
 // 항공 탭 렌더링만 담당한다. 공항 체크리스트 상태 변경은 상위 핸들러를 호출한다.
 export function FlightTab({ allChecklist, checkedItems, flights, toggleCheck, trip, onNavigateToMyPage }: TripPageProps) {
@@ -11,26 +12,7 @@ export function FlightTab({ allChecklist, checkedItems, flights, toggleCheck, tr
     <section className="screen">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
         <h1 style={{ margin: 0 }}>항공편</h1>
-        <button
-          onClick={() => onNavigateToMyPage?.()}
-          style={{
-            background: "rgba(255,255,255,0.06)",
-            border: "1px solid var(--border-color)",
-            borderRadius: "50%",
-            width: "36px",
-            height: "36px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#ffffff",
-            cursor: "pointer",
-            transition: "all 0.2s"
-          }}
-          title="마이페이지 열기"
-          type="button"
-        >
-          <User size={18} />
-        </button>
+        <ProfileShortcutButton onClick={onNavigateToMyPage} />
       </div>
       <p className="muted">공항에서 바로 확인할 수 있도록 출국·입국 항공편을 따로 모았습니다.</p>
 

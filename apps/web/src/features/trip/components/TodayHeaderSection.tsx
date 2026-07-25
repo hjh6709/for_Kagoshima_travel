@@ -1,6 +1,7 @@
-import { ChevronLeft, User } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { formatKoreanDate, type TripDates } from "../../../shared/date";
 import type { Trip } from "../../../types/travel";
+import { ProfileShortcutButton } from "./ProfileShortcutButton";
 
 type TodayHeaderSectionProps = {
   travelStatus: { phase: string; label: string; description: string };
@@ -59,16 +60,7 @@ export function TodayHeaderSection({ travelStatus, trip, tripDates, onNavigateTo
         <div className="trip-badges">
           <span className="badge-item country-badge">{countryBadge}</span>
           <span className={`badge-item dday-badge ${dday.className}`}>{dday.text}</span>
-          {onNavigateToMyPage && (
-            <button
-              onClick={onNavigateToMyPage}
-              className="header-profile-btn"
-              title="마이페이지 열기"
-              type="button"
-            >
-              <User size={14} />
-            </button>
-          )}
+          <ProfileShortcutButton onClick={onNavigateToMyPage} />
         </div>
       </div>
       <h1>{trip.title}</h1>

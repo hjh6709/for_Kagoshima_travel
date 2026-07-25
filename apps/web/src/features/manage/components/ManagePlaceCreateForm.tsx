@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { PlusCircle, Search, Check, Loader2, Compass, AlertCircle } from "lucide-react";
+import { searchTripPlaces, type PlaceSearchResult } from "../../../api/trips";
 import { placeCategoryOptions } from "../../../shared/travelOptions";
 import type { PlaceCategory } from "../../../types/travel";
 import type { TripManagePageProps } from "../manageTypes";
@@ -15,6 +16,7 @@ type ManagePlaceCreateFormProps = Pick<
   | "newPlaceChineseAddress"
   | "newPlaceSubwayExit"
   | "newPlaceTaxiPhrase"
+  | "auth"
   | "onNewPlaceAddressChange"
   | "onNewPlaceCategoryChange"
   | "onNewPlaceGoogleMapsURLChange"
@@ -24,26 +26,16 @@ type ManagePlaceCreateFormProps = Pick<
   | "onNewPlaceChineseAddressChange"
   | "onNewPlaceSubwayExitChange"
   | "onNewPlaceTaxiPhraseChange"
+  | "onNewPlaceSearchSelectionChange"
   | "onSubmitNewPlace"
   | "placeCreateError"
   | "placeCreateSubmitting"
   | "selectedOwnerTrip"
 > & { destinationCountry?: string };
 
-interface SearchPlaceItem {
-  name: string;
-  address?: string;
-  latitude?: number;
-  longitude?: number;
-  googlePlaceId?: string;
-  chineseName?: string;
-  chineseAddress?: string;
-  subwayExit?: string;
-  taxiPhrase?: string;
-}
-
 // 여행 관리 화면의 장소 추가 폼 및 지도 검색(Amap/Google) 연동 영역
 export function ManagePlaceCreateForm({
+  auth,
   newPlaceAddress,
   newPlaceCategory,
   newPlaceGoogleMapsURL,
@@ -62,6 +54,7 @@ export function ManagePlaceCreateForm({
   onNewPlaceChineseAddressChange,
   onNewPlaceSubwayExitChange,
   onNewPlaceTaxiPhraseChange,
+  onNewPlaceSearchSelectionChange,
   onSubmitNewPlace,
   placeCreateError,
   placeCreateSubmitting,
@@ -73,15 +66,19 @@ export function ManagePlaceCreateForm({
 
   // 검색 상태 관리
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<SearchPlaceItem[]>([]);
+  const [searchResults, setSearchResults] = useState<PlaceSearchResult[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchErrorMsg, setSearchErrorMsg] = useState("");
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
 
   // 통합 검색 트리거
-  const handleSearch = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (!tripID || !searchQuery.trim()) return;
+  const handleSearch = async () => {
+    const query = searchQuery.trim();
+    if (!tripID || !query) return;
+    if (!auth) {
+      setSearchErrorMsg("로그인 정보를 확인한 뒤 다시 검색해 주세요.");
+      return;
+    }
 
     setSearchLoading(true);
     setSearchErrorMsg("");
@@ -89,31 +86,20 @@ export function ManagePlaceCreateForm({
     setSelectedIdx(null);
 
     try {
-      const token = localStorage.getItem("owner_auth_token") || "";
-      const res = await fetch(`/api/trips/${tripID}/places/search?q=${encodeURIComponent(searchQuery)}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!res.ok) {
-        throw new Error("검색 결과를 가져오는 데 실패했습니다.");
-      }
-
-      const data = await res.json();
-      setSearchResults(data || []);
-      if (!data || data.length === 0) {
+      const data = await searchTripPlaces(auth.accessToken, tripID, query);
+      setSearchResults(data);
+      if (data.length === 0) {
         setSearchErrorMsg("검색 결과가 없습니다. 오타를 확인하거나 직접 입력해 주세요.");
       }
-    } catch (err: any) {
-      setSearchErrorMsg(err.message || "검색 중 네트워크 오류가 발생했습니다.");
+    } catch (error) {
+      setSearchErrorMsg(error instanceof Error ? error.message : "검색 중 네트워크 오류가 발생했습니다.");
     } finally {
       setSearchLoading(false);
     }
   };
 
   // 선택 결과 자동 대입 (Auto-fill)
-  const handleSelectResult = (result: SearchPlaceItem, idx: number) => {
+  const handleSelectResult = (result: PlaceSearchResult, idx: number) => {
     setSelectedIdx(idx);
 
     // 1. 기본 이름 및 주소
@@ -138,6 +124,12 @@ export function ManagePlaceCreateForm({
       onNewPlaceSubwayExitChange(result.subwayExit || "");
       onNewPlaceTaxiPhraseChange(result.taxiPhrase || "");
     }
+
+    onNewPlaceSearchSelectionChange({
+      latitude: result.latitude,
+      longitude: result.longitude,
+      googlePlaceId: result.googlePlaceId,
+    });
   };
 
   return (
@@ -150,13 +142,13 @@ export function ManagePlaceCreateForm({
       </div>
 
       {/* 지도 데이터 기반 통합 검색 컴포넌트 추가 */}
-      <div style={{ background: "rgba(255, 255, 255, 0.03)", border: "1px solid var(--border-color)", borderRadius: "12px", padding: "16px", marginBottom: "20px" }}>
-        <h4 style={{ fontSize: "14px", fontWeight: 700, color: "#ffffff", marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
-          <Compass size={16} style={{ color: "#10b981" }} />
+      <div style={{ background: "var(--c-green-light)", border: "1px solid var(--border-color)", borderRadius: "12px", padding: "16px", marginBottom: "20px" }}>
+        <h4 style={{ fontSize: "14px", fontWeight: 700, color: "var(--c-text)", marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
+          <Compass size={16} style={{ color: "var(--c-green)" }} />
           지도 통합 검색 (구글 맵스 / 고덕지도 연동)
         </h4>
         <p style={{ fontSize: "12px", color: "var(--c-muted)", marginBottom: "12px" }}>
-          지명이나 상호명을 입력하고 검색하면 주소와 위도/경도가 자동 입력되어 작성이 매우 편리해집니다.
+          지명이나 상호명을 검색해 선택하면 주소와 지도 위치가 자동으로 저장됩니다.
         </p>
         
         <div style={{ display: "flex", gap: "8px" }}>
@@ -165,18 +157,18 @@ export function ManagePlaceCreateForm({
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
-                handleSearch(e as any);
+                void handleSearch();
               }
             }}
             placeholder={isChinaTrip ? "중국 명소 예: 东方明珠, 신천지, 예원" : "여행지 명소 예: 센간엔, 도쿄타워"}
-            style={{ flex: 1, padding: "8px 12px", fontSize: "13px", borderRadius: "8px", border: "1px solid var(--border-color)", background: "rgba(255, 255, 255, 0.02)", color: "#ffffff" }}
+            style={{ flex: 1, padding: "8px 12px", fontSize: "14px", borderRadius: "8px", border: "1px solid var(--border-color)", background: "var(--c-surface)", color: "var(--c-text)" }}
             type="text"
             value={searchQuery}
           />
           <button
             className="secondary-button compact-button"
             disabled={searchLoading}
-            onClick={handleSearch}
+            onClick={() => void handleSearch()}
             type="button"
             style={{ display: "flex", alignItems: "center", gap: "4px", padding: "0 14px", minWidth: "80px", justifyContent: "center" }}
           >
@@ -188,12 +180,12 @@ export function ManagePlaceCreateForm({
         {/* 검색 결과 리스트 */}
         {searchResults.length > 0 && (
           <div style={{ marginTop: "14px", display: "grid", gap: "8px", maxHeight: "200px", overflowY: "auto", paddingRight: "4px" }}>
-            <span style={{ fontSize: "11px", color: "var(--c-muted)", fontWeight: 700 }}>검색된 후보 ({searchResults.length}개)</span>
+            <span style={{ fontSize: "12px", color: "var(--c-muted)", fontWeight: 700 }}>검색된 후보 ({searchResults.length}개)</span>
             {searchResults.map((result, idx) => {
               const isSelected = selectedIdx === idx;
               return (
                 <button
-                  key={idx}
+                  key={`${result.googlePlaceId ?? "place"}-${result.latitude ?? "x"}-${result.longitude ?? "y"}-${result.name}`}
                   onClick={() => handleSelectResult(result, idx)}
                   type="button"
                   style={{
@@ -202,8 +194,8 @@ export function ManagePlaceCreateForm({
                     alignItems: "center",
                     padding: "10px 12px",
                     borderRadius: "8px",
-                    border: isSelected ? "1px solid #10b981" : "1px solid rgba(255,255,255,0.06)",
-                    background: isSelected ? "rgba(16, 185, 129, 0.08)" : "rgba(255,255,255,0.02)",
+                    border: isSelected ? "1px solid var(--c-green)" : "1px solid var(--border-color)",
+                    background: isSelected ? "var(--c-surface)" : "rgba(255,255,255,0.6)",
                     textAlign: "left",
                     width: "100%",
                     cursor: "pointer",
@@ -211,22 +203,22 @@ export function ManagePlaceCreateForm({
                   }}
                 >
                   <div style={{ flex: 1, paddingRight: "8px" }}>
-                    <div style={{ fontSize: "13px", fontWeight: 700, color: isSelected ? "#10b981" : "#ffffff" }}>
+                    <div style={{ fontSize: "14px", fontWeight: 700, color: isSelected ? "var(--c-green)" : "var(--c-text)" }}>
                       {result.name}
                     </div>
                     {result.address && (
-                      <div style={{ fontSize: "11px", color: "var(--c-muted)", marginTop: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <div style={{ fontSize: "12px", color: "var(--c-muted)", marginTop: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {result.address}
                       </div>
                     )}
                   </div>
                   {isSelected ? (
-                    <span style={{ color: "#10b981", display: "flex", alignItems: "center", gap: "4px", fontSize: "12px", fontWeight: 600 }}>
+                    <span style={{ color: "var(--c-green)", display: "flex", alignItems: "center", gap: "4px", fontSize: "12px", fontWeight: 500 }}>
                       <Check size={14} />
                       선택됨
                     </span>
                   ) : (
-                    <span style={{ fontSize: "11px", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)", borderRadius: "4px", padding: "2px 6px" }}>
+                    <span style={{ fontSize: "12px", color: "var(--c-green)", border: "1px solid var(--c-green)", borderRadius: "4px", padding: "2px 6px" }}>
                       선택
                     </span>
                   )}
@@ -249,7 +241,11 @@ export function ManagePlaceCreateForm({
           <label>
             장소 이름
             <input
-              onChange={(event) => onNewPlaceNameChange(event.target.value)}
+              onChange={(event) => {
+                setSelectedIdx(null);
+                onNewPlaceSearchSelectionChange(null);
+                onNewPlaceNameChange(event.target.value);
+              }}
               placeholder="예: 공항 렌터카 센터"
               required
               type="text"
@@ -274,7 +270,11 @@ export function ManagePlaceCreateForm({
         <label>
           주소
           <input
-            onChange={(event) => onNewPlaceAddressChange(event.target.value)}
+            onChange={(event) => {
+              setSelectedIdx(null);
+              onNewPlaceSearchSelectionChange(null);
+              onNewPlaceAddressChange(event.target.value);
+            }}
             placeholder="예: 공항 1층 또는 숙소 주소"
             type="text"
             value={newPlaceAddress}
@@ -285,7 +285,11 @@ export function ManagePlaceCreateForm({
           Google Maps 링크
           <input
             inputMode="url"
-            onChange={(event) => onNewPlaceGoogleMapsURLChange(event.target.value)}
+            onChange={(event) => {
+              setSelectedIdx(null);
+              onNewPlaceSearchSelectionChange(null);
+              onNewPlaceGoogleMapsURLChange(event.target.value);
+            }}
             placeholder="https://www.google.com/maps/..."
             type="url"
             value={newPlaceGoogleMapsURL}

@@ -5,6 +5,7 @@ import {
   listTripPlaces,
   listTripSchedules,
   type OwnerTrip,
+  type PlaceSearchSelection,
   type SharedFlight,
   type SharedPlace,
   type SharedSchedule,
@@ -60,6 +61,7 @@ type UseTripManageDetailDataParams = {
     newPlaceChineseAddress: string;
     newPlaceSubwayExit: string;
     newPlaceTaxiPhrase: string;
+    newPlaceSearchSelection: PlaceSearchSelection | null;
     cancelPlaceEdit: () => void;
     editingPlaceAddress: string;
     editingPlaceCategory: PlaceCategory;
@@ -82,6 +84,7 @@ type UseTripManageDetailDataParams = {
     setNewPlaceChineseAddress: Dispatch<SetStateAction<string>>;
     setNewPlaceSubwayExit: Dispatch<SetStateAction<string>>;
     setNewPlaceTaxiPhrase: Dispatch<SetStateAction<string>>;
+    setNewPlaceSearchSelection: Dispatch<SetStateAction<PlaceSearchSelection | null>>;
     setNewSchedulePlaceID: Dispatch<SetStateAction<string>>;
     setPlaceCreateError: Dispatch<SetStateAction<string>>;
     setPlaceCreateSubmitting: Dispatch<SetStateAction<boolean>>;

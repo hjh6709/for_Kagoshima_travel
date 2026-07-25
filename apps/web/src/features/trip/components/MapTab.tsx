@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Navigation, Copy, Maximize2, Train, AlertTriangle, X, User } from "lucide-react";
+import { Navigation, Copy, Maximize2, Train, AlertTriangle, X } from "lucide-react";
 import { placeCategoryLabels } from "../../../shared/travelOptions";
 import type { TripPageProps } from "../tripPageTypes";
 import { getDirectionUrl, getPlaceMarkerUrl } from "../../../utils/mapLinks";
+import { ProfileShortcutButton } from "./ProfileShortcutButton";
 
 export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateToMyPage }: TripPageProps) {
   const [subTab, setSubTab] = useState<"timeline" | "all">("timeline");
@@ -47,26 +48,7 @@ export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateTo
     <section className="screen">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
         <h1 style={{ margin: 0 }}>지도와 추천 장소</h1>
-        <button
-          onClick={() => onNavigateToMyPage?.()}
-          style={{
-            background: "rgba(255,255,255,0.06)",
-            border: "1px solid var(--border-color)",
-            borderRadius: "50%",
-            width: "36px",
-            height: "36px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#ffffff",
-            cursor: "pointer",
-            transition: "all 0.2s"
-          }}
-          title="마이페이지 열기"
-          type="button"
-        >
-          <User size={18} />
-        </button>
+        <ProfileShortcutButton onClick={onNavigateToMyPage} />
       </div>
 
       {/* 2단 세그먼트 제어바 */}
@@ -111,7 +93,7 @@ export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateTo
                         {schedule.time && <span className="pill subtle" style={{ background: "rgba(16, 185, 129, 0.15)", color: "#10b981" }}>{schedule.time}</span>}
                       </div>
 
-                      <h2 style={{ fontSize: "18px", fontWeight: 800, color: "#ffffff", marginBottom: "4px" }}>
+                      <h2 style={{ fontSize: "20px", fontWeight: 700, color: "var(--c-text)", marginBottom: "4px" }}>
                         {place.name}
                       </h2>
 
@@ -122,7 +104,7 @@ export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateTo
                         </p>
                       )}
 
-                      <p className="muted" style={{ fontSize: "13px", lineHeight: 1.4 }}>{place.recommendedReason}</p>
+                      <p className="muted" style={{ fontSize: "14px", lineHeight: 1.4 }}>{place.recommendedReason}</p>
 
                       {/* 주소 및 지하철역 안내 */}
                       <div style={{ marginTop: "10px", fontSize: "12px", display: "grid", gap: "4px" }}>
@@ -150,12 +132,12 @@ export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateTo
                       {!hasCoords && (
                         <div style={{ display: "flex", gap: "6px", alignItems: "center", background: "rgba(245, 158, 11, 0.1)", border: "1px solid rgba(245, 158, 11, 0.2)", borderRadius: "8px", padding: "8px 12px", marginTop: "12px" }}>
                           <AlertTriangle size={14} style={{ color: "var(--c-orange)" }} />
-                          <span style={{ fontSize: "11px", color: "#fde047" }}>정확한 위치 미등록 상태 (기본 이름 검색 연동)</span>
+                          <span style={{ fontSize: "12px", color: "var(--c-danger)" }}>정확한 위치 미등록 상태 (기본 이름 검색 연동)</span>
                         </div>
                       )}
                     </div>
 
-                    <div style={{ borderTop: "1px solid rgba(255, 255, 255, 0.08)", paddingTop: "12px", marginTop: "4px" }}>
+                    <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "12px", marginTop: "4px" }}>
                       <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                         {/* 길찾기 활성화 토글 */}
                         <button
@@ -318,11 +300,11 @@ export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateTo
                 <article className="place-card" key={place.id} style={{ background: "var(--bg-secondary)", borderRadius: "16px", border: "1px solid var(--border-color)", padding: "20px", display: "grid", gap: "12px" }}>
                   <div>
                     <span className="pill subtle" style={{ marginBottom: "8px", display: "inline-block" }}>{placeCategoryLabels[place.category]}</span>
-                    <h2 style={{ fontSize: "18px", fontWeight: 800, color: "#ffffff", marginBottom: "4px" }}>{place.name}</h2>
+                    <h2 style={{ fontSize: "20px", fontWeight: 700, color: "var(--c-text)", marginBottom: "4px" }}>{place.name}</h2>
                     {place.chineseName && (
                       <p style={{ color: "#10b981", fontSize: "14px", fontWeight: 700, margin: "2px 0 6px" }}>{place.chineseName}</p>
                     )}
-                    <p className="muted" style={{ fontSize: "13px", lineHeight: 1.4 }}>{place.recommendedReason}</p>
+                    <p className="muted" style={{ fontSize: "14px", lineHeight: 1.4 }}>{place.recommendedReason}</p>
 
                     <div style={{ marginTop: "10px", fontSize: "12px", display: "grid", gap: "4px" }}>
                       {place.address && (
@@ -348,12 +330,12 @@ export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateTo
                     {!hasCoords && (
                       <div style={{ display: "flex", gap: "6px", alignItems: "center", background: "rgba(245, 158, 11, 0.1)", border: "1px solid rgba(245, 158, 11, 0.2)", borderRadius: "8px", padding: "8px 12px", marginTop: "12px" }}>
                         <AlertTriangle size={14} style={{ color: "var(--c-orange)" }} />
-                        <span style={{ fontSize: "11px", color: "#fde047" }}>정확한 위치 미등록 상태 (이름 검색 연동)</span>
+                        <span style={{ fontSize: "12px", color: "var(--c-danger)" }}>정확한 위치 미등록 상태 (이름 검색 연동)</span>
                       </div>
                     )}
                   </div>
 
-                  <div style={{ borderTop: "1px solid rgba(255, 255, 255, 0.08)", paddingTop: "12px", marginTop: "4px" }}>
+                  <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "12px", marginTop: "4px" }}>
                     <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                       <button
                         className="secondary-button compact-button"

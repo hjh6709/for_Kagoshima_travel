@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { SharedPlace } from "../../api/trips";
+import type { PlaceSearchSelection, SharedPlace } from "../../api/trips";
 import type { PlaceCategory } from "../../types/travel";
 
 // 장소 추가/수정 폼과 장소 목록 편집 상태를 모아 관리한다.
@@ -13,6 +13,7 @@ export function usePlaceManageFormState() {
   const [newPlaceChineseAddress, setNewPlaceChineseAddress] = useState("");
   const [newPlaceSubwayExit, setNewPlaceSubwayExit] = useState("");
   const [newPlaceTaxiPhrase, setNewPlaceTaxiPhrase] = useState("");
+  const [newPlaceSearchSelection, setNewPlaceSearchSelection] = useState<PlaceSearchSelection | null>(null);
   const [placeCreateError, setPlaceCreateError] = useState("");
   const [placeCreateSubmitting, setPlaceCreateSubmitting] = useState(false);
   const [isPlaceListEditing, setIsPlaceListEditing] = useState(false);
@@ -73,6 +74,7 @@ export function usePlaceManageFormState() {
     setNewPlaceChineseAddress("");
     setNewPlaceSubwayExit("");
     setNewPlaceTaxiPhrase("");
+    setNewPlaceSearchSelection(null);
     setPlaceCreateError("");
     setIsPlaceListEditing(false);
     setPlaceDeleteError("");
@@ -99,6 +101,8 @@ export function usePlaceManageFormState() {
     setNewPlaceSubwayExit,
     newPlaceTaxiPhrase,
     setNewPlaceTaxiPhrase,
+    newPlaceSearchSelection,
+    setNewPlaceSearchSelection,
     placeCreateError,
     setPlaceCreateError,
     placeCreateSubmitting,

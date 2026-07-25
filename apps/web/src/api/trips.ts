@@ -50,6 +50,20 @@ export type CreatePlacePayload = {
 
 export type UpdatePlacePayload = Partial<CreatePlacePayload>;
 
+export type PlaceSearchResult = {
+  name: string;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
+  googlePlaceId?: string;
+  chineseName?: string;
+  chineseAddress?: string;
+  subwayExit?: string;
+  taxiPhrase?: string;
+};
+
+export type PlaceSearchSelection = Pick<PlaceSearchResult, "latitude" | "longitude" | "googlePlaceId">;
+
 export type CreateFlightPayload = {
   direction: string;
   label: string;
@@ -225,6 +239,14 @@ export function deleteTripSchedule(accessToken: string, tripID: string, schedule
 
 export function listTripPlaces(accessToken: string, tripID: string) {
   return apiRequest<SharedPlace[]>(`/api/trips/${tripID}/places`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+}
+
+export function searchTripPlaces(accessToken: string, tripID: string, query: string) {
+  return apiRequest<PlaceSearchResult[]>(`/api/trips/${tripID}/places/search?q=${encodeURIComponent(query)}`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },

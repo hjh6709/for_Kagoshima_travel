@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Copy, Phone, User } from "lucide-react";
+import { Copy, Phone } from "lucide-react";
 import type { TripPageProps } from "../tripPageTypes";
 import { ChinaPaymentHelper } from "../../manage/components/ChinaPaymentHelper";
 import { QuickTravelHelper } from "./QuickTravelHelper";
+import { ProfileShortcutButton } from "./ProfileShortcutButton";
 
 // 긴급/여행 정보 탭 렌더링만 담당한다. 주소 복사는 상위 핸들러를 호출한다.
 export function ConciergeTab({
@@ -19,30 +20,11 @@ export function ConciergeTab({
     <section className="screen">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
         <h1 style={{ margin: 0 }}>긴급과 여행 정보</h1>
-        <button
-          onClick={() => onNavigateToMyPage?.()}
-          style={{
-            background: "rgba(255,255,255,0.06)",
-            border: "1px solid var(--border-color)",
-            borderRadius: "50%",
-            width: "36px",
-            height: "36px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#ffffff",
-            cursor: "pointer",
-            transition: "all 0.2s"
-          }}
-          title="마이페이지 열기"
-          type="button"
-        >
-          <User size={18} />
-        </button>
+        <ProfileShortcutButton onClick={onNavigateToMyPage} />
       </div>
 
       {/* 2단 세그먼트 메뉴 바 */}
-      <div className="segment-control-wrapper" style={{ display: "flex", gap: "2px", background: "rgba(255, 255, 255, 0.05)", borderRadius: "8px", padding: "3px", marginBottom: "20px" }}>
+      <div className="segment-control-wrapper" style={{ display: "flex", gap: "2px", background: "var(--c-green-light)", borderRadius: "8px", padding: "3px", marginBottom: "20px" }}>
         <button
           onClick={() => setSubTab("emergency")}
           className={`segment-btn ${subTab === "emergency" ? "active" : ""}`}
@@ -51,11 +33,11 @@ export function ConciergeTab({
             padding: "10px 0",
             border: 0,
             borderRadius: "6px",
-            fontSize: "13px",
+            fontSize: "14px",
             fontWeight: 700,
             cursor: "pointer",
             background: subTab === "emergency" ? "rgba(16, 185, 129, 0.15)" : "transparent",
-            color: subTab === "emergency" ? "#10b981" : "var(--c-muted)",
+            color: subTab === "emergency" ? "var(--c-green)" : "var(--c-muted)",
             transition: "all 0.2s"
           }}
           type="button"
@@ -70,11 +52,11 @@ export function ConciergeTab({
             padding: "10px 0",
             border: 0,
             borderRadius: "6px",
-            fontSize: "13px",
+            fontSize: "14px",
             fontWeight: 700,
             cursor: "pointer",
             background: subTab === "tools" ? "rgba(16, 185, 129, 0.15)" : "transparent",
-            color: subTab === "tools" ? "#10b981" : "var(--c-muted)",
+            color: subTab === "tools" ? "var(--c-green)" : "var(--c-muted)",
             transition: "all 0.2s"
           }}
           type="button"

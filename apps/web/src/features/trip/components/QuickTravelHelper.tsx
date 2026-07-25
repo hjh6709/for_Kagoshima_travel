@@ -44,6 +44,14 @@ const CHINESE_PHRASES: Phrase[] = [
   { korean: "도와주세요 (긴급)", foreign: "请帮帮我", pronunciation: "칭 방방 워" },
 ];
 
+function foreignToKrw(amount: number, rate: number, isJapan: boolean) {
+  return Math.round(isJapan ? (amount * rate) / 100 : amount * rate);
+}
+
+function krwToForeign(amount: number, rate: number, isJapan: boolean) {
+  return isJapan ? ((amount / rate) * 100).toFixed(0) : (amount / rate).toFixed(1);
+}
+
 /**
  * QuickTravelHelper 컴포넌트
  * 목적지 국가(일본/중국)에 맞춰 실시간 환율 계산 폼과 현지 생존 회화 편의 도구를 제공합니다.
@@ -52,7 +60,7 @@ export function QuickTravelHelper({ destinationCountry = "JP" }: QuickTravelHelp
   const isJapan = destinationCountry === "JP";
   
   // 환율 상태 관리 (데이터베이스가 오프라인일 때도 정상 가동하기 위한 기본 디폴트 기준 환율 설정)
-  const defaultRate = isJapan ? 9.0 : 190.0; // 100엔 = 900원, 1위안 = 190원 기준 초기값
+  const defaultRate = isJapan ? 900 : 190; // 100엔 = 900원, 1위안 = 190원 기준 초기값
   const [exchangeRate, setExchangeRate] = useState<number>(defaultRate);
   const [foreignVal, setForeignVal] = useState<string>("");
   const [krwVal, setKrwVal] = useState<string>("");
@@ -88,12 +96,20 @@ export function QuickTravelHelper({ destinationCountry = "JP" }: QuickTravelHelp
       if (data && data.rates) {
         if (isJapan) {
           // 100엔 기준 역산 환율 (1 / rates.JPY * 100)
+          if (!Number.isFinite(data.rates.JPY) || data.rates.JPY <= 0) throw new Error("Invalid JPY rate");
           const rateJpy = 1 / data.rates.JPY;
-          setApiRate(Math.round(rateJpy * 100 * 100) / 100);
+          const nextRate = Math.round(rateJpy * 100 * 100) / 100;
+          setApiRate(nextRate);
+          setExchangeRate(nextRate);
+          if (foreignVal) setKrwVal(foreignToKrw(Number(foreignVal), nextRate, true).toLocaleString());
         } else {
           // 1위안 기준 역산 환율 (1 / rates.CNY)
+          if (!Number.isFinite(data.rates.CNY) || data.rates.CNY <= 0) throw new Error("Invalid CNY rate");
           const rateCny = 1 / data.rates.CNY;
-          setApiRate(Math.round(rateCny * 100) / 100);
+          const nextRate = Math.round(rateCny * 100) / 100;
+          setApiRate(nextRate);
+          setExchangeRate(nextRate);
+          if (foreignVal) setKrwVal(foreignToKrw(Number(foreignVal), nextRate, false).toLocaleString());
         }
       }
     } catch (err) {
@@ -110,14 +126,11 @@ export function QuickTravelHelper({ destinationCountry = "JP" }: QuickTravelHelp
       setKrwVal("");
       return;
     }
-    const num = Number(val);
-    if (isJapan) {
-      // 엔화는 관례상 100엔 단위를 기준으로 환산합니다. (예: 1000엔 * 9.0 = 9000원)
-      setKrwVal(Math.round((num * exchangeRate) / 100).toLocaleString());
-    } else {
-      // 위안화는 1위안 단위를 기준으로 정직하게 1:1 환산합니다. (예: 10위안 * 190 = 1900원)
-      setKrwVal(Math.round(num * exchangeRate).toLocaleString());
+    if (exchangeRate <= 0) {
+      setKrwVal("");
+      return;
     }
+    setKrwVal(foreignToKrw(Number(val), exchangeRate, isJapan).toLocaleString());
   };
 
   // [환율 변환 수식 로직]: 원화 ➡️ 외화 변환
@@ -128,14 +141,11 @@ export function QuickTravelHelper({ destinationCountry = "JP" }: QuickTravelHelp
       setForeignVal("");
       return;
     }
-    const num = Number(cleaned);
-    if (isJapan) {
-      // 원화에서 엔화로 변환 시 100엔 단위 수식을 역산 적용합니다.
-      setForeignVal(((num / exchangeRate) * 100).toFixed(0));
-    } else {
-      // 위안화 변환 시 소수점 한 자리까지 노출하여 직관성을 높입니다.
-      setForeignVal((num / exchangeRate).toFixed(1));
+    if (exchangeRate <= 0) {
+      setForeignVal("");
+      return;
     }
+    setForeignVal(krwToForeign(Number(cleaned), exchangeRate, isJapan));
   };
 
   // 간편 가산 터치 패드 작동 헬퍼
@@ -163,11 +173,11 @@ export function QuickTravelHelper({ destinationCountry = "JP" }: QuickTravelHelp
       {/* 1. 간편 환율 계산기 위젯 개편 */}
       <article className="info-card exchange-widget" style={{ padding: "20px", display: "grid", gap: "16px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h2 style={{ fontSize: "16px", fontWeight: 800, margin: 0, color: "#ffffff" }}>
+          <h2 style={{ fontSize: "16px", fontWeight: 700, margin: 0, color: "var(--c-text)" }}>
             간편 환율 계산기 ({isJapan ? "100엔 기준" : "1위안 기준"})
           </h2>
-          <span style={{ fontSize: "11px", color: "#10b981", fontWeight: 700, background: "rgba(16, 185, 129, 0.12)", padding: "2px 8px", borderRadius: "10px" }}>
-            {isJapan ? "100円 = 900원" : "1元 = 190원"} 기준
+          <span style={{ fontSize: "12px", color: "var(--c-green)", fontWeight: 700, background: "var(--c-green-light)", padding: "2px 8px", borderRadius: "10px" }}>
+            {isJapan ? `100円 = ${exchangeRate.toLocaleString()}원` : `1元 = ${exchangeRate.toLocaleString()}원`} 기준
           </span>
         </div>
 
@@ -175,21 +185,17 @@ export function QuickTravelHelper({ destinationCountry = "JP" }: QuickTravelHelp
           <label style={{ color: "var(--c-muted)" }}>적용 환율 설정:</label>
           <input
             type="number"
+            min="0.01"
+            step="0.01"
             value={exchangeRate}
             onChange={(e) => {
               const val = Number(e.target.value);
               setExchangeRate(val);
               // 환율 수치가 바뀔 때 기존 외화 대비 한화 금액 동시 갱신
-              if (foreignVal) {
-                if (isJapan) {
-                  setKrwVal(Math.round((Number(foreignVal) * val) / 100).toLocaleString());
-                } else {
-                  setKrwVal(Math.round(Number(foreignVal) * val).toLocaleString());
-                }
-              }
+              if (foreignVal) setKrwVal(foreignToKrw(Number(foreignVal), val, isJapan).toLocaleString());
             }}
             className="rate-input"
-            style={{ width: "80px", padding: "4px 8px", borderRadius: "6px", border: "1px solid var(--border-color)", background: "rgba(255, 255, 255, 0.02)", color: "#ffffff", textAlign: "center" }}
+            style={{ width: "80px", padding: "4px 8px", borderRadius: "6px", border: "1px solid var(--border-color)", background: "var(--c-bg)", color: "var(--c-text)", textAlign: "center" }}
           />
           <span>원</span>
           <button 
@@ -206,7 +212,7 @@ export function QuickTravelHelper({ destinationCountry = "JP" }: QuickTravelHelp
         {/* 외화 및 원화 입력폼 */}
         <div className="exchange-inputs" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
           <div className="input-group" style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-            <span className="unit-label" style={{ fontSize: "11px", color: "var(--c-muted)", fontWeight: 700 }}>
+            <span className="unit-label" style={{ fontSize: "12px", color: "var(--c-muted)", fontWeight: 700 }}>
               {isJapan ? "￥" : "元"} ({currencyUnit})
             </span>
             <input
@@ -215,7 +221,7 @@ export function QuickTravelHelper({ destinationCountry = "JP" }: QuickTravelHelp
               value={foreignVal}
               onChange={(e) => handleForeignChange(e.target.value)}
               className="calc-input"
-              style={{ width: "100%", padding: "12px", fontSize: "18px", fontWeight: 700, borderRadius: "8px", border: "1px solid var(--border-color)", background: "rgba(255,255,255,0.02)", color: "#ffffff" }}
+              style={{ width: "100%", padding: "12px", fontSize: "20px", fontWeight: 700, borderRadius: "8px", border: "1px solid var(--border-color)", background: "var(--c-bg)", color: "var(--c-text)" }}
             />
           </div>
 
@@ -224,7 +230,7 @@ export function QuickTravelHelper({ destinationCountry = "JP" }: QuickTravelHelp
           </div>
 
           <div className="input-group" style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-            <span className="unit-label" style={{ fontSize: "11px", color: "var(--c-muted)", fontWeight: 700 }}>
+            <span className="unit-label" style={{ fontSize: "12px", color: "var(--c-muted)", fontWeight: 700 }}>
               ₩ (원화 KRW)
             </span>
             <input
@@ -233,36 +239,36 @@ export function QuickTravelHelper({ destinationCountry = "JP" }: QuickTravelHelp
               value={krwVal}
               onChange={(e) => handleKrwChange(e.target.value)}
               className="calc-input"
-              style={{ width: "100%", padding: "12px", fontSize: "18px", fontWeight: 700, borderRadius: "8px", border: "1px solid var(--border-color)", background: "rgba(255,255,255,0.02)", color: "#ffffff" }}
+              style={{ width: "100%", padding: "12px", fontSize: "20px", fontWeight: 700, borderRadius: "8px", border: "1px solid var(--border-color)", background: "var(--c-bg)", color: "var(--c-text)" }}
             />
           </div>
         </div>
 
         {/* 간편 터치 덧셈 버튼 패드 수식 */}
         <div style={{ display: "grid", gap: "8px", marginTop: "4px" }}>
-          <span style={{ fontSize: "11px", color: "var(--c-muted)", fontWeight: 700 }}>간편 금액 합산 패드</span>
+          <span style={{ fontSize: "12px", color: "var(--c-muted)", fontWeight: 700 }}>간편 금액 합산 패드</span>
           <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
             {isJapan ? (
               <>
-                <button type="button" onClick={() => handleQuickAdd(1000)} className="secondary-button compact-button" style={{ flex: 1, fontSize: "11px", padding: "8px 0" }}>+1,000円</button>
-                <button type="button" onClick={() => handleQuickAdd(5000)} className="secondary-button compact-button" style={{ flex: 1, fontSize: "11px", padding: "8px 0" }}>+5,000円</button>
-                <button type="button" onClick={() => handleQuickAdd(10000)} className="secondary-button compact-button" style={{ flex: 1, fontSize: "11px", padding: "8px 0" }}>+10,000円</button>
+                <button type="button" onClick={() => handleQuickAdd(1000)} className="secondary-button compact-button" style={{ flex: 1, fontSize: "12px", minHeight: "40px" }}>+1,000円</button>
+                <button type="button" onClick={() => handleQuickAdd(5000)} className="secondary-button compact-button" style={{ flex: 1, fontSize: "12px", minHeight: "40px" }}>+5,000円</button>
+                <button type="button" onClick={() => handleQuickAdd(10000)} className="secondary-button compact-button" style={{ flex: 1, fontSize: "12px", minHeight: "40px" }}>+10,000円</button>
               </>
             ) : (
               <>
-                <button type="button" onClick={() => handleQuickAdd(10)} className="secondary-button compact-button" style={{ flex: 1, fontSize: "11px", padding: "8px 0" }}>+10元</button>
-                <button type="button" onClick={() => handleQuickAdd(50)} className="secondary-button compact-button" style={{ flex: 1, fontSize: "11px", padding: "8px 0" }}>+50元</button>
-                <button type="button" onClick={() => handleQuickAdd(100)} className="secondary-button compact-button" style={{ flex: 1, fontSize: "11px", padding: "8px 0" }}>+100元</button>
-                <button type="button" onClick={() => handleQuickAdd(500)} className="secondary-button compact-button" style={{ flex: 1, fontSize: "11px", padding: "8px 0" }}>+500元</button>
+                <button type="button" onClick={() => handleQuickAdd(10)} className="secondary-button compact-button" style={{ flex: 1, fontSize: "12px", minHeight: "40px" }}>+10元</button>
+                <button type="button" onClick={() => handleQuickAdd(50)} className="secondary-button compact-button" style={{ flex: 1, fontSize: "12px", minHeight: "40px" }}>+50元</button>
+                <button type="button" onClick={() => handleQuickAdd(100)} className="secondary-button compact-button" style={{ flex: 1, fontSize: "12px", minHeight: "40px" }}>+100元</button>
+                <button type="button" onClick={() => handleQuickAdd(500)} className="secondary-button compact-button" style={{ flex: 1, fontSize: "12px", minHeight: "40px" }}>+500元</button>
               </>
             )}
             <button 
               type="button" 
               onClick={handleReset} 
               className="danger-button compact-button" 
-              style={{ flex: 1, fontSize: "11px", padding: "8px 0", background: "rgba(166,75,69,0.15)", color: "#f43f5e", borderColor: "rgba(166,75,69,0.3)" }}
+              style={{ flex: 1, fontSize: "12px", minHeight: "40px", background: "rgba(166,75,69,0.15)", color: "var(--c-danger)", borderColor: "rgba(166,75,69,0.3)" }}
             >
-              Reset
+              초기화
             </button>
           </div>
         </div>
@@ -271,10 +277,10 @@ export function QuickTravelHelper({ destinationCountry = "JP" }: QuickTravelHelp
         {apiRate !== null && (
           <div style={{ display: "flex", gap: "4px", alignItems: "center", background: "rgba(255, 255, 255, 0.02)", border: "1px solid var(--border-color)", borderRadius: "8px", padding: "10px 12px", marginTop: "4px" }}>
             <Landmark size={13} style={{ color: "var(--c-muted)" }} />
-            <span style={{ fontSize: "11px", color: "var(--c-muted)" }}>
+            <span style={{ fontSize: "12px", color: "var(--c-muted)" }}>
               실시간 고시 환율 피드 대조:
             </span>
-            <span style={{ fontSize: "11px", color: "#10b981", fontWeight: 700 }}>
+            <span style={{ fontSize: "12px", color: "var(--c-green)", fontWeight: 700 }}>
               {isJapan ? `100엔 = ${apiRate}원` : `1위안 = ${apiRate}원`}
             </span>
           </div>
@@ -284,7 +290,7 @@ export function QuickTravelHelper({ destinationCountry = "JP" }: QuickTravelHelp
       {/* 2. 현지 서바이벌 회화 및 클립보드/소통 기능 영역 */}
       <article className="info-card translation-widget" style={{ display: "grid", gap: "14px" }}>
         <div className="title-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 0 }}>
-          <h2 style={{ fontSize: "16px", fontWeight: 800, margin: 0, color: "#ffffff" }}>
+          <h2 style={{ fontSize: "16px", fontWeight: 700, margin: 0, color: "var(--c-text)" }}>
             현지 생존 회화 ({isJapan ? "일본어" : "중국어"})
           </h2>
           <Languages size={20} className="muted" />
@@ -293,8 +299,8 @@ export function QuickTravelHelper({ destinationCountry = "JP" }: QuickTravelHelp
         {/* 실시간 외부 번역기 즉시 연동 단추 패널 */}
         <div style={{ display: "flex", gap: "8px", background: "rgba(255, 255, 255, 0.02)", border: "1px solid var(--border-color)", borderRadius: "10px", padding: "12px", alignItems: "center" }}>
           <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "2px" }}>
-            <span style={{ fontSize: "11px", color: "var(--c-muted)", fontWeight: 700 }}>번역기 바로가기</span>
-            <p style={{ fontSize: "11px", color: "var(--c-muted)", margin: 0 }}>탭 한 번으로 번역 페이지로 신속히 이동합니다.</p>
+            <span style={{ fontSize: "12px", color: "var(--c-muted)", fontWeight: 700 }}>번역기 바로가기</span>
+            <p style={{ fontSize: "12px", color: "var(--c-muted)", margin: 0 }}>탭 한 번으로 번역 페이지로 이동합니다.</p>
           </div>
           <div style={{ display: "flex", gap: "6px" }}>
             <a
@@ -302,7 +308,7 @@ export function QuickTravelHelper({ destinationCountry = "JP" }: QuickTravelHelp
               target="_blank"
               rel="noreferrer"
               className="primary-button compact-button"
-              style={{ padding: "8px 12px", fontSize: "12px", background: "#00c73c", borderColor: "#00c73c", color: "#ffffff", fontWeight: 700, borderRadius: "6px", display: "inline-flex", alignItems: "center", gap: "4px", textDecoration: "none" }}
+              style={{ minHeight: "40px", padding: "8px 12px", fontSize: "12px", background: "var(--c-green)", borderColor: "var(--c-green)", color: "var(--c-surface)", fontWeight: 700, borderRadius: "6px", display: "inline-flex", alignItems: "center", gap: "4px", textDecoration: "none" }}
             >
               Papago
             </a>
@@ -311,7 +317,7 @@ export function QuickTravelHelper({ destinationCountry = "JP" }: QuickTravelHelp
               target="_blank"
               rel="noreferrer"
               className="secondary-button compact-button"
-              style={{ padding: "8px 12px", fontSize: "12px", background: "#4285f4", borderColor: "#4285f4", color: "#ffffff", fontWeight: 700, borderRadius: "6px", display: "inline-flex", alignItems: "center", gap: "4px", textDecoration: "none" }}
+              style={{ minHeight: "40px", padding: "8px 12px", fontSize: "12px", background: "var(--c-green-light)", borderColor: "var(--c-green)", color: "var(--c-green)", fontWeight: 700, borderRadius: "6px", display: "inline-flex", alignItems: "center", gap: "4px", textDecoration: "none" }}
             >
               Google
             </a>
