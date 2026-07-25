@@ -28,7 +28,8 @@
 body {
   margin: 0;
   min-width: 320px;
-  min-height: 100vh;
+  min-height: 100dvh;
+  overscroll-behavior: none; /* 브라우저 최상위 스크롤 뜯김 방지 */
 }
 
 button,
@@ -46,16 +47,31 @@ button:disabled {
 }
 
 .app-shell {
-  min-height: 100vh;
+  min-height: 100dvh;
   background: var(--c-page);
   display: grid;
   place-items: center;
   padding: 24px;
 }
 
+/* 모바일 꽉 찬 화면 오버라이딩 미디어 쿼리 */
+@media (max-width: 480px) {
+  .app-shell {
+    padding: 0;
+  }
+  .phone-frame {
+    width: 100% !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+}
+
 .phone-frame {
   width: min(100%, 430px);
-  height: min(860px, calc(100vh - 48px));
+  height: min(860px, calc(100dvh - 48px));
   background: var(--c-bg);
   border: 1px solid rgba(36, 48, 47, 0.1);
   box-shadow: 0 24px 80px rgba(28, 50, 37, 0.16);
@@ -65,8 +81,12 @@ button:disabled {
 }
 
 .content {
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding-bottom: 8px;
+  -webkit-overflow-scrolling: touch; /* 관성 스크롤 복원 */
+  scroll-behavior: smooth;
+  overscroll-behavior-y: contain; /* 바운스 체인 차단 */
 }
 
 .screen {
