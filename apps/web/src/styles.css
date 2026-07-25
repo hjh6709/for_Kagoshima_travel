@@ -1343,7 +1343,7 @@ p {
 .bottom-tabs {
   height: 68px;
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   background: rgba(28, 50, 37, 0.85);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
