@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Copy, Phone } from "lucide-react";
+import { Copy, Phone, User } from "lucide-react";
 import type { TripPageProps } from "../tripPageTypes";
 import { ChinaPaymentHelper } from "../../manage/components/ChinaPaymentHelper";
 import { QuickTravelHelper } from "./QuickTravelHelper";
@@ -11,12 +11,35 @@ export function ConciergeTab({
   copyAccommodationAddress,
   emergencies,
   trip,
+  onNavigateToMyPage,
 }: TripPageProps) {
   const [subTab, setSubTab] = useState<"emergency" | "tools">("emergency");
 
   return (
     <section className="screen">
-      <h1>긴급과 여행 정보</h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+        <h1 style={{ margin: 0 }}>긴급과 여행 정보</h1>
+        <button
+          onClick={() => onNavigateToMyPage?.()}
+          style={{
+            background: "rgba(255,255,255,0.06)",
+            border: "1px solid var(--border-color)",
+            borderRadius: "50%",
+            width: "36px",
+            height: "36px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#ffffff",
+            cursor: "pointer",
+            transition: "all 0.2s"
+          }}
+          title="마이페이지 열기"
+          type="button"
+        >
+          <User size={18} />
+        </button>
+      </div>
 
       {/* 2단 세그먼트 메뉴 바 */}
       <div className="segment-control-wrapper" style={{ display: "flex", gap: "2px", background: "rgba(255, 255, 255, 0.05)", borderRadius: "8px", padding: "3px", marginBottom: "20px" }}>

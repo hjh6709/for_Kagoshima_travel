@@ -20,10 +20,10 @@ export function TripPage(props: TripPageComponentProps) {
       <section className="phone-frame">
         <div className="content" ref={contentRef}>
           {activeTab === "today" && <TodayTab {...props} onNavigateToMyPage={() => setActiveTab("mypage")} />}
-          {activeTab === "schedule" && <ScheduleTab {...props} />}
-          {activeTab === "flight" && <FlightTab {...props} />}
-          {activeTab === "map" && <MapTab {...props} />}
-          {activeTab === "concierge" && <ConciergeTab {...props} />}
+          {activeTab === "schedule" && <ScheduleTab {...props} onNavigateToMyPage={() => setActiveTab("mypage")} />}
+          {activeTab === "flight" && <FlightTab {...props} onNavigateToMyPage={() => setActiveTab("mypage")} />}
+          {activeTab === "map" && <MapTab {...props} onNavigateToMyPage={() => setActiveTab("mypage")} />}
+          {activeTab === "concierge" && <ConciergeTab {...props} onNavigateToMyPage={() => setActiveTab("mypage")} />}
           {activeTab === "mypage" && <MyPageTab {...props} onLogout={onLogout} isDemo={props.isDemo} />}
         </div>
 

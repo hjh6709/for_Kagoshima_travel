@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { Navigation, Copy, Maximize2, Train, AlertTriangle, X } from "lucide-react";
+import { Navigation, Copy, Maximize2, Train, AlertTriangle, X, User } from "lucide-react";
 import { placeCategoryLabels } from "../../../shared/travelOptions";
 import type { TripPageProps } from "../tripPageTypes";
 import { getDirectionUrl, getPlaceMarkerUrl } from "../../../utils/mapLinks";
 
-export function MapTab({ selectedSchedules, getPlace, places, trip }: TripPageProps) {
+export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateToMyPage }: TripPageProps) {
   const [subTab, setSubTab] = useState<"timeline" | "all">("timeline");
   
   // 택시 제시용 큰 글씨 모달
@@ -45,7 +45,29 @@ export function MapTab({ selectedSchedules, getPlace, places, trip }: TripPagePr
 
   return (
     <section className="screen">
-      <h1>지도와 추천 장소</h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+        <h1 style={{ margin: 0 }}>지도와 추천 장소</h1>
+        <button
+          onClick={() => onNavigateToMyPage?.()}
+          style={{
+            background: "rgba(255,255,255,0.06)",
+            border: "1px solid var(--border-color)",
+            borderRadius: "50%",
+            width: "36px",
+            height: "36px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#ffffff",
+            cursor: "pointer",
+            transition: "all 0.2s"
+          }}
+          title="마이페이지 열기"
+          type="button"
+        >
+          <User size={18} />
+        </button>
+      </div>
 
       {/* 2단 세그먼트 제어바 */}
       <div className="map-segment-control">
