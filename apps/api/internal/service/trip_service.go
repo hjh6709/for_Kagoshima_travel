@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -12,10 +13,11 @@ import (
 )
 
 var (
-	ErrTripNotFound  = errors.New("trip not found")
-	ErrShareNotFound = errors.New("share link not found")
-	ErrForbidden     = errors.New("forbidden")
-	ErrInvalidTrip   = errors.New("invalid trip input")
+	ErrTripNotFound           = errors.New("trip not found")
+	ErrShareNotFound          = errors.New("share link not found")
+	ErrForbidden              = errors.New("forbidden")
+	ErrInvalidTrip            = errors.New("invalid trip input")
+	ErrPlaceSearchUnavailable = errors.New("place search unavailable")
 )
 
 type TripService struct {
@@ -796,8 +798,12 @@ func (s *TripService) SearchPlaces(tripID, ownerID, query string) ([]dto.PlaceSe
 
 	results, err := s.searchPlacesByCountry(trip.DestinationCountry, query)
 	if err != nil {
-		// API 호출 실패 시 로컬 Mock 데이터베이스로 매끄럽게 Fallback 처리
-		return s.getMockPlaces(trip.DestinationCountry, query), nil
+		// 알려진 명소는 로컬 데이터로 보완하되, 범주 검색 장애를 빈 결과로 숨기지는 않는다.
+		fallback := s.getMockPlaces(trip.DestinationCountry, query)
+		if len(fallback) == 0 {
+			return nil, fmt.Errorf("%w: %v", ErrPlaceSearchUnavailable, err)
+		}
+		return fallback, nil
 	}
 	return results, nil
 }

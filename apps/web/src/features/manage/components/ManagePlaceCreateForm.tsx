@@ -33,6 +33,17 @@ type ManagePlaceCreateFormProps = Pick<
   | "selectedOwnerTrip"
 > & { destinationCountry?: string };
 
+function inferPlaceCategory(query: string): PlaceCategory | null {
+  const normalized = query.trim().toLowerCase();
+  if (["카페", "커피", "커피숍", "cafe", "coffee", "咖啡", "咖啡店"].includes(normalized)) {
+    return "cafe";
+  }
+  if (["식당", "음식점", "맛집", "레스토랑", "restaurant", "food", "餐厅"].includes(normalized)) {
+    return "meal";
+  }
+  return null;
+}
+
 // 여행 관리 화면의 장소 추가 폼 및 지도 검색(Amap/Google) 연동 영역
 export function ManagePlaceCreateForm({
   auth,
@@ -125,6 +136,11 @@ export function ManagePlaceCreateForm({
       onNewPlaceTaxiPhraseChange(result.taxiPhrase || "");
     }
 
+    const inferredCategory = inferPlaceCategory(searchQuery);
+    if (inferredCategory) {
+      onNewPlaceCategoryChange(inferredCategory);
+    }
+
     onNewPlaceSearchSelectionChange({
       latitude: result.latitude,
       longitude: result.longitude,
@@ -160,7 +176,7 @@ export function ManagePlaceCreateForm({
                 void handleSearch();
               }
             }}
-            placeholder={isChinaTrip ? "중국 명소 예: 东方明珠, 신천지, 예원" : "여행지 명소 예: 센간엔, 도쿄타워"}
+            placeholder={isChinaTrip ? "장소·종류 예: 신천지, 카페, 식당" : "장소·종류 예: 센간엔, 카페, 식당"}
             style={{ flex: 1, padding: "8px 12px", fontSize: "14px", borderRadius: "8px", border: "1px solid var(--border-color)", background: "var(--c-surface)", color: "var(--c-text)" }}
             type="text"
             value={searchQuery}

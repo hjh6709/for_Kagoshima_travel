@@ -47,6 +47,8 @@ cp .env.example .env
 - `PORT`: API 서버 포트
 - `DATABASE_URL`: PostgreSQL 연결 문자열. 루트 `docker-compose.yml`의 PostgreSQL을 사용할 때는 `localhost:5433`을 사용
 - `JWT_SECRET`: JWT 서명 비밀키
+- `AMAP_API_KEY`: 중국 여행의 고덕지도 장소 검색 키
+- `GOOGLE_MAPS_API_KEY`: 중국 외 여행의 Google Places 검색 키
 - `ALLOWED_ORIGINS`: CORS 허용 origin
 
 실제 `.env` 파일은 커밋하지 않습니다.

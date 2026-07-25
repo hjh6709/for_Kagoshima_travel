@@ -18,13 +18,18 @@ import (
 // 장소 공급자 호출이 끊기지 않고 끝나도록 두 공급자에 같은 제한 시간을 적용한다.
 var placeSearchHTTPClient = &http.Client{Timeout: 10 * time.Second}
 
+const amapPlaceSearchEndpoint = "https://restapi.amap.com/v5/place/text"
+
 func searchAmapPlaces(query string) ([]dto.PlaceSearchResult, error) {
 	key := os.Getenv("AMAP_API_KEY")
 	if key == "" {
 		return nil, errors.New("amap api key not found")
 	}
 
-	requestURL := fmt.Sprintf("https://restapi.amap.com/v3/place/text?keywords=%s&key=%s&offset=10&page=1", url.QueryEscape(query), key)
+	requestURL, err := buildAmapPlaceSearchURL(query, key)
+	if err != nil {
+		return nil, err
+	}
 	req, err := http.NewRequest(http.MethodGet, requestURL, nil)
 	if err != nil {
 		return nil, err
@@ -79,6 +84,39 @@ func searchAmapPlaces(query string) ([]dto.PlaceSearchResult, error) {
 		})
 	}
 	return results, nil
+}
+
+func buildAmapPlaceSearchURL(query, key string) (string, error) {
+	requestURL, err := url.Parse(amapPlaceSearchEndpoint)
+	if err != nil {
+		return "", err
+	}
+
+	keywords, placeType := normalizeAmapSearchQuery(query)
+	params := requestURL.Query()
+	params.Set("key", key)
+	params.Set("keywords", keywords)
+	params.Set("region", "上海市")
+	params.Set("city_limit", "true")
+	params.Set("page_size", "20")
+	params.Set("page_num", "1")
+	if placeType != "" {
+		params.Set("types", placeType)
+	}
+	requestURL.RawQuery = params.Encode()
+	return requestURL.String(), nil
+}
+
+func normalizeAmapSearchQuery(query string) (keywords, placeType string) {
+	normalized := strings.ToLower(strings.TrimSpace(query))
+	switch normalized {
+	case "카페", "커피", "커피숍", "cafe", "coffee":
+		return "咖啡店", "050000"
+	case "식당", "음식점", "맛집", "레스토랑", "restaurant", "food":
+		return "餐厅", "050000"
+	default:
+		return strings.TrimSpace(query), ""
+	}
 }
 
 func searchGooglePlaces(query string) ([]dto.PlaceSearchResult, error) {

@@ -281,6 +281,8 @@ func writeServiceError(w http.ResponseWriter, err error) {
 		httpjson.WriteError(w, http.StatusForbidden, "권한이 없습니다.")
 	case errors.Is(err, service.ErrInvalidTrip):
 		httpjson.WriteError(w, http.StatusBadRequest, "필수 항목이 누락됐습니다.")
+	case errors.Is(err, service.ErrPlaceSearchUnavailable):
+		httpjson.WriteError(w, http.StatusServiceUnavailable, "지도 검색을 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.")
 	default:
 		httpjson.WriteError(w, http.StatusInternalServerError, "서버 오류가 발생했습니다.")
 	}
