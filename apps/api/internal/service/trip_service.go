@@ -552,11 +552,15 @@ var defaultChecklistPresets = []PresetItem{
 	{Category: "before", Title: "현금 및 100엔 동전지갑 준비", DestinationCountry: "JP"},
 	{Category: "before", Title: "110V 11자 돼지코 콘센트 플러그", DestinationCountry: "JP"},
 
-	// 중국 전용 필수 항목
-	{Category: "before", Title: "알리페이(Alipay)/위챗페이 앱 결제카드 사전 연동", DestinationCountry: "CN"},
-	{Category: "before", Title: "VPN 우회 프로그램(인스타/구글 접속용) 설치", DestinationCountry: "CN"},
+	// 중국 전용 필수 항목 (상하이 실전 8종 패키지)
+	{Category: "before", Title: "알리페이(Alipay)/위챗페이 결제카드 사전 등록 및 신원확인(여권) 완료", DestinationCountry: "CN"},
+	{Category: "before", Title: "비상용 현금(위안화) 및 해외 결제 가능 신용카드 예비 준비", DestinationCountry: "CN"},
+	{Category: "before", Title: "고덕지도(Amap) 및 디디추싱(Didi) 택시 호출 앱 사전 설정", DestinationCountry: "CN"},
+	{Category: "before", Title: "중국 모바일 데이터 로밍 또는 eSIM/유심 작동 상태 점검", DestinationCountry: "CN"},
+	{Category: "before", Title: "VPN 우회 프로그램(인스타/구글 접속용) 사전에 2개 이상 설치", DestinationCountry: "CN"},
 	{Category: "before", Title: "여권 사본 및 중국 무비자/비자 증빙 서류 지참", DestinationCountry: "CN"},
-	{Category: "airport", Title: "중국 기내 입국 신고서 작성용 필기도구 지참", DestinationCountry: "CN"},
+	{Category: "airport", Title: "공항 도착 후 호텔 이동 수단(지하철/자기부상열차/택시) 탑승 위치 파악", DestinationCountry: "CN"},
+	{Category: "daily", Title: "실물 여권 항상 소지 및 호텔 명함(중국어 주소/전화번호) 지참", DestinationCountry: "CN"},
 }
 
 func (s *TripService) CreateTrip(ownerID string, req dto.CreateTripRequest) (dto.TripResponse, error) {
