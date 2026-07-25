@@ -282,11 +282,42 @@ export function QuickTravelHelper({ destinationCountry = "JP" }: QuickTravelHelp
       </article>
 
       {/* 2. 현지 서바이벌 회화 및 클립보드/소통 기능 영역 */}
-      <article className="info-card translation-widget">
-        <div className="title-row">
-          <h2>현지 생존 회화 ({isJapan ? "일본어" : "중국어"})</h2>
+      <article className="info-card translation-widget" style={{ display: "grid", gap: "14px" }}>
+        <div className="title-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 0 }}>
+          <h2 style={{ fontSize: "16px", fontWeight: 800, margin: 0, color: "#ffffff" }}>
+            현지 생존 회화 ({isJapan ? "일본어" : "중국어"})
+          </h2>
           <Languages size={20} className="muted" />
         </div>
+
+        {/* 실시간 외부 번역기 즉시 연동 단추 패널 */}
+        <div style={{ display: "flex", gap: "8px", background: "rgba(255, 255, 255, 0.02)", border: "1px solid var(--border-color)", borderRadius: "10px", padding: "12px", alignItems: "center" }}>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "2px" }}>
+            <span style={{ fontSize: "11px", color: "var(--c-muted)", fontWeight: 700 }}>번역기 바로가기</span>
+            <p style={{ fontSize: "11px", color: "var(--c-muted)", margin: 0 }}>탭 한 번으로 번역 페이지로 신속히 이동합니다.</p>
+          </div>
+          <div style={{ display: "flex", gap: "6px" }}>
+            <a
+              href={isJapan ? "https://papago.naver.com/?sk=ko&tk=ja" : "https://papago.naver.com/?sk=ko&tk=zh-CN"}
+              target="_blank"
+              rel="noreferrer"
+              className="primary-button compact-button"
+              style={{ padding: "8px 12px", fontSize: "12px", background: "#00c73c", borderColor: "#00c73c", color: "#ffffff", fontWeight: 700, borderRadius: "6px", display: "inline-flex", alignItems: "center", gap: "4px", textDecoration: "none" }}
+            >
+              Papago
+            </a>
+            <a
+              href={isJapan ? "https://translate.google.com/?sl=ko&tl=ja" : "https://translate.google.com/?sl=ko&tl=zh-CN"}
+              target="_blank"
+              rel="noreferrer"
+              className="secondary-button compact-button"
+              style={{ padding: "8px 12px", fontSize: "12px", background: "#4285f4", borderColor: "#4285f4", color: "#ffffff", fontWeight: 700, borderRadius: "6px", display: "inline-flex", alignItems: "center", gap: "4px", textDecoration: "none" }}
+            >
+              Google
+            </a>
+          </div>
+        </div>
+
         <div className="phrase-grid">
           {phrases.map((phrase, idx) => (
             <div className="phrase-row" key={idx}>
