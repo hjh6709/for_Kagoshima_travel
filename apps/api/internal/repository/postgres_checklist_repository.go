@@ -65,7 +65,7 @@ func (r *PostgresChecklistRepository) SaveAll(ctx context.Context, items []model
 // FindChecklist는 단일 준비물 ID로 checklists 레코드를 조회하여 model.ChecklistItem으로 반환합니다.
 func (r *PostgresChecklistRepository) FindChecklist(ctx context.Context, id string) (model.ChecklistItem, error) {
 	row := r.pool.QueryRow(ctx,
-		`SELECT id, trip_id, category, title, is_completed, custom, COALESCE(destination_country, ''), created_at 
+		`SELECT id::text, trip_id::text, category, title, is_completed, custom, COALESCE(destination_country, ''), created_at 
 		 FROM checklists WHERE id = $1`, id)
 
 	var item model.ChecklistItem
@@ -82,7 +82,7 @@ func (r *PostgresChecklistRepository) FindChecklist(ctx context.Context, id stri
 // FindByTrip은 한 여행(trip_id)에 연결된 전체 준비물 항목 목록을 가져옵니다. 생성 시간 순서로 정렬하여 반환합니다.
 func (r *PostgresChecklistRepository) FindByTrip(ctx context.Context, tripID string) ([]model.ChecklistItem, error) {
 	rows, err := r.pool.Query(ctx,
-		`SELECT id, trip_id, category, title, is_completed, custom, COALESCE(destination_country, ''), created_at 
+		`SELECT id::text, trip_id::text, category, title, is_completed, custom, COALESCE(destination_country, ''), created_at 
 		 FROM checklists WHERE trip_id = $1 ORDER BY created_at ASC`, tripID)
 	if err != nil {
 		return nil, err
