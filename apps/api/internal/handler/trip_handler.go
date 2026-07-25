@@ -258,6 +258,23 @@ func (h *TripHandler) ListRoutes(w http.ResponseWriter, r *http.Request) {
 	httpjson.Write(w, http.StatusOK, routes)
 }
 
+func (h *TripHandler) SearchPlaces(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.GetClaims(r)
+	tripID := r.PathValue("tripID")
+	query := r.URL.Query().Get("q")
+	if query == "" {
+		httpjson.Write(w, http.StatusOK, []interface{}{})
+		return
+	}
+
+	results, err := h.tripService.SearchPlaces(tripID, claims.UserID, query)
+	if err != nil {
+		writeServiceError(w, err)
+		return
+	}
+	httpjson.Write(w, http.StatusOK, results)
+}
+
 func writeServiceError(w http.ResponseWriter, err error) {
 	switch {
 	case errors.Is(err, service.ErrTripNotFound):

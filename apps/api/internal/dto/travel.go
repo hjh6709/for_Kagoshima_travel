@@ -184,3 +184,15 @@ type SharedTripResponse struct {
 	Routes    []RouteResponse         `json:"routes"`
 	Checklist []ChecklistItemResponse `json:"checklist"`
 }
+
+type PlaceSearchResult struct {
+	Name           string   `json:"name"`
+	Address        string   `json:"address,omitempty"`
+	Latitude       *float64 `json:"latitude,omitempty"`
+	Longitude      *float64 `json:"longitude,omitempty"`
+	GooglePlaceID  string   `json:"googlePlaceId,omitempty"`
+	ChineseName    string   `json:"chineseName,omitempty"`
+	ChineseAddress string   `json:"chineseAddress,omitempty"`
+	SubwayExit     string   `json:"subwayExit,omitempty"`
+	TaxiPhrase     string   `json:"taxiPhrase,omitempty"`
+}
