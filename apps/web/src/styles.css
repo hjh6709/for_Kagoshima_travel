@@ -25,11 +25,19 @@
   box-sizing: border-box;
 }
 
+html,
 body {
   margin: 0;
-  min-width: 320px;
+  padding: 0;
+  width: 100%;
+  height: 100dvh;
   min-height: 100dvh;
+  overflow: hidden;
   overscroll-behavior: none; /* 브라우저 최상위 스크롤 뜯김 방지 */
+}
+
+body {
+  min-width: 320px;
 }
 
 button,
@@ -47,7 +55,9 @@ button:disabled {
 }
 
 .app-shell {
+  height: 100dvh;
   min-height: 100dvh;
+  overflow: hidden;
   background: var(--c-page);
   display: grid;
   place-items: center;
@@ -58,6 +68,9 @@ button:disabled {
 @media (max-width: 480px) {
   .app-shell {
     padding: 0;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    overflow: hidden !important;
   }
   .phone-frame {
     width: 100% !important;
