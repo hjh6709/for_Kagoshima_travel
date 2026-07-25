@@ -1,3 +1,4 @@
+import { User } from "lucide-react";
 import { formatShortDate } from "../../../shared/date";
 import { ChecklistSection } from "./ChecklistSection";
 import { ScheduleCard } from "./ScheduleCard";
@@ -31,10 +32,33 @@ export function ScheduleTab({
   setSelectedDate,
   toggleCheck,
   toggleScheduleComplete,
+  onNavigateToMyPage,
 }: TripPageProps) {
   return (
     <section className="screen">
-      <h1>일정</h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+        <h1 style={{ margin: 0 }}>일정</h1>
+        <button
+          onClick={() => onNavigateToMyPage?.()}
+          style={{
+            background: "rgba(255,255,255,0.06)",
+            border: "1px solid var(--border-color)",
+            borderRadius: "50%",
+            width: "36px",
+            height: "36px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#ffffff",
+            cursor: "pointer",
+            transition: "all 0.2s"
+          }}
+          title="마이페이지 열기"
+          type="button"
+        >
+          <User size={18} />
+        </button>
+      </div>
       <div className="date-tabs">
         {dates.map((date) => (
           <button
