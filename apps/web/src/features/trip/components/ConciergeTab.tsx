@@ -56,7 +56,7 @@ export function ConciergeTab({
           }}
           type="button"
         >
-          🛠️ 환율 & 생존 회화
+          🛠️ 간편 환율 & 생존 회화
         </button>
       </div>
 

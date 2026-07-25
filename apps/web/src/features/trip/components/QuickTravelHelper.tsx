@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowUpDown, Copy, Maximize2, Languages, X } from "lucide-react";
+import { ArrowUpDown, Copy, Maximize2, Languages, X, RefreshCw, Landmark } from "lucide-react";
 
 /**
  * QuickTravelHelperProps: 컴포넌트 입력 프로퍼티
@@ -40,7 +40,7 @@ const CHINESE_PHRASES: Phrase[] = [
   { korean: "이거 주세요", foreign: "要这个", pronunciation: "야오 쩌거" },
   { korean: "화장실은 어디입니까?", foreign: "洗手间在哪里？", pronunciation: "시쇼우지엔 짜이 나리?" },
   { korean: "카드 결제 가능한가요?", foreign: "可以刷卡吗？", pronunciation: "커이 슈아카 마?" },
-  { korean: "고수 빼주세요", foreign: "不要香菜", pronunciation: "부야오 시앙차이" }, // 중국 식문화를 고려한 맞춤형 문구
+  { korean: "고수 빼주세요", foreign: "不要香菜", pronunciation: "부야오 시앙차이" },
   { korean: "도와주세요 (긴급)", foreign: "请帮帮我", pronunciation: "칭 방방 워" },
 ];
 
@@ -57,6 +57,10 @@ export function QuickTravelHelper({ destinationCountry = "JP" }: QuickTravelHelp
   const [foreignVal, setForeignVal] = useState<string>("");
   const [krwVal, setKrwVal] = useState<string>("");
 
+  // 실시간 API 고시 환율 상태
+  const [apiRate, setApiRate] = useState<number | null>(null);
+  const [apiLoading, setApiLoading] = useState<boolean>(false);
+
   // 크게 보여주기 줌인(Magnify) 모달 상태
   const [zoomedPhrase, setZoomedPhrase] = useState<Phrase | null>(null);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
@@ -69,7 +73,35 @@ export function QuickTravelHelper({ destinationCountry = "JP" }: QuickTravelHelp
     setExchangeRate(defaultRate);
     setForeignVal("");
     setKrwVal("");
+    setApiRate(null);
+    fetchRealtimeRate();
   }, [destinationCountry, defaultRate]);
+
+  // 실시간 환율 API 패치 (ER-API)
+  const fetchRealtimeRate = async () => {
+    setApiLoading(true);
+    try {
+      const res = await fetch("https://open.er-api.com/v6/latest/KRW");
+      if (!res.ok) throw new Error("API status error");
+      const data = await res.json();
+      
+      if (data && data.rates) {
+        if (isJapan) {
+          // 100엔 기준 역산 환율 (1 / rates.JPY * 100)
+          const rateJpy = 1 / data.rates.JPY;
+          setApiRate(Math.round(rateJpy * 100 * 100) / 100);
+        } else {
+          // 1위안 기준 역산 환율 (1 / rates.CNY)
+          const rateCny = 1 / data.rates.CNY;
+          setApiRate(Math.round(rateCny * 100) / 100);
+        }
+      }
+    } catch (err) {
+      console.warn("실시간 환율 API 호출 실패. 디폴트 환율로 가동합니다:", err);
+    } finally {
+      setApiLoading(false);
+    }
+  };
 
   // [환율 변환 수식 로직]: 외화 ➡️ 원화 변환
   const handleForeignChange = (val: string) => {
@@ -106,6 +138,19 @@ export function QuickTravelHelper({ destinationCountry = "JP" }: QuickTravelHelp
     }
   };
 
+  // 간편 가산 터치 패드 작동 헬퍼
+  const handleQuickAdd = (amount: number) => {
+    const current = Number(foreignVal) || 0;
+    const nextVal = (current + amount).toString();
+    handleForeignChange(nextVal);
+  };
+
+  // 계산기 초기화
+  const handleReset = () => {
+    setForeignVal("");
+    setKrwVal("");
+  };
+
   // 현지 생존 회화 문구를 클립보드에 복사해 주는 클립보드 API 연동 함수
   const handleCopyPhrase = (phrase: Phrase, index: number) => {
     navigator.clipboard.writeText(phrase.foreign);
@@ -115,47 +160,125 @@ export function QuickTravelHelper({ destinationCountry = "JP" }: QuickTravelHelp
 
   return (
     <div className="quick-helper-container">
-      {/* 1. 실시간 오프라인 대응 환율 변환 위젯 */}
-      <article className="info-card exchange-widget">
-        <h2>실시간 환율 변환기 ({isJapan ? "100엔 기준" : "1위안 기준"})</h2>
-        <div className="rate-editor">
-          <label>적용 환율: </label>
+      {/* 1. 간편 환율 계산기 위젯 개편 */}
+      <article className="info-card exchange-widget" style={{ padding: "20px", display: "grid", gap: "16px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <h2 style={{ fontSize: "16px", fontWeight: 800, margin: 0, color: "#ffffff" }}>
+            간편 환율 계산기 ({isJapan ? "100엔 기준" : "1위안 기준"})
+          </h2>
+          <span style={{ fontSize: "11px", color: "#10b981", fontWeight: 700, background: "rgba(16, 185, 129, 0.12)", padding: "2px 8px", borderRadius: "10px" }}>
+            {isJapan ? "100円 = 900원" : "1元 = 190원"} 기준
+          </span>
+        </div>
+
+        <div className="rate-editor" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px" }}>
+          <label style={{ color: "var(--c-muted)" }}>적용 환율 설정:</label>
           <input
             type="number"
             value={exchangeRate}
-            onChange={(e) => setExchangeRate(Number(e.target.value))}
+            onChange={(e) => {
+              const val = Number(e.target.value);
+              setExchangeRate(val);
+              // 환율 수치가 바뀔 때 기존 외화 대비 한화 금액 동시 갱신
+              if (foreignVal) {
+                if (isJapan) {
+                  setKrwVal(Math.round((Number(foreignVal) * val) / 100).toLocaleString());
+                } else {
+                  setKrwVal(Math.round(Number(foreignVal) * val).toLocaleString());
+                }
+              }
+            }}
             className="rate-input"
+            style={{ width: "80px", padding: "4px 8px", borderRadius: "6px", border: "1px solid var(--border-color)", background: "rgba(255, 255, 255, 0.02)", color: "#ffffff", textAlign: "center" }}
           />
           <span>원</span>
+          <button 
+            type="button" 
+            onClick={fetchRealtimeRate} 
+            disabled={apiLoading}
+            style={{ border: 0, background: "transparent", color: "var(--c-muted)", display: "flex", alignItems: "center", cursor: "pointer", marginLeft: "auto" }}
+            title="실시간 환율 가져오기"
+          >
+            <RefreshCw size={14} className={apiLoading ? "animate-spin" : ""} />
+          </button>
         </div>
 
-        <div className="exchange-inputs">
-          <div className="input-group">
-            <span className="unit-label">{isJapan ? "￥" : "元"} ({currencyUnit})</span>
+        {/* 외화 및 원화 입력폼 */}
+        <div className="exchange-inputs" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          <div className="input-group" style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+            <span className="unit-label" style={{ fontSize: "11px", color: "var(--c-muted)", fontWeight: 700 }}>
+              {isJapan ? "￥" : "元"} ({currencyUnit})
+            </span>
             <input
               type="number"
               placeholder="0"
               value={foreignVal}
               onChange={(e) => handleForeignChange(e.target.value)}
               className="calc-input"
+              style={{ width: "100%", padding: "12px", fontSize: "18px", fontWeight: 700, borderRadius: "8px", border: "1px solid var(--border-color)", background: "rgba(255,255,255,0.02)", color: "#ffffff" }}
             />
           </div>
 
-          <div className="swap-icon">
-            <ArrowUpDown size={18} />
+          <div className="swap-icon" style={{ display: "flex", justifyContent: "center", color: "var(--c-muted)" }}>
+            <ArrowUpDown size={16} />
           </div>
 
-          <div className="input-group">
-            <span className="unit-label">₩ (원화)</span>
+          <div className="input-group" style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+            <span className="unit-label" style={{ fontSize: "11px", color: "var(--c-muted)", fontWeight: 700 }}>
+              ₩ (원화 KRW)
+            </span>
             <input
               type="text"
               placeholder="0"
               value={krwVal}
               onChange={(e) => handleKrwChange(e.target.value)}
               className="calc-input"
+              style={{ width: "100%", padding: "12px", fontSize: "18px", fontWeight: 700, borderRadius: "8px", border: "1px solid var(--border-color)", background: "rgba(255,255,255,0.02)", color: "#ffffff" }}
             />
           </div>
         </div>
+
+        {/* 간편 터치 덧셈 버튼 패드 수식 */}
+        <div style={{ display: "grid", gap: "8px", marginTop: "4px" }}>
+          <span style={{ fontSize: "11px", color: "var(--c-muted)", fontWeight: 700 }}>간편 금액 합산 패드</span>
+          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+            {isJapan ? (
+              <>
+                <button type="button" onClick={() => handleQuickAdd(1000)} className="secondary-button compact-button" style={{ flex: 1, fontSize: "11px", padding: "8px 0" }}>+1,000円</button>
+                <button type="button" onClick={() => handleQuickAdd(5000)} className="secondary-button compact-button" style={{ flex: 1, fontSize: "11px", padding: "8px 0" }}>+5,000円</button>
+                <button type="button" onClick={() => handleQuickAdd(10000)} className="secondary-button compact-button" style={{ flex: 1, fontSize: "11px", padding: "8px 0" }}>+10,000円</button>
+              </>
+            ) : (
+              <>
+                <button type="button" onClick={() => handleQuickAdd(10)} className="secondary-button compact-button" style={{ flex: 1, fontSize: "11px", padding: "8px 0" }}>+10元</button>
+                <button type="button" onClick={() => handleQuickAdd(50)} className="secondary-button compact-button" style={{ flex: 1, fontSize: "11px", padding: "8px 0" }}>+50元</button>
+                <button type="button" onClick={() => handleQuickAdd(100)} className="secondary-button compact-button" style={{ flex: 1, fontSize: "11px", padding: "8px 0" }}>+100元</button>
+                <button type="button" onClick={() => handleQuickAdd(500)} className="secondary-button compact-button" style={{ flex: 1, fontSize: "11px", padding: "8px 0" }}>+500元</button>
+              </>
+            )}
+            <button 
+              type="button" 
+              onClick={handleReset} 
+              className="danger-button compact-button" 
+              style={{ flex: 1, fontSize: "11px", padding: "8px 0", background: "rgba(166,75,69,0.15)", color: "#f43f5e", borderColor: "rgba(166,75,69,0.3)" }}
+            >
+              Reset
+            </button>
+          </div>
+        </div>
+
+        {/* 실시간 고시 환율 대조 피드 노출 */}
+        {apiRate !== null && (
+          <div style={{ display: "flex", gap: "4px", alignItems: "center", background: "rgba(255, 255, 255, 0.02)", border: "1px solid var(--border-color)", borderRadius: "8px", padding: "10px 12px", marginTop: "4px" }}>
+            <Landmark size={13} style={{ color: "var(--c-muted)" }} />
+            <span style={{ fontSize: "11px", color: "var(--c-muted)" }}>
+              실시간 고시 환율 피드 대조:
+            </span>
+            <span style={{ fontSize: "11px", color: "#10b981", fontWeight: 700 }}>
+              {isJapan ? `100엔 = ${apiRate}원` : `1위안 = ${apiRate}원`}
+            </span>
+          </div>
+        )}
       </article>
 
       {/* 2. 현지 서바이벌 회화 및 클립보드/소통 기능 영역 */}
@@ -196,7 +319,7 @@ export function QuickTravelHelper({ destinationCountry = "JP" }: QuickTravelHelp
         </div>
       </article>
 
-      {/* 3. 현지인과 원활한 바디랭귀지/소통을 돕는 풀스크린 줌 모달 */}
+      {/* 3. 풀스크린 줌 모달 */}
       {zoomedPhrase && (
         <div className="modal-overlay" onClick={() => setZoomedPhrase(null)}>
           <div className="zoom-modal-card" onClick={(e) => e.stopPropagation()}>
