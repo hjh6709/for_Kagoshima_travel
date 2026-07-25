@@ -1,15 +1,8 @@
 package service
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
-	"fmt"
-	"net/http"
-	"net/url"
-	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -792,12 +785,16 @@ func (s *TripService) SearchPlaces(tripID, ownerID, query string) ([]dto.PlaceSe
 	if err := s.ensureTripOwner(tripID, ownerID); err != nil {
 		return nil, err
 	}
+	query = strings.TrimSpace(query)
+	if query == "" {
+		return []dto.PlaceSearchResult{}, nil
+	}
 	trip, err := s.tripRepository.FindTrip(tripID)
 	if err != nil {
 		return nil, mapRepositoryError(err)
 	}
 
-	results, err := s.SearchPlacesByCountry(trip.DestinationCountry, query)
+	results, err := s.searchPlacesByCountry(trip.DestinationCountry, query)
 	if err != nil {
 		// API 호출 실패 시 로컬 Mock 데이터베이스로 매끄럽게 Fallback 처리
 		return s.getMockPlaces(trip.DestinationCountry, query), nil
@@ -805,7 +802,7 @@ func (s *TripService) SearchPlaces(tripID, ownerID, query string) ([]dto.PlaceSe
 	return results, nil
 }
 
-func (s *TripService) SearchPlacesByCountry(country, query string) ([]dto.PlaceSearchResult, error) {
+func (s *TripService) searchPlacesByCountry(country, query string) ([]dto.PlaceSearchResult, error) {
 	if country == "CN" {
 		return s.searchPlacesAmap(query)
 	}
@@ -813,128 +810,11 @@ func (s *TripService) SearchPlacesByCountry(country, query string) ([]dto.PlaceS
 }
 
 func (s *TripService) searchPlacesAmap(query string) ([]dto.PlaceSearchResult, error) {
-	key := os.Getenv("AMAP_API_KEY")
-	if key == "" {
-		return nil, errors.New("amap api key not found")
-	}
-
-	url := fmt.Sprintf("https://restapi.amap.com/v3/place/text?keywords=%s&key=%s&offset=10&page=1", url.QueryEscape(query), key)
-	resp, err := http.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("amap api status code: %d", resp.StatusCode)
-	}
-
-	var data struct {
-		Status string `json:"status"`
-		Pois   []struct {
-			ID       string `json:"id"`
-			Name     string `json:"name"`
-			Address  string `json:"address"`
-			Location string `json:"location"` // "lon,lat"
-		} `json:"pois"`
-	}
-
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
-	}
-
-	if data.Status != "1" {
-		return nil, fmt.Errorf("amap api error status: %s", data.Status)
-	}
-
-	results := make([]dto.PlaceSearchResult, 0)
-	for _, poi := range data.Pois {
-		var lat, lon *float64
-		coords := strings.Split(poi.Location, ",")
-		if len(coords) == 2 {
-			if l, err := strconv.ParseFloat(coords[0], 64); err == nil {
-				lon = &l
-			}
-			if l, err := strconv.ParseFloat(coords[1], 64); err == nil {
-				lat = &l
-			}
-		}
-
-		results = append(results, dto.PlaceSearchResult{
-			Name:           poi.Name,
-			Address:        poi.Address,
-			Latitude:       lat,
-			Longitude:      lon,
-			ChineseName:    poi.Name,
-			ChineseAddress: poi.Address,
-		})
-	}
-
-	return results, nil
+	return searchAmapPlaces(query)
 }
 
 func (s *TripService) searchPlacesGoogle(query string) ([]dto.PlaceSearchResult, error) {
-	key := os.Getenv("GOOGLE_MAPS_API_KEY")
-	if key == "" {
-		return nil, errors.New("google maps api key not found")
-	}
-
-	reqBody, _ := json.Marshal(map[string]string{
-		"textQuery": query,
-	})
-
-	req, err := http.NewRequest("POST", "https://places.googleapis.com/v1/places:searchText", bytes.NewBuffer(reqBody))
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-Goog-Api-Key", key)
-	req.Header.Set("X-Goog-FieldMask", "places.id,places.displayName,places.formattedAddress,places.location")
-
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("google places api status: %d", resp.StatusCode)
-	}
-
-	var data struct {
-		Places []struct {
-			ID          string `json:"id"`
-			DisplayName struct {
-				Text string `json:"text"`
-			} `json:"displayName"`
-			FormattedAddress string `json:"formattedAddress"`
-			Location         struct {
-				Latitude  float64 `json:"latitude"`
-				Longitude float64 `json:"longitude"`
-			} `json:"location"`
-		} `json:"places"`
-	}
-
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
-	}
-
-	results := make([]dto.PlaceSearchResult, 0)
-	for _, place := range data.Places {
-		lat := place.Location.Latitude
-		lon := place.Location.Longitude
-		results = append(results, dto.PlaceSearchResult{
-			Name:          place.DisplayName.Text,
-			Address:       place.FormattedAddress,
-			Latitude:      &lat,
-			Longitude:     &lon,
-			GooglePlaceID: place.ID,
-		})
-	}
-
-	return results, nil
+	return searchGooglePlaces(query)
 }
 
 // getMockPlaces는 API 키가 유실되었거나 개발/로컬 환경일 때,
@@ -1034,6 +914,16 @@ func (s *TripService) getMockPlaces(country, query string) []dto.PlaceSearchResu
 			ChineseAddress: "黄浦区人民大道201号",
 			SubwayExit:     "1/2/8호선 人民广场(인민광장)역 1번 출구 도보 3분",
 			TaxiPhrase:     "请去人民广场上海博物馆, 谢谢。 (인민광장 상하이 박물관으로 가주세요.)",
+		},
+		{
+			Name:           "상하이 타워 (上海中心大厦)",
+			Address:        "上海市浦东新区银城中路501号",
+			Latitude:       floatPtr(31.2335),
+			Longitude:      floatPtr(121.5055),
+			ChineseName:    "上海中心大厦",
+			ChineseAddress: "浦东新区银城中路501号",
+			SubwayExit:     "2호선 陆家嘴(루자쭈이)역 6번 출구 도보 8분",
+			TaxiPhrase:     "请去上海中心大厦，谢谢。 (상하이 타워로 가주세요.)",
 		},
 	}
 

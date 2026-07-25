@@ -1,6 +1,6 @@
 import type { FormEvent } from "react";
 import type { AuthResponse } from "../../api/auth";
-import type { OwnerTrip, SharedFlight, SharedPlace, SharedSchedule } from "../../api/trips";
+import type { OwnerTrip, PlaceSearchSelection, SharedFlight, SharedPlace, SharedSchedule } from "../../api/trips";
 import type { FlightDirection } from "../../shared/travelOptions";
 import type { PlaceCategory, ScheduleItem } from "../../types/travel";
 import type { ChecklistItemResponse } from "../../api/checklist";
@@ -56,6 +56,7 @@ export type TripListSectionProps = {
 // 선택 여행 상세 화면은 일정/장소/항공/공유/기본정보 섹션을 다시 감싸는 상위 섹션이다.
 // 하위 컴포넌트 props를 이 타입으로 모아 두면 controller의 반환 구조와 화면 연결 지점을 한곳에서 추적할 수 있다.
 export type SelectedTripDetailSectionProps = {
+  auth: AuthResponse | null;
   deletingPlaceID: string;
   deletingFlightID: string;
   deletingScheduleID: string;
@@ -117,6 +118,7 @@ export type SelectedTripDetailSectionProps = {
   newPlaceChineseAddress: string;
   newPlaceSubwayExit: string;
   newPlaceTaxiPhrase: string;
+  newPlaceSearchSelection: PlaceSearchSelection | null;
   newScheduleDate: string;
   newScheduleGuideMemo: string;
   newSchedulePlaceID: string;
@@ -180,6 +182,7 @@ export type SelectedTripDetailSectionProps = {
   onNewPlaceChineseAddressChange: (value: string) => void;
   onNewPlaceSubwayExitChange: (value: string) => void;
   onNewPlaceTaxiPhraseChange: (value: string) => void;
+  onNewPlaceSearchSelectionChange: (value: PlaceSearchSelection | null) => void;
   onNewScheduleDateChange: (value: string) => void;
   onNewScheduleGuideMemoChange: (value: string) => void;
   onNewSchedulePlaceIDChange: (value: string) => void;

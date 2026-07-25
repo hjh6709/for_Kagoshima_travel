@@ -10,6 +10,8 @@
   --c-green-light: #ebf0eb;
   --c-gold-light: #f5ede0;
   --c-danger-light: #f8edec;
+  --border-color: rgba(28, 50, 37, 0.16);
+  --bg-secondary: var(--c-green-light);
 
   color: var(--c-text);
   background: var(--c-page);
@@ -2113,12 +2115,12 @@ p {
 
 /* 상단 프로필 헤더 내 마이페이지 버튼 */
 .header-profile-btn {
-  width: 28px;
-  height: 28px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
+  border: 1px solid var(--border-color);
+  background: var(--c-green-light);
+  color: var(--c-green);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2129,9 +2131,9 @@ p {
 }
 
 .header-profile-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: #10b981;
-  color: #10b981;
+  background: var(--c-surface);
+  border-color: var(--c-green);
+  color: var(--c-green);
 }
 
 /* 민감정보 마스킹 컴포넌트 */

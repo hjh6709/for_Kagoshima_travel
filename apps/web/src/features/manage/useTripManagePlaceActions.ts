@@ -1,6 +1,13 @@
 import type { Dispatch, FormEvent, SetStateAction } from "react";
 import type { AuthResponse } from "../../api/auth";
-import { createTripPlace, deleteTripPlace, updateTripPlace, type OwnerTrip, type SharedPlace } from "../../api/trips";
+import {
+  createTripPlace,
+  deleteTripPlace,
+  updateTripPlace,
+  type OwnerTrip,
+  type PlaceSearchSelection,
+  type SharedPlace,
+} from "../../api/trips";
 import { sortSharedPlaces } from "../../shared/sort";
 import type { PlaceCategory } from "../../types/travel";
 import { handleManageApiError, optionalTrimmedText } from "./manageFormUtils";
@@ -16,6 +23,7 @@ type PlaceFormState = {
   newPlaceChineseAddress: string;
   newPlaceSubwayExit: string;
   newPlaceTaxiPhrase: string;
+  newPlaceSearchSelection: PlaceSearchSelection | null;
   cancelPlaceEdit: () => void;
   editingPlaceAddress: string;
   editingPlaceCategory: PlaceCategory;
@@ -38,6 +46,7 @@ type PlaceFormState = {
   setNewPlaceChineseAddress: Dispatch<SetStateAction<string>>;
   setNewPlaceSubwayExit: Dispatch<SetStateAction<string>>;
   setNewPlaceTaxiPhrase: Dispatch<SetStateAction<string>>;
+  setNewPlaceSearchSelection: Dispatch<SetStateAction<PlaceSearchSelection | null>>;
   setNewSchedulePlaceID: Dispatch<SetStateAction<string>>;
   setPlaceCreateError: Dispatch<SetStateAction<string>>;
   setPlaceCreateSubmitting: Dispatch<SetStateAction<boolean>>;
@@ -99,6 +108,9 @@ export function useTripManagePlaceActions({
         chineseAddress,
         subwayExit,
         taxiPhrase,
+        latitude: placeForm.newPlaceSearchSelection?.latitude,
+        longitude: placeForm.newPlaceSearchSelection?.longitude,
+        googlePlaceId: optionalTrimmedText(placeForm.newPlaceSearchSelection?.googlePlaceId ?? ""),
       });
       setOwnerPlaces((currentPlaces) => sortSharedPlaces([...currentPlaces, createdPlace]));
       placeForm.setNewSchedulePlaceID(createdPlace.id);
@@ -110,6 +122,7 @@ export function useTripManagePlaceActions({
       placeForm.setNewPlaceChineseAddress("");
       placeForm.setNewPlaceSubwayExit("");
       placeForm.setNewPlaceTaxiPhrase("");
+      placeForm.setNewPlaceSearchSelection(null);
       placeForm.setPlaceCreateError("");
     } catch (error) {
       handleManageApiError(error, {
