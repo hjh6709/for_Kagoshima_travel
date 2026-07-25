@@ -2,6 +2,7 @@ import { PlusCircle } from "lucide-react";
 import { scheduleTypeOptions } from "../../../shared/travelOptions";
 import type { ScheduleItem } from "../../../types/travel";
 import type { TripManagePageProps } from "../manageTypes";
+import { ShanghaiStarterPlanner } from "./ShanghaiStarterPlanner";
 
 type ManageScheduleCreateFormProps = Pick<
   TripManagePageProps,
@@ -21,11 +22,13 @@ type ManageScheduleCreateFormProps = Pick<
   | "onNewScheduleTypeChange"
   | "onSubmitNewSchedule"
   | "ownerPlaces"
+  | "ownerSchedules"
   | "scheduleCreateError"
   | "scheduleCreateSubmitting"
 > & {
   tripEndDate: string;
   tripStartDate: string;
+  destinationCountry?: string;
 };
 
 // 여행 관리 화면의 일정 추가 폼만 담당한다. 장소 선택 목록과 저장 상태는 상위에서 전달받는다.
@@ -46,11 +49,32 @@ export function ManageScheduleCreateForm({
   onNewScheduleTypeChange,
   onSubmitNewSchedule,
   ownerPlaces,
+  ownerSchedules,
   scheduleCreateError,
   scheduleCreateSubmitting,
   tripEndDate,
   tripStartDate,
+  destinationCountry,
 }: ManageScheduleCreateFormProps) {
+  const applyShanghaiPlanItem = (item: {
+    date: string;
+    time: string;
+    type: ScheduleItem["type"];
+    title: string;
+    placeID: string;
+    transportMemo: string;
+    guideMemo: string;
+  }) => {
+    onNewScheduleDateChange(item.date);
+    onNewScheduleTimeChange(item.time);
+    onNewScheduleTypeChange(item.type);
+    onNewScheduleTitleChange(item.title);
+    onNewSchedulePlaceIDChange(item.placeID);
+    onNewScheduleTransportMemoChange(item.transportMemo);
+    onNewScheduleGuideMemoChange(item.guideMemo);
+    requestAnimationFrame(() => document.getElementById("schedule-create-form")?.scrollIntoView({ behavior: "smooth" }));
+  };
+
   return (
     <section className="owner-linked-data-section">
       <div className="section-title-row compact-title-row">
@@ -60,7 +84,17 @@ export function ManageScheduleCreateForm({
         </div>
       </div>
 
-      <form className="auth-form compact-owner-form" onSubmit={onSubmitNewSchedule}>
+      {destinationCountry === "CN" && (
+        <ShanghaiStarterPlanner
+          onApply={applyShanghaiPlanItem}
+          ownerPlaces={ownerPlaces}
+          ownerSchedules={ownerSchedules}
+          tripEndDate={tripEndDate}
+          tripStartDate={tripStartDate}
+        />
+      )}
+
+      <form className="auth-form compact-owner-form" id="schedule-create-form" onSubmit={onSubmitNewSchedule}>
         <div className="form-grid-two">
           <label>
             날짜

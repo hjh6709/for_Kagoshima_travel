@@ -72,6 +72,7 @@ export function SelectedTripDetailSection(props: SelectedTripDetailSectionProps)
 
         <ManageScheduleCreateForm
           {...props}
+          destinationCountry={selectedOwnerTrip.destinationCountry}
           tripEndDate={selectedOwnerTrip.endDate}
           tripStartDate={selectedOwnerTrip.startDate}
         />

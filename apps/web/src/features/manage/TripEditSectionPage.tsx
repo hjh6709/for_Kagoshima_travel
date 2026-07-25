@@ -130,6 +130,7 @@ export function TripEditSectionPage({ tripId, section }: TripEditSectionPageProp
               <>
                 <ManageScheduleCreateForm
                   {...manage}
+                  destinationCountry={selectedOwnerTrip.destinationCountry}
                   tripEndDate={selectedOwnerTrip.endDate}
                   tripStartDate={selectedOwnerTrip.startDate}
                 />
