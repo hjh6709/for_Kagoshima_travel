@@ -1,4 +1,4 @@
-import { CalendarDays, Home, Map as MapIcon, Plane, Shield, User } from "lucide-react";
+import { CalendarDays, Home, Map as MapIcon, Plane, Shield } from "lucide-react";
 import type { Tab } from "../../tripViewState";
 
 type BottomTabsProps = {
@@ -12,12 +12,11 @@ const tabs: Array<{ id: Tab; label: string; icon: typeof Home }> = [
   { id: "flight", label: "항공", icon: Plane },
   { id: "map", label: "지도", icon: MapIcon },
   { id: "concierge", label: "긴급", icon: Shield },
-  { id: "mypage", label: "마이", icon: User },
 ];
 
 /**
  * BottomTabs 컴포넌트
- * 하단 네비게이션 탭 바입니다. (오늘, 일정, 항공, 지도, 긴급, 마이페이지)
+ * 여행 중 핵심 기능을 위한 5개 하단 탭 바 (오늘, 일정, 항공, 지도, 긴급)
  */
 export function BottomTabs({ activeTab, setActiveTab }: BottomTabsProps) {
   return (
@@ -38,7 +37,7 @@ export function BottomTabs({ activeTab, setActiveTab }: BottomTabsProps) {
               onClick={() => setActiveTab(tab.id)}
               type="button"
             >
-              <Icon size={20} aria-hidden="true" />
+              <Icon size={21} aria-hidden="true" />
               <span>{tab.label}</span>
             </button>
           );
