@@ -1,6 +1,6 @@
-import { MapDirectionsChoice } from "../../../shared/components/MapDirectionsChoice";
-import { formatKoreanDate } from "../../../shared/date";
-import type { Place, ScheduleItem } from "../../../types/travel";
+import { MapDirectionsChoice } from "../../../../shared/components/MapDirectionsChoice";
+import { formatKoreanDate } from "../../../../shared/date";
+import type { Place, ScheduleItem } from "../../../../types/travel";
 import { Sparkles, Clock } from "lucide-react";
 
 type NextScheduleCardProps = {

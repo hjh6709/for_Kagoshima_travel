@@ -1,7 +1,7 @@
 import { CheckCircle2, Plane } from "lucide-react";
-import type { TripPageProps } from "../tripPageTypes";
-import { MaskedText } from "../../../shared/components/MaskedText";
-import { ProfileShortcutButton } from "./ProfileShortcutButton";
+import { MaskedText } from "../../../../shared/components/MaskedText";
+import type { TripPageProps } from "../../tripPageTypes";
+import { ProfileShortcutButton } from "../cards/ProfileShortcutButton";
 
 // 항공 탭 렌더링만 담당한다. 공항 체크리스트 상태 변경은 상위 핸들러를 호출한다.
 export function FlightTab({ allChecklist, checkedItems, flights, toggleCheck, trip, onNavigateToMyPage }: TripPageProps) {

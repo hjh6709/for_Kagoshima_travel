@@ -1,7 +1,7 @@
 import { CheckCircle2, PlusCircle, Trash2 } from "lucide-react";
-import { checklistCategories } from "../../../shared/travelOptions";
-import type { ChecklistCategory } from "../tripViewState";
-import type { TripPageProps } from "../tripPageTypes";
+import { checklistCategories } from "../../../../shared/travelOptions";
+import type { TripPageProps } from "../../tripPageTypes";
+import type { ChecklistCategory } from "../../tripViewState";
 
 type ChecklistSectionProps = Pick<
   TripPageProps,

@@ -1,7 +1,7 @@
 import { ChevronLeft } from "lucide-react";
-import { formatKoreanDate, type TripDates } from "../../../shared/date";
-import type { Trip } from "../../../types/travel";
-import { ProfileShortcutButton } from "./ProfileShortcutButton";
+import { formatKoreanDate, type TripDates } from "../../../../shared/date";
+import type { Trip } from "../../../../types/travel";
+import { ProfileShortcutButton } from "../cards/ProfileShortcutButton";
 
 type TodayHeaderSectionProps = {
   travelStatus: { phase: string; label: string; description: string };

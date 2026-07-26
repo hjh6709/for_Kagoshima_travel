@@ -1,4 +1,4 @@
-import type { TripDates } from "../../../shared/date";
+import type { TripDates } from "../../../../shared/date";
 
 type TripDateEditorProps = {
   tripDates: TripDates;
