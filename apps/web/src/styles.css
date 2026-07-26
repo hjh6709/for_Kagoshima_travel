@@ -799,6 +799,14 @@ p {
   text-decoration: none;
   font-weight: 700;
   border-radius: var(--radius-control);
+  transition: transform 0.15s ease, opacity 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.primary-button:active:not(:disabled),
+.secondary-button:active:not(:disabled),
+.danger-button:active:not(:disabled),
+.quick-button:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .primary-button {
@@ -1182,7 +1190,9 @@ p {
 }
 
 .shared-schedule-card {
-  border-left: 5px solid var(--c-green);
+  border: 1px solid rgba(28, 50, 37, 0.12);
+  background: var(--c-surface);
+  box-shadow: 0 4px 16px rgba(28, 50, 37, 0.04);
 }
 
 .card-footer {
@@ -1304,10 +1314,9 @@ p {
 
 .flight-card {
   background: var(--c-surface);
-  border: 1px solid rgba(36, 48, 47, 0.1);
-  border-top: 5px solid var(--c-green);
-  border-radius: 8px;
-  box-shadow: 0 10px 26px rgba(28, 50, 37, 0.08);
+  border: 1px solid rgba(36, 48, 47, 0.12);
+  border-radius: 12px;
+  box-shadow: 0 10px 26px rgba(28, 50, 37, 0.06);
   display: grid;
   gap: 16px;
   padding: 24px;
@@ -1559,9 +1568,8 @@ p {
   grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 12px;
   align-items: start;
-  padding: 14px 10px 14px 14px;
+  padding: 14px 14px 14px 14px;
   border: 1px solid var(--border-color);
-  border-left-width: 4px;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.97);
   color: var(--c-text);
@@ -1577,7 +1585,8 @@ p {
 }
 
 .toast-success {
-  border-left-color: #397454;
+  border-color: rgba(57, 116, 84, 0.25);
+  background: rgba(240, 247, 243, 0.97);
 }
 
 .toast-success .toast-icon {
@@ -1585,7 +1594,8 @@ p {
 }
 
 .toast-error {
-  border-left-color: var(--c-danger);
+  border-color: rgba(166, 75, 69, 0.25);
+  background: rgba(253, 242, 242, 0.97);
 }
 
 .toast-error .toast-icon {
@@ -1593,7 +1603,8 @@ p {
 }
 
 .toast-warning {
-  border-left-color: var(--c-gold);
+  border-color: rgba(169, 132, 70, 0.25);
+  background: rgba(254, 250, 243, 0.97);
 }
 
 .toast-warning .toast-icon {
@@ -1601,7 +1612,8 @@ p {
 }
 
 .toast-info {
-  border-left-color: #39708d;
+  border-color: rgba(57, 112, 141, 0.25);
+  background: rgba(242, 247, 250, 0.97);
 }
 
 .toast-info .toast-icon {
@@ -2313,9 +2325,11 @@ p {
 
 .progress-fill {
   height: 100%;
+  width: 100%;
   background: linear-gradient(90deg, var(--c-green), var(--c-gold));
   border-radius: 4px;
-  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: left;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .progress-percentage {
