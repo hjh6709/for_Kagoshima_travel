@@ -11,6 +11,8 @@ import { useTripPageController } from "./features/trip/useTripPageController";
 import { parseManageRoute } from "./shared/manageRoute";
 import { getShareTokenFromPath } from "./shared/share";
 
+import { PwaStatusBanner } from "./shared/components/PwaStatusBanner";
+
 function App() {
   const currentPath = window.location.pathname;
   const isLegacyOwnerRoute = currentPath === "/owner" || currentPath.startsWith("/owner/");
@@ -21,34 +23,42 @@ function App() {
   const managePageProps = useTripManageController({ currentPath, isLegacyOwnerRoute, isManageRoute });
   const tripPageProps = useTripPageController();
 
-  if (isShareRoute) {
-    return <SharedTripPage error={sharedTripError} warning={sharedTripWarning} loading={sharedTripLoading} sharedTrip={sharedTrip} />;
-  }
-
-  if (isManageRoute && !isLegacyOwnerRoute) {
-    const manageRoute = parseManageRoute(currentPath);
-    if (manageRoute.view === "trip") {
-      return <OwnerTripViewPage tripId={manageRoute.tripId} />;
+  const renderContent = () => {
+    if (isShareRoute) {
+      return <SharedTripPage error={sharedTripError} warning={sharedTripWarning} loading={sharedTripLoading} sharedTrip={sharedTrip} />;
     }
-    if (manageRoute.view === "editSection") {
-      return <TripEditSectionPage section={manageRoute.section} tripId={manageRoute.tripId} />;
+
+    if (isManageRoute && !isLegacyOwnerRoute) {
+      const manageRoute = parseManageRoute(currentPath);
+      if (manageRoute.view === "trip") {
+        return <OwnerTripViewPage tripId={manageRoute.tripId} />;
+      }
+      if (manageRoute.view === "editSection") {
+        return <TripEditSectionPage section={manageRoute.section} tripId={manageRoute.tripId} />;
+      }
+      if (manageRoute.view === "editHub") {
+        return <TripEditHubPage tripId={manageRoute.tripId} />;
+      }
+      return <TripManagePage {...managePageProps} />;
     }
-    if (manageRoute.view === "editHub") {
-      return <TripEditHubPage tripId={manageRoute.tripId} />;
+
+    if (isManageRoute) {
+      return <TripManagePage {...managePageProps} />;
     }
-    return <TripManagePage {...managePageProps} />;
-  }
 
-  if (isManageRoute) {
-    // 레거시 /owner 경로: useTripManageController 내부의 리다이렉트 effect가 /manage로 옮겨준다.
-    return <TripManagePage {...managePageProps} />;
-  }
+    if (isDemoRoute) {
+      return <TripPage {...tripPageProps} isDemo={true} />;
+    }
 
-  if (isDemoRoute) {
-    return <TripPage {...tripPageProps} isDemo={true} />;
-  }
+    return <StartPage />;
+  };
 
-  return <StartPage />;
+  return (
+    <>
+      {renderContent()}
+      <PwaStatusBanner />
+    </>
+  );
 }
 
 export default App;
