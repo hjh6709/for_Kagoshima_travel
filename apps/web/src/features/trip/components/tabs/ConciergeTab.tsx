@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Copy, Phone } from "lucide-react";
-import type { TripPageProps } from "../tripPageTypes";
-import { ChinaPaymentHelper } from "../../manage/components/ChinaPaymentHelper";
-import { QuickTravelHelper } from "./QuickTravelHelper";
-import { ProfileShortcutButton } from "./ProfileShortcutButton";
+import { ChinaPaymentHelper } from "../../../manage/components/ChinaPaymentHelper";
+import type { TripPageProps } from "../../tripPageTypes";
+import { ProfileShortcutButton } from "../cards/ProfileShortcutButton";
+import { QuickTravelHelper } from "../helpers/QuickTravelHelper";
 
 // 긴급/여행 정보 탭 렌더링만 담당한다. 주소 복사는 상위 핸들러를 호출한다.
 export function ConciergeTab({

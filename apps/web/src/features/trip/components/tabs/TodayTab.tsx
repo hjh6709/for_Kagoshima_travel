@@ -1,10 +1,10 @@
-import type { TripPageProps } from "../tripPageTypes";
-import { HomeChecklistSection } from "./HomeChecklistSection";
-import { NextScheduleCard } from "./NextScheduleCard";
-import { QuickActionGrid } from "./QuickActionGrid";
-import { RecommendedRoutesSection } from "./RecommendedRoutesSection";
-import { TodayHeaderSection } from "./TodayHeaderSection";
-import { TripDateEditor } from "./TripDateEditor";
+import type { TripPageProps } from "../../tripPageTypes";
+import { NextScheduleCard } from "../cards/NextScheduleCard";
+import { TripDateEditor } from "../helpers/TripDateEditor";
+import { HomeChecklistSection } from "../sections/HomeChecklistSection";
+import { QuickActionGrid } from "../sections/QuickActionGrid";
+import { RecommendedRoutesSection } from "../sections/RecommendedRoutesSection";
+import { TodayHeaderSection } from "../sections/TodayHeaderSection";
 
 // 오늘 탭 렌더링만 담당한다. 상태 변경은 상위에서 전달한 핸들러를 호출한다.
 export function TodayTab(props: TripPageProps) {

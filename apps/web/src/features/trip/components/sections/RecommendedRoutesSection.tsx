@@ -1,5 +1,5 @@
 import { Route } from "lucide-react";
-import type { RecommendedRoute } from "../../../types/travel";
+import type { RecommendedRoute } from "../../../../types/travel";
 
 type RecommendedRoutesSectionProps = {
   routes: RecommendedRoute[];

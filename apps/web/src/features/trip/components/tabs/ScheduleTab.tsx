@@ -1,8 +1,8 @@
-import { formatShortDate } from "../../../shared/date";
-import { ChecklistSection } from "./ChecklistSection";
-import { ScheduleCard } from "./ScheduleCard";
-import type { TripPageProps } from "../tripPageTypes";
-import { ProfileShortcutButton } from "./ProfileShortcutButton";
+import { formatShortDate } from "../../../../shared/date";
+import type { TripPageProps } from "../../tripPageTypes";
+import { ProfileShortcutButton } from "../cards/ProfileShortcutButton";
+import { ScheduleCard } from "../cards/ScheduleCard";
+import { ChecklistSection } from "../sections/ChecklistSection";
 
 // 일정 탭과 체크리스트 렌더링만 담당한다. 완료/순서/추가/삭제는 상위 핸들러를 호출한다.
 export function ScheduleTab({

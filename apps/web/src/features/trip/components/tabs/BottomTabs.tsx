@@ -1,5 +1,5 @@
 import { CalendarDays, Home, Map as MapIcon, Plane, Shield } from "lucide-react";
-import type { Tab } from "../tripViewState";
+import type { Tab } from "../../tripViewState";
 
 type BottomTabsProps = {
   activeTab: Tab;

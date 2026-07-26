@@ -1,8 +1,8 @@
 import { ArrowDown, ArrowUp, CheckCircle2 } from "lucide-react";
-import { MapDirectionsChoice } from "../../../shared/components/MapDirectionsChoice";
-import { scheduleTypeLabels } from "../../../shared/travelOptions";
-import type { Place, ScheduleItem } from "../../../types/travel";
-import { MaskedText } from "../../../shared/components/MaskedText";
+import { MapDirectionsChoice } from "../../../../shared/components/MapDirectionsChoice";
+import { MaskedText } from "../../../../shared/components/MaskedText";
+import { scheduleTypeLabels } from "../../../../shared/travelOptions";
+import type { Place, ScheduleItem } from "../../../../types/travel";
 
 type ScheduleCardProps = {
   index: number;

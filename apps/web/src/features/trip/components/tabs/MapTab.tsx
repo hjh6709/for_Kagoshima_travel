@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { AlertTriangle, Check, Copy, Maximize2, Train, X } from "lucide-react";
-import { MapDirectionsChoice } from "../../../shared/components/MapDirectionsChoice";
-import { placeCategoryLabels } from "../../../shared/travelOptions";
-import type { TripPageProps } from "../tripPageTypes";
-import { ProfileShortcutButton } from "./ProfileShortcutButton";
+import { MapDirectionsChoice } from "../../../../shared/components/MapDirectionsChoice";
+import { placeCategoryLabels } from "../../../../shared/travelOptions";
+import type { TripPageProps } from "../../tripPageTypes";
+import { ProfileShortcutButton } from "../cards/ProfileShortcutButton";
 
 export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateToMyPage }: TripPageProps) {
   const [subTab, setSubTab] = useState<"timeline" | "all">("timeline");

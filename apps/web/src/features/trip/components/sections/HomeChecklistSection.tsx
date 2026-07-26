@@ -1,6 +1,6 @@
 import { CheckCircle2 } from "lucide-react";
-import type { ChecklistItem } from "../../../types/travel";
-import type { Tab } from "../tripViewState";
+import type { ChecklistItem } from "../../../../types/travel";
+import type { Tab } from "../../tripViewState";
 
 type HomeChecklistSectionProps = {
   checkedItems: Record<string, boolean>;

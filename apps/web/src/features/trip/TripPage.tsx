@@ -1,11 +1,5 @@
 import { useEffect } from "react";
-import { BottomTabs } from "./components/BottomTabs";
-import { ConciergeTab } from "./components/ConciergeTab";
-import { FlightTab } from "./components/FlightTab";
-import { MapTab } from "./components/MapTab";
-import { ScheduleTab } from "./components/ScheduleTab";
-import { TodayTab } from "./components/TodayTab";
-import { MyPageTab } from "./components/MyPageTab";
+import { BottomTabs, ConciergeTab, FlightTab, MapTab, MyPageTab, ScheduleTab, TodayTab } from "./components";
 import type { TripPageProps } from "./tripPageTypes";
 
 type TripPageComponentProps = TripPageProps & {

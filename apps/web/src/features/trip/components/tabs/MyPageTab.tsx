@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Key, Eye, EyeOff, List, Lock, User, LogOut, Settings2 } from "lucide-react";
-import type { TripPageProps } from "../tripPageTypes";
-import { changePassword } from "../../../api/auth";
-import { getSavedOwnerAuth } from "../../manage/ownerAuthStorage";
+import { Eye, EyeOff, Key, List, Lock, LogOut, Settings2, User } from "lucide-react";
+import { changePassword } from "../../../../api/auth";
+import { getSavedOwnerAuth } from "../../../manage/ownerAuthStorage";
+import type { TripPageProps } from "../../tripPageTypes";
 
 type MyPageTabProps = TripPageProps & {
   onLogout?: () => void;

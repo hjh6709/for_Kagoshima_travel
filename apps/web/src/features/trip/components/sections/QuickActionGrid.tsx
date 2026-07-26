@@ -1,5 +1,5 @@
 import { AlertTriangle, CalendarDays, Plane } from "lucide-react";
-import type { Tab } from "../tripViewState";
+import type { Tab } from "../../tripViewState";
 
 type QuickActionGridProps = {
   setActiveTab: (tab: Tab) => void;
