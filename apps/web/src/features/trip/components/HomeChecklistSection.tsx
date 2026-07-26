@@ -51,7 +51,7 @@ export function HomeChecklistSection({
             className="progress-track"
             role="progressbar"
           >
-            <div className="progress-fill" style={{ width: `${percentage}%` }} />
+            <div className="progress-fill" style={{ transform: `scaleX(${percentage / 100})` }} />
           </div>
           <span className="progress-percentage">{percentage}% 달성</span>
         </div>

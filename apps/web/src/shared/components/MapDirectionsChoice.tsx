@@ -35,12 +35,11 @@ export function MapDirectionsChoice({ destinationCountry, place }: MapDirections
         <div
           aria-label="길찾기 지도 선택"
           style={{
-            background: "var(--bg-secondary)",
-            border: "1px solid var(--border-color)",
-            borderRadius: "10px",
+            borderTop: "1px solid var(--border-color)",
             display: "grid",
             gap: "8px",
-            padding: "10px",
+            paddingTop: "10px",
+            marginTop: "4px",
           }}
         >
           <span style={{ color: "var(--c-muted)", fontSize: "11px", fontWeight: 700 }}>

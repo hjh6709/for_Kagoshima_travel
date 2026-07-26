@@ -297,10 +297,12 @@ export function QuickTravelHelper({ destinationCountry = "JP" }: QuickTravelHelp
         </div>
 
         {/* 실시간 외부 번역기 즉시 연동 단추 패널 */}
-        <div style={{ display: "flex", gap: "8px", background: "rgba(255, 255, 255, 0.02)", border: "1px solid var(--border-color)", borderRadius: "10px", padding: "12px", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: "10px", background: "linear-gradient(135deg, rgba(19, 42, 30, 0.04), rgba(19, 42, 30, 0.08))", border: "1px solid rgba(19, 42, 30, 0.1)", borderRadius: "14px", padding: "14px", alignItems: "center", boxShadow: "0 4px 16px rgba(0,0,0,0.02)" }}>
           <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "2px" }}>
-            <span style={{ fontSize: "12px", color: "var(--c-muted)", fontWeight: 700 }}>번역기 바로가기</span>
-            <p style={{ fontSize: "12px", color: "var(--c-muted)", margin: 0 }}>탭 한 번으로 번역 페이지로 이동합니다.</p>
+            <span style={{ fontSize: "12px", color: "var(--c-green)", fontWeight: 800, display: "flex", alignItems: "center", gap: "4px" }}>
+              <Languages size={14} /> 번역기 바로가기
+            </span>
+            <p style={{ fontSize: "12px", color: "var(--c-muted)", margin: 0, fontWeight: 500 }}>파파고 & 구글 번역기로 빠른 이동</p>
           </div>
           <div style={{ display: "flex", gap: "6px" }}>
             <a
@@ -308,7 +310,7 @@ export function QuickTravelHelper({ destinationCountry = "JP" }: QuickTravelHelp
               target="_blank"
               rel="noreferrer"
               className="primary-button compact-button"
-              style={{ minHeight: "40px", padding: "8px 12px", fontSize: "12px", background: "var(--c-green)", borderColor: "var(--c-green)", color: "var(--c-surface)", fontWeight: 700, borderRadius: "6px", display: "inline-flex", alignItems: "center", gap: "4px", textDecoration: "none" }}
+              style={{ minHeight: "38px", padding: "6px 14px", fontSize: "12px", background: "linear-gradient(135deg, #00d760, #00b34f)", borderColor: "transparent", color: "#ffffff", fontWeight: 800, borderRadius: "10px", display: "inline-flex", alignItems: "center", gap: "4px", textDecoration: "none", boxShadow: "0 4px 12px rgba(0, 215, 96, 0.25)" }}
             >
               Papago
             </a>
@@ -317,7 +319,7 @@ export function QuickTravelHelper({ destinationCountry = "JP" }: QuickTravelHelp
               target="_blank"
               rel="noreferrer"
               className="secondary-button compact-button"
-              style={{ minHeight: "40px", padding: "8px 12px", fontSize: "12px", background: "var(--c-green-light)", borderColor: "var(--c-green)", color: "var(--c-green)", fontWeight: 700, borderRadius: "6px", display: "inline-flex", alignItems: "center", gap: "4px", textDecoration: "none" }}
+              style={{ minHeight: "38px", padding: "6px 14px", fontSize: "12px", background: "linear-gradient(135deg, #4285f4, #1a73e8)", borderColor: "transparent", color: "#ffffff", fontWeight: 800, borderRadius: "10px", display: "inline-flex", alignItems: "center", gap: "4px", textDecoration: "none", boxShadow: "0 4px 12px rgba(66, 133, 244, 0.25)" }}
             >
               Google
             </a>
