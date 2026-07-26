@@ -1,6 +1,6 @@
 import { CheckCircle2 } from "lucide-react";
+import type { TravelPhase } from "../../../../shared/date";
 import type { ChecklistItem } from "../../../../types/travel";
-import type { Tab } from "../../tripViewState";
 
 type HomeChecklistSectionProps = {
   checkedItems: Record<string, boolean>;
@@ -8,8 +8,9 @@ type HomeChecklistSectionProps = {
   focusScheduleCount: number;
   homeChecklistCompletedCount: number;
   homeChecklistItems: ChecklistItem[];
-  setActiveTab: (tab: Tab) => void;
+  onOpenChecklist: () => void;
   toggleCheck: (id: string) => void;
+  travelPhase: TravelPhase;
 };
 
 // 오늘 확인해야 할 체크리스트 요약과 전체 일정 이동 버튼을 표시한다.
@@ -19,32 +20,48 @@ export function HomeChecklistSection({
   focusScheduleCount,
   homeChecklistCompletedCount,
   homeChecklistItems,
-  setActiveTab,
+  onOpenChecklist,
   toggleCheck,
+  travelPhase,
 }: HomeChecklistSectionProps) {
-  const totalItems = focusScheduleCount + homeChecklistItems.length;
-  const completedItems = focusCompletedScheduleCount + homeChecklistCompletedCount;
-  const percentage = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+  const percentage =
+    homeChecklistItems.length > 0 ? Math.round((homeChecklistCompletedCount / homeChecklistItems.length) * 100) : 0;
+  const heading =
+    travelPhase === "before" ? "출발 전 준비" : travelPhase === "during" ? "오늘 할 일" : "귀가 후 확인";
+  const scheduleSummary =
+    travelPhase === "before"
+      ? `첫날 일정 ${focusScheduleCount}개`
+      : travelPhase === "during"
+        ? `오늘 일정 ${focusCompletedScheduleCount}/${focusScheduleCount}`
+        : null;
 
   return (
     <section className="section-block">
       <div className="section-title-row">
         <div>
-          <h2>오늘 확인</h2>
-          <p className="section-caption">
-            일정 {focusScheduleCount}개 중 {focusCompletedScheduleCount}개 완료 · 체크 {homeChecklistItems.length}개 중{" "}
-            {homeChecklistCompletedCount}개 완료
-          </p>
+          <h2>{heading}</h2>
+          <p className="section-caption">여행 단계에 맞는 항목만 모아 보여드려요.</p>
         </div>
-        <button className="secondary-button compact-button" onClick={() => setActiveTab("schedule")} type="button">
-          전체 보기
+        <button className="secondary-button compact-button" onClick={onOpenChecklist} type="button">
+          준비물 전체
         </button>
       </div>
 
-      {totalItems > 0 && (
+      {(scheduleSummary || homeChecklistItems.length > 0) && (
+        <div className="home-task-summary" aria-label="현재 할 일 요약">
+          {scheduleSummary && <span>{scheduleSummary}</span>}
+          {homeChecklistItems.length > 0 && (
+            <span>
+              확인 항목 {homeChecklistCompletedCount}/{homeChecklistItems.length}
+            </span>
+          )}
+        </div>
+      )}
+
+      {homeChecklistItems.length > 0 && (
         <div className="progress-container">
           <div
-            aria-label="오늘 준비 달성률"
+            aria-label={`${heading} 달성률`}
             aria-valuemax={100}
             aria-valuemin={0}
             aria-valuenow={percentage}
@@ -60,13 +77,19 @@ export function HomeChecklistSection({
       <div className="home-checklist-card">
         {homeChecklistItems.length > 0 ? (
           homeChecklistItems.map((item) => (
-            <button className="home-check-item" key={item.id} onClick={() => toggleCheck(item.id)} type="button">
+            <button
+              aria-pressed={Boolean(checkedItems[item.id])}
+              className={`home-check-item${checkedItems[item.id] ? " completed" : ""}`}
+              key={item.id}
+              onClick={() => toggleCheck(item.id)}
+              type="button"
+            >
               <CheckCircle2 className={checkedItems[item.id] ? "checked" : ""} size={22} />
               <span>{item.title}</span>
             </button>
           ))
         ) : (
-          <p className="muted">오늘 확인할 체크리스트가 없습니다.</p>
+          <p className="muted">지금 확인할 준비 항목이 없습니다.</p>
         )}
       </div>
     </section>

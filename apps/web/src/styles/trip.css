@@ -80,8 +80,12 @@ p {
 }
 
 .segment-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex: 1;
-  min-height: 42px;
+  min-height: 44px;
+  gap: 7px;
   padding: 8px 10px;
   border: 0;
   border-radius: 8px;
@@ -169,6 +173,35 @@ p {
   color: var(--c-route);
   font-size: 14px;
   font-weight: 700;
+}
+
+.next-schedule-empty {
+  grid-template-columns: 32px minmax(0, 1fr);
+  align-items: start;
+  gap: 8px 12px;
+  padding: 20px;
+}
+
+.next-schedule-empty > svg {
+  margin-top: 2px;
+  color: var(--c-route);
+}
+
+.next-schedule-empty h2,
+.next-schedule-empty p {
+  margin-bottom: 0;
+}
+
+.next-schedule-empty p {
+  margin-top: 5px;
+  color: var(--c-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.next-schedule-empty .secondary-button {
+  grid-column: 2;
+  justify-self: start;
 }
 
 .shared-hero-card {
@@ -408,7 +441,7 @@ p {
   position: relative;
   z-index: 2;
   display: grid;
-  grid-template-columns: 72px 1fr;
+  grid-template-columns: 72px minmax(0, 1fr);
   gap: 12px;
   padding: 18px 18px;
   margin-left: 24px;
@@ -447,6 +480,13 @@ p {
 .schedule-content {
   display: grid;
   gap: 10px;
+  min-width: 0;
+}
+
+.schedule-content h2,
+.schedule-detail,
+.schedule-detail p {
+  overflow-wrap: anywhere;
 }
 
 .schedule-meta {
@@ -484,6 +524,56 @@ p {
 .schedule-summary small {
   color: var(--c-muted);
   font-weight: 700;
+}
+
+.schedule-view-switch {
+  margin-top: 2px;
+}
+
+.schedule-empty-state,
+.checklist-empty-state {
+  grid-template-columns: 32px minmax(0, 1fr);
+  place-items: start;
+  padding: 22px 18px;
+  text-align: left;
+}
+
+.schedule-empty-state > svg,
+.checklist-empty-state > svg {
+  color: var(--c-route);
+}
+
+.schedule-empty-state strong,
+.checklist-empty-state strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--c-text);
+}
+
+.schedule-empty-state p,
+.checklist-empty-state p {
+  margin: 0;
+  color: var(--c-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.trip-checklist-view {
+  margin-top: 4px;
+}
+
+.trip-checklist-context {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--c-route-soft);
+  color: var(--c-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.trip-checklist-view > .section-block {
+  margin-top: 22px;
 }
 
 .schedule-actions {
@@ -607,6 +697,35 @@ p {
   font-weight: 800;
   color: var(--c-route);
   white-space: nowrap;
+}
+
+.home-task-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 2px 0 12px;
+  color: var(--c-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.home-task-summary span + span {
+  position: relative;
+}
+
+.home-task-summary span + span::before {
+  position: absolute;
+  top: 50%;
+  left: -9px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: currentColor;
+  content: "";
+}
+
+.today-demo-tools {
+  margin-top: 28px;
 }
 
 /* 헤더 탈출 복귀 링크 */

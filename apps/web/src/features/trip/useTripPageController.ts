@@ -47,6 +47,7 @@ import {
 export function useTripPageController(): TripPageProps {
   const contentRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<Tab>("today");
+  const [scheduleView, setScheduleView] = useState<"itinerary" | "checklist">("itinerary");
   const [tripDates, setTripDates] = useState<TripDates>(getSavedTripDates);
   const [selectedDate, setSelectedDate] = useState(schedules[0]?.date ?? trip.startDate);
   const [addressCopied, setAddressCopied] = useState(false);
@@ -85,9 +86,11 @@ export function useTripPageController(): TripPageProps {
     [focusScheduleDate, scheduleOrderByDate]
   );
   const nextSchedule =
-    focusSchedules.find((item) => !completedSchedules[item.id]) ??
-    schedules.find((item) => !completedSchedules[item.id]) ??
-    schedules[0];
+    travelStatus.phase === "after"
+      ? null
+      : focusSchedules.find((item) => !completedSchedules[item.id]) ??
+        schedules.find((item) => item.date > focusScheduleDate && !completedSchedules[item.id]) ??
+        null;
   const focusCompletedScheduleCount = focusSchedules.filter((item) => completedSchedules[item.id]).length;
   const homeChecklistCategories: ChecklistCategory[] =
     travelStatus.phase === "before" ? ["before", "airport"] : travelStatus.phase === "during" ? ["daily"] : ["return"];
@@ -224,6 +227,7 @@ export function useTripPageController(): TripPageProps {
     dates,
     emergencies,
     flights,
+    focusDate: focusScheduleDate,
     focusCompletedScheduleCount,
     focusSchedules,
     getDisplayDate,
@@ -239,6 +243,7 @@ export function useTripPageController(): TripPageProps {
     phrases,
     places,
     routes,
+    scheduleView,
     selectedDate,
     selectedSchedules,
     trip,
@@ -253,6 +258,7 @@ export function useTripPageController(): TripPageProps {
     setIsChecklistEditing,
     setNewChecklistCategory,
     setNewChecklistTitle,
+    setScheduleView,
     setSelectedDate,
     toggleCheck,
     toggleScheduleComplete,

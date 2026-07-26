@@ -1,4 +1,4 @@
-import { CheckCircle2, PlusCircle, Trash2 } from "lucide-react";
+import { CheckCircle2, ListChecks, PlusCircle, Trash2 } from "lucide-react";
 import { checklistCategories } from "../../../../shared/travelOptions";
 import type { TripPageProps } from "../../tripPageTypes";
 import type { ChecklistCategory } from "../../tripViewState";
@@ -64,61 +64,78 @@ export function ChecklistSection({
         </button>
       )}
 
-      <form className="check-add-form" onSubmit={addChecklistItem}>
-        <label>
-          구분
-          <select
-            value={newChecklistCategory}
-            onChange={(event) => setNewChecklistCategory(event.target.value as ChecklistCategory)}
-          >
-            {checklistCategories.map(([category, label]) => (
-              <option key={category} value={category}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          추가할 항목
-          <input
-            placeholder="예: 여권 사본 챙기기"
-            type="text"
-            value={newChecklistTitle}
-            onChange={(event) => setNewChecklistTitle(event.target.value)}
-          />
-        </label>
-        <button className="primary-button" type="submit">
-          <PlusCircle size={18} />
-          추가
-        </button>
-      </form>
+      {isChecklistEditing && (
+        <form className="check-add-form" onSubmit={addChecklistItem}>
+          <label>
+            구분
+            <select
+              value={newChecklistCategory}
+              onChange={(event) => setNewChecklistCategory(event.target.value as ChecklistCategory)}
+            >
+              {checklistCategories.map(([category, label]) => (
+                <option key={category} value={category}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            추가할 항목
+            <input
+              placeholder="예: 여권 사본 챙기기"
+              type="text"
+              value={newChecklistTitle}
+              onChange={(event) => setNewChecklistTitle(event.target.value)}
+            />
+          </label>
+          <button className="primary-button" type="submit">
+            <PlusCircle size={18} />
+            추가
+          </button>
+        </form>
+      )}
 
       <div className="check-groups">
-        {groupedChecklist.map((group) => (
-          <section className="check-group" key={group.category}>
-            <h3>{group.label}</h3>
-            <div className="card-stack">
-              {group.items.map((item) => (
-                <div className="check-row" key={item.id}>
-                  <button className="check-toggle" onClick={() => toggleCheck(item.id)} type="button">
-                    <CheckCircle2 className={checkedItems[item.id] ? "checked" : ""} size={24} />
-                    <span>{item.title}</span>
-                  </button>
-                  {isChecklistEditing && (
+        {groupedChecklist.length > 0 ? (
+          groupedChecklist.map((group) => (
+            <section className="check-group" key={group.category}>
+              <h3>{group.label}</h3>
+              <div className="card-stack">
+                {group.items.map((item) => (
+                  <div className={`check-row${checkedItems[item.id] ? " completed" : ""}`} key={item.id}>
                     <button
-                      aria-label={`${item.title} 삭제`}
-                      className="icon-button"
-                      onClick={() => removeChecklistItem(item)}
+                      aria-pressed={Boolean(checkedItems[item.id])}
+                      className="check-toggle"
+                      onClick={() => toggleCheck(item.id)}
                       type="button"
                     >
-                      <Trash2 size={18} />
+                      <CheckCircle2 className={checkedItems[item.id] ? "checked" : ""} size={24} />
+                      <span>{item.title}</span>
                     </button>
-                  )}
-                </div>
-              ))}
+                    {isChecklistEditing && (
+                      <button
+                        aria-label={`${item.title} 삭제`}
+                        className="icon-button"
+                        onClick={() => removeChecklistItem(item)}
+                        type="button"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+          ))
+        ) : (
+          <article className="empty-state-card list-card checklist-empty-state">
+            <ListChecks aria-hidden="true" size={22} />
+            <div>
+              <strong>준비 항목이 없습니다</strong>
+              <p>편집을 눌러 여행에 필요한 항목을 추가해 보세요.</p>
             </div>
-          </section>
-        ))}
+          </article>
+        )}
       </div>
     </section>
   );
