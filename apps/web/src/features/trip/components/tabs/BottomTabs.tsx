@@ -14,35 +14,26 @@ const tabs: Array<{ id: Tab; label: string; icon: typeof Home }> = [
   { id: "concierge", label: "긴급", icon: Shield },
 ];
 
-/**
- * BottomTabs 컴포넌트
- * 여행 중 핵심 기능을 위한 5개 하단 탭 바 (오늘, 일정, 항공, 지도, 긴급)
- */
+// 여행 중 가장 자주 쓰는 다섯 화면으로 이동하는 하단 내비게이션이다.
 export function BottomTabs({ activeTab, setActiveTab }: BottomTabsProps) {
   return (
-    <nav className="bottom-tabs" aria-label="주요 메뉴 내비게이션">
-      <div role="tablist" aria-label="여행 탭 리스트" style={{ display: "contents" }}>
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              role="tab"
-              id={`tab-${tab.id}`}
-              aria-controls={`tabpanel-${tab.id}`}
-              aria-selected={isActive}
-              aria-label={`${tab.label} 탭${isActive ? ", 현재 선택됨" : ""}`}
-              className={isActive ? "active" : ""}
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              type="button"
-            >
-              <Icon size={21} aria-hidden="true" />
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
-      </div>
+    <nav className="bottom-tabs" aria-label="여행 메뉴">
+      {tabs.map((tab) => {
+        const Icon = tab.icon;
+        const isActive = activeTab === tab.id;
+        return (
+          <button
+            aria-current={isActive ? "page" : undefined}
+            className={isActive ? "active" : ""}
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            type="button"
+          >
+            <Icon size={21} aria-hidden="true" />
+            <span>{tab.label}</span>
+          </button>
+        );
+      })}
     </nav>
   );
 }
