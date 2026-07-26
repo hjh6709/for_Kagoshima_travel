@@ -634,3 +634,278 @@ p {
 .back-to-list-link svg {
   display: block;
 }
+
+/* My page: account, active trip, and security settings rail. */
+.mypage-screen {
+  display: grid;
+  gap: 28px;
+}
+
+.mypage-header {
+  display: grid;
+  gap: 6px;
+}
+
+.mypage-header h1,
+.mypage-header p {
+  margin: 0;
+}
+
+.mypage-header p {
+  color: var(--c-muted);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.mypage-account-card,
+.mypage-trip-card,
+.mypage-security-card {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  background: var(--c-surface);
+}
+
+.mypage-account-card {
+  padding: 16px;
+}
+
+.mypage-account-main {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+
+.mypage-avatar {
+  flex: 0 0 auto;
+}
+
+.mypage-account-copy {
+  min-width: 0;
+}
+
+.mypage-account-copy span,
+.mypage-account-copy strong {
+  display: block;
+}
+
+.mypage-account-copy span {
+  margin-bottom: 2px;
+  color: var(--c-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.mypage-account-copy strong {
+  overflow-wrap: anywhere;
+  color: var(--c-text);
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.mypage-account-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+}
+
+.mypage-logout-button {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--c-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.mypage-logout-button:hover {
+  background: var(--c-surface-cool);
+  color: var(--c-text);
+}
+
+.mypage-section {
+  display: grid;
+  gap: 10px;
+}
+
+.mypage-section-title {
+  margin: 0;
+  color: var(--c-muted);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.mypage-trip-card {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+}
+
+.mypage-trip-copy {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+}
+
+.mypage-route-stop {
+  width: 12px;
+  height: 12px;
+  margin-top: 7px;
+  border: 3px solid var(--c-surface);
+  border-radius: 50%;
+  background: var(--c-route);
+  box-shadow: 0 0 0 2px var(--c-route);
+}
+
+.mypage-trip-copy h3 {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--c-text);
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.35;
+}
+
+.mypage-trip-copy p {
+  margin: 4px 0 0;
+  color: var(--c-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.mypage-trip-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+  gap: 8px;
+}
+
+.mypage-trip-actions .primary-button,
+.mypage-trip-actions .secondary-button {
+  width: 100%;
+  min-width: 0;
+  padding-right: 10px;
+  padding-left: 10px;
+  white-space: nowrap;
+}
+
+.mypage-security-card {
+  overflow: clip;
+}
+
+.mypage-security-summary {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 20px;
+  align-items: center;
+  gap: 12px;
+  min-height: 80px;
+  padding: 15px 16px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.mypage-security-summary::-webkit-details-marker {
+  display: none;
+}
+
+.mypage-security-summary:focus-visible {
+  outline: 3px solid rgba(11, 111, 106, 0.28);
+  outline-offset: -3px;
+}
+
+.mypage-security-icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--c-route-soft);
+  color: var(--c-route);
+}
+
+.mypage-security-copy {
+  min-width: 0;
+}
+
+.mypage-security-copy strong,
+.mypage-security-copy > span {
+  display: block;
+}
+
+.mypage-security-copy strong {
+  color: var(--c-text);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.mypage-security-copy > span {
+  margin-top: 2px;
+  color: var(--c-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.mypage-security-chevron {
+  color: var(--c-muted);
+  transition: transform 0.2s var(--ease-route);
+}
+
+.mypage-security-card[open] .mypage-security-chevron {
+  transform: rotate(180deg);
+}
+
+.mypage-security-content {
+  padding: 18px 16px 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.mypage-password-form {
+  gap: 16px;
+  margin-top: 0;
+}
+
+.mypage-password-form .auth-field-label {
+  gap: 8px;
+}
+
+.mypage-password-form input[aria-invalid="true"] {
+  border-color: var(--c-danger);
+}
+
+.mypage-field-help {
+  margin: -8px 2px 0;
+  color: var(--c-muted);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.mypage-field-help.is-error {
+  color: var(--c-danger);
+}
+
+.mypage-password-submit {
+  margin-top: 2px;
+}
+
+@media (max-width: 360px) {
+  .mypage-screen {
+    gap: 24px;
+  }
+
+  .mypage-trip-actions {
+    grid-template-columns: 1fr;
+  }
+}
