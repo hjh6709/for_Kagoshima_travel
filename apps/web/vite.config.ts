@@ -6,13 +6,12 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: "autoUpdate",
+      registerType: "prompt",
       manifest: false,
       workbox: {
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         globPatterns: ["**/*.{js,css,html,svg,png,webmanifest}"],
-        skipWaiting: true,
       },
     }),
   ],
