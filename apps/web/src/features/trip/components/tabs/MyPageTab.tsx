@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Eye, EyeOff, Key, List, Lock, LogOut, Settings2, User } from "lucide-react";
+import { ChevronDown, Eye, EyeOff, Key, List, Lock, LogOut, Settings2, User } from "lucide-react";
 import { changePassword } from "../../../../api/auth";
 import { getSavedOwnerAuth } from "../../../manage/ownerAuthStorage";
 import type { TripPageProps } from "../../tripPageTypes";
@@ -7,6 +7,8 @@ import type { TripPageProps } from "../../tripPageTypes";
 type MyPageTabProps = TripPageProps & {
   onLogout?: () => void;
 };
+
+const PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
 
 export function MyPageTab({ trip, onLogout, editTripHref, isDemo }: MyPageTabProps) {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -21,6 +23,8 @@ export function MyPageTab({ trip, onLogout, editTripHref, isDemo }: MyPageTabPro
   const [error, setError] = useState("");
 
   const savedAuth = getSavedOwnerAuth();
+  const isNewPasswordValid = PASSWORD_PATTERN.test(newPassword);
+  const doPasswordsMatch = confirmPassword.length === 0 || newPassword === confirmPassword;
 
   // 사용자가 마이페이지에서 기존 비밀번호와 새 비밀번호를 입력해 비밀번호 변경을 요청하는 핸들러입니다.
   // api/auth.ts 내 공통화된 통신 함수를 호출하여 주소 오타를 차단하고, catch 블록에서 세부 에러를 매핑합니다.
@@ -30,7 +34,7 @@ export function MyPageTab({ trip, onLogout, editTripHref, isDemo }: MyPageTabPro
       setError("새 비밀번호와 확인 비밀번호가 일치하지 않습니다.");
       return;
     }
-    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/.test(newPassword)) {
+    if (!PASSWORD_PATTERN.test(newPassword)) {
       setError("새 비밀번호는 영문 대/소문자, 숫자, 특수문자를 각각 최소 1개 이상 포함하여 8자 이상이어야 합니다.");
       return;
     }
@@ -97,139 +101,181 @@ export function MyPageTab({ trip, onLogout, editTripHref, isDemo }: MyPageTabPro
   }
 
   return (
-    <section className="screen">
-      <h1>마이페이지</h1>
-      <p className="muted">내 계정 정보 관리 및 비밀번호 변경을 지원합니다.</p>
+    <section className="screen mypage-screen">
+      <header className="mypage-header">
+        <h1>마이페이지</h1>
+        <p>계정과 여행 설정을 관리합니다.</p>
+      </header>
 
-      <article className="info-card auth-card-premium" style={{ marginBottom: "16px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", paddingBottom: "12px", borderBottom: "1px solid var(--border-color)" }}>
-          <div className="auth-brand-circle" style={{ width: "40px", height: "40px" }}>
+      <article className="mypage-account-card" aria-label="계정 정보">
+        <div className="mypage-account-main">
+          <div className="auth-brand-circle mypage-avatar">
             <User size={20} />
           </div>
-          <div>
-            <span style={{ display: "block", fontSize: "11px", color: "var(--c-muted)", fontWeight: 700 }}>접속 계정</span>
-            <strong style={{ fontSize: "15px", color: "var(--c-text)" }}>{savedAuth?.user.email ?? "인증된 사용자"}</strong>
+          <div className="mypage-account-copy">
+            <span>접속 계정</span>
+            <strong>{savedAuth?.user.email ?? "인증된 사용자"}</strong>
           </div>
         </div>
 
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "12px" }}>
+        <div className="mypage-account-footer">
           <span className="pill subtle">여정 관리자</span>
           <button
-            className="secondary-button compact-button"
+            className="mypage-logout-button"
             onClick={handleLogoutClick}
             type="button"
-            style={{ color: "var(--c-muted)", border: "1px solid var(--border-color)" }}
           >
-            <LogOut size={14} style={{ marginRight: "4px" }} />
+            <LogOut size={16} />
             로그아웃
           </button>
         </div>
       </article>
 
       {editTripHref && (
-        <article className="info-card" style={{ marginBottom: "16px" }}>
-          <h2>{trip.title}</h2>
-          <p className="muted">이 여행의 기본정보, 장소, 항공편, 일정, 체크리스트를 편집합니다.</p>
-          <a className="primary-button" href={editTripHref} style={{ marginTop: "8px" }}>
-            <Settings2 size={18} />
-            이 여행 편집하기
-          </a>
-          <a className="secondary-button" href="/manage" style={{ marginTop: "8px" }}>
-            <List size={18} />
-            여행 목록
-          </a>
-        </article>
+        <section className="mypage-section" aria-labelledby="mypage-current-trip">
+          <h2 className="mypage-section-title" id="mypage-current-trip">현재 여행</h2>
+          <article className="mypage-trip-card">
+            <div className="mypage-trip-copy">
+              <span className="mypage-route-stop" aria-hidden="true" />
+              <div>
+                <h3>{trip.title}</h3>
+                <p>장소 · 일정 · 항공편 · 체크리스트 관리</p>
+              </div>
+            </div>
+            <div className="mypage-trip-actions">
+              <a className="primary-button" href={editTripHref}>
+                <Settings2 size={18} />
+                여행 편집
+              </a>
+              <a className="secondary-button" href="/manage">
+                <List size={18} />
+                여행 목록
+              </a>
+            </div>
+          </article>
+        </section>
       )}
 
-      <div style={{ marginTop: "24px" }}>
-        <h2 style={{ fontSize: "20px", fontWeight: 800, color: "var(--c-text)", marginBottom: "12px" }}>비밀번호 변경</h2>
-        <form className="auth-form auth-card-premium" onSubmit={handlePasswordChange} style={{ background: "var(--c-surface)" }}>
-          <label className="auth-field-label">
-            <span>현재 비밀번호</span>
-            <div className="input-with-icon">
-              <Key size={16} className="field-icon" />
-              <input
-                className="with-password-toggle"
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                placeholder="현재 비밀번호 입력"
-                required
-                type={showCurrent ? "text" : "password"}
-                value={currentPassword}
-              />
-              <button
-                className="password-toggle-btn"
-                onClick={() => setShowCurrent(!showCurrent)}
-                type="button"
-                aria-label={showCurrent ? "현재 비밀번호 숨기기" : "현재 비밀번호 보기"}
-                tabIndex={0}
+      <section className="mypage-section" aria-labelledby="mypage-security">
+        <h2 className="mypage-section-title" id="mypage-security">보안</h2>
+        <details className="mypage-security-card">
+          <summary className="mypage-security-summary">
+            <span className="mypage-security-icon" aria-hidden="true">
+              <Key size={19} />
+            </span>
+            <span className="mypage-security-copy">
+              <strong>비밀번호 변경</strong>
+              <span>현재 비밀번호를 확인한 뒤 변경할 수 있습니다.</span>
+            </span>
+            <ChevronDown className="mypage-security-chevron" size={20} aria-hidden="true" />
+          </summary>
+
+          <div className="mypage-security-content">
+            <form className="auth-form mypage-password-form" onSubmit={handlePasswordChange}>
+              <label className="auth-field-label">
+                <span>현재 비밀번호</span>
+                <div className="input-with-icon">
+                  <Key size={16} className="field-icon" />
+                  <input
+                    className="with-password-toggle"
+                    autoComplete="current-password"
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    placeholder="현재 비밀번호"
+                    required
+                    type={showCurrent ? "text" : "password"}
+                    value={currentPassword}
+                  />
+                  <button
+                    className="password-toggle-btn"
+                    onClick={() => setShowCurrent(!showCurrent)}
+                    type="button"
+                    aria-label={showCurrent ? "현재 비밀번호 숨기기" : "현재 비밀번호 보기"}
+                  >
+                    {showCurrent ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </label>
+
+              <label className="auth-field-label">
+                <span>새 비밀번호</span>
+                <div className="input-with-icon">
+                  <Lock size={16} className="field-icon" />
+                  <input
+                    className="with-password-toggle"
+                    aria-describedby="new-password-help"
+                    aria-invalid={newPassword.length > 0 && !isNewPasswordValid}
+                    autoComplete="new-password"
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="새 비밀번호"
+                    required
+                    type={showNew ? "text" : "password"}
+                    value={newPassword}
+                  />
+                  <button
+                    className="password-toggle-btn"
+                    onClick={() => setShowNew(!showNew)}
+                    type="button"
+                    aria-label={showNew ? "새 비밀번호 숨기기" : "새 비밀번호 보기"}
+                  >
+                    {showNew ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </label>
+
+              <p
+                className={`mypage-field-help${newPassword && !isNewPasswordValid ? " is-error" : ""}`}
+                id="new-password-help"
               >
-                {showCurrent ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
-            </div>
-          </label>
+                8자 이상, 영문 대·소문자, 숫자, 특수문자를 포함해 주세요.
+              </p>
 
-          <label className="auth-field-label" style={{ marginTop: "12px" }}>
-            <span>새 비밀번호</span>
-            <div className="input-with-icon">
-              <Lock size={16} className="field-icon" />
-              <input
-                className="with-password-toggle"
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="8자 이상 입력"
-                required
-                type={showNew ? "text" : "password"}
-                value={newPassword}
-              />
-              <button
-                className="password-toggle-btn"
-                onClick={() => setShowNew(!showNew)}
-                type="button"
-                aria-label={showNew ? "새 비밀번호 숨기기" : "새 비밀번호 보기"}
-                tabIndex={0}
+              <label className="auth-field-label">
+                <span>새 비밀번호 확인</span>
+                <div className="input-with-icon">
+                  <Lock size={16} className="field-icon" />
+                  <input
+                    className="with-password-toggle"
+                    aria-describedby="confirm-password-help"
+                    aria-invalid={confirmPassword.length > 0 && !doPasswordsMatch}
+                    autoComplete="new-password"
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="새 비밀번호 확인"
+                    required
+                    type={showConfirm ? "text" : "password"}
+                    value={confirmPassword}
+                  />
+                  <button
+                    className="password-toggle-btn"
+                    onClick={() => setShowConfirm(!showConfirm)}
+                    type="button"
+                    aria-label={showConfirm ? "새 비밀번호 확인 숨기기" : "새 비밀번호 확인 보기"}
+                  >
+                    {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </label>
+
+              <p
+                className={`mypage-field-help${!doPasswordsMatch ? " is-error" : ""}`}
+                id="confirm-password-help"
               >
-                {showNew ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
-            </div>
-          </label>
+                {!doPasswordsMatch ? "새 비밀번호가 일치하지 않습니다." : "같은 비밀번호를 한 번 더 입력해 주세요."}
+              </p>
 
-          {newPassword && !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/.test(newPassword) && (
-            <p className="form-error" style={{ fontSize: "11px", marginTop: "4px", color: "var(--c-muted)", paddingLeft: "42px" }}>
-              ⚠️ 영문 대/소문자, 숫자, 특수문자를 각각 최소 1개 이상 포함해야 합니다.
-            </p>
-          )}
+              {error && <p className="form-error" role="alert">{error}</p>}
+              {message && <p className="form-success" role="status">{message}</p>}
 
-          <label className="auth-field-label" style={{ marginTop: "12px" }}>
-            <span>새 비밀번호 확인</span>
-            <div className="input-with-icon">
-              <Lock size={16} className="field-icon" />
-              <input
-                className="with-password-toggle"
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="새 비밀번호 다시 입력"
-                required
-                type={showConfirm ? "text" : "password"}
-                value={confirmPassword}
-              />
               <button
-                className="password-toggle-btn"
-                onClick={() => setShowConfirm(!showConfirm)}
-                type="button"
-                aria-label={showConfirm ? "새 비밀번호 확인 숨기기" : "새 비밀번호 확인 보기"}
-                tabIndex={0}
+                className="primary-button mypage-password-submit"
+                disabled={submitting || !currentPassword || !isNewPasswordValid || !confirmPassword || !doPasswordsMatch}
+                type="submit"
               >
-                {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                {submitting ? "변경 중…" : "비밀번호 변경"}
               </button>
-            </div>
-          </label>
-
-          {error && <p className="form-error" style={{ marginTop: "8px" }}>{error}</p>}
-          {message && <p style={{ color: "var(--c-route)", fontSize: "13px", fontWeight: 700, marginTop: "8px" }}>{message}</p>}
-
-          <button className="primary-button" disabled={submitting} type="submit" style={{ marginTop: "16px" }}>
-            비밀번호 변경 완료
-          </button>
-        </form>
-      </div>
+            </form>
+          </div>
+        </details>
+      </section>
     </section>
   );
 }
