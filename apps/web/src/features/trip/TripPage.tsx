@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { BottomTabs } from "./components/BottomTabs";
 import { ConciergeTab } from "./components/ConciergeTab";
 import { FlightTab } from "./components/FlightTab";
@@ -14,6 +15,10 @@ type TripPageComponentProps = TripPageProps & {
 // 일반 여행 화면의 탭 컴포넌트를 조립한다. 상태 저장과 API 흐름은 App.tsx가 관리한다.
 export function TripPage(props: TripPageComponentProps) {
   const { activeTab, contentRef, onLogout, setActiveTab } = props;
+
+  useEffect(() => {
+    contentRef.current?.scrollTo({ top: 0 });
+  }, [activeTab, contentRef]);
 
   return (
     <main className="app-shell">

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Copy, Maximize2, Train, AlertTriangle, X } from "lucide-react";
+import { AlertTriangle, Check, Copy, Maximize2, Train, X } from "lucide-react";
 import { MapDirectionsChoice } from "../../../shared/components/MapDirectionsChoice";
 import { placeCategoryLabels } from "../../../shared/travelOptions";
 import type { TripPageProps } from "../tripPageTypes";
@@ -7,6 +7,7 @@ import { ProfileShortcutButton } from "./ProfileShortcutButton";
 
 export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateToMyPage }: TripPageProps) {
   const [subTab, setSubTab] = useState<"timeline" | "all">("timeline");
+  const [copiedPlaceID, setCopiedPlaceID] = useState("");
   
   // 택시 제시용 큰 글씨 모달
   const [phraseModal, setPhraseModal] = useState<{ open: boolean; title: string; address: string }>({
@@ -18,9 +19,15 @@ export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateTo
   const isChina = trip.destinationCountry === "CN";
 
   // 클립보드 복사 헬퍼
-  const handleCopyAddress = (address: string) => {
-    navigator.clipboard.writeText(address);
-    alert("주소가 클립보드에 복사되었습니다.");
+  const handleCopyAddress = async (placeID: string, address: string) => {
+    if (!navigator.clipboard) return;
+    try {
+      await navigator.clipboard.writeText(address);
+      setCopiedPlaceID(placeID);
+      window.setTimeout(() => setCopiedPlaceID(""), 2000);
+    } catch {
+      setCopiedPlaceID("");
+    }
   };
 
   // 스케줄 목록에서 장소가 등록된 일정만 추출하여 타임라인 순으로 구성
@@ -44,6 +51,7 @@ export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateTo
       {/* 2단 세그먼트 제어바 */}
       <div className="map-segment-control">
         <button
+          aria-pressed={subTab === "timeline"}
           className={subTab === "timeline" ? "active" : ""}
           onClick={() => setSubTab("timeline")}
           type="button"
@@ -51,6 +59,7 @@ export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateTo
           📅 오늘 동선
         </button>
         <button
+          aria-pressed={subTab === "all"}
           className={subTab === "all" ? "active" : ""}
           onClick={() => setSubTab("all")}
           type="button"
@@ -79,7 +88,7 @@ export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateTo
                     <div>
                       <div style={{ display: "flex", gap: "6px", alignItems: "center", marginBottom: "8px" }}>
                         <span className="pill subtle">{placeCategoryLabels[place.category]}</span>
-                        {schedule.time && <span className="pill subtle" style={{ background: "rgba(16, 185, 129, 0.15)", color: "#10b981" }}>{schedule.time}</span>}
+                        {schedule.time && <span className="pill subtle" style={{ background: "var(--c-green-light)", color: "var(--c-green)" }}>{schedule.time}</span>}
                       </div>
 
                       <h2 style={{ fontSize: "20px", fontWeight: 700, color: "var(--c-text)", marginBottom: "4px" }}>
@@ -88,7 +97,7 @@ export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateTo
 
                       {/* 중국어 명칭 (존재 시) */}
                       {place.chineseName && (
-                        <p style={{ color: "#10b981", fontSize: "14px", fontWeight: 700, margin: "2px 0 6px" }}>
+                        <p style={{ color: "var(--c-green)", fontSize: "14px", fontWeight: 700, margin: "2px 0 6px" }}>
                           {place.chineseName}
                         </p>
                       )}
@@ -104,7 +113,7 @@ export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateTo
                           </div>
                         )}
                         {place.chineseAddress && (
-                          <div style={{ display: "flex", gap: "4px", color: "#10b981" }}>
+                          <div style={{ display: "flex", gap: "4px", color: "var(--c-green)" }}>
                             <span>중국 주소:</span>
                             <span>{place.chineseAddress}</span>
                           </div>
@@ -134,12 +143,13 @@ export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateTo
                         {(place.address || place.chineseAddress) && (
                           <button
                             className="secondary-button compact-button"
-                            onClick={() => handleCopyAddress(place.chineseAddress || place.address || "")}
+                            onClick={() => void handleCopyAddress(place.id, place.chineseAddress || place.address || "")}
                             type="button"
                             style={{ padding: "0 10px" }}
-                            title="주소 복사"
+                            title={copiedPlaceID === place.id ? "주소 복사 완료" : "주소 복사"}
+                            aria-label={copiedPlaceID === place.id ? `${place.name} 주소 복사 완료` : `${place.name} 주소 복사`}
                           >
-                            <Copy size={14} />
+                            {copiedPlaceID === place.id ? <Check size={14} /> : <Copy size={14} />}
                           </button>
                         )}
 
@@ -152,7 +162,7 @@ export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateTo
                               address: place.chineseAddress || place.address || "주소 정보 없음",
                             })}
                             type="button"
-                            style={{ padding: "0 10px", color: "#10b981", borderColor: "rgba(16, 185, 129, 0.3)" }}
+                            style={{ padding: "0 10px", color: "var(--c-green)", borderColor: "var(--border-color)" }}
                             title="기사님께 크게 보여주기"
                           >
                             <Maximize2 size={14} />
@@ -198,7 +208,7 @@ export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateTo
                     <span className="pill subtle" style={{ marginBottom: "8px", display: "inline-block" }}>{placeCategoryLabels[place.category]}</span>
                     <h2 style={{ fontSize: "20px", fontWeight: 700, color: "var(--c-text)", marginBottom: "4px" }}>{place.name}</h2>
                     {place.chineseName && (
-                      <p style={{ color: "#10b981", fontSize: "14px", fontWeight: 700, margin: "2px 0 6px" }}>{place.chineseName}</p>
+                      <p style={{ color: "var(--c-green)", fontSize: "14px", fontWeight: 700, margin: "2px 0 6px" }}>{place.chineseName}</p>
                     )}
                     <p className="muted" style={{ fontSize: "14px", lineHeight: 1.4 }}>{place.recommendedReason}</p>
 
@@ -210,7 +220,7 @@ export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateTo
                         </div>
                       )}
                       {place.chineseAddress && (
-                        <div style={{ display: "flex", gap: "4px", color: "#10b981" }}>
+                        <div style={{ display: "flex", gap: "4px", color: "var(--c-green)" }}>
                           <span>중국 주소:</span>
                           <span>{place.chineseAddress}</span>
                         </div>
@@ -238,12 +248,13 @@ export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateTo
                       {(place.address || place.chineseAddress) && (
                         <button
                           className="secondary-button compact-button"
-                          onClick={() => handleCopyAddress(place.chineseAddress || place.address || "")}
+                          onClick={() => void handleCopyAddress(place.id, place.chineseAddress || place.address || "")}
                           type="button"
                           style={{ padding: "0 10px" }}
-                          title="주소 복사"
+                          title={copiedPlaceID === place.id ? "주소 복사 완료" : "주소 복사"}
+                          aria-label={copiedPlaceID === place.id ? `${place.name} 주소 복사 완료` : `${place.name} 주소 복사`}
                         >
-                          <Copy size={14} />
+                          {copiedPlaceID === place.id ? <Check size={14} /> : <Copy size={14} />}
                         </button>
                       )}
 
@@ -256,7 +267,7 @@ export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateTo
                             address: place.chineseAddress || place.address || "주소 정보 없음",
                           })}
                           type="button"
-                          style={{ padding: "0 10px", color: "#10b981", borderColor: "rgba(16, 185, 129, 0.3)" }}
+                          style={{ padding: "0 10px", color: "var(--c-green)", borderColor: "var(--border-color)" }}
                           title="기사님께 크게 보여주기"
                         >
                           <Maximize2 size={14} />

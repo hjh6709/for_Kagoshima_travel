@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useMemo, useRef, useState, type FormEvent } from "react";
 import {
   accommodation,
   checklist,
@@ -104,11 +104,6 @@ export function useTripPageController(): TripPageProps {
         .filter((group) => group.items.length > 0),
     [allChecklist]
   );
-
-  useEffect(() => {
-    contentRef.current?.scrollTo({ top: 0 });
-    window.scrollTo({ top: 0 });
-  }, [activeTab]);
 
   function getDisplayDate(dateStr: string) {
     return shiftDate(tripDates.startDate, getDateOffset(trip.startDate, dateStr));
