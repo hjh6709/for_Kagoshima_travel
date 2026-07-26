@@ -1,53 +1,34 @@
-# 여행 도우미 앱 제품 기획
+# 여행 도우미 앱 제품 기획 & 개발자 문서 단일 진입점
 
-사용자가 직접 여행 일정과 체크리스트를 관리하고, 여행 중 필요한 정보를 빠르게 확인하는 모바일 여행 도우미 앱의 제품 기획 문서입니다.
+사용자가 직접 여행 일정, 준비물, 환율, 현지 회화를 관리하고 오프라인 환경에서도 빠르게 확인하는 모바일 여행 도우미 플랫폼의 종합 문서 단일 진입점(Entry Point)입니다.
 
-Manyfast 방식처럼 기획 산출물을 단계별로 나누고, 아래 카테고리로 묶어 둡니다.
-이 문서가 전체 문서의 단일 진입점입니다 (루트 `README.md`는 이 문서로 연결만 합니다).
+---
 
-### 1. 기획 (무엇을 만들 것인가)
+## 📚 문서 맵 (Documentation Sitemap)
 
-1. [프로덕트 요구사항 문서 (PRD)](./PRD.md)
-2. [기능명세서 (Features)](./FEATURES.md)
-3. [유저 플로우 (User Flow)](./USER_FLOW.md)
-4. [와이어프레임 (Wireframe)](./WIREFRAME.md)
+### 1. 개발자 종합 가이드 (Developer & Architecture)
+1. [개발자 종합 가이드 (DEVELOPER_GUIDE.md)](./DEVELOPER_GUIDE.md) - **(필독)** 계층화된 폴더 구조, 안티패턴 금지 규칙, 60fps 애니메이션 및 번들 구성
+2. [기술 설계서 (Tech Design)](./TECH_DESIGN.md) - 시스템 구성도, 데이터베이스 ERD, API 설계
+3. [시스템 운용 가이드 (System Guide)](./SYSTEM_GUIDE.md) - 보안, 캡차, 인증 및 오프라인 캐싱 흐름
 
-### 2. 설계와 운영 (어떻게 만들고 배포할 것인가)
+### 2. 기획 & 요구사항 (PRD & Specifications)
+4. [프로덕트 요구사항 문서 (PRD)](./PRD.md)
+5. [기능명세서 (Features)](./FEATURES.md)
+6. [유저 플로우 (User Flow)](./USER_FLOW.md)
+7. [와이어프레임 (Wireframe)](./WIREFRAME.md)
 
-5. [개발자 종합 가이드 (Developer Guide)](./DEVELOPER_GUIDE.md)
-6. [기술 설계서 (Tech Design)](./TECH_DESIGN.md)
-7. [배포 가이드](./DEPLOYMENT.md)
+### 3. 배포 & 런북 (Deployment & Runbooks)
 8. [로컬 개발 런북](./LOCAL_DEVELOPMENT_RUNBOOK.md)
 9. [Oracle VM API 배포 런북](./ORACLE_VM_DEPLOYMENT_RUNBOOK.md)
-10. [디자인 가이드라인](./DESIGN_GUIDELINES.md)
-11. [프로젝트 트러블슈팅 및 장애 해결 가이드](./TROUBLESHOOTING.md)
+10. [배포 가이드](./DEPLOYMENT.md)
+11. [디자인 가이드라인](./DESIGN_GUIDELINES.md)
+12. [프로젝트 트러블슈팅 가이드](./TROUBLESHOOTING.md)
 
-### 3. 확장 전략 (2차 백엔드 준비물)
+---
 
-10. [인증과 공유 전략](./AUTH_AND_SHARING_PLAN.md)
-11. [백엔드 포트폴리오 로드맵](./BACKEND_PORTFOLIO_ROADMAP.md)
-12. [MVP와 초기 사용자 확보 전략](./MVP_AND_GTM_STRATEGY.md)
+## 💡 개발 및 코드 작성 시 핵심 참고 규칙
 
-### 4. 보관 (대체된 초기 자료, 참고용)
-
-- [초기 앱 기획서](./archive/APP_PLANNING.md) — PRD/Features/User Flow/Wireframe로 내용이 분리·대체됨
-- [Figma 컴포넌트 감사 노트](./archive/FIGMA_COMPONENT_AUDIT.md) — 디자인 참고 자료 1회성 분석 기록
-
-## 프로젝트 한 줄 정의
-
-여행자가 일정, 이동, 지도, 준비물, 항공편, 긴급 정보를 직접 관리하고 여행 중 바로 확인할 수 있는 모바일 우선 PWA 여행 도우미 앱.
-
-## 기획 기준
-
-- 1차 사용자는 여행 중 앱을 직접 쓰는 여행자다.
-- 사용자는 여행 날짜, 일정 순서, 체크리스트 항목을 직접 조정할 수 있어야 한다.
-- Android와 iPhone에서 모두 사용할 수 있어야 한다.
-- 앱스토어 배포보다 빠른 공유와 설치가 중요하다.
-- 1차 MVP는 비용을 줄이기 위해 Vercel Hobby 정적 PWA로 배포한다.
-- 사용자 입력형 Beta부터는 Go 백엔드, PostgreSQL, 로그인, 공유 링크를 붙인다.
-- 공유 링크는 가족이나 동행자가 같은 여행 정보를 확인하는 보조 기능으로 둔다.
-- 백엔드 포트폴리오 관점에서는 REST API, PostgreSQL, 인증/인가, 배포 흐름을 설명할 수 있어야 한다.
-- 상용 서비스 검증은 많은 기능보다 `여행 입력 -> 여행 중 직접 사용 -> 필요한 사람에게 공유`의 핵심 흐름을 먼저 검증한다.
-- 여행 중 인터넷이 불안정할 수 있으므로 핵심 정보는 오프라인 확인이 가능해야 한다.
-- 복잡한 입력보다 여행 중 바로 수정하고 확인할 수 있는 간단한 조작이 우선이다.
-- Claude Code와 Gemini Pro는 디자인 보조 도구로 쓰되, 여행 중 실용성과 가독성을 최우선으로 둔다.
+- **단일 책임 서브 모듈화 (Single Responsibility)**: 300줄 이상의 거대 비대 파일(God Object)은 단일 책임 컴포넌트 및 유틸로 분리합니다.
+- **계층화된 컴포넌트 폴더 구조**: UI 컴포넌트는 `tabs/`, `sections/`, `cards/`, `forms/`, `lists/`, `helpers/` 서브 폴더에 작성하고 `index.ts` Barrel Export로 노출합니다.
+- **오프라인 회복력 (Offline Resilience)**: 네트워크 오프라인 상태에서도 최근 방문 데이터 및 오프라인 캐시가 부드럽게 복원되도록 유지합니다.
+- **60fps Transform 애니메이션**: Layout Reflow를 일으키는 width/left 대신 GPU 가속 transform과 opacity 속성만을 사용합니다.
