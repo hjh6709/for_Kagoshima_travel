@@ -1,4 +1,4 @@
-import { CalendarDays, Home, Map as MapIcon, Plane, Shield } from "lucide-react";
+import { CalendarDays, Home, Map as MapIcon, Plane, Shield, User } from "lucide-react";
 import type { Tab } from "../../tripViewState";
 
 type BottomTabsProps = {
@@ -8,31 +8,42 @@ type BottomTabsProps = {
 
 const tabs: Array<{ id: Tab; label: string; icon: typeof Home }> = [
   { id: "today", label: "오늘", icon: Home },
-  { id: "schedule", label: "전체 일정", icon: CalendarDays },
+  { id: "schedule", label: "일정", icon: CalendarDays },
   { id: "flight", label: "항공", icon: Plane },
   { id: "map", label: "지도", icon: MapIcon },
   { id: "concierge", label: "긴급", icon: Shield },
+  { id: "mypage", label: "마이", icon: User },
 ];
 
-// 하단 탭 내비게이션만 담당한다. 현재 탭 상태는 상위에서 관리한다.
+/**
+ * BottomTabs 컴포넌트
+ * 하단 네비게이션 탭 바입니다. (오늘, 일정, 항공, 지도, 긴급, 마이페이지)
+ */
 export function BottomTabs({ activeTab, setActiveTab }: BottomTabsProps) {
   return (
-    <nav className="bottom-tabs" aria-label="주요 메뉴">
-      {tabs.map((tab) => {
-        const Icon = tab.icon;
-        return (
-          <button
-            aria-current={activeTab === tab.id ? "page" : undefined}
-            className={activeTab === tab.id ? "active" : ""}
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            type="button"
-          >
-            <Icon size={21} />
-            <span>{tab.label}</span>
-          </button>
-        );
-      })}
+    <nav className="bottom-tabs" aria-label="주요 메뉴 내비게이션">
+      <div role="tablist" aria-label="여행 탭 리스트" style={{ display: "contents" }}>
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              role="tab"
+              id={`tab-${tab.id}`}
+              aria-controls={`tabpanel-${tab.id}`}
+              aria-selected={isActive}
+              aria-label={`${tab.label} 탭${isActive ? ", 현재 선택됨" : ""}`}
+              className={isActive ? "active" : ""}
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              type="button"
+            >
+              <Icon size={20} aria-hidden="true" />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
     </nav>
   );
 }
