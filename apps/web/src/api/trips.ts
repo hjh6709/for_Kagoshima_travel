@@ -1,4 +1,8 @@
 import { apiRequest } from "./auth";
+import type { ChecklistItemResponse } from "./checklist";
+import type { SharedFlight } from "./flights";
+import type { SharedPlace } from "./places";
+import type { SharedSchedule } from "./schedules";
 
 export type OwnerTrip = {
   id: string;
@@ -21,65 +25,6 @@ export type CreateTripPayload = {
 
 export type UpdateTripPayload = Partial<CreateTripPayload>;
 
-export type CreateSchedulePayload = {
-  placeId?: string;
-  date: string;
-  time: string;
-  type: string;
-  title: string;
-  transportMemo?: string;
-  guideMemo?: string;
-};
-
-export type UpdateSchedulePayload = Partial<CreateSchedulePayload>;
-
-export type CreatePlacePayload = {
-  name: string;
-  category: string;
-  address?: string;
-  googleMapsUrl?: string;
-  recommendedReason?: string;
-  latitude?: number;
-  longitude?: number;
-  googlePlaceId?: string;
-  chineseName?: string;
-  chineseAddress?: string;
-  subwayExit?: string;
-  taxiPhrase?: string;
-};
-
-export type UpdatePlacePayload = Partial<CreatePlacePayload>;
-
-export type PlaceSearchResult = {
-  name: string;
-  address?: string;
-  latitude?: number;
-  longitude?: number;
-  googlePlaceId?: string;
-  chineseName?: string;
-  chineseAddress?: string;
-  subwayExit?: string;
-  taxiPhrase?: string;
-};
-
-export type PlaceSearchSelection = Pick<PlaceSearchResult, "latitude" | "longitude" | "googlePlaceId">;
-
-export type CreateFlightPayload = {
-  direction: string;
-  label: string;
-  airline?: string;
-  flightNumber?: string;
-  departureAirport: string;
-  arrivalAirport: string;
-  departureDate: string;
-  departureTime: string;
-  arrivalDate?: string;
-  arrivalTime?: string;
-  memo?: string;
-};
-
-export type UpdateFlightPayload = Partial<CreateFlightPayload>;
-
 export type ShareLinkResponse = {
   token: string;
   apiPath: string;
@@ -96,48 +41,6 @@ export type PublicTrip = {
   destinationCountry: string;
 };
 
-export type SharedSchedule = {
-  id: string;
-  placeId?: string;
-  date: string;
-  time: string;
-  type: string;
-  title: string;
-  transportMemo?: string;
-  guideMemo?: string;
-};
-
-export type SharedPlace = {
-  id: string;
-  name: string;
-  category: string;
-  address?: string;
-  googleMapsUrl?: string;
-  recommendedReason?: string;
-  latitude?: number;
-  longitude?: number;
-  googlePlaceId?: string;
-  chineseName?: string;
-  chineseAddress?: string;
-  subwayExit?: string;
-  taxiPhrase?: string;
-};
-
-export type SharedFlight = {
-  id: string;
-  direction: string;
-  label: string;
-  airline?: string;
-  flightNumber?: string;
-  departureAirport: string;
-  arrivalAirport: string;
-  departureDate: string;
-  departureTime: string;
-  arrivalDate?: string;
-  arrivalTime?: string;
-  memo?: string;
-};
-
 export type SharedRoute = {
   id: string;
   title: string;
@@ -146,8 +49,6 @@ export type SharedRoute = {
   transportMemo?: string;
   estimatedDuration?: string;
 };
-
-import type { ChecklistItemResponse } from "./checklist";
 
 export type SharedTripResponse = {
   trip: PublicTrip;
@@ -186,138 +87,18 @@ export function updateTrip(accessToken: string, tripID: string, payload: UpdateT
   });
 }
 
+export function deleteTrip(accessToken: string, tripID: string) {
+  return apiRequest<void>(`/api/trips/${tripID}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+}
+
 export function createShareLink(accessToken: string, tripID: string) {
   return apiRequest<ShareLinkResponse>(`/api/trips/${tripID}/share`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-}
-
-export function listTripSchedules(accessToken: string, tripID: string) {
-  return apiRequest<SharedSchedule[]>(`/api/trips/${tripID}/schedules`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-}
-
-export function createTripSchedule(accessToken: string, tripID: string, payload: CreateSchedulePayload) {
-  return apiRequest<SharedSchedule>(`/api/trips/${tripID}/schedules`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify(payload),
-  });
-}
-
-export function updateTripSchedule(
-  accessToken: string,
-  tripID: string,
-  scheduleID: string,
-  payload: UpdateSchedulePayload
-) {
-  return apiRequest<SharedSchedule>(`/api/trips/${tripID}/schedules/${scheduleID}`, {
-    method: "PATCH",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify(payload),
-  });
-}
-
-export function deleteTripSchedule(accessToken: string, tripID: string, scheduleID: string) {
-  return apiRequest<void>(`/api/trips/${tripID}/schedules/${scheduleID}`, {
-    method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-}
-
-export function listTripPlaces(accessToken: string, tripID: string) {
-  return apiRequest<SharedPlace[]>(`/api/trips/${tripID}/places`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-}
-
-export function searchTripPlaces(accessToken: string, tripID: string, query: string) {
-  return apiRequest<PlaceSearchResult[]>(`/api/trips/${tripID}/places/search?q=${encodeURIComponent(query)}`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-}
-
-export function createTripPlace(accessToken: string, tripID: string, payload: CreatePlacePayload) {
-  return apiRequest<SharedPlace>(`/api/trips/${tripID}/places`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify(payload),
-  });
-}
-
-export function updateTripPlace(accessToken: string, tripID: string, placeID: string, payload: UpdatePlacePayload) {
-  return apiRequest<SharedPlace>(`/api/trips/${tripID}/places/${placeID}`, {
-    method: "PATCH",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify(payload),
-  });
-}
-
-export function deleteTripPlace(accessToken: string, tripID: string, placeID: string) {
-  return apiRequest<void>(`/api/trips/${tripID}/places/${placeID}`, {
-    method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-}
-
-export function listTripFlights(accessToken: string, tripID: string) {
-  return apiRequest<SharedFlight[]>(`/api/trips/${tripID}/flights`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-}
-
-export function createTripFlight(accessToken: string, tripID: string, payload: CreateFlightPayload) {
-  return apiRequest<SharedFlight>(`/api/trips/${tripID}/flights`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify(payload),
-  });
-}
-
-export function updateTripFlight(
-  accessToken: string,
-  tripID: string,
-  flightID: string,
-  payload: UpdateFlightPayload
-) {
-  return apiRequest<SharedFlight>(`/api/trips/${tripID}/flights/${flightID}`, {
-    method: "PATCH",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify(payload),
-  });
-}
-
-export function deleteTripFlight(accessToken: string, tripID: string, flightID: string) {
-  return apiRequest<void>(`/api/trips/${tripID}/flights/${flightID}`, {
-    method: "DELETE",
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
@@ -328,11 +109,7 @@ export function getSharedTrip(token: string) {
   return apiRequest<SharedTripResponse>(`/api/share/${encodeURIComponent(token)}`);
 }
 
-export function deleteTrip(accessToken: string, tripID: string) {
-  return apiRequest<void>(`/api/trips/${tripID}`, {
-    method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-}
+// Re-export sub-module API functions and types for backwards compatibility
+export * from "./places";
+export * from "./schedules";
+export * from "./flights";
