@@ -141,8 +141,8 @@ export function MyPageTab({ trip, onLogout, editTripHref, isDemo }: MyPageTabPro
         </article>
       )}
 
-      <section className="section-block">
-        <h2>비밀번호 변경</h2>
+      <div style={{ marginTop: "24px" }}>
+        <h2 style={{ fontSize: "20px", fontWeight: 800, color: "var(--c-text)", marginBottom: "12px" }}>비밀번호 변경</h2>
         <form className="auth-form auth-card-premium" onSubmit={handlePasswordChange} style={{ background: "var(--c-surface)" }}>
           <label className="auth-field-label">
             <span>현재 비밀번호</span>
@@ -229,7 +229,7 @@ export function MyPageTab({ trip, onLogout, editTripHref, isDemo }: MyPageTabPro
             비밀번호 변경 완료
           </button>
         </form>
-      </section>
+      </div>
     </section>
   );
 }

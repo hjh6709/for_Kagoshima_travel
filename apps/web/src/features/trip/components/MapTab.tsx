@@ -84,7 +84,7 @@ export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateTo
               return (
                 <div key={schedule.id}>
                   {/* 장소 카드 */}
-                  <article className="place-card" style={{ background: "var(--bg-secondary)", borderRadius: "16px", border: "1px solid var(--border-color)", padding: "20px", display: "grid", gap: "12px" }}>
+                  <article className="place-card" style={{ background: "var(--c-surface)", borderRadius: "16px", border: "1px solid rgba(15, 23, 42, 0.08)", boxShadow: "0 4px 16px rgba(15, 23, 42, 0.04)", padding: "20px", display: "grid", gap: "12px" }}>
                     <div>
                       <div style={{ display: "flex", gap: "6px", alignItems: "center", marginBottom: "8px" }}>
                         <span className="pill subtle">{placeCategoryLabels[place.category]}</span>
@@ -203,7 +203,7 @@ export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateTo
               const hasCoords = place.latitude !== undefined && place.longitude !== undefined;
 
               return (
-                <article className="place-card" key={place.id} style={{ background: "var(--bg-secondary)", borderRadius: "16px", border: "1px solid var(--border-color)", padding: "20px", display: "grid", gap: "12px" }}>
+                <article className="place-card" key={place.id} style={{ background: "var(--c-surface)", borderRadius: "16px", border: "1px solid rgba(15, 23, 42, 0.08)", boxShadow: "0 4px 16px rgba(15, 23, 42, 0.04)", padding: "20px", display: "grid", gap: "12px" }}>
                   <div>
                     <span className="pill subtle" style={{ marginBottom: "8px", display: "inline-block" }}>{placeCategoryLabels[place.category]}</span>
                     <h2 style={{ fontSize: "20px", fontWeight: 700, color: "var(--c-text)", marginBottom: "4px" }}>{place.name}</h2>

@@ -1,22 +1,22 @@
 :root {
   --c-green: #11261b;
-  --c-gold: #b38539;
+  --c-gold: #925f0e;
   --c-danger: #a93c39;
   --c-accent-emerald: #059669;
-  --c-bg: #faf7f2;
-  --c-page: #e8e2d8;
+  --c-bg: #f8fafc;
+  --c-page: #0f172a;
   --c-surface: #ffffff;
-  --c-text: #06120c;
-  --c-muted: #3d4c44;
-  --c-green-light: #e5f1ea;
-  --c-gold-light: #f7efe2;
-  --c-danger-light: #fadede;
-  --border-color: rgba(17, 38, 27, 0.14);
+  --c-text: #0f172a;
+  --c-muted: #475569;
+  --c-green-light: #e6f4ed;
+  --c-gold-light: #fef3c7;
+  --c-danger-light: #fee2e2;
+  --border-color: rgba(15, 23, 42, 0.12);
   --bg-secondary: var(--c-green-light);
   --radius-card: 18px;
   --radius-control: 14px;
-  --shadow-card: 0 12px 32px rgba(17, 38, 27, 0.07);
-  --shadow-premium: 0 20px 48px rgba(17, 38, 27, 0.14);
+  --shadow-card: 0 8px 24px rgba(15, 23, 42, 0.06);
+  --shadow-premium: 0 16px 36px rgba(15, 23, 42, 0.12);
 
   color: var(--c-text);
   background: var(--c-page);
@@ -68,7 +68,7 @@ a:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 3px solid rgba(201, 155, 74, 0.5);
+  outline: 3px solid rgba(146, 95, 14, 0.5);
   outline-offset: 3px;
 }
 
@@ -81,7 +81,7 @@ button:disabled {
   height: 100dvh;
   min-height: 100dvh;
   overflow: hidden;
-  background: radial-gradient(circle at 50% 20%, #f4eee5 0%, #e2d9cc 100%);
+  background: #090d16;
   display: grid;
   place-items: center;
   padding: 24px;
@@ -109,18 +109,19 @@ button:disabled {
   width: min(100%, 430px);
   height: min(860px, calc(100dvh - 48px));
   background: var(--c-bg);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  border: none;
   border-radius: 28px;
-  box-shadow: 0 32px 90px rgba(19, 42, 30, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.45);
   display: grid;
   grid-template-rows: 1fr auto;
   overflow: hidden;
+  padding-bottom: 8px;
 }
 
 .content {
   overflow-y: auto;
   overflow-x: hidden;
-  padding-bottom: 12px;
+  padding-bottom: 24px;
   -webkit-overflow-scrolling: touch; /* 관성 스크롤 복원 */
   scroll-behavior: smooth;
   overscroll-behavior-y: contain; /* 바운스 체인 차단 */
@@ -132,7 +133,7 @@ button:disabled {
 }
 
 .screen {
-  padding: calc(24px + env(safe-area-inset-top)) 20px 24px;
+  padding: calc(24px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom));
   animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -154,13 +155,13 @@ button:disabled {
   border-radius: 14px;
   background: linear-gradient(135deg, var(--c-green), #1b3d2c);
   color: #ffffff;
-  box-shadow: 0 10px 24px rgba(19, 42, 30, 0.18);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
 }
 
 .status-card.before,
 .status-card.after {
   background: linear-gradient(135deg, #a97c38, var(--c-gold));
-  box-shadow: 0 10px 24px rgba(169, 124, 56, 0.2);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
 }
 
 .status-card span {
@@ -849,9 +850,9 @@ p {
 }
 
 .quick-button {
-  background: var(--c-surface);
+  background: rgba(15, 23, 42, 0.04);
   color: var(--c-text);
-  border: 0;
+  border: 1px solid rgba(15, 23, 42, 0.06);
   padding: 14px 10px;
 }
 
@@ -1287,11 +1288,10 @@ p {
 .home-checklist-card {
   display: grid;
   gap: 8px;
-  padding: 10px;
-  border: 1px solid rgba(36, 48, 47, 0.1);
-  border-radius: 10px;
-  background: var(--c-surface);
-  box-shadow: 0 10px 26px rgba(28, 50, 37, 0.08);
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
 }
 
 .home-checklist-card p {
@@ -1314,9 +1314,9 @@ p {
 }
 
 .date-details {
-  border: 1px solid rgba(36, 48, 47, 0.1);
-  border-radius: 10px;
-  background: var(--c-surface);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.03);
   padding: 14px 16px;
 }
 
@@ -2314,14 +2314,14 @@ p {
   background: linear-gradient(135deg, var(--c-green), #1b3e2b);
   color: #34d399;
   border-color: rgba(52, 211, 153, 0.3);
-  box-shadow: 0 4px 14px rgba(19, 42, 30, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .dday-active {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.1));
   color: #2563eb;
   border-color: rgba(59, 130, 246, 0.35);
-  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .dday-past {
@@ -2410,7 +2410,7 @@ p {
   background: var(--c-danger);
   color: #ffffff;
   border-color: var(--c-danger);
-  box-shadow: 0 6px 18px rgba(185, 74, 72, 0.25);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
 }
 
 .danger-button:disabled {
