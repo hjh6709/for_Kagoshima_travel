@@ -1,5 +1,5 @@
 import type { FormEvent, RefObject } from "react";
-import type { TripDates } from "../../shared/date";
+import type { TravelPhase, TripDates } from "../../shared/date";
 import type {
   AccommodationInfo,
   ChecklistItem,
@@ -27,6 +27,7 @@ export type TripPageProps = {
   editTripHref?: string;
   emergencies: EmergencyInfo[];
   flights: FlightInfo[];
+  focusDate: string;
   focusCompletedScheduleCount: number;
   focusSchedules: ScheduleItem[];
   getDisplayDate: (dateStr: string) => string;
@@ -38,15 +39,16 @@ export type TripPageProps = {
   isChecklistEditing: boolean;
   newChecklistCategory: ChecklistCategory;
   newChecklistTitle: string;
-  nextSchedule: ScheduleItem;
+  nextSchedule: ScheduleItem | null;
   phrases: UsefulPhrase[];
   places: Place[];
   routes: RecommendedRoute[];
+  scheduleView: "itinerary" | "checklist";
   selectedDate: string;
   selectedSchedules: ScheduleItem[];
   trip: Trip;
   tripDates: TripDates;
-  travelStatus: { phase: string; label: string; description: string };
+  travelStatus: { phase: TravelPhase; label: string; description: string };
   addChecklistItem: (event: FormEvent<HTMLFormElement>) => void;
   copyAccommodationAddress: () => void;
   moveSchedule: (scheduleID: string, direction: "up" | "down") => void;
@@ -56,6 +58,7 @@ export type TripPageProps = {
   setIsChecklistEditing: (value: boolean) => void;
   setNewChecklistCategory: (category: ChecklistCategory) => void;
   setNewChecklistTitle: (title: string) => void;
+  setScheduleView: (view: "itinerary" | "checklist") => void;
   setSelectedDate: (date: string) => void;
   toggleCheck: (id: string) => void;
   toggleScheduleComplete: (id: string) => void;

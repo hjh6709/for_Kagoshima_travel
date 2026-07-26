@@ -11,7 +11,7 @@ import {
 } from "../../shared/date";
 import { checklistCategories } from "../../shared/travelOptions";
 import { phrases } from "../../data/sampleTrip";
-import type { ChecklistItem, ScheduleItem } from "../../types/travel";
+import type { ChecklistItem } from "../../types/travel";
 import {
   deriveAccommodation,
   getOwnerPlaceById,
@@ -46,8 +46,6 @@ type UseOwnerTripPageAdapterParams = {
   editTripHref: string;
 };
 
-const FALLBACK_SCHEDULE_ID = "__owner-trip-no-schedule__";
-
 // 실제 소유자 여행 데이터를 /demo와 동일한 TripPage가 요구하는 props 모양으로 조립한다.
 // 새 API 호출은 하지 않는다 — 인자로 받은 값은 전부 useTripManageController가 이미 불러온 것이다.
 export function useOwnerTripPageAdapter({
@@ -69,6 +67,7 @@ export function useOwnerTripPageAdapter({
   const tripId = selectedOwnerTrip.id;
 
   const [activeTab, setActiveTab] = useState<Tab>("today");
+  const [scheduleView, setScheduleView] = useState<"itinerary" | "checklist">("itinerary");
   const [addressCopied, setAddressCopied] = useState(false);
   const [isChecklistEditing, setIsChecklistEditing] = useState(false);
   const [tripDates, setTripDatesState] = useState<TripDates>(() =>
@@ -121,19 +120,12 @@ export function useOwnerTripPageAdapter({
     () => getOwnerSchedulesForDate(focusScheduleDate, schedules, scheduleOrderByDate),
     [focusScheduleDate, schedules, scheduleOrderByDate]
   );
-  const fallbackSchedule: ScheduleItem = {
-    id: FALLBACK_SCHEDULE_ID,
-    date: trip.startDate,
-    time: "",
-    type: "etc",
-    title: "등록된 일정이 없습니다",
-    guideMemo: "편집 화면에서 일정을 추가해보세요.",
-  };
   const nextSchedule =
-    focusSchedules.find((item) => !completedSchedules[item.id]) ??
-    schedules.find((item) => !completedSchedules[item.id]) ??
-    schedules[0] ??
-    fallbackSchedule;
+    travelStatus.phase === "after"
+      ? null
+      : focusSchedules.find((item) => !completedSchedules[item.id]) ??
+        schedules.find((item) => item.date > focusScheduleDate && !completedSchedules[item.id]) ??
+        null;
   const focusCompletedScheduleCount = focusSchedules.filter((item) => completedSchedules[item.id]).length;
 
   const homeChecklistCategories: ChecklistCategory[] =
@@ -253,6 +245,7 @@ export function useOwnerTripPageAdapter({
     editTripHref,
     emergencies,
     flights,
+    focusDate: focusScheduleDate,
     focusCompletedScheduleCount,
     focusSchedules,
     getDisplayDate,
@@ -268,6 +261,7 @@ export function useOwnerTripPageAdapter({
     phrases,
     places,
     routes: [],
+    scheduleView,
     selectedDate,
     selectedSchedules,
     trip,
@@ -282,6 +276,7 @@ export function useOwnerTripPageAdapter({
     setIsChecklistEditing,
     setNewChecklistCategory: onNewChecklistCategoryChange,
     setNewChecklistTitle: onNewChecklistTitleChange,
+    setScheduleView,
     setSelectedDate,
     toggleCheck,
     toggleScheduleComplete,

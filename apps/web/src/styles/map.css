@@ -11,6 +11,7 @@
 
 .map-segment-control button {
   flex: 1;
+  min-height: 44px;
   padding: 10px;
   font-size: 14px;
   font-weight: 700;
@@ -20,6 +21,49 @@
   color: var(--c-muted);
   cursor: pointer;
   transition: background-color 0.18s var(--ease-route), color 0.18s var(--ease-route);
+}
+
+.map-screen-intro {
+  margin: 4px 0 0;
+  color: var(--c-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.map-route-summary {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--c-route-soft);
+  color: var(--c-route);
+}
+
+.map-route-summary > svg {
+  margin-top: 1px;
+}
+
+.map-route-summary strong {
+  display: block;
+  color: var(--c-text);
+  font-size: 14px;
+}
+
+.map-route-summary p {
+  margin: 3px 0 0;
+  color: var(--c-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.map-route-summary .secondary-button {
+  min-height: 40px;
+  padding: 7px 10px;
+  background: var(--c-surface);
+  font-size: 12px;
 }
 
 .map-segment-control button.active {
@@ -98,6 +142,7 @@
     calc(24px + env(safe-area-inset-bottom))
     calc(24px + env(safe-area-inset-left));
   color: #ffffff;
+  overflow-y: auto;
 }
 
 .taxi-phrase-header {
@@ -136,19 +181,19 @@
 }
 
 .taxi-phrase-title {
-  font-size: 44px;
+  font-size: clamp(32px, 9vw, 44px);
   font-weight: 800;
   line-height: 1.2;
   margin-bottom: 32px;
   color: #ffffff;
-  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 
 .taxi-phrase-address {
-  font-size: 26px;
+  font-size: clamp(20px, 5.5vw, 26px);
   line-height: 1.4;
   color: #9ca3af;
-  word-break: keep-all;
+  overflow-wrap: anywhere;
   background: rgba(255, 255, 255, 0.05);
   padding: 20px;
   border-radius: 12px;
@@ -165,7 +210,14 @@
 .map-route-list,
 .map-all-places {
   display: grid;
+}
+
+.map-route-list {
   gap: 0;
+}
+
+.map-all-places {
+  gap: 12px;
 }
 
 .map-route-stop {
@@ -290,6 +342,29 @@
   width: 44px;
   min-width: 44px;
   padding: 0;
+}
+
+.map-copy-error {
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--c-danger-light);
+  color: var(--c-danger);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+@media (max-width: 420px) {
+  .map-route-summary {
+    grid-template-columns: 24px minmax(0, 1fr);
+  }
+
+  .map-route-summary .secondary-button {
+    grid-column: 2;
+    justify-self: start;
+    min-height: 44px;
+  }
 }
 
 .map-empty-state {

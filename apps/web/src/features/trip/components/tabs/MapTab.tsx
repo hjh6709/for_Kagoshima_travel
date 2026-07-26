@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { AlertTriangle, Check, Copy, MapPin, Maximize2, Train, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { AlertTriangle, CalendarDays, Check, Copy, MapPin, Maximize2, Train, X } from "lucide-react";
 import { MapDirectionsChoice } from "../../../../shared/components/MapDirectionsChoice";
+import { formatKoreanDate } from "../../../../shared/date";
 import { placeCategoryLabels } from "../../../../shared/travelOptions";
 import type { Place } from "../../../../types/travel";
 import type { TripPageProps } from "../../tripPageTypes";
@@ -12,6 +13,7 @@ type PlaceMapCardProps = {
   isChina: boolean;
   place: Place;
   scheduleTime?: string;
+  showReason?: boolean;
   warningText: string;
   onCopyAddress: (placeID: string, address: string) => void;
   onShowPhrase: (title: string, address: string) => void;
@@ -23,6 +25,7 @@ function PlaceMapCard({
   isChina,
   place,
   scheduleTime,
+  showReason = true,
   warningText,
   onCopyAddress,
   onShowPhrase,
@@ -44,7 +47,7 @@ function PlaceMapCard({
 
         <h2>{place.name}</h2>
         {place.chineseName && <p className="place-local-name">{place.chineseName}</p>}
-        {place.recommendedReason && <p className="place-reason">{place.recommendedReason}</p>}
+        {showReason && place.recommendedReason && <p className="place-reason">{place.recommendedReason}</p>}
 
         <div className="place-address-list">
           {place.address && (
@@ -111,33 +114,88 @@ function PlaceMapCard({
   );
 }
 
-export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateToMyPage }: TripPageProps) {
+export function MapTab({
+  focusDate,
+  focusSchedules,
+  getDisplayDate,
+  getPlace,
+  places,
+  setActiveTab,
+  setScheduleView,
+  travelStatus,
+  trip,
+  onNavigateToMyPage,
+}: TripPageProps) {
   const [subTab, setSubTab] = useState<"timeline" | "all">("timeline");
   const [copiedPlaceID, setCopiedPlaceID] = useState("");
+  const [copyError, setCopyError] = useState("");
   const [phraseModal, setPhraseModal] = useState({ open: false, title: "", address: "" });
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
   const isChina = trip.destinationCountry === "CN";
+  const routeLabel =
+    travelStatus.phase === "before" ? "첫날 동선" : travelStatus.phase === "during" ? "오늘 동선" : "마지막 날 동선";
+  const routeDate = formatKoreanDate(getDisplayDate(focusDate));
+
+  useEffect(() => {
+    if (!phraseModal.open) return;
+    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    closeButtonRef.current?.focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setPhraseModal({ open: false, title: "", address: "" });
+        return;
+      }
+      if (event.key !== "Tab" || !dialogRef.current) return;
+
+      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>("button, [href], [tabindex]:not([tabindex='-1'])"));
+      const first = focusable[0];
+      const last = focusable.at(-1);
+      if (!first || !last) return;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      previouslyFocused?.focus();
+    };
+  }, [phraseModal.open]);
 
   const handleCopyAddress = async (placeID: string, address: string) => {
-    if (!navigator.clipboard) return;
+    if (!navigator.clipboard) {
+      setCopyError("이 브라우저에서는 주소 복사를 지원하지 않습니다. 주소를 길게 눌러 직접 복사해 주세요.");
+      return;
+    }
     try {
       await navigator.clipboard.writeText(address);
+      setCopyError("");
       setCopiedPlaceID(placeID);
       window.setTimeout(() => setCopiedPlaceID(""), 2000);
     } catch {
       setCopiedPlaceID("");
+      setCopyError("주소를 복사하지 못했습니다. 주소를 길게 눌러 직접 복사해 주세요.");
     }
   };
 
-  const timelineItems = selectedSchedules
+  const timelineItems = focusSchedules
     .map((schedule) => ({ schedule, place: getPlace(schedule.placeId) }))
     .filter((item): item is typeof item & { place: Place } => item.place !== undefined);
+  const missingPlaceCount = focusSchedules.length - timelineItems.length;
 
   return (
     <section className="screen map-screen">
       <div className="screen-title-row">
         <div>
-          <span className="screen-kicker">TRIP ATLAS</span>
-          <h1>지도와 동선</h1>
+          <h1>동선과 길찾기</h1>
+          <p className="map-screen-intro">일정에 연결한 장소를 이동 순서대로 확인하세요.</p>
         </div>
         <ProfileShortcutButton onClick={onNavigateToMyPage} />
       </div>
@@ -149,7 +207,7 @@ export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateTo
           onClick={() => setSubTab("timeline")}
           type="button"
         >
-          오늘 동선
+          {routeLabel}
         </button>
         <button
           aria-pressed={subTab === "all"}
@@ -157,18 +215,48 @@ export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateTo
           onClick={() => setSubTab("all")}
           type="button"
         >
-          전체 장소 <span>{places.length}</span>
+          저장한 장소 <span>{places.length}</span>
         </button>
       </div>
 
       {subTab === "timeline" ? (
-        <div className="map-route-list">
+        <>
+          <div className="map-route-summary">
+            <CalendarDays aria-hidden="true" size={19} />
+            <div>
+              <strong>{routeDate}</strong>
+              <p>
+                {focusSchedules.length === 0
+                  ? "등록된 일정이 없습니다."
+                  : `장소 연결 ${timelineItems.length}/${focusSchedules.length}${
+                      missingPlaceCount > 0
+                        ? ` · ${missingPlaceCount}개 일정은 장소 연결이 필요해요.`
+                        : " · 순서대로 길찾기를 시작하세요."
+                    }`}
+              </p>
+            </div>
+            <button
+              className="secondary-button compact-button"
+              onClick={() => {
+                setScheduleView("itinerary");
+                setActiveTab("schedule");
+              }}
+              type="button"
+            >
+              일정 보기
+            </button>
+          </div>
+          <div className="map-route-list">
           {timelineItems.length === 0 ? (
             <article className="empty-state-card list-card map-empty-state">
               <MapPin aria-hidden="true" size={24} />
               <div>
-                <strong>오늘 연결된 장소가 없습니다</strong>
-                <p>일정 탭에서 장소를 연결하면 이동 순서대로 나타납니다.</p>
+                <strong>{focusSchedules.length > 0 ? "일정에 연결된 장소가 없습니다" : `${routeLabel}이 비어 있습니다`}</strong>
+                <p>
+                  {focusSchedules.length > 0
+                    ? "여행 관리에서 각 일정에 장소를 연결해 주세요."
+                    : "일정을 추가하고 장소를 연결하면 이동 순서대로 나타납니다."}
+                </p>
               </div>
             </article>
           ) : (
@@ -182,6 +270,7 @@ export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateTo
                   onShowPhrase={(title, address) => setPhraseModal({ open: true, title, address })}
                   place={place}
                   scheduleTime={schedule.time}
+                  showReason={false}
                   warningText="정확한 위치가 없어 이름으로 검색합니다."
                 />
                 {index < timelineItems.length - 1 && (
@@ -193,7 +282,8 @@ export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateTo
               </div>
             ))
           )}
-        </div>
+          </div>
+        </>
       ) : (
         <div className="card-stack map-all-places">
           {places.length === 0 ? (
@@ -221,12 +311,25 @@ export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateTo
         </div>
       )}
 
+      {copyError && (
+        <p className="map-copy-error" role="alert">
+          {copyError}
+        </p>
+      )}
+
       {phraseModal.open && (
-        <div className="taxi-phrase-overlay" role="dialog" aria-modal="true" aria-label="기사님께 보여줄 장소">
+        <div
+          className="taxi-phrase-overlay"
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="기사님께 보여줄 장소"
+        >
           <div className="taxi-phrase-header">
             <button
               aria-label="크게 보기 닫기"
               className="taxi-phrase-close"
+              ref={closeButtonRef}
               onClick={() => setPhraseModal({ open: false, title: "", address: "" })}
               type="button"
             >
