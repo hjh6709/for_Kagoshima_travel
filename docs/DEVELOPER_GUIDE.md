@@ -34,7 +34,7 @@ for_Kagoshima_travel/
 │   │
 │   └── web/                     # React Vite PWA 프론트엔드
 │       ├── src/
-│       │   ├── api/             # HTTP 클라이언트 & API 바인딩
+│       │   ├── api/             # 엔티티별 분리된 HTTP 클라이언트 (trips, places, schedules, flights, auth, checklist, index.ts)
 │       │   ├── data/            # 정적 가고시마/상하이 오프라인 추천 데이터
 │       │   ├── features/        # 도메인 피처 모듈 (trip, manage, share, start)
 │       │   │   ├── trip/
