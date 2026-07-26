@@ -34,6 +34,7 @@ type TripRepository interface {
 	DeleteSchedule(tripID, scheduleID string) error
 	DeletePlace(tripID, placeID string) error
 	DeleteFlight(tripID, flightID string) error
+	ConsumeMonthlyAPIRequest(provider, periodStart string, limit int) (bool, error)
 	Update(trip model.Trip) error
 	Delete(id string) error
 }
@@ -46,6 +47,7 @@ type MemoryTripRepository struct {
 	flights   []model.Flight
 	routes    []model.Route
 	shares    []model.ShareLink
+	apiUsage  map[string]int
 }
 
 func NewMemoryTripRepository() *MemoryTripRepository {
@@ -121,6 +123,7 @@ func NewMemoryTripRepository() *MemoryTripRepository {
 				Memo:             "실제 항공권 정보로 교체하세요.",
 			},
 		},
+		apiUsage: make(map[string]int),
 		routes: []model.Route{
 			{
 				ID:                "route-1",
@@ -133,6 +136,17 @@ func NewMemoryTripRepository() *MemoryTripRepository {
 			},
 		},
 	}
+}
+
+func (r *MemoryTripRepository) ConsumeMonthlyAPIRequest(provider, periodStart string, limit int) (bool, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	key := provider + ":" + periodStart
+	if r.apiUsage[key] >= limit {
+		return false, nil
+	}
+	r.apiUsage[key]++
+	return true, nil
 }
 
 func (r *MemoryTripRepository) FindTrip(id string) (model.Trip, error) {

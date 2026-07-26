@@ -33,6 +33,17 @@ type ManagePlaceCreateFormProps = Pick<
   | "selectedOwnerTrip"
 > & { destinationCountry?: string };
 
+function inferPlaceCategory(query: string): PlaceCategory | null {
+  const normalized = query.trim().toLowerCase();
+  if (["카페", "커피", "커피숍", "cafe", "coffee", "咖啡", "咖啡店"].includes(normalized)) {
+    return "cafe";
+  }
+  if (["식당", "음식점", "맛집", "레스토랑", "restaurant", "food", "餐厅"].includes(normalized)) {
+    return "meal";
+  }
+  return null;
+}
+
 // 여행 관리 화면의 장소 추가 폼 및 지도 검색(Amap/Google) 연동 영역
 export function ManagePlaceCreateForm({
   auth,
@@ -125,6 +136,11 @@ export function ManagePlaceCreateForm({
       onNewPlaceTaxiPhraseChange(result.taxiPhrase || "");
     }
 
+    const inferredCategory = inferPlaceCategory(searchQuery);
+    if (inferredCategory) {
+      onNewPlaceCategoryChange(inferredCategory);
+    }
+
     onNewPlaceSearchSelectionChange({
       latitude: result.latitude,
       longitude: result.longitude,
@@ -145,10 +161,10 @@ export function ManagePlaceCreateForm({
       <div style={{ background: "var(--c-green-light)", border: "1px solid var(--border-color)", borderRadius: "12px", padding: "16px", marginBottom: "20px" }}>
         <h4 style={{ fontSize: "14px", fontWeight: 700, color: "var(--c-text)", marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
           <Compass size={16} style={{ color: "var(--c-green)" }} />
-          지도 통합 검색 (구글 맵스 / 고덕지도 연동)
+          Google Maps 장소 검색
         </h4>
         <p style={{ fontSize: "12px", color: "var(--c-muted)", marginBottom: "12px" }}>
-          지명이나 상호명을 검색해 선택하면 주소와 지도 위치가 자동으로 저장됩니다.
+          장소 후보를 선택하면 주소와 위치가 자동으로 채워집니다. 저장 후 고덕지도나 Google 지도를 선택해 길찾기할 수 있습니다.
         </p>
         
         <div style={{ display: "flex", gap: "8px" }}>
@@ -160,7 +176,7 @@ export function ManagePlaceCreateForm({
                 void handleSearch();
               }
             }}
-            placeholder={isChinaTrip ? "중국 명소 예: 东方明珠, 신천지, 예원" : "여행지 명소 예: 센간엔, 도쿄타워"}
+            placeholder={isChinaTrip ? "장소·종류 예: 신천지, 카페, 식당" : "장소·종류 예: 센간엔, 카페, 식당"}
             style={{ flex: 1, padding: "8px 12px", fontSize: "14px", borderRadius: "8px", border: "1px solid var(--border-color)", background: "var(--c-surface)", color: "var(--c-text)" }}
             type="text"
             value={searchQuery}
@@ -180,7 +196,17 @@ export function ManagePlaceCreateForm({
         {/* 검색 결과 리스트 */}
         {searchResults.length > 0 && (
           <div style={{ marginTop: "14px", display: "grid", gap: "8px", maxHeight: "200px", overflowY: "auto", paddingRight: "4px" }}>
-            <span style={{ fontSize: "12px", color: "var(--c-muted)", fontWeight: 700 }}>검색된 후보 ({searchResults.length}개)</span>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontSize: "12px", color: "var(--c-muted)", fontWeight: 700 }}>검색된 후보 ({searchResults.length}개)</span>
+              <a
+                href="https://maps.google.com"
+                rel="noreferrer"
+                style={{ color: "#5f6368", fontFamily: "Roboto, Arial, sans-serif", fontSize: "12px", fontWeight: 500, textDecoration: "none", whiteSpace: "nowrap" }}
+                target="_blank"
+              >
+                Google Maps 제공
+              </a>
+            </div>
             {searchResults.map((result, idx) => {
               const isSelected = selectedIdx === idx;
               return (

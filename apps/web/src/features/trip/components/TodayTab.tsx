@@ -13,7 +13,6 @@ export function TodayTab(props: TripPageProps) {
     focusCompletedScheduleCount,
     focusSchedules,
     getDisplayDate,
-    getMapUrl,
     getPlace,
     homeChecklistCompletedCount,
     homeChecklistItems,
@@ -36,8 +35,8 @@ export function TodayTab(props: TripPageProps) {
         onNavigateToMyPage={onNavigateToMyPage}
       />
       <NextScheduleCard
+        destinationCountry={trip.destinationCountry}
         getDisplayDate={getDisplayDate}
-        getMapUrl={getMapUrl}
         getPlace={getPlace}
         nextSchedule={nextSchedule}
       />

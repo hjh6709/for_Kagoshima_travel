@@ -14,7 +14,6 @@ export function ScheduleTab({
   completedSchedules,
   dates,
   getDisplayDate,
-  getMapUrl,
   getPlace,
   groupedChecklist,
   hiddenChecklistIDs,
@@ -32,6 +31,7 @@ export function ScheduleTab({
   setSelectedDate,
   toggleCheck,
   toggleScheduleComplete,
+  trip,
   onNavigateToMyPage,
 }: TripPageProps) {
   return (
@@ -68,7 +68,7 @@ export function ScheduleTab({
               isLast={index === selectedSchedules.length - 1}
               item={item}
               key={item.id}
-              mapUrl={getMapUrl(place)}
+              destinationCountry={trip.destinationCountry}
               onMove={moveSchedule}
               onToggleComplete={toggleScheduleComplete}
               place={place}

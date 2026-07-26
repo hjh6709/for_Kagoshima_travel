@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Navigation, Copy, Maximize2, Train, AlertTriangle, X } from "lucide-react";
+import { Copy, Maximize2, Train, AlertTriangle, X } from "lucide-react";
+import { MapDirectionsChoice } from "../../../shared/components/MapDirectionsChoice";
 import { placeCategoryLabels } from "../../../shared/travelOptions";
 import type { TripPageProps } from "../tripPageTypes";
-import { getDirectionUrl, getPlaceMarkerUrl } from "../../../utils/mapLinks";
 import { ProfileShortcutButton } from "./ProfileShortcutButton";
 
 export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateToMyPage }: TripPageProps) {
@@ -15,22 +15,12 @@ export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateTo
     address: "",
   });
 
-  // 개별 장소 카드 내의 길찾기 메뉴 노출 여부
-  const [activeDirections, setActiveDirections] = useState<Record<string, boolean>>({});
-
   const isChina = trip.destinationCountry === "CN";
 
   // 클립보드 복사 헬퍼
   const handleCopyAddress = (address: string) => {
     navigator.clipboard.writeText(address);
     alert("주소가 클립보드에 복사되었습니다.");
-  };
-
-  const toggleDirections = (placeId: string) => {
-    setActiveDirections((prev) => ({
-      ...prev,
-      [placeId]: !prev[placeId],
-    }));
   };
 
   // 스케줄 목록에서 장소가 등록된 일정만 추출하여 타임라인 순으로 구성
@@ -81,7 +71,6 @@ export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateTo
               const place = item.place!;
               const schedule = item.schedule;
               const hasCoords = place.latitude !== undefined && place.longitude !== undefined;
-              const showMenu = activeDirections[place.id];
 
               return (
                 <div key={schedule.id}>
@@ -139,16 +128,7 @@ export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateTo
 
                     <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "12px", marginTop: "4px" }}>
                       <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                        {/* 길찾기 활성화 토글 */}
-                        <button
-                          className="secondary-button compact-button"
-                          onClick={() => toggleDirections(place.id)}
-                          type="button"
-                          style={{ flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px" }}
-                        >
-                          <Navigation size={14} />
-                          길찾기
-                        </button>
+                        <MapDirectionsChoice destinationCountry={trip.destinationCountry} place={place} />
 
                         {/* 복사 및 기사님 카드 */}
                         {(place.address || place.chineseAddress) && (
@@ -180,89 +160,6 @@ export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateTo
                         )}
                       </div>
 
-                      {/* 길찾기 수단 및 지도 제공자 선택 메뉴 */}
-                      {showMenu && (
-                        <div style={{ marginTop: "12px", background: "rgba(255,255,255,0.03)", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.06)", padding: "10px", display: "grid", gap: "8px" }}>
-                          <span style={{ fontSize: "11px", color: "var(--c-muted)", fontWeight: 700 }}>지도 앱 및 이동 수단 선택</span>
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
-                            {/* 고덕지도 (중국 메인) */}
-                            {isChina && (
-                              hasCoords ? (
-                                <>
-                                <a
-                                  href={getDirectionUrl("amap", place, "walking")}
-                                  className="primary-button compact-button"
-                                  style={{ fontSize: "11px", textAlign: "center", textDecoration: "none", background: "rgba(16, 185, 129, 0.2)", color: "#10b981", borderColor: "#10b981" }}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                >
-                                  🚶 고덕 도보
-                                </a>
-                                <a
-                                  href={getDirectionUrl("amap", place, "driving")}
-                                  className="primary-button compact-button"
-                                  style={{ fontSize: "11px", textAlign: "center", textDecoration: "none", background: "rgba(16, 185, 129, 0.2)", color: "#10b981", borderColor: "#10b981" }}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                >
-                                  🚗 고덕 차
-                                </a>
-                                </>
-                              ) : (
-                                <a
-                                  href={getPlaceMarkerUrl("amap", place)}
-                                  className="primary-button compact-button"
-                                  style={{ gridColumn: "1 / -1", fontSize: "11px", textAlign: "center", textDecoration: "none", background: "rgba(16, 185, 129, 0.2)", color: "#10b981", borderColor: "#10b981" }}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                >
-                                  🔎 고덕 장소 검색
-                                </a>
-                              )
-                            )}
-
-                            {/* 구글 지도 (공통/일본 메인) */}
-                            <a
-                              href={getDirectionUrl("google", place, "walking")}
-                              className="secondary-button compact-button"
-                              style={{ fontSize: "11px", textAlign: "center", textDecoration: "none" }}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              🚶 구글 도보
-                            </a>
-                            <a
-                              href={getDirectionUrl("google", place, "driving")}
-                              className="secondary-button compact-button"
-                              style={{ fontSize: "11px", textAlign: "center", textDecoration: "none" }}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              🚗 구글 차
-                            </a>
-
-                            {/* 애플 지도 */}
-                            <a
-                              href={getDirectionUrl("apple", place, "walking")}
-                              className="secondary-button compact-button"
-                              style={{ fontSize: "11px", textAlign: "center", textDecoration: "none" }}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              🚶 애플 도보
-                            </a>
-                            <a
-                              href={getPlaceMarkerUrl(isChina ? "amap" : "google", place)}
-                              className="secondary-button compact-button"
-                              style={{ fontSize: "11px", textAlign: "center", textDecoration: "none" }}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              📍 지도 위치만
-                            </a>
-                          </div>
-                        </div>
-                      )}
                     </div>
                   </article>
 
@@ -294,7 +191,6 @@ export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateTo
           ) : (
             places.map((place) => {
               const hasCoords = place.latitude !== undefined && place.longitude !== undefined;
-              const showMenu = activeDirections[place.id];
 
               return (
                 <article className="place-card" key={place.id} style={{ background: "var(--bg-secondary)", borderRadius: "16px", border: "1px solid var(--border-color)", padding: "20px", display: "grid", gap: "12px" }}>
@@ -337,15 +233,7 @@ export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateTo
 
                   <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "12px", marginTop: "4px" }}>
                     <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                      <button
-                        className="secondary-button compact-button"
-                        onClick={() => toggleDirections(place.id)}
-                        type="button"
-                        style={{ flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px" }}
-                      >
-                        <Navigation size={14} />
-                        길찾기
-                      </button>
+                      <MapDirectionsChoice destinationCountry={trip.destinationCountry} place={place} />
 
                       {(place.address || place.chineseAddress) && (
                         <button
@@ -376,83 +264,6 @@ export function MapTab({ selectedSchedules, getPlace, places, trip, onNavigateTo
                       )}
                     </div>
 
-                    {showMenu && (
-                      <div style={{ marginTop: "12px", background: "rgba(255,255,255,0.03)", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.06)", padding: "10px", display: "grid", gap: "8px" }}>
-                        <span style={{ fontSize: "11px", color: "var(--c-muted)", fontWeight: 700 }}>지도 앱 및 이동 수단 선택</span>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
-                          {isChina && (
-                            hasCoords ? (
-                              <>
-                              <a
-                                href={getDirectionUrl("amap", place, "walking")}
-                                className="primary-button compact-button"
-                                style={{ fontSize: "11px", textAlign: "center", textDecoration: "none", background: "rgba(16, 185, 129, 0.2)", color: "#10b981", borderColor: "#10b981" }}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                🚶 고덕 도보
-                              </a>
-                              <a
-                                href={getDirectionUrl("amap", place, "driving")}
-                                className="primary-button compact-button"
-                                style={{ fontSize: "11px", textAlign: "center", textDecoration: "none", background: "rgba(16, 185, 129, 0.2)", color: "#10b981", borderColor: "#10b981" }}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                🚗 고덕 차
-                              </a>
-                              </>
-                            ) : (
-                              <a
-                                href={getPlaceMarkerUrl("amap", place)}
-                                className="primary-button compact-button"
-                                style={{ gridColumn: "1 / -1", fontSize: "11px", textAlign: "center", textDecoration: "none", background: "rgba(16, 185, 129, 0.2)", color: "#10b981", borderColor: "#10b981" }}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                🔎 고덕 장소 검색
-                              </a>
-                            )
-                          )}
-                          <a
-                            href={getDirectionUrl("google", place, "walking")}
-                            className="secondary-button compact-button"
-                            style={{ fontSize: "11px", textAlign: "center", textDecoration: "none" }}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            🚶 구글 도보
-                          </a>
-                          <a
-                            href={getDirectionUrl("google", place, "driving")}
-                            className="secondary-button compact-button"
-                            style={{ fontSize: "11px", textAlign: "center", textDecoration: "none" }}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            🚗 구글 차
-                          </a>
-                          <a
-                            href={getDirectionUrl("apple", place, "walking")}
-                            className="secondary-button compact-button"
-                            style={{ fontSize: "11px", textAlign: "center", textDecoration: "none" }}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            🚶 애플 도보
-                          </a>
-                          <a
-                            href={getPlaceMarkerUrl(isChina ? "amap" : "google", place)}
-                            className="secondary-button compact-button"
-                            style={{ fontSize: "11px", textAlign: "center", textDecoration: "none" }}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            📍 지도 위치만
-                          </a>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </article>
               );

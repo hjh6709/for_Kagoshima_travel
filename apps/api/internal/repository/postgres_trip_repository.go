@@ -286,6 +286,26 @@ func (r *PostgresTripRepository) DeleteFlight(tripID, flightID string) error {
 	return nil
 }
 
+func (r *PostgresTripRepository) ConsumeMonthlyAPIRequest(provider, periodStart string, limit int) (bool, error) {
+	row := r.pool.QueryRow(context.Background(), `
+		WITH consumed AS (
+			INSERT INTO external_api_monthly_usage (provider, period_start, request_count)
+			VALUES ($1, $2::date, 1)
+			ON CONFLICT (provider, period_start) DO UPDATE
+			SET request_count = external_api_monthly_usage.request_count + 1,
+			    updated_at = NOW()
+			WHERE external_api_monthly_usage.request_count < $3
+			RETURNING request_count
+		)
+		SELECT EXISTS(SELECT 1 FROM consumed)
+	`, provider, periodStart, limit)
+	var consumed bool
+	if err := row.Scan(&consumed); err != nil {
+		return false, err
+	}
+	return consumed, nil
+}
+
 func (r *PostgresTripRepository) Update(trip model.Trip) error {
 	tag, err := r.pool.Exec(context.Background(),
 		`UPDATE trips SET title=$1, start_date=$2, end_date=$3, travelers=$4, destination_country=$5, memo=$6, updated_at=NOW() WHERE id=$7`,

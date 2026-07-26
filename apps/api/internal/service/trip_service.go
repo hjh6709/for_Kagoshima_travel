@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -12,11 +14,15 @@ import (
 )
 
 var (
-	ErrTripNotFound  = errors.New("trip not found")
-	ErrShareNotFound = errors.New("share link not found")
-	ErrForbidden     = errors.New("forbidden")
-	ErrInvalidTrip   = errors.New("invalid trip input")
+	ErrTripNotFound             = errors.New("trip not found")
+	ErrShareNotFound            = errors.New("share link not found")
+	ErrForbidden                = errors.New("forbidden")
+	ErrInvalidTrip              = errors.New("invalid trip input")
+	ErrPlaceSearchUnavailable   = errors.New("place search unavailable")
+	ErrPlaceSearchQuotaExceeded = errors.New("place search monthly quota exceeded")
 )
+
+const googlePlacesMonthlyLimit = 4500
 
 type TripService struct {
 	tripRepository      repository.TripRepository
@@ -780,7 +786,7 @@ func mapRouteResponse(route model.Route) dto.RouteResponse {
 	}
 }
 
-// SearchPlaces는 사용자가 입력한 검색어를 기준으로 구글 맵스 또는 고덕지도 검색 API를 작동하고, 예외 시 로컬 명소 DB로 폴백합니다.
+// SearchPlaces는 사용자가 입력한 검색어를 Google Places에서 찾고, 예외 시 로컬 명소 DB로 폴백합니다.
 func (s *TripService) SearchPlaces(tripID, ownerID, query string) ([]dto.PlaceSearchResult, error) {
 	if err := s.ensureTripOwner(tripID, ownerID); err != nil {
 		return nil, err
@@ -796,28 +802,39 @@ func (s *TripService) SearchPlaces(tripID, ownerID, query string) ([]dto.PlaceSe
 
 	results, err := s.searchPlacesByCountry(trip.DestinationCountry, query)
 	if err != nil {
-		// API 호출 실패 시 로컬 Mock 데이터베이스로 매끄럽게 Fallback 처리
-		return s.getMockPlaces(trip.DestinationCountry, query), nil
+		if errors.Is(err, ErrPlaceSearchQuotaExceeded) {
+			return nil, err
+		}
+		// 알려진 명소는 로컬 데이터로 보완하되, 범주 검색 장애를 빈 결과로 숨기지는 않는다.
+		fallback := s.getMockPlaces(trip.DestinationCountry, query)
+		if len(fallback) == 0 {
+			return nil, fmt.Errorf("%w: %v", ErrPlaceSearchUnavailable, err)
+		}
+		return fallback, nil
 	}
 	return results, nil
 }
 
 func (s *TripService) searchPlacesByCountry(country, query string) ([]dto.PlaceSearchResult, error) {
-	if country == "CN" {
-		return s.searchPlacesAmap(query)
+	return s.searchPlacesGoogle(query, country)
+}
+
+func (s *TripService) searchPlacesGoogle(query, country string) ([]dto.PlaceSearchResult, error) {
+	if strings.TrimSpace(os.Getenv("GOOGLE_MAPS_API_KEY")) == "" {
+		return searchGooglePlaces(query, country)
 	}
-	return s.searchPlacesGoogle(query)
+	periodStart := time.Now().UTC().Format("2006-01") + "-01"
+	allowed, err := s.tripRepository.ConsumeMonthlyAPIRequest("google-places-text-search", periodStart, googlePlacesMonthlyLimit)
+	if err != nil {
+		return nil, err
+	}
+	if !allowed {
+		return nil, ErrPlaceSearchQuotaExceeded
+	}
+	return searchGooglePlaces(query, country)
 }
 
-func (s *TripService) searchPlacesAmap(query string) ([]dto.PlaceSearchResult, error) {
-	return searchAmapPlaces(query)
-}
-
-func (s *TripService) searchPlacesGoogle(query string) ([]dto.PlaceSearchResult, error) {
-	return searchGooglePlaces(query)
-}
-
-// getMockPlaces는 API 키가 유실되었거나 개발/로컬 환경일 때,
+// getMockPlaces는 Google Places 키가 유실되었거나 개발/로컬 환경일 때,
 // 실전 상하이 명소 10선 및 일본 전망대/전철역 7선을 부분 검색 매핑하여 돌려주는 오프라인 Fallback 시뮬레이터입니다.
 func (s *TripService) getMockPlaces(country, query string) []dto.PlaceSearchResult {
 	q := strings.ToLower(strings.TrimSpace(query))

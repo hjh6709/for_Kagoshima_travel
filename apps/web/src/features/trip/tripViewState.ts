@@ -2,7 +2,6 @@ import { places, schedules, trip } from "../../data/sampleTrip";
 import type { TripDates } from "../../shared/date";
 import { checklistCategoryLabels } from "../../shared/travelOptions";
 import type { ChecklistItem } from "../../types/travel";
-import { getGoogleDirectionsUrl } from "../../utils/mapLinks";
 
 export type Tab = "today" | "schedule" | "flight" | "map" | "concierge" | "mypage";
 export type ChecklistCategory = ChecklistItem["category"];
@@ -20,10 +19,6 @@ const tripStorageKeys = {
 
 export function getPlace(placeId?: string) {
   return places.find((place) => place.id === placeId);
-}
-
-export function getMapUrl(place?: ReturnType<typeof getPlace>) {
-  return getGoogleDirectionsUrl(place);
 }
 
 function isDateValue(value: unknown): value is string {

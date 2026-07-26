@@ -1,4 +1,5 @@
-import { ArrowDown, ArrowUp, CheckCircle2, MapPin } from "lucide-react";
+import { ArrowDown, ArrowUp, CheckCircle2 } from "lucide-react";
+import { MapDirectionsChoice } from "../../../shared/components/MapDirectionsChoice";
 import { scheduleTypeLabels } from "../../../shared/travelOptions";
 import type { Place, ScheduleItem } from "../../../types/travel";
 import { MaskedText } from "../../../shared/components/MaskedText";
@@ -8,7 +9,7 @@ type ScheduleCardProps = {
   isCompleted: boolean;
   isLast: boolean;
   item: ScheduleItem;
-  mapUrl: string;
+  destinationCountry?: string;
   onMove: (scheduleID: string, direction: "up" | "down") => void;
   onToggleComplete: (scheduleID: string) => void;
   place?: Place;
@@ -20,7 +21,7 @@ export function ScheduleCard({
   isCompleted,
   isLast,
   item,
-  mapUrl,
+  destinationCountry,
   onMove,
   onToggleComplete,
   place,
@@ -82,16 +83,11 @@ export function ScheduleCard({
             </button>
           </div>
         </div>
-        <a
-          className="secondary-button compact-button map-direction-button"
-          href={mapUrl}
-          rel="noopener noreferrer"
-          target="_blank"
-          style={{ width: "100%", justifyContent: "center", marginTop: "12px" }}
-        >
-          <MapPin size={18} />
-          현위치 길찾기
-        </a>
+        {place && (
+          <div style={{ marginTop: "12px" }}>
+            <MapDirectionsChoice destinationCountry={destinationCountry} place={place} />
+          </div>
+        )}
       </div>
     </article>
   );

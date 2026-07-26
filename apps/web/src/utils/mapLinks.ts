@@ -31,6 +31,8 @@ export function hasPlaceCoordinates(place?: MappablePlace): place is MappablePla
 }
 
 export function getAmapDirectionsUrl(place: MappablePlace, mode: TravelMode = "transit") {
+  // Google Places 좌표는 고덕지도 경로 입력으로 넘기지 않고 현지 장소명 검색으로 연결한다.
+  if (place.googlePlaceId) return undefined;
   if (!hasPlaceCoordinates(place)) return undefined;
 
   const destinationName = place.chineseName || place.name || "目的地";
@@ -93,7 +95,9 @@ export function getDirectionUrl(
 /** 외부 지도에서 장소 위치를 연다. 좌표가 없으면 동일 제공자의 장소 검색으로 대체한다. */
 export function getPlaceMarkerUrl(provider: "amap" | "google" | "apple", params: MapLinkParams): string {
   if (provider === "amap") {
-    if (!hasPlaceCoordinates(params)) return getAmapSearchUrl(params) || "https://uri.amap.com/search";
+    if (params.googlePlaceId || !hasPlaceCoordinates(params)) {
+      return getAmapSearchUrl(params) || "https://uri.amap.com/search";
+    }
     const markerParams = new URLSearchParams({
       position: `${params.longitude},${params.latitude}`,
       name: params.chineseName || params.name,

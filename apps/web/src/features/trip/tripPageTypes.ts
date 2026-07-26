@@ -30,7 +30,6 @@ export type TripPageProps = {
   focusCompletedScheduleCount: number;
   focusSchedules: ScheduleItem[];
   getDisplayDate: (dateStr: string) => string;
-  getMapUrl: (place?: Place) => string;
   getPlace: (placeId?: string) => Place | undefined;
   groupedChecklist: Array<{ category: ChecklistCategory; label: string; items: ChecklistItem[] }>;
   hiddenChecklistIDs: string[];
