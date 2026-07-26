@@ -11,8 +11,6 @@ import { useTripPageController } from "./features/trip/useTripPageController";
 import { parseManageRoute } from "./shared/manageRoute";
 import { getShareTokenFromPath } from "./shared/share";
 
-import { PwaStatusBanner } from "./shared/components/PwaStatusBanner";
-
 function App() {
   const currentPath = window.location.pathname;
   const isLegacyOwnerRoute = currentPath === "/owner" || currentPath.startsWith("/owner/");
@@ -53,12 +51,7 @@ function App() {
     return <StartPage />;
   };
 
-  return (
-    <>
-      {renderContent()}
-      <PwaStatusBanner />
-    </>
-  );
+  return renderContent();
 }
 
 export default App;

@@ -8,27 +8,28 @@ type BottomTabsProps = {
 
 const tabs: Array<{ id: Tab; label: string; icon: typeof Home }> = [
   { id: "today", label: "오늘", icon: Home },
-  { id: "schedule", label: "전체 일정", icon: CalendarDays },
+  { id: "schedule", label: "일정", icon: CalendarDays },
   { id: "flight", label: "항공", icon: Plane },
   { id: "map", label: "지도", icon: MapIcon },
   { id: "concierge", label: "긴급", icon: Shield },
 ];
 
-// 하단 탭 내비게이션만 담당한다. 현재 탭 상태는 상위에서 관리한다.
+// 여행 중 가장 자주 쓰는 다섯 화면으로 이동하는 하단 내비게이션이다.
 export function BottomTabs({ activeTab, setActiveTab }: BottomTabsProps) {
   return (
-    <nav className="bottom-tabs" aria-label="주요 메뉴">
+    <nav className="bottom-tabs" aria-label="여행 메뉴">
       {tabs.map((tab) => {
         const Icon = tab.icon;
+        const isActive = activeTab === tab.id;
         return (
           <button
-            aria-current={activeTab === tab.id ? "page" : undefined}
-            className={activeTab === tab.id ? "active" : ""}
+            aria-current={isActive ? "page" : undefined}
+            className={isActive ? "active" : ""}
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             type="button"
           >
-            <Icon size={21} />
+            <Icon size={21} aria-hidden="true" />
             <span>{tab.label}</span>
           </button>
         );
