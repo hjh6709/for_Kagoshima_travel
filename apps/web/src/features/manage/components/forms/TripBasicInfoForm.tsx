@@ -1,5 +1,5 @@
 import { CheckCircle2 } from "lucide-react";
-import type { TripManagePageProps } from "../manageTypes";
+import type { TripManagePageProps } from "../../manageTypes";
 
 type TripBasicInfoFormProps = Pick<
   TripManagePageProps,

@@ -1,6 +1,6 @@
 import { Trash2 } from "lucide-react";
-import type { ChecklistItemResponse } from "../../../api/checklist";
-import { checklistCategories } from "../../../shared/travelOptions";
+import type { ChecklistItemResponse } from "../../../../api/checklist";
+import { checklistCategories } from "../../../../shared/travelOptions";
 
 // ManageChecklistSectionProps는 체크리스트 관리 컴포넌트가 부모로부터 주입받는 속성 규격입니다.
 type ManageChecklistSectionProps = {

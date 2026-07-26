@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { ChevronRight, Compass, Luggage, MapPin, Plane, CalendarDays, ListChecks, Link2 } from "lucide-react";
 import { formatKoreanDate } from "../../shared/date";
 import type { EditSection } from "../../shared/manageRoute";
-import { ManageAuthSection } from "./components/ManageAuthSection";
+import { ManageAuthSection } from "./components";
 import { useTripManageController } from "./useTripManageController";
 
 type TripEditHubPageProps = {

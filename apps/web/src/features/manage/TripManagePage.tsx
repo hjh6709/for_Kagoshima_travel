@@ -1,8 +1,4 @@
-import { ManageAuthSection } from "./components/ManageAuthSection";
-import { ManageFlowGuide } from "./components/ManageFlowGuide";
-import { ManageHeader } from "./components/ManageHeader";
-import { TripCreateSection } from "./components/TripCreateSection";
-import { TripListSection } from "./components/TripListSection";
+import { ManageAuthSection, ManageFlowGuide, ManageHeader, TripCreateSection, TripListSection } from "./components";
 import type { TripManagePageProps } from "./manageTypes";
 
 // API 호출과 세션 상태는 useTripManageController가 담당한다.

@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { PlusCircle, Search, Check, Loader2, Compass, AlertCircle } from "lucide-react";
-import { searchTripPlaces, type PlaceSearchResult } from "../../../api/trips";
-import { placeCategoryOptions } from "../../../shared/travelOptions";
-import type { PlaceCategory } from "../../../types/travel";
-import type { TripManagePageProps } from "../manageTypes";
+import { searchTripPlaces, type PlaceSearchResult } from "../../../../api/trips";
+import { placeCategoryOptions } from "../../../../shared/travelOptions";
+import type { PlaceCategory } from "../../../../types/travel";
+import type { TripManagePageProps } from "../../manageTypes";
 
 type ManagePlaceCreateFormProps = Pick<
   TripManagePageProps,

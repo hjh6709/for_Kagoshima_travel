@@ -1,8 +1,8 @@
 import { CalendarPlus, Check, Link2Off, MapPin } from "lucide-react";
-import type { SharedPlace, SharedSchedule } from "../../../api/trips";
-import { formatKoreanDate } from "../../../shared/date";
-import { getScheduleTypeLabel } from "../../../shared/travelOptions";
-import type { ScheduleItem } from "../../../types/travel";
+import type { SharedPlace, SharedSchedule } from "../../../../api/trips";
+import { formatKoreanDate } from "../../../../shared/date";
+import { getScheduleTypeLabel } from "../../../../shared/travelOptions";
+import type { ScheduleItem } from "../../../../types/travel";
 
 type ShanghaiPlanItem = {
   dayOffset: number;

@@ -1,8 +1,8 @@
 import { PlusCircle } from "lucide-react";
-import { scheduleTypeOptions } from "../../../shared/travelOptions";
-import type { ScheduleItem } from "../../../types/travel";
-import type { TripManagePageProps } from "../manageTypes";
-import { ShanghaiStarterPlanner } from "./ShanghaiStarterPlanner";
+import { scheduleTypeOptions } from "../../../../shared/travelOptions";
+import type { ScheduleItem } from "../../../../types/travel";
+import type { TripManagePageProps } from "../../manageTypes";
+import { ShanghaiStarterPlanner } from "../helpers/ShanghaiStarterPlanner";
 
 type ManageScheduleCreateFormProps = Pick<
   TripManagePageProps,

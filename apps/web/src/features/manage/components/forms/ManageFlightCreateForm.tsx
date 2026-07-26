@@ -1,6 +1,6 @@
 import { PlusCircle } from "lucide-react";
-import { flightDirectionOptions, type FlightDirection } from "../../../shared/travelOptions";
-import type { TripManagePageProps } from "../manageTypes";
+import { flightDirectionOptions, type FlightDirection } from "../../../../shared/travelOptions";
+import type { TripManagePageProps } from "../../manageTypes";
 
 type ManageFlightCreateFormProps = Pick<
   TripManagePageProps,

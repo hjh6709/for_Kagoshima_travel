@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Compass } from "lucide-react";
-import { ManageAuthSection } from "../manage/components/ManageAuthSection";
+import { ManageAuthSection } from "../manage/components";
 import { useTripManageController } from "../manage/useTripManageController";
 import { TripPage } from "./TripPage";
 import { useOwnerTripPageAdapter } from "./useOwnerTripPageAdapter";

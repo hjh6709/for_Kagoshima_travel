@@ -1,16 +1,16 @@
-import { formatKoreanDate } from "../../../shared/date";
-import type { SelectedTripDetailSectionProps } from "../manageTypes";
-import { ManageFlightCreateForm } from "./ManageFlightCreateForm";
-import { ManageFlightList } from "./ManageFlightList";
-import { ManageDetailStepGuide } from "./ManageDetailStepGuide";
-import { ManagePlaceCreateForm } from "./ManagePlaceCreateForm";
-import { ManagePlaceList } from "./ManagePlaceList";
-import { ManageScheduleCreateForm } from "./ManageScheduleCreateForm";
-import { ManageScheduleList } from "./ManageScheduleList";
+import { formatKoreanDate } from "../../../../shared/date";
+import type { SelectedTripDetailSectionProps } from "../../manageTypes";
+import { ManageFlightCreateForm } from "../forms/ManageFlightCreateForm";
+import { ManagePlaceCreateForm } from "../forms/ManagePlaceCreateForm";
+import { ManageScheduleCreateForm } from "../forms/ManageScheduleCreateForm";
+import { TripBasicInfoForm } from "../forms/TripBasicInfoForm";
+import { ChinaPaymentHelper } from "../helpers/ChinaPaymentHelper";
+import { ManageDetailStepGuide } from "../helpers/ManageDetailStepGuide";
+import { ManageChecklistSection } from "../lists/ManageChecklistSection";
+import { ManageFlightList } from "../lists/ManageFlightList";
+import { ManagePlaceList } from "../lists/ManagePlaceList";
+import { ManageScheduleList } from "../lists/ManageScheduleList";
 import { ManageShareActions } from "./ManageShareActions";
-import { TripBasicInfoForm } from "./TripBasicInfoForm";
-import { ManageChecklistSection } from "./ManageChecklistSection";
-import { ChinaPaymentHelper } from "./ChinaPaymentHelper";
 
 // 선택한 여행의 상세 관리 화면만 담당한다. 실제 저장/삭제 동작은 상위에서 받은 콜백으로 처리한다.
 export function SelectedTripDetailSection(props: SelectedTripDetailSectionProps) {

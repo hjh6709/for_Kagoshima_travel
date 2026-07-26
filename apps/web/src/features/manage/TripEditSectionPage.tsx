@@ -2,16 +2,18 @@ import { useEffect } from "react";
 import { Compass } from "lucide-react";
 import { formatKoreanDate } from "../../shared/date";
 import type { EditSection } from "../../shared/manageRoute";
-import { ManageAuthSection } from "./components/ManageAuthSection";
-import { ManageChecklistSection } from "./components/ManageChecklistSection";
-import { ManageFlightCreateForm } from "./components/ManageFlightCreateForm";
-import { ManageFlightList } from "./components/ManageFlightList";
-import { ManagePlaceCreateForm } from "./components/ManagePlaceCreateForm";
-import { ManagePlaceList } from "./components/ManagePlaceList";
-import { ManageScheduleCreateForm } from "./components/ManageScheduleCreateForm";
-import { ManageScheduleList } from "./components/ManageScheduleList";
-import { ManageShareActions } from "./components/ManageShareActions";
-import { TripBasicInfoForm } from "./components/TripBasicInfoForm";
+import {
+  ManageAuthSection,
+  ManageChecklistSection,
+  ManageFlightCreateForm,
+  ManageFlightList,
+  ManagePlaceCreateForm,
+  ManagePlaceList,
+  ManageScheduleCreateForm,
+  ManageScheduleList,
+  ManageShareActions,
+  TripBasicInfoForm,
+} from "./components";
 import { useTripManageController } from "./useTripManageController";
 
 type TripEditSectionPageProps = {

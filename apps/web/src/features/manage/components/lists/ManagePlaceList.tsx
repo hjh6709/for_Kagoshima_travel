@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Check, Copy, Edit3, ExternalLink, Maximize2, Save, Trash2, X } from "lucide-react";
-import { MapDirectionsChoice } from "../../../shared/components/MapDirectionsChoice";
-import { getPlaceCopyText } from "../../../utils/mapLinks";
-import { placeCategoryOptions } from "../../../shared/travelOptions";
-import type { PlaceCategory } from "../../../types/travel";
-import type { TripManagePageProps } from "../manageTypes";
+import { MapDirectionsChoice } from "../../../../shared/components/MapDirectionsChoice";
+import { placeCategoryOptions } from "../../../../shared/travelOptions";
+import type { PlaceCategory } from "../../../../types/travel";
+import { getPlaceCopyText } from "../../../../utils/mapLinks";
+import type { TripManagePageProps } from "../../manageTypes";
 
 type ManagePlaceListProps = Pick<
   TripManagePageProps,
