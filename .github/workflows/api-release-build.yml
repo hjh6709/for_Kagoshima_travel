@@ -102,19 +102,14 @@ jobs:
       - name: Launch systemd service and cleanup backup on VM
         uses: appleboy/ssh-action@029f5b4aeeeb58fdfe1410a5d17f967dacf36262 # v1.0.3
         env:
-          AMAP_API_KEY: ${{ secrets.AMAP_API_KEY }}
           GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
         with:
           host: ${{ secrets.OCI_VM_IP }}
           username: ${{ secrets.OCI_VM_USER }}
           key: ${{ secrets.OCI_SSH_KEY }}
-          envs: AMAP_API_KEY,GOOGLE_MAPS_API_KEY
+          envs: GOOGLE_MAPS_API_KEY
           script: |
             [ -f /home/opc/travel-api/.env ] || echo -e 'PORT=8080\nJWT_SECRET=super-secret-key-change-me' > /home/opc/travel-api/.env
-            if [ -n "$AMAP_API_KEY" ]; then
-              sed -i '/^AMAP_API_KEY=/d' /home/opc/travel-api/.env
-              printf 'AMAP_API_KEY=%s\n' "$AMAP_API_KEY" >> /home/opc/travel-api/.env
-            fi
             if [ -n "$GOOGLE_MAPS_API_KEY" ]; then
               sed -i '/^GOOGLE_MAPS_API_KEY=/d' /home/opc/travel-api/.env
               printf 'GOOGLE_MAPS_API_KEY=%s\n' "$GOOGLE_MAPS_API_KEY" >> /home/opc/travel-api/.env

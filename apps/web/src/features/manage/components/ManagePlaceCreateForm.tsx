@@ -161,10 +161,10 @@ export function ManagePlaceCreateForm({
       <div style={{ background: "var(--c-green-light)", border: "1px solid var(--border-color)", borderRadius: "12px", padding: "16px", marginBottom: "20px" }}>
         <h4 style={{ fontSize: "14px", fontWeight: 700, color: "var(--c-text)", marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
           <Compass size={16} style={{ color: "var(--c-green)" }} />
-          지도 통합 검색 (구글 맵스 / 고덕지도 연동)
+          Google Maps 장소 검색
         </h4>
         <p style={{ fontSize: "12px", color: "var(--c-muted)", marginBottom: "12px" }}>
-          지명이나 상호명을 검색해 선택하면 주소와 지도 위치가 자동으로 저장됩니다.
+          장소 후보를 선택하면 주소와 위치가 자동으로 채워집니다. 저장 후 고덕지도에서는 현지 장소명으로 검색합니다.
         </p>
         
         <div style={{ display: "flex", gap: "8px" }}>
@@ -196,7 +196,17 @@ export function ManagePlaceCreateForm({
         {/* 검색 결과 리스트 */}
         {searchResults.length > 0 && (
           <div style={{ marginTop: "14px", display: "grid", gap: "8px", maxHeight: "200px", overflowY: "auto", paddingRight: "4px" }}>
-            <span style={{ fontSize: "12px", color: "var(--c-muted)", fontWeight: 700 }}>검색된 후보 ({searchResults.length}개)</span>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontSize: "12px", color: "var(--c-muted)", fontWeight: 700 }}>검색된 후보 ({searchResults.length}개)</span>
+              <a
+                href="https://maps.google.com"
+                rel="noreferrer"
+                style={{ color: "#5f6368", fontFamily: "Roboto, Arial, sans-serif", fontSize: "12px", fontWeight: 500, textDecoration: "none", whiteSpace: "nowrap" }}
+                target="_blank"
+              >
+                Google Maps 제공
+              </a>
+            </div>
             {searchResults.map((result, idx) => {
               const isSelected = selectedIdx === idx;
               return (

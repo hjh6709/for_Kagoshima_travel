@@ -23,7 +23,7 @@ func (r *recordingExecer) Exec(_ context.Context, sql string, _ ...any) (pgconn.
 	return pgconn.CommandTag{}, r.err
 }
 
-func TestRunMigrationsAddsShanghaiPlaceColumnsIdempotently(t *testing.T) {
+func TestRunMigrationsAppliesCurrentSchemaIdempotently(t *testing.T) {
 	execer := &recordingExecer{}
 
 	if err := RunMigrations(context.Background(), execer); err != nil {
@@ -42,6 +42,9 @@ func TestRunMigrationsAddsShanghaiPlaceColumnsIdempotently(t *testing.T) {
 		if !strings.Contains(joined, want) {
 			t.Errorf("migration SQL does not contain %q", want)
 		}
+	}
+	if !strings.Contains(joined, "CREATE TABLE IF NOT EXISTS external_api_monthly_usage") {
+		t.Error("migration SQL does not create external_api_monthly_usage")
 	}
 }
 

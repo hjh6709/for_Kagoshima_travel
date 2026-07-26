@@ -6,126 +6,70 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/dto"
 )
 
-// 장소 공급자 호출이 끊기지 않고 끝나도록 두 공급자에 같은 제한 시간을 적용한다.
+// 장소 공급자 호출이 끊기지 않고 끝나도록 제한 시간을 적용한다.
 var placeSearchHTTPClient = &http.Client{Timeout: 10 * time.Second}
 
-const amapPlaceSearchEndpoint = "https://restapi.amap.com/v5/place/text"
-
-func searchAmapPlaces(query string) ([]dto.PlaceSearchResult, error) {
-	key := os.Getenv("AMAP_API_KEY")
-	if key == "" {
-		return nil, errors.New("amap api key not found")
-	}
-
-	requestURL, err := buildAmapPlaceSearchURL(query, key)
-	if err != nil {
-		return nil, err
-	}
-	req, err := http.NewRequest(http.MethodGet, requestURL, nil)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := placeSearchHTTPClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("amap api status code: %d", resp.StatusCode)
-	}
-
-	var data struct {
-		Status string `json:"status"`
-		Pois   []struct {
-			ID       string `json:"id"`
-			Name     string `json:"name"`
-			Address  string `json:"address"`
-			Location string `json:"location"`
-		} `json:"pois"`
-	}
-
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
-	}
-	if data.Status != "1" {
-		return nil, fmt.Errorf("amap api error status: %s", data.Status)
-	}
-
-	results := make([]dto.PlaceSearchResult, 0, len(data.Pois))
-	for _, poi := range data.Pois {
-		var latitude, longitude *float64
-		coords := strings.Split(poi.Location, ",")
-		if len(coords) == 2 {
-			if value, parseErr := strconv.ParseFloat(coords[0], 64); parseErr == nil {
-				longitude = &value
-			}
-			if value, parseErr := strconv.ParseFloat(coords[1], 64); parseErr == nil {
-				latitude = &value
-			}
-		}
-
-		results = append(results, dto.PlaceSearchResult{
-			Name:           poi.Name,
-			Address:        poi.Address,
-			Latitude:       latitude,
-			Longitude:      longitude,
-			ChineseName:    poi.Name,
-			ChineseAddress: poi.Address,
-		})
-	}
-	return results, nil
+type googleTextSearchRequest struct {
+	TextQuery           string                     `json:"textQuery"`
+	PageSize            int                        `json:"pageSize"`
+	LanguageCode        string                     `json:"languageCode,omitempty"`
+	RegionCode          string                     `json:"regionCode,omitempty"`
+	IncludedType        string                     `json:"includedType,omitempty"`
+	StrictTypeFiltering bool                       `json:"strictTypeFiltering,omitempty"`
+	LocationRestriction *googleLocationRestriction `json:"locationRestriction,omitempty"`
 }
 
-func buildAmapPlaceSearchURL(query, key string) (string, error) {
-	requestURL, err := url.Parse(amapPlaceSearchEndpoint)
-	if err != nil {
-		return "", err
-	}
-
-	keywords, placeType := normalizeAmapSearchQuery(query)
-	params := requestURL.Query()
-	params.Set("key", key)
-	params.Set("keywords", keywords)
-	params.Set("region", "上海市")
-	params.Set("city_limit", "true")
-	params.Set("page_size", "20")
-	params.Set("page_num", "1")
-	if placeType != "" {
-		params.Set("types", placeType)
-	}
-	requestURL.RawQuery = params.Encode()
-	return requestURL.String(), nil
+type googleLocationRestriction struct {
+	Rectangle googleRectangle `json:"rectangle"`
 }
 
-func normalizeAmapSearchQuery(query string) (keywords, placeType string) {
-	normalized := strings.ToLower(strings.TrimSpace(query))
-	switch normalized {
-	case "카페", "커피", "커피숍", "cafe", "coffee":
-		return "咖啡店", "050000"
-	case "식당", "음식점", "맛집", "레스토랑", "restaurant", "food":
-		return "餐厅", "050000"
-	default:
-		return strings.TrimSpace(query), ""
-	}
+type googleRectangle struct {
+	Low  googleCoordinate `json:"low"`
+	High googleCoordinate `json:"high"`
 }
 
-func searchGooglePlaces(query string) ([]dto.PlaceSearchResult, error) {
+type googleCoordinate struct {
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+}
+
+func buildGoogleTextSearchRequest(query, country string) googleTextSearchRequest {
+	request := googleTextSearchRequest{TextQuery: strings.TrimSpace(query), PageSize: 20}
+	if country != "CN" {
+		return request
+	}
+
+	request.LanguageCode = "zh-CN"
+	request.RegionCode = "CN"
+	request.LocationRestriction = &googleLocationRestriction{Rectangle: googleRectangle{
+		Low:  googleCoordinate{Latitude: 30.67, Longitude: 120.85},
+		High: googleCoordinate{Latitude: 31.88, Longitude: 122.20},
+	}}
+	switch strings.ToLower(request.TextQuery) {
+	case "카페", "커피", "커피숍", "cafe", "coffee", "咖啡", "咖啡店":
+		request.IncludedType = "cafe"
+		request.StrictTypeFiltering = true
+	case "식당", "음식점", "맛집", "레스토랑", "restaurant", "food", "餐厅":
+		request.IncludedType = "restaurant"
+		request.StrictTypeFiltering = true
+	}
+	return request
+}
+
+func searchGooglePlaces(query, country string) ([]dto.PlaceSearchResult, error) {
 	key := os.Getenv("GOOGLE_MAPS_API_KEY")
 	if key == "" {
 		return nil, errors.New("google maps api key not found")
 	}
 
-	reqBody, err := json.Marshal(map[string]string{"textQuery": query})
+	reqBody, err := json.Marshal(buildGoogleTextSearchRequest(query, country))
 	if err != nil {
 		return nil, err
 	}
@@ -167,13 +111,18 @@ func searchGooglePlaces(query string) ([]dto.PlaceSearchResult, error) {
 	for _, place := range data.Places {
 		latitude := place.Location.Latitude
 		longitude := place.Location.Longitude
-		results = append(results, dto.PlaceSearchResult{
+		result := dto.PlaceSearchResult{
 			Name:          place.DisplayName.Text,
 			Address:       place.FormattedAddress,
 			Latitude:      &latitude,
 			Longitude:     &longitude,
 			GooglePlaceID: place.ID,
-		})
+		}
+		if country == "CN" {
+			result.ChineseName = place.DisplayName.Text
+			result.ChineseAddress = place.FormattedAddress
+		}
+		results = append(results, result)
 	}
 	return results, nil
 }
