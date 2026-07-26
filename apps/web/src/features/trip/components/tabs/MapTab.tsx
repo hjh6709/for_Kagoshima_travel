@@ -1,120 +1,186 @@
 import { useEffect, useRef, useState } from "react";
-import { AlertTriangle, CalendarDays, Check, Copy, MapPin, Maximize2, Train, X } from "lucide-react";
+import {
+  AlertTriangle,
+  CalendarDays,
+  Check,
+  CheckCircle2,
+  ChevronDown,
+  Copy,
+  MapPin,
+  Maximize2,
+  Train,
+  X,
+} from "lucide-react";
 import { MapDirectionsChoice } from "../../../../shared/components/MapDirectionsChoice";
 import { formatKoreanDate } from "../../../../shared/date";
 import { placeCategoryLabels } from "../../../../shared/travelOptions";
-import type { Place } from "../../../../types/travel";
+import type { Place, ScheduleItem } from "../../../../types/travel";
 import type { TripPageProps } from "../../tripPageTypes";
 import { ProfileShortcutButton } from "../cards/ProfileShortcutButton";
 
-type PlaceMapCardProps = {
+type RouteItem = {
+  place: Place;
+  schedule: ScheduleItem;
+};
+
+type PlaceInteractionProps = {
   copied: boolean;
   destinationCountry?: string;
   isChina: boolean;
   place: Place;
-  scheduleTime?: string;
-  showReason?: boolean;
-  warningText: string;
   onCopyAddress: (placeID: string, address: string) => void;
   onShowPhrase: (title: string, address: string) => void;
 };
 
-function PlaceMapCard({
+function PlaceUtilityActions({
   copied,
-  destinationCountry,
   isChina,
   place,
-  scheduleTime,
-  showReason = true,
-  warningText,
   onCopyAddress,
   onShowPhrase,
-}: PlaceMapCardProps) {
+}: Omit<PlaceInteractionProps, "destinationCountry">) {
   const displayAddress = place.chineseAddress || place.address || "";
+
+  return (
+    <div className="map-place-utilities">
+      {displayAddress && (
+        <button
+          className="secondary-button compact-button"
+          onClick={() => onCopyAddress(place.id, displayAddress)}
+          type="button"
+        >
+          {copied ? <Check aria-hidden="true" size={16} /> : <Copy aria-hidden="true" size={16} />}
+          {copied ? "주소 복사됨" : "주소 복사"}
+        </button>
+      )}
+      {isChina && (place.chineseName || place.name) && (
+        <button
+          className="secondary-button compact-button"
+          onClick={() =>
+            onShowPhrase(place.chineseName || place.name, place.chineseAddress || place.address || "주소 정보 없음")
+          }
+          type="button"
+        >
+          <Maximize2 aria-hidden="true" size={16} />
+          기사님께 보기
+        </button>
+      )}
+    </div>
+  );
+}
+
+function PlaceEssentials({ place }: { place: Place }) {
+  const displayAddress = place.chineseAddress || place.address;
   const hasCoords = place.latitude !== undefined && place.longitude !== undefined;
 
   return (
-    <article className="place-card map-place-card">
-      <div className="place-card-marker" aria-hidden="true">
-        <MapPin size={16} />
-      </div>
-
-      <div className="place-card-body">
-        <div className="place-card-meta">
-          <span className="pill subtle">{placeCategoryLabels[place.category]}</span>
-          {scheduleTime && <span className="pill route-time-pill">{scheduleTime}</span>}
-        </div>
-
-        <h2>{place.name}</h2>
-        {place.chineseName && <p className="place-local-name">{place.chineseName}</p>}
-        {showReason && place.recommendedReason && <p className="place-reason">{place.recommendedReason}</p>}
-
-        <div className="place-address-list">
-          {place.address && (
-            <p>
-              <span>주소</span>
-              {place.address}
-            </p>
-          )}
-          {place.chineseAddress && (
-            <p>
-              <span>현지 주소</span>
-              {place.chineseAddress}
-            </p>
-          )}
+    <>
+      {(place.subwayExit || displayAddress) && (
+        <div className="map-place-essentials">
           {place.subwayExit && (
-            <p className="place-transit">
-              <Train aria-hidden="true" size={14} />
+            <p>
+              <Train aria-hidden="true" size={15} />
               {place.subwayExit}
             </p>
           )}
+          {displayAddress && (
+            <p>
+              <MapPin aria-hidden="true" size={15} />
+              {displayAddress}
+            </p>
+          )}
         </div>
-
-        {!hasCoords && (
-          <div className="place-location-warning" role="status">
-            <AlertTriangle aria-hidden="true" size={15} />
-            <span>{warningText}</span>
-          </div>
-        )}
-
-        <div className="place-card-actions">
-          <MapDirectionsChoice destinationCountry={destinationCountry} place={place} />
-          <div className="place-card-utilities">
-            {displayAddress && (
-              <button
-                aria-label={copied ? `${place.name} 주소 복사 완료` : `${place.name} 주소 복사`}
-                className="secondary-button compact-button icon-only-button"
-                onClick={() => onCopyAddress(place.id, displayAddress)}
-                title={copied ? "주소 복사 완료" : "주소 복사"}
-                type="button"
-              >
-                {copied ? <Check aria-hidden="true" size={16} /> : <Copy aria-hidden="true" size={16} />}
-              </button>
-            )}
-            {isChina && (place.chineseName || place.name) && (
-              <button
-                aria-label={`${place.name}을 기사님께 크게 보여주기`}
-                className="secondary-button compact-button icon-only-button"
-                onClick={() =>
-                  onShowPhrase(
-                    place.chineseName || place.name,
-                    place.chineseAddress || place.address || "주소 정보 없음",
-                  )
-                }
-                title="기사님께 크게 보여주기"
-                type="button"
-              >
-                <Maximize2 aria-hidden="true" size={16} />
-              </button>
-            )}
-          </div>
+      )}
+      {!hasCoords && (
+        <div className="place-location-warning" role="status">
+          <AlertTriangle aria-hidden="true" size={15} />
+          <span>정확한 위치가 없어 장소 이름과 주소로 검색합니다.</span>
         </div>
+      )}
+    </>
+  );
+}
+
+type SelectedDestinationPanelProps = PlaceInteractionProps & {
+  label: string;
+  routeItem: RouteItem;
+};
+
+function SelectedDestinationPanel({
+  copied,
+  destinationCountry,
+  isChina,
+  label,
+  onCopyAddress,
+  onShowPhrase,
+  place,
+  routeItem,
+}: SelectedDestinationPanelProps) {
+  return (
+    <article className="map-destination-panel">
+      <div className="map-destination-heading">
+        <div>
+          <span className="map-destination-kicker">
+            <MapPin aria-hidden="true" size={14} />
+            {label}
+          </span>
+          <h2>{place.name}</h2>
+          {place.chineseName && <p className="map-local-name">{place.chineseName}</p>}
+        </div>
+        <span className="map-destination-time">{routeItem.schedule.time}</span>
+      </div>
+
+      <PlaceEssentials place={place} />
+
+      <div className="map-destination-actions">
+        <MapDirectionsChoice destinationCountry={destinationCountry} place={place} />
+        <PlaceUtilityActions
+          copied={copied}
+          isChina={isChina}
+          onCopyAddress={onCopyAddress}
+          onShowPhrase={onShowPhrase}
+          place={place}
+        />
       </div>
     </article>
   );
 }
 
+function SavedPlaceDisclosure(props: PlaceInteractionProps) {
+  const { copied, destinationCountry, isChina, onCopyAddress, onShowPhrase, place } = props;
+
+  return (
+    <details className="map-saved-place">
+      <summary>
+        <span className="map-saved-marker" aria-hidden="true">
+          <MapPin size={15} />
+        </span>
+        <span className="map-saved-copy">
+          <small>{placeCategoryLabels[place.category]}</small>
+          <strong>{place.name}</strong>
+          {(place.subwayExit || place.address) && <span>{place.subwayExit || place.address}</span>}
+        </span>
+        <ChevronDown className="map-saved-chevron" aria-hidden="true" size={18} />
+      </summary>
+      <div className="map-saved-details">
+        {place.chineseName && <p className="map-local-name">{place.chineseName}</p>}
+        {place.recommendedReason && <p className="map-saved-reason">{place.recommendedReason}</p>}
+        <PlaceEssentials place={place} />
+        <MapDirectionsChoice destinationCountry={destinationCountry} place={place} />
+        <PlaceUtilityActions
+          copied={copied}
+          isChina={isChina}
+          onCopyAddress={onCopyAddress}
+          onShowPhrase={onShowPhrase}
+          place={place}
+        />
+      </div>
+    </details>
+  );
+}
+
 export function MapTab({
+  completedSchedules,
   focusDate,
   focusSchedules,
   getDisplayDate,
@@ -127,6 +193,7 @@ export function MapTab({
   onNavigateToMyPage,
 }: TripPageProps) {
   const [subTab, setSubTab] = useState<"timeline" | "all">("timeline");
+  const [selectedScheduleID, setSelectedScheduleID] = useState("");
   const [copiedPlaceID, setCopiedPlaceID] = useState("");
   const [copyError, setCopyError] = useState("");
   const [phraseModal, setPhraseModal] = useState({ open: false, title: "", address: "" });
@@ -149,7 +216,9 @@ export function MapTab({
       }
       if (event.key !== "Tab" || !dialogRef.current) return;
 
-      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>("button, [href], [tabindex]:not([tabindex='-1'])"));
+      const focusable = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>("button, [href], [tabindex]:not([tabindex='-1'])"),
+      );
       const first = focusable[0];
       const last = focusable.at(-1);
       if (!first || !last) return;
@@ -185,17 +254,36 @@ export function MapTab({
     }
   };
 
-  const timelineItems = focusSchedules
+  const timelineItems: RouteItem[] = focusSchedules
     .map((schedule) => ({ schedule, place: getPlace(schedule.placeId) }))
-    .filter((item): item is typeof item & { place: Place } => item.place !== undefined);
+    .filter((item): item is RouteItem => item.place !== undefined);
   const missingPlaceCount = focusSchedules.length - timelineItems.length;
+  const nextRouteItem =
+    travelStatus.phase === "after"
+      ? undefined
+      : timelineItems.find(({ schedule }) => !completedSchedules[schedule.id]);
+  const selectedRouteItem =
+    timelineItems.find(({ schedule }) => schedule.id === selectedScheduleID) ?? nextRouteItem ?? timelineItems[0];
+  const selectedLabel =
+    selectedRouteItem?.schedule.id === nextRouteItem?.schedule.id
+      ? travelStatus.phase === "before"
+        ? "첫 목적지"
+        : "다음 목적지"
+      : "선택한 정류장";
+
+  const openSchedule = () => {
+    setScheduleView("itinerary");
+    setActiveTab("schedule");
+  };
+
+  const showPhrase = (title: string, address: string) => setPhraseModal({ open: true, title, address });
 
   return (
     <section className="screen map-screen">
       <div className="screen-title-row">
         <div>
-          <h1>동선과 길찾기</h1>
-          <p className="map-screen-intro">일정에 연결한 장소를 이동 순서대로 확인하세요.</p>
+          <h1>길찾기</h1>
+          <p className="map-screen-intro">목적지를 고르고 사용할 지도 앱을 여세요.</p>
         </div>
         <ProfileShortcutButton onClick={onNavigateToMyPage} />
       </div>
@@ -207,7 +295,7 @@ export function MapTab({
           onClick={() => setSubTab("timeline")}
           type="button"
         >
-          {routeLabel}
+          동선 길찾기
         </button>
         <button
           aria-pressed={subTab === "all"}
@@ -220,72 +308,96 @@ export function MapTab({
       </div>
 
       {subTab === "timeline" ? (
-        <>
-          <div className="map-route-summary">
-            <CalendarDays aria-hidden="true" size={19} />
+        timelineItems.length === 0 ? (
+          <article className="empty-state-card list-card map-empty-state">
+            <MapPin aria-hidden="true" size={24} />
             <div>
-              <strong>{routeDate}</strong>
+              <strong>{focusSchedules.length > 0 ? "일정에 연결된 장소가 없습니다" : `${routeLabel}이 비어 있습니다`}</strong>
               <p>
-                {focusSchedules.length === 0
-                  ? "등록된 일정이 없습니다."
-                  : `장소 연결 ${timelineItems.length}/${focusSchedules.length}${
-                      missingPlaceCount > 0
-                        ? ` · ${missingPlaceCount}개 일정은 장소 연결이 필요해요.`
-                        : " · 순서대로 길찾기를 시작하세요."
-                    }`}
+                {focusSchedules.length > 0
+                  ? "여행 관리에서 각 일정에 장소를 연결해 주세요."
+                  : "일정을 추가하고 장소를 연결하면 길찾기 동선이 만들어집니다."}
               </p>
+              <button className="secondary-button compact-button" onClick={openSchedule} type="button">
+                일정 보기
+              </button>
             </div>
-            <button
-              className="secondary-button compact-button"
-              onClick={() => {
-                setScheduleView("itinerary");
-                setActiveTab("schedule");
-              }}
-              type="button"
-            >
-              일정 보기
-            </button>
-          </div>
-          <div className="map-route-list">
-          {timelineItems.length === 0 ? (
-            <article className="empty-state-card list-card map-empty-state">
-              <MapPin aria-hidden="true" size={24} />
-              <div>
-                <strong>{focusSchedules.length > 0 ? "일정에 연결된 장소가 없습니다" : `${routeLabel}이 비어 있습니다`}</strong>
-                <p>
-                  {focusSchedules.length > 0
-                    ? "여행 관리에서 각 일정에 장소를 연결해 주세요."
-                    : "일정을 추가하고 장소를 연결하면 이동 순서대로 나타납니다."}
-                </p>
+          </article>
+        ) : (
+          <>
+            {selectedRouteItem && (
+              <SelectedDestinationPanel
+                copied={copiedPlaceID === selectedRouteItem.place.id}
+                destinationCountry={trip.destinationCountry}
+                isChina={isChina}
+                label={selectedLabel}
+                onCopyAddress={(placeID, address) => void handleCopyAddress(placeID, address)}
+                onShowPhrase={showPhrase}
+                place={selectedRouteItem.place}
+                routeItem={selectedRouteItem}
+              />
+            )}
+
+            <section className="map-route-overview" aria-labelledby="map-route-title">
+              <div className="map-route-heading">
+                <div>
+                  <span className="map-route-date">
+                    <CalendarDays aria-hidden="true" size={15} />
+                    {routeDate}
+                  </span>
+                  <h2 id="map-route-title">{routeLabel}</h2>
+                  <p>
+                    {timelineItems.length}개 정류장
+                    {missingPlaceCount > 0 && ` · 장소 연결 필요 ${missingPlaceCount}개`}
+                  </p>
+                </div>
+                <button className="secondary-button compact-button" onClick={openSchedule} type="button">
+                  일정 관리
+                </button>
               </div>
-            </article>
-          ) : (
-            timelineItems.map(({ place, schedule }, index) => (
-              <div className="map-route-stop" key={schedule.id}>
-                <PlaceMapCard
-                  copied={copiedPlaceID === place.id}
-                  destinationCountry={trip.destinationCountry}
-                  isChina={isChina}
-                  onCopyAddress={(placeID, address) => void handleCopyAddress(placeID, address)}
-                  onShowPhrase={(title, address) => setPhraseModal({ open: true, title, address })}
-                  place={place}
-                  scheduleTime={schedule.time}
-                  showReason={false}
-                  warningText="정확한 위치가 없어 이름으로 검색합니다."
-                />
-                {index < timelineItems.length - 1 && (
-                  <div className="timeline-connector">
-                    <div className="timeline-line" />
-                    {schedule.transportMemo && <span className="timeline-arrow">{schedule.transportMemo}</span>}
-                  </div>
-                )}
-              </div>
-            ))
-          )}
-          </div>
-        </>
+
+              <ol className="map-stop-list">
+                {timelineItems.map(({ place, schedule }, index) => {
+                  const isSelected = selectedRouteItem?.schedule.id === schedule.id;
+                  const isCompleted = Boolean(completedSchedules[schedule.id]);
+                  return (
+                    <li className="map-stop" key={schedule.id}>
+                      <button
+                        aria-pressed={isSelected}
+                        className={`map-stop-button${isSelected ? " selected" : ""}${isCompleted ? " completed" : ""}`}
+                        onClick={() => setSelectedScheduleID(schedule.id)}
+                        type="button"
+                      >
+                        <span className="map-stop-index" aria-hidden="true">
+                          {isCompleted ? <CheckCircle2 size={17} /> : index + 1}
+                        </span>
+                        <span className="map-stop-copy">
+                          <small>
+                            {schedule.time} · {placeCategoryLabels[place.category]}
+                          </small>
+                          <strong>{place.name}</strong>
+                        </span>
+                        {isSelected && <span className="map-stop-selected-label">선택됨</span>}
+                      </button>
+                      {index < timelineItems.length - 1 && (
+                        <div className="map-route-leg">
+                          <span aria-hidden="true" />
+                          {schedule.transportMemo && <small>{schedule.transportMemo}</small>}
+                        </div>
+                      )}
+                    </li>
+                  );
+                })}
+              </ol>
+            </section>
+          </>
+        )
       ) : (
-        <div className="card-stack map-all-places">
+        <section className="map-saved-section" aria-labelledby="map-saved-title">
+          <div className="map-saved-heading">
+            <h2 id="map-saved-title">저장한 장소</h2>
+            <p>장소를 펼치면 주소와 길찾기를 확인할 수 있어요.</p>
+          </div>
           {places.length === 0 ? (
             <article className="empty-state-card list-card map-empty-state">
               <MapPin aria-hidden="true" size={24} />
@@ -295,20 +407,21 @@ export function MapTab({
               </div>
             </article>
           ) : (
-            places.map((place) => (
-              <PlaceMapCard
-                copied={copiedPlaceID === place.id}
-                destinationCountry={trip.destinationCountry}
-                isChina={isChina}
-                key={place.id}
-                onCopyAddress={(placeID, address) => void handleCopyAddress(placeID, address)}
-                onShowPhrase={(title, address) => setPhraseModal({ open: true, title, address })}
-                place={place}
-                warningText="정확한 위치가 없어 이름으로 검색합니다."
-              />
-            ))
+            <div className="map-saved-list">
+              {places.map((place) => (
+                <SavedPlaceDisclosure
+                  copied={copiedPlaceID === place.id}
+                  destinationCountry={trip.destinationCountry}
+                  isChina={isChina}
+                  key={place.id}
+                  onCopyAddress={(placeID, address) => void handleCopyAddress(placeID, address)}
+                  onShowPhrase={showPhrase}
+                  place={place}
+                />
+              ))}
+            </div>
           )}
-        </div>
+        </section>
       )}
 
       {copyError && (
