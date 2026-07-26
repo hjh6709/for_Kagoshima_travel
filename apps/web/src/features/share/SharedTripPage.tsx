@@ -1,10 +1,11 @@
-import { CalendarRange, Check, Compass, Copy, ExternalLink, Maximize2, Navigation, Plane, Users, X } from "lucide-react";
+import { CalendarRange, Check, Compass, Copy, ExternalLink, Maximize2, Plane, Users, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { SharedTripResponse } from "../../api/trips";
+import { MapDirectionsChoice } from "../../shared/components/MapDirectionsChoice";
 import { formatKoreanDate, formatShortDate } from "../../shared/date";
 import { sortSharedFlights } from "../../shared/sort";
 import { getFlightDirectionLabel, getScheduleTypeLabel } from "../../shared/travelOptions";
-import { getAmapDirectionsUrl, getAmapSearchUrl, getPlaceCopyText } from "../../utils/mapLinks";
+import { getPlaceCopyText } from "../../utils/mapLinks";
 
 type SharedTripPageProps = {
   error: string;
@@ -286,20 +287,12 @@ export function SharedTripPage({ error, warning, loading, sharedTrip }: SharedTr
                               </a>
                             )}
 
-                            {/* 중국 여행은 저장된 좌표와 현지 정보를 그대로 활용해 고덕지도 길찾기와 복사를 제공한다. */}
                             {sharedTrip.trip.destinationCountry === "CN" && (
                               <>
-                                {(getAmapDirectionsUrl(place) || getAmapSearchUrl(place)) && (
-                                  <a
-                                    className="primary-button compact-button"
-                                    href={getAmapDirectionsUrl(place) || getAmapSearchUrl(place)}
-                                    rel="noreferrer"
-                                    target="_blank"
-                                  >
-                                    <Navigation size={16} />
-                                    {getAmapDirectionsUrl(place) ? "고덕지도 길찾기" : "고덕지도 장소 검색"}
-                                  </a>
-                                )}
+                                <MapDirectionsChoice
+                                  destinationCountry={sharedTrip.trip.destinationCountry}
+                                  place={place}
+                                />
                                 <button
                                   className="secondary-button compact-button"
                                   onClick={() => void copyPlaceInfo(place.id)}

@@ -1,16 +1,18 @@
-import { MapPin } from "lucide-react";
+import { MapDirectionsChoice } from "../../../shared/components/MapDirectionsChoice";
 import { formatKoreanDate } from "../../../shared/date";
 import type { Place, ScheduleItem } from "../../../types/travel";
 
 type NextScheduleCardProps = {
+  destinationCountry?: string;
   getDisplayDate: (dateStr: string) => string;
-  getMapUrl: (place?: Place) => string;
   getPlace: (placeId?: string) => Place | undefined;
   nextSchedule: ScheduleItem;
 };
 
-// 홈 화면의 다음 일정 카드만 담당한다. 지도 URL 계산은 상위에서 받은 함수를 사용한다.
-export function NextScheduleCard({ getDisplayDate, getMapUrl, getPlace, nextSchedule }: NextScheduleCardProps) {
+// 홈 화면의 다음 일정 카드만 담당한다.
+export function NextScheduleCard({ destinationCountry, getDisplayDate, getPlace, nextSchedule }: NextScheduleCardProps) {
+  const place = getPlace(nextSchedule.placeId);
+
   return (
     <article className="hero-card">
       <div>
@@ -21,15 +23,7 @@ export function NextScheduleCard({ getDisplayDate, getMapUrl, getPlace, nextSche
         </p>
         <p className="muted">{nextSchedule.guideMemo}</p>
       </div>
-      <a
-        className="primary-button"
-        href={getMapUrl(getPlace(nextSchedule.placeId))}
-        rel="noopener noreferrer"
-        target="_blank"
-      >
-        <MapPin size={20} />
-        지도 열기
-      </a>
+      {place && <MapDirectionsChoice destinationCountry={destinationCountry} place={place} />}
     </article>
   );
 }

@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Check, Copy, Edit3, ExternalLink, Maximize2, Navigation, Save, Trash2, X } from "lucide-react";
-import { getAmapDirectionsUrl, getAmapSearchUrl, getPlaceCopyText } from "../../../utils/mapLinks";
+import { Check, Copy, Edit3, ExternalLink, Maximize2, Save, Trash2, X } from "lucide-react";
+import { MapDirectionsChoice } from "../../../shared/components/MapDirectionsChoice";
+import { getPlaceCopyText } from "../../../utils/mapLinks";
 import { placeCategoryOptions } from "../../../shared/travelOptions";
 import type { PlaceCategory } from "../../../types/travel";
 import type { TripManagePageProps } from "../manageTypes";
@@ -153,20 +154,9 @@ export function ManagePlaceList({
                   </a>
                 )}
                 
-                {/* 중국 여행은 저장된 좌표와 현지 정보를 그대로 활용해 고덕지도 길찾기와 복사를 제공한다. */}
                 {destinationCountry === "CN" && (
                   <>
-                    {(getAmapDirectionsUrl(place) || getAmapSearchUrl(place)) && (
-                      <a
-                        className="primary-button compact-button"
-                        href={getAmapDirectionsUrl(place) || getAmapSearchUrl(place)}
-                        rel="noreferrer"
-                        target="_blank"
-                      >
-                        <Navigation size={16} />
-                        {getAmapDirectionsUrl(place) ? "고덕지도 길찾기" : "고덕지도 장소 검색"}
-                      </a>
-                    )}
+                    <MapDirectionsChoice destinationCountry={destinationCountry} place={place} />
                     <button
                       className="secondary-button compact-button"
                       onClick={() => void copyPlaceInfo(place.id)}

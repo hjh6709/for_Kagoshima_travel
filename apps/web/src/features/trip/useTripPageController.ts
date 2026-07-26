@@ -22,7 +22,6 @@ import { checklistCategories } from "../../shared/travelOptions";
 import type { ChecklistItem } from "../../types/travel";
 import type { TripPageProps } from "./tripPageTypes";
 import {
-  getMapUrl,
   getOrderedSchedulesForDate,
   getPlace,
   getSavedChecklistCompletions,
@@ -233,7 +232,6 @@ export function useTripPageController(): TripPageProps {
     focusCompletedScheduleCount,
     focusSchedules,
     getDisplayDate,
-    getMapUrl,
     getPlace,
     groupedChecklist,
     hiddenChecklistIDs,

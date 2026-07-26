@@ -164,7 +164,7 @@ export function ManagePlaceCreateForm({
           Google Maps 장소 검색
         </h4>
         <p style={{ fontSize: "12px", color: "var(--c-muted)", marginBottom: "12px" }}>
-          장소 후보를 선택하면 주소와 위치가 자동으로 채워집니다. 저장 후 고덕지도에서는 현지 장소명으로 검색합니다.
+          장소 후보를 선택하면 주소와 위치가 자동으로 채워집니다. 저장 후 고덕지도나 Google 지도를 선택해 길찾기할 수 있습니다.
         </p>
         
         <div style={{ display: "flex", gap: "8px" }}>

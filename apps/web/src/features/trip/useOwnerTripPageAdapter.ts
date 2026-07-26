@@ -10,7 +10,6 @@ import {
   type TripDates,
 } from "../../shared/date";
 import { checklistCategories } from "../../shared/travelOptions";
-import { getGoogleDirectionsUrl } from "../../utils/mapLinks";
 import { phrases } from "../../data/sampleTrip";
 import type { ChecklistItem, ScheduleItem } from "../../types/travel";
 import {
@@ -184,16 +183,6 @@ export function useOwnerTripPageAdapter({
     return shiftDate(tripDates.startDate, getDateOffset(trip.startDate, dateStr));
   }
 
-  function getMapUrl(place?: {
-    latitude?: number;
-    longitude?: number;
-    address?: string;
-    name?: string;
-    googlePlaceId?: string;
-  }) {
-    return getGoogleDirectionsUrl(place);
-  }
-
   function getPlace(placeId?: string) {
     return getOwnerPlaceById(placeId, places);
   }
@@ -267,7 +256,6 @@ export function useOwnerTripPageAdapter({
     focusCompletedScheduleCount,
     focusSchedules,
     getDisplayDate,
-    getMapUrl,
     getPlace,
     groupedChecklist,
     hiddenChecklistIDs: [],
