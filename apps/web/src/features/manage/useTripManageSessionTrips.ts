@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type Dispatch, type FormEvent, type SetStateAction } from "react";
 import { ApiError, getCurrentUser, login, register, type AuthResponse } from "../../api/auth";
 import { createTrip, listMyTrips, updateTrip, deleteTrip, type OwnerTrip } from "../../api/trips";
-import { isOnline } from "../../utils/offlineCache";
+import { isOnline, getLocalCache, setLocalCache, OFFLINE_CACHE_KEYS } from "../../utils/offlineCache";
 import {
   handleManageApiError,
   isEndDateBeforeStartDate,
@@ -132,19 +132,43 @@ export function useTripManageSessionTrips({
     };
   }, [isManageRoute]);
 
-  // 인증된 관리자만 본인이 만든 여행 목록을 가져온다.
+
+
+  // 인증된 관리자만 본인이 만든 여행 목록을 가져온다. (오프라인 지원)
   useEffect(() => {
     if (!isManageRoute || !ownerAuth) return;
 
     let cancelled = false;
     setOwnerTripsLoading(true);
     setOwnerTripsError("");
+
+    if (!isOnline()) {
+      const cachedTrips = getLocalCache<OwnerTrip[]>(OFFLINE_CACHE_KEYS.MY_TRIPS);
+      if (!cancelled) {
+        if (cachedTrips) {
+          setOwnerTrips(cachedTrips);
+        } else {
+          setOwnerTripsError("오프라인 상태입니다. 저장된 여행 목록이 없습니다.");
+        }
+        setOwnerTripsLoading(false);
+      }
+      return;
+    }
+
     listMyTrips(ownerAuth.accessToken)
       .then((trips) => {
-        if (!cancelled) setOwnerTrips(trips);
+        if (!cancelled) {
+          setOwnerTrips(trips);
+          setLocalCache(OFFLINE_CACHE_KEYS.MY_TRIPS, trips);
+        }
       })
       .catch((error) => {
         if (cancelled) return;
+        const cachedTrips = getLocalCache<OwnerTrip[]>(OFFLINE_CACHE_KEYS.MY_TRIPS);
+        if (cachedTrips) {
+          setOwnerTrips(cachedTrips);
+          return;
+        }
         handleManageApiError(error, {
           clearOwnerSession: clearOwnerSessionBase,
           fallbackMessage: "여행 목록을 불러오지 못했습니다.",
