@@ -1,5 +1,6 @@
 import { ChevronLeft } from "lucide-react";
 import { formatKoreanDate, type TripDates } from "../../../../shared/date";
+import { getDestinationCountryLabel } from "../../../../shared/travelOptions";
 import type { Trip } from "../../../../types/travel";
 import { ProfileShortcutButton } from "../cards/ProfileShortcutButton";
 
@@ -13,11 +14,11 @@ type TodayHeaderSectionProps = {
 // 국가 국기 뱃지 헬퍼
 function getCountryBadge(countryCode?: string): string {
   const code = (countryCode || "").toUpperCase().trim();
-  if (code === "JP" || code === "JAPAN" || code === "일본") return "🇯🇵 일본";
-  if (code === "CN" || code === "CHINA" || code === "중국") return "🇨🇳 중국";
-  if (code === "KR" || code === "KOREA" || code === "한국") return "🇰🇷 한국";
-  if (code === "US" || code === "USA" || code === "미국") return "🇺🇸 미국";
-  return "✈️ 해외여행";
+  if (code === "OTHER") return "🌍 기타 국가·지역";
+  if (!/^[A-Z]{2}$/.test(code)) return "🌍 여행";
+
+  const flag = String.fromCodePoint(...[...code].map((character) => 127397 + character.charCodeAt(0)));
+  return `${flag} ${getDestinationCountryLabel(code)}`;
 }
 
 // D-Day 라벨 헬퍼

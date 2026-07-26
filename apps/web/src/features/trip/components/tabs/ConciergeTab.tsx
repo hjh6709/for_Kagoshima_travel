@@ -18,50 +18,28 @@ export function ConciergeTab({
 
   return (
     <section className="screen">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-        <h1 style={{ margin: 0 }}>긴급과 여행 정보</h1>
+      <div className="screen-title-row">
+        <h1>긴급과 여행 정보</h1>
         <ProfileShortcutButton onClick={onNavigateToMyPage} />
       </div>
 
       {/* 2단 세그먼트 메뉴 바 */}
-      <div className="segment-control-wrapper" style={{ display: "flex", gap: "2px", background: "var(--c-green-light)", borderRadius: "8px", padding: "3px", marginBottom: "20px" }}>
+      <div className="segment-control-wrapper">
         <button
           onClick={() => setSubTab("emergency")}
           className={`segment-btn ${subTab === "emergency" ? "active" : ""}`}
-          style={{
-            flex: 1,
-            padding: "10px 0",
-            border: 0,
-            borderRadius: "6px",
-            fontSize: "14px",
-            fontWeight: 700,
-            cursor: "pointer",
-            background: subTab === "emergency" ? "rgba(16, 185, 129, 0.15)" : "transparent",
-            color: subTab === "emergency" ? "var(--c-green)" : "var(--c-muted)",
-            transition: "all 0.2s"
-          }}
+          aria-pressed={subTab === "emergency"}
           type="button"
         >
-          🚨 긴급 연락 & 숙소
+          긴급 연락 · 숙소
         </button>
         <button
           onClick={() => setSubTab("tools")}
           className={`segment-btn ${subTab === "tools" ? "active" : ""}`}
-          style={{
-            flex: 1,
-            padding: "10px 0",
-            border: 0,
-            borderRadius: "6px",
-            fontSize: "14px",
-            fontWeight: 700,
-            cursor: "pointer",
-            background: subTab === "tools" ? "rgba(16, 185, 129, 0.15)" : "transparent",
-            color: subTab === "tools" ? "var(--c-green)" : "var(--c-muted)",
-            transition: "all 0.2s"
-          }}
+          aria-pressed={subTab === "tools"}
           type="button"
         >
-          🛠️ 간편 환율 & 생존 회화
+          환율 · 회화
         </button>
       </div>
 

@@ -1,4 +1,5 @@
 import { PlusCircle } from "lucide-react";
+import { destinationCountryOptions } from "../../../../shared/travelOptions";
 import type { TripCreateSectionProps } from "../../manageTypes";
 
 // 새 여행 생성 폼만 담당한다. 생성 후 목록 갱신은 상위 상태 흐름을 따른다.
@@ -44,10 +45,17 @@ export function TripCreateSection({
           목적지 국가
           <select
             onChange={(event) => onNewTripDestinationCountryChange(event.target.value)}
+            required
             value={newTripDestinationCountry}
           >
-            <option value="JP">일본 (엔화/일어 지원)</option>
-            <option value="CN">중국 (위안화/중국어 지원)</option>
+            <option disabled value="">목적지 국가를 선택하세요</option>
+            {destinationCountryOptions.map(([code, label]) => (
+              <option key={code} value={code}>
+                {label}
+                {code === "JP" ? " · 엔화/일본어 도구" : ""}
+                {code === "CN" ? " · 위안화/중국어·고덕지도" : ""}
+              </option>
+            ))}
           </select>
         </label>
 

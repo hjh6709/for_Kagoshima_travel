@@ -77,8 +77,8 @@ export function MyPageTab({ trip, onLogout, editTripHref, isDemo }: MyPageTabPro
         <h1>마이페이지</h1>
         <p className="muted">체험용 데모 화면입니다. 계정을 만들어 나만의 여행을 보관하세요.</p>
 
-        <article className="info-card auth-card-premium" style={{ marginBottom: "16px", background: "linear-gradient(135deg, rgba(28, 50, 37, 0.03) 0%, rgba(30, 41, 59, 0.03) 100%)" }}>
-          <h2 style={{ fontSize: "17px", color: "var(--c-green)", marginBottom: "8px" }}>나만의 맞춤 여행 만들기 ✈️</h2>
+        <article className="info-card auth-card-premium" style={{ marginBottom: "16px" }}>
+          <h2 style={{ fontSize: "17px", color: "var(--c-route)", marginBottom: "8px" }}>나만의 맞춤 여행 만들기 ✈️</h2>
           <p className="muted" style={{ lineHeight: 1.5, margin: "8px 0 16px", fontSize: "13.5px" }}>
             회원가입 후 로그인하시면 아래의 풍부한 개인화 기능을 평생 무료로 활용하실 수 있습니다.
           </p>
@@ -102,7 +102,7 @@ export function MyPageTab({ trip, onLogout, editTripHref, isDemo }: MyPageTabPro
       <p className="muted">내 계정 정보 관리 및 비밀번호 변경을 지원합니다.</p>
 
       <article className="info-card auth-card-premium" style={{ marginBottom: "16px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", paddingBottom: "12px", borderBottom: "1px solid rgba(28, 50, 37, 0.05)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", paddingBottom: "12px", borderBottom: "1px solid var(--border-color)" }}>
           <div className="auth-brand-circle" style={{ width: "40px", height: "40px" }}>
             <User size={20} />
           </div>
@@ -118,7 +118,7 @@ export function MyPageTab({ trip, onLogout, editTripHref, isDemo }: MyPageTabPro
             className="secondary-button compact-button"
             onClick={handleLogoutClick}
             type="button"
-            style={{ color: "var(--c-muted)", border: "1px solid rgba(28, 50, 37, 0.1)" }}
+            style={{ color: "var(--c-muted)", border: "1px solid var(--border-color)" }}
           >
             <LogOut size={14} style={{ marginRight: "4px" }} />
             로그아웃
@@ -223,7 +223,7 @@ export function MyPageTab({ trip, onLogout, editTripHref, isDemo }: MyPageTabPro
           </label>
 
           {error && <p className="form-error" style={{ marginTop: "8px" }}>{error}</p>}
-          {message && <p style={{ color: "var(--c-green)", fontSize: "13px", fontWeight: 700, marginTop: "8px" }}>{message}</p>}
+          {message && <p style={{ color: "var(--c-route)", fontSize: "13px", fontWeight: 700, marginTop: "8px" }}>{message}</p>}
 
           <button className="primary-button" disabled={submitting} type="submit" style={{ marginTop: "16px" }}>
             비밀번호 변경 완료

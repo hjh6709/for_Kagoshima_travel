@@ -1,4 +1,4 @@
-import { AlertTriangle, CalendarDays, Plane } from "lucide-react";
+import { AlertTriangle, CalendarDays, Map } from "lucide-react";
 import type { Tab } from "../../tripViewState";
 
 type QuickActionGridProps = {
@@ -13,9 +13,9 @@ export function QuickActionGrid({ setActiveTab }: QuickActionGridProps) {
         <CalendarDays size={22} />
         일정 보기
       </button>
-      <button className="quick-button" onClick={() => setActiveTab("flight")} type="button">
-        <Plane size={22} />
-        항공편
+      <button className="quick-button" onClick={() => setActiveTab("map")} type="button">
+        <Map size={22} />
+        지도 보기
       </button>
       <button className="quick-button danger" onClick={() => setActiveTab("concierge")} type="button">
         <AlertTriangle size={22} />

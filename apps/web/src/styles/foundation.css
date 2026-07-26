@@ -1,0 +1,309 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100dvh;
+  min-height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none; /* 브라우저 최상위 스크롤 뜯김 방지 */
+}
+
+body {
+  min-width: 320px;
+  background: var(--c-page);
+}
+
+button,
+a {
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(11, 111, 106, 0.28);
+  outline-offset: 3px;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.app-shell {
+  height: 100dvh;
+  min-height: 100dvh;
+  overflow: hidden;
+  background: var(--c-page);
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+/* 모바일 꽉 찬 화면 오버라이딩 미디어 쿼리 */
+@media (max-width: 480px) {
+  .app-shell {
+    padding: 0;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    overflow: hidden !important;
+  }
+  .phone-frame {
+    width: 100% !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+}
+
+.phone-frame {
+  width: min(100%, 430px);
+  height: min(860px, calc(100dvh - 48px));
+  background: var(--c-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sheet);
+  box-shadow: var(--shadow-frame);
+  display: grid;
+  grid-template-rows: 1fr auto;
+  overflow: hidden;
+}
+
+.content {
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-bottom: 24px;
+  background: var(--c-bg);
+  -webkit-overflow-scrolling: touch; /* 관성 스크롤 복원 */
+  scroll-behavior: smooth;
+  overscroll-behavior-y: contain; /* 바운스 체인 차단 */
+  scrollbar-width: none;
+}
+
+.content::-webkit-scrollbar {
+  display: none;
+}
+
+.screen {
+  padding: calc(24px + env(safe-area-inset-top)) 20px calc(32px + env(safe-area-inset-bottom));
+}
+
+.trip-header {
+  margin-bottom: 20px;
+}
+
+.trip-dates {
+  margin-bottom: 0;
+  color: var(--c-muted);
+  font-weight: 700;
+}
+
+.status-card {
+  position: relative;
+  display: grid;
+  gap: 6px;
+  margin-top: 16px;
+  padding: 17px 18px 17px 48px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  background: var(--c-surface);
+  color: var(--c-text);
+}
+
+.status-card::before {
+  position: absolute;
+  top: 21px;
+  left: 20px;
+  width: 12px;
+  height: 12px;
+  border: 3px solid var(--c-surface);
+  border-radius: 50%;
+  background: var(--c-route);
+  box-shadow: 0 0 0 2px var(--c-route);
+  content: "";
+}
+
+.status-card.before::before,
+.status-card.after::before {
+  background: var(--c-destination);
+  box-shadow: 0 0 0 2px var(--c-destination);
+}
+
+.status-card span {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.status-card p {
+  margin-bottom: 0;
+  color: var(--c-muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.date-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.date-form label {
+  display: grid;
+  gap: 6px;
+  color: var(--c-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.date-form input {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid rgba(23, 51, 61, 0.12);
+  border-radius: 10px;
+  background: var(--c-surface);
+  color: var(--c-text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 8px 10px;
+}
+
+.auth-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.auth-form label {
+  display: grid;
+  gap: 6px;
+  color: var(--c-muted);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.auth-form input,
+.auth-form textarea,
+.auth-form select {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-control);
+  background: #ffffff;
+  color: var(--c-text);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 10px 14px;
+  box-shadow: none;
+  transition: border-color 0.18s var(--ease-route), box-shadow 0.18s var(--ease-route);
+}
+
+.auth-form input:focus,
+.auth-form textarea:focus,
+.auth-form select:focus {
+  outline: none;
+  border-color: var(--c-route);
+  box-shadow: 0 0 0 3px rgba(11, 111, 106, 0.18);
+  background: var(--c-surface);
+}
+
+.auth-form select {
+  appearance: none;
+}
+
+.auth-form textarea {
+  line-height: 1.5;
+  min-height: 92px;
+  resize: vertical;
+}
+
+.form-grid-two {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.trip-create-form {
+  margin-top: 12px;
+}
+
+.trip-edit-form {
+  border-top: 1px solid rgba(23, 51, 61, 0.08);
+  margin-top: 0;
+  padding-top: 18px;
+}
+
+.compact-owner-form {
+  margin-top: 0;
+}
+
+.compact-title-row {
+  margin-bottom: 0;
+}
+
+.compact-title-row h3 {
+  margin: 0;
+}
+
+.auth-card {
+  border-top: 5px solid var(--c-route);
+}
+
+.auth-switch-button {
+  width: 100%;
+}
+
+.auth-help {
+  margin: 14px 0 0;
+  color: var(--c-muted);
+  font-size: 13px;
+}
+
+.auth-help code {
+  color: var(--c-route);
+  font-weight: 700;
+}
+
+.form-error {
+  margin: 0;
+  border-radius: 8px;
+  background: var(--c-danger-light);
+  color: var(--c-danger);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 10px 12px;
+}
+
+.form-success {
+  margin: 0;
+  border-radius: 8px;
+  background: var(--c-route-soft);
+  color: var(--c-route);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 10px 12px;
+}
+/* 마우스 클릭 시 생기는 브라우저 기본 포커스 아웃라인은 세련되게 소거 */
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible),
+input:focus:not(:focus-visible) {
+  outline: none;
+}

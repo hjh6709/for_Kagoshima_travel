@@ -1,0 +1,39 @@
+/* 프리미엄 동반자 공유 화면 리브랜딩 스타일 */
+.premium-hero-card {
+  border-top: none;
+  background: var(--c-surface);
+  border: 1px solid var(--border-color);
+  box-shadow: none;
+  border-radius: var(--radius-card);
+  padding: 24px;
+}
+
+.shared-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.brand-badge-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--c-route-soft);
+  color: var(--c-route);
+}
+
+.brand-logo-icon {
+  color: var(--c-route);
+}
+
+.trip-title-premium {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--c-text);
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}

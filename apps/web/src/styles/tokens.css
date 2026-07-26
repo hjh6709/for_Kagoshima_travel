@@ -1,0 +1,43 @@
+:root {
+  /* Pocket Atlas palette: route, destination, ink, and map paper. */
+  --c-route: #0b6f6a;
+  --c-route-deep: #075a57;
+  --c-route-soft: #e1f0ee;
+  --c-destination: #c94f3d;
+  --c-destination-deep: #ad3e2f;
+  --c-destination-soft: #faeae6;
+  --c-danger: #b33a3a;
+  --c-warning: #9a6500;
+  --c-orange: var(--c-warning);
+  --c-success: #25734b;
+  --c-bg: #f5f8f7;
+  --c-page: #dfe9e8;
+  --c-surface: #ffffff;
+  --c-text: #17333d;
+  --c-muted: #4c626a;
+  --c-surface-cool: #edf3f2;
+  --c-danger-light: #f9e9e8;
+  --c-warning-light: #f7edd6;
+  --border-color: #cad8d7;
+  --bg-secondary: var(--c-route-soft);
+  --radius-card: 14px;
+  --radius-control: 10px;
+  --radius-sheet: 20px;
+  --shadow-card: none;
+  --shadow-frame: 0 24px 64px rgba(23, 51, 61, 0.14);
+  --shadow-overlay: 0 16px 40px rgba(23, 51, 61, 0.18);
+  --ease-route: cubic-bezier(0.22, 1, 0.36, 1);
+
+  color: var(--c-text);
+  background: var(--c-page);
+  font-family:
+    "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+  color-scheme: light;
+  line-height: 1.55;
+  letter-spacing: -0.012em;
+}

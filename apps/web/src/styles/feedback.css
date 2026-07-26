@@ -1,0 +1,173 @@
+/* 앱 전역 상태 및 인증 결과 알림 */
+.toast-viewport {
+  position: fixed;
+  left: 50%;
+  z-index: 2000;
+  width: min(100%, 430px);
+  padding: 0 12px;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.toast-viewport-top {
+  top: calc(12px + env(safe-area-inset-top));
+}
+
+.toast-viewport-bottom {
+  bottom: calc(12px + env(safe-area-inset-bottom));
+}
+
+.toast-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  padding: 14px 14px 14px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.97);
+  color: var(--c-text);
+  box-shadow: 0 14px 38px rgba(23, 51, 61, 0.2);
+  backdrop-filter: blur(12px);
+  pointer-events: auto;
+  animation: toastIn 0.25s ease-out;
+}
+
+.toast-icon {
+  display: inline-flex;
+  margin-top: 2px;
+}
+
+.toast-success {
+  border-color: rgba(57, 116, 84, 0.25);
+  background: rgba(240, 247, 243, 0.97);
+}
+
+.toast-success .toast-icon {
+  color: #397454;
+}
+
+.toast-error {
+  border-color: rgba(166, 75, 69, 0.25);
+  background: rgba(253, 242, 242, 0.97);
+}
+
+.toast-error .toast-icon {
+  color: var(--c-danger);
+}
+
+.toast-warning {
+  border-color: rgba(201, 79, 61, 0.25);
+  background: rgba(254, 250, 243, 0.97);
+}
+
+.toast-warning .toast-icon {
+  color: #87652e;
+}
+
+.toast-info {
+  border-color: rgba(57, 112, 141, 0.25);
+  background: rgba(242, 247, 250, 0.97);
+}
+
+.toast-info .toast-icon {
+  color: #39708d;
+}
+
+.toast-content {
+  min-width: 0;
+}
+
+.toast-content h2 {
+  margin: 0 0 3px;
+  font-size: 15px;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+
+.toast-content p {
+  margin: 0;
+  color: var(--c-muted);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.toast-action {
+  min-height: 40px;
+  margin-top: 8px;
+  padding: 7px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--c-route);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.toast-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin: -8px -4px 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--c-muted);
+}
+
+.toast-close:hover {
+  background: var(--c-route-soft);
+  color: var(--c-route);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .app-shell {
+    display: block;
+    padding: 0;
+  }
+
+  .phone-frame {
+    width: 100%;
+    height: 100dvh;
+    border: 0;
+    box-shadow: none;
+  }
+}

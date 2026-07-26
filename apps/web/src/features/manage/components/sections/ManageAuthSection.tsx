@@ -174,18 +174,18 @@ export function ManageAuthSection({
           transform: "translateX(-50%)",
           zIndex: 9999,
           background: "var(--c-surface)",
-          border: "1px dashed var(--c-green)",
+          border: "1px dashed var(--c-route)",
           borderRadius: "12px",
           padding: "14px 20px",
           boxShadow: "0 8px 30px rgba(0,0,0,0.15)",
           width: "90%",
           maxWidth: "360px"
         }}>
-          <span style={{ display: "block", fontSize: "11px", fontWeight: 700, color: "var(--c-green)", marginBottom: "4px" }}>
+          <span style={{ display: "block", fontSize: "11px", fontWeight: 700, color: "var(--c-route)", marginBottom: "4px" }}>
             📨 가상 이메일 수신 시뮬레이터
           </span>
           <p style={{ fontSize: "13px", margin: 0, color: "var(--c-text)" }}>
-            인증 코드가 발급되었습니다: <strong style={{ fontSize: "16px", color: "var(--c-green)" }}>{verificationPopup}</strong>
+            인증 코드가 발급되었습니다: <strong style={{ fontSize: "16px", color: "var(--c-route)" }}>{verificationPopup}</strong>
           </p>
           <button
             onClick={() => {
@@ -199,7 +199,7 @@ export function ManageAuthSection({
               width: "100%",
               padding: "6px",
               fontSize: "11px",
-              background: "var(--c-green)",
+              background: "var(--c-route)",
               color: "white",
               border: "none",
               borderRadius: "4px",
@@ -229,7 +229,7 @@ export function ManageAuthSection({
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span>이메일 주소</span>
             {isCodeVerified && (
-              <span style={{ fontSize: "11px", color: "var(--c-green)", fontWeight: 600, display: "flex", alignItems: "center", gap: "2px" }}>
+              <span style={{ fontSize: "11px", color: "var(--c-route)", fontWeight: 600, display: "flex", alignItems: "center", gap: "2px" }}>
                 <CheckCircle2 size={12} /> 이메일 인증 완료
               </span>
             )}
@@ -245,7 +245,7 @@ export function ManageAuthSection({
               required
               type="email"
               value={authEmail}
-              style={isCodeVerified ? { backgroundColor: "rgba(16, 185, 129, 0.08)", borderColor: "var(--c-green)" } : undefined}
+              style={isCodeVerified ? { backgroundColor: "var(--c-route-soft)", borderColor: "var(--c-route)" } : undefined}
             />
           </div>
         </label>
@@ -286,9 +286,9 @@ export function ManageAuthSection({
                     whiteSpace: "nowrap",
                     height: "42px",
                     fontSize: "12px",
-                    backgroundColor: "rgba(16, 185, 129, 0.15)",
-                    color: "var(--c-green)",
-                    borderColor: "var(--c-green)",
+                    backgroundColor: "var(--c-route-soft)",
+                    color: "var(--c-route)",
+                    borderColor: "var(--c-route)",
                   }}
                 >
                   인증 완료 ✓
@@ -356,7 +356,7 @@ export function ManageAuthSection({
           <label className="auth-field-label" style={{ marginTop: "12px" }}>
             <span>사람 인증 (수학 퀴즈 방지)</span>
             <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-              <span style={{ fontWeight: 700, fontSize: "15px", whiteSpace: "nowrap", color: "var(--c-green)" }}>
+              <span style={{ fontWeight: 700, fontSize: "15px", whiteSpace: "nowrap", color: "var(--c-route)" }}>
                 {captchaQuestion} =
               </span>
               <input
