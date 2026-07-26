@@ -9,15 +9,15 @@ type QuickActionGridProps = {
 export function QuickActionGrid({ setActiveTab }: QuickActionGridProps) {
   return (
     <div className="grid-two">
-      <button className="quick-button" onClick={() => setActiveTab("schedule")}>
+      <button className="quick-button" onClick={() => setActiveTab("schedule")} type="button">
         <CalendarDays size={22} />
         일정 보기
       </button>
-      <button className="quick-button" onClick={() => setActiveTab("flight")}>
+      <button className="quick-button" onClick={() => setActiveTab("flight")} type="button">
         <Plane size={22} />
         항공편
       </button>
-      <button className="quick-button danger" onClick={() => setActiveTab("concierge")}>
+      <button className="quick-button danger" onClick={() => setActiveTab("concierge")} type="button">
         <AlertTriangle size={22} />
         긴급 연락
       </button>

@@ -26,6 +26,7 @@ export function BottomTabs({ activeTab, setActiveTab }: BottomTabsProps) {
             className={activeTab === tab.id ? "active" : ""}
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
+            type="button"
           >
             <Icon size={21} />
             <span>{tab.label}</span>

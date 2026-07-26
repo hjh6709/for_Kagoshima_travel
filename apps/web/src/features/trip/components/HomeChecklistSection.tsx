@@ -43,7 +43,14 @@ export function HomeChecklistSection({
 
       {totalItems > 0 && (
         <div className="progress-container">
-          <div className="progress-track">
+          <div
+            aria-label="오늘 준비 달성률"
+            aria-valuemax={100}
+            aria-valuemin={0}
+            aria-valuenow={percentage}
+            className="progress-track"
+            role="progressbar"
+          >
             <div className="progress-fill" style={{ width: `${percentage}%` }} />
           </div>
           <span className="progress-percentage">{percentage}% 달성</span>
