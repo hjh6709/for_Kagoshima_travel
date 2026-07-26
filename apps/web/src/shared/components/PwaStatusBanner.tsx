@@ -9,6 +9,8 @@ type StatusNotice = {
   onAction?: () => void;
 };
 
+const OFFLINE_CONFIRMATION_DELAY_MS = 2000;
+
 const NETWORK_OFFLINE_NOTICE: StatusNotice = {
   toast: {
     id: "network-offline",
@@ -60,7 +62,8 @@ export function PwaStatusBanner() {
   const [notice, setNotice] = useState<StatusNotice | null>(() =>
     navigator.onLine ? null : NETWORK_OFFLINE_NOTICE,
   );
-  const wasOffline = useRef(!navigator.onLine);
+  const offlineTimer = useRef<number | null>(null);
+  const hasConfirmedOffline = useRef(!navigator.onLine);
 
   useEffect(() => {
     return subscribePwaStatus((status) => {
@@ -71,13 +74,25 @@ export function PwaStatusBanner() {
 
   useEffect(() => {
     const handleOffline = () => {
-      wasOffline.current = true;
-      setNotice(NETWORK_OFFLINE_NOTICE);
+      if (hasConfirmedOffline.current || offlineTimer.current !== null) return;
+
+      offlineTimer.current = window.setTimeout(() => {
+        offlineTimer.current = null;
+        if (navigator.onLine) return;
+
+        hasConfirmedOffline.current = true;
+        setNotice(NETWORK_OFFLINE_NOTICE);
+      }, OFFLINE_CONFIRMATION_DELAY_MS);
     };
 
     const handleOnline = () => {
-      if (!wasOffline.current) return;
-      wasOffline.current = false;
+      if (offlineTimer.current !== null) {
+        window.clearTimeout(offlineTimer.current);
+        offlineTimer.current = null;
+      }
+
+      if (!hasConfirmedOffline.current) return;
+      hasConfirmedOffline.current = false;
       setNotice({
         toast: {
           id: `network-restored-${Date.now()}`,
@@ -92,6 +107,9 @@ export function PwaStatusBanner() {
     window.addEventListener("offline", handleOffline);
     window.addEventListener("online", handleOnline);
     return () => {
+      if (offlineTimer.current !== null) {
+        window.clearTimeout(offlineTimer.current);
+      }
       window.removeEventListener("offline", handleOffline);
       window.removeEventListener("online", handleOnline);
     };
