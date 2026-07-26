@@ -37,15 +37,20 @@ for_Kagoshima_travel/
 │       │   ├── api/             # HTTP 클라이언트 & API 바인딩
 │       │   ├── data/            # 정적 가고시마/상하이 오프라인 추천 데이터
 │       │   ├── features/        # 도메인 피처 모듈 (trip, manage, share, start)
-│       │   │   └── trip/
-│       │   │       ├── components/ # 계층화된 UI 컴포넌트
-│       │   │       │   ├── tabs/    # 메인 탭 컴포넌트 (TodayTab, MapTab 등)
-│       │   │       │   ├── sections/# 화면 섹션 컴포넌트 (ChecklistSection 등)
-│       │   │       │   ├── cards/   # 단위 카드 컴포넌트 (ScheduleCard 등)
-│       │   │       │   ├── helpers/ # 헬퍼 모달 및 유틸 (QuickTravelHelper 등)
-│       │   │       │   └── index.ts # Barrel Re-export 진입점
-│       │   │       ├── TripPage.tsx
-│       │   │       └── tripViewState.ts
+│       │   │   ├── trip/
+│       │   │   └── components/ # 계층화된 trip UI 컴포넌트
+│       │   │       ├── tabs/    # 메인 탭 컴포넌트 (TodayTab, MapTab 등)
+│       │   │       ├── sections/# 화면 섹션 컴포넌트 (ChecklistSection 등)
+│       │   │       ├── cards/   # 단위 카드 컴포넌트 (ScheduleCard 등)
+│       │   │       ├── helpers/ # 헬퍼 모달 및 유틸 (QuickTravelHelper 등)
+│       │   │       └── index.ts # Barrel Re-export 진입점
+│       │   │   └── manage/
+│       │   │       └── components/ # 계층화된 manage UI 컴포넌트
+│       │   │           ├── forms/   # 폼 입력 컴포넌트 (TripBasicInfoForm 등)
+│       │   │           ├── lists/   # 리스트 관리 컴포넌트 (ManagePlaceList 등)
+│       │   │           ├── sections/# 관리 섹션 컴포넌트 (ManageAuthSection 등)
+│       │   │           ├── helpers/ # 헬퍼 가이드 컴포넌트 (ManageFlowGuide 등)
+│       │   │           └── index.ts # Barrel Re-export 진입점
 │       │   ├── shared/          # 공통 컴포넌트 & 유틸 (date, mapLinks 등)
 │       │   ├── types/           # 도메인 타입 정의
 │       │   └── styles.css       # 메인 CSS 디자인 시스템 토큰
@@ -58,12 +63,19 @@ for_Kagoshima_travel/
 ## 3. 프론트엔드 모듈화 & 컴포넌트 패턴
 
 ### 컴포넌트 역할 분리 (Domain Subfolder Architecture)
-`apps/web/src/features/trip/components/` 하위는 역할에 따라 4개 디렉토리로 분류되어 있습니다.
+`features/trip/components/` 및 `features/manage/components/` 하위는 역할에 따라 명확한 4개 서브 디렉토리로 분류되어 있습니다.
 
-1. tabs/: 사용자가 하단 탭 바를 통해 스위칭하는 독립 페이지 단위 (TodayTab, ScheduleTab, FlightTab, MapTab, ConciergeTab, MyPageTab, BottomTabs)
-2. sections/: 탭 내부를 구성하는 블록 섹션 (TodayHeaderSection, HomeChecklistSection, ChecklistSection, RecommendedRoutesSection, QuickActionGrid)
-3. cards/: 단일 데이터 엔티티를 표현하는 컴포넌트 (NextScheduleCard, ScheduleCard, ProfileShortcutButton)
-4. helpers/: 보조 유틸 팝업 및 에디터 (QuickTravelHelper, TripDateEditor)
+1. `features/trip/components/`
+   - tabs/: 독립 탭 페이지 (TodayTab, ScheduleTab, FlightTab, MapTab, ConciergeTab, MyPageTab, BottomTabs)
+   - sections/: 탭 내부 블록 섹션 (TodayHeaderSection, HomeChecklistSection, ChecklistSection, RecommendedRoutesSection, QuickActionGrid)
+   - cards/: 데이터 카드 컴포넌트 (NextScheduleCard, ScheduleCard, ProfileShortcutButton)
+   - helpers/: 보조 팝업 및 유틸 (QuickTravelHelper, TripDateEditor)
+
+2. `features/manage/components/`
+   - forms/: 데이터 생성/수정 폼 (TripBasicInfoForm, ManagePlaceCreateForm, ManageScheduleCreateForm, ManageFlightCreateForm)
+   - lists/: 목록 조회/관리 컴포넌트 (ManagePlaceList, ManageScheduleList, ManageFlightList, ManageChecklistSection)
+   - sections/: 인증 및 주요 흐름 섹션 (ManageAuthSection, ManageHeader, ManageShareActions, SelectedTripDetailSection, TripCreateSection, TripListSection)
+   - helpers/: 결제/플래너 안내 헬퍼 (ChinaPaymentHelper, ShanghaiStarterPlanner, ManageFlowGuide, ManageDetailStepGuide)
 
 ### Barrel Export 사용 규칙
 `features/trip/components/index.ts` 진입점이 제공되므로 상위 페이지에서는 다음과 같이 깔끔하게 임포트합니다.

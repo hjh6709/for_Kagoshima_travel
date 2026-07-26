@@ -1,5 +1,5 @@
 import { LogOut, UserRound } from "lucide-react";
-import type { AuthResponse } from "../../../api/auth";
+import type { AuthResponse } from "../../../../api/auth";
 
 type ManageHeaderProps = {
   auth: AuthResponse;

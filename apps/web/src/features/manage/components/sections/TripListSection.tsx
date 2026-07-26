@@ -1,6 +1,6 @@
 import { Compass, Trash2 } from "lucide-react";
-import { formatKoreanDate } from "../../../shared/date";
-import type { TripListSectionProps } from "../manageTypes";
+import { formatKoreanDate } from "../../../../shared/date";
+import type { TripListSectionProps } from "../../manageTypes";
 
 // 여행 목록 렌더링만 담당한다. 관리 상세 화면 이동은 링크(전체 페이지 이동)로 처리한다.
 export function TripListSection({

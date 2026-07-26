@@ -1,9 +1,9 @@
 import { Edit3, Save, Trash2, X } from "lucide-react";
-import { formatKoreanDate } from "../../../shared/date";
-import { getScheduleTypeLabel, scheduleTypeOptions } from "../../../shared/travelOptions";
-import type { ScheduleItem } from "../../../types/travel";
-import type { TripManagePageProps } from "../manageTypes";
-import { MaskedText } from "../../../shared/components/MaskedText";
+import { formatKoreanDate } from "../../../../shared/date";
+import { getScheduleTypeLabel, scheduleTypeOptions } from "../../../../shared/travelOptions";
+import type { ScheduleItem } from "../../../../types/travel";
+import { MaskedText } from "../../../../shared/components/MaskedText";
+import type { TripManagePageProps } from "../../manageTypes";
 
 type ManageScheduleListProps = Pick<
   TripManagePageProps,

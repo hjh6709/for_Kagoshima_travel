@@ -1,5 +1,5 @@
 import { CalendarDays, Copy, ExternalLink, MapPin, Plane } from "lucide-react";
-import type { TripManagePageProps } from "../manageTypes";
+import type { TripManagePageProps } from "../../manageTypes";
 
 type ManageShareActionsProps = Pick<
   TripManagePageProps,

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Copy, Phone } from "lucide-react";
-import { ChinaPaymentHelper } from "../../../manage/components/ChinaPaymentHelper";
+import { ChinaPaymentHelper } from "../../../manage/components";
 import type { TripPageProps } from "../../tripPageTypes";
 import { ProfileShortcutButton } from "../cards/ProfileShortcutButton";
 import { QuickTravelHelper } from "../helpers/QuickTravelHelper";
