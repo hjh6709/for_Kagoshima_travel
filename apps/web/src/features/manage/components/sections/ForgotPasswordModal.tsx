@@ -133,9 +133,9 @@ export function ForgotPasswordModal({ onClose, onSuccessToast }: ForgotPasswordM
           </form>
         ) : (
           <div style={{ display: "grid", gap: "14px", textAlign: "center" }}>
-            <div style={{ background: "rgba(5, 150, 105, 0.08)", padding: "16px", borderRadius: "12px", border: "1px solid rgba(5, 150, 105, 0.2)" }}>
+            <div style={{ background: "var(--c-route-soft)", padding: "16px", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
               <span style={{ fontSize: "12px", color: "var(--c-muted)", display: "block" }}>새로 발급된 임시 비밀번호</span>
-              <strong style={{ fontSize: "24px", color: "var(--c-accent-emerald)", letterSpacing: "2px" }}>{tempPassword}</strong>
+              <strong style={{ fontSize: "24px", color: "var(--c-route)", letterSpacing: "2px" }}>{tempPassword}</strong>
             </div>
 
             <button

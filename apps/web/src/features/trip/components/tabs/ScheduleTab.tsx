@@ -36,8 +36,8 @@ export function ScheduleTab({
 }: TripPageProps) {
   return (
     <section className="screen">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-        <h1 style={{ margin: 0 }}>일정</h1>
+      <div className="screen-title-row">
+        <h1>일정</h1>
         <ProfileShortcutButton onClick={onNavigateToMyPage} />
       </div>
       <div className="date-tabs">
@@ -57,7 +57,7 @@ export function ScheduleTab({
         </span>
         <small>일정 순서는 날짜별로 저장됩니다.</small>
       </div>
-      <div className="card-stack">
+      <div className="card-stack timeline-stack">
         {selectedSchedules.map((item, index) => {
           const place = getPlace(item.placeId);
           const isCompleted = completedSchedules[item.id];

@@ -1,7 +1,7 @@
 import { MapDirectionsChoice } from "../../../../shared/components/MapDirectionsChoice";
 import { formatKoreanDate } from "../../../../shared/date";
 import type { Place, ScheduleItem } from "../../../../types/travel";
-import { Sparkles, Clock } from "lucide-react";
+import { Clock, MapPin } from "lucide-react";
 
 type NextScheduleCardProps = {
   destinationCountry?: string;
@@ -15,18 +15,15 @@ export function NextScheduleCard({ destinationCountry, getDisplayDate, getPlace,
   const place = getPlace(nextSchedule.placeId);
 
   return (
-    <article className="hero-card">
+    <article className="hero-card next-schedule-card">
       <div>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-          <span className="pill" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-            <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#34d399", boxShadow: "0 0 8px #34d399" }} />
-            <Sparkles size={12} />
-            다음 일정
-          </span>
-        </div>
+        <span className="next-schedule-kicker">
+          <MapPin aria-hidden="true" size={14} />
+          다음 정류장
+        </span>
         <h2>{nextSchedule.title}</h2>
-        <p style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          <Clock size={14} style={{ opacity: 0.8 }} />
+        <p className="next-schedule-time">
+          <Clock aria-hidden="true" size={14} />
           {formatKoreanDate(getDisplayDate(nextSchedule.date))} {nextSchedule.time}
         </p>
         <p className="muted">{nextSchedule.guideMemo}</p>

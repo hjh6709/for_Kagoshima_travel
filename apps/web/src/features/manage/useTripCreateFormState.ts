@@ -6,7 +6,7 @@ export function useTripCreateFormState() {
   const [newTripStartDate, setNewTripStartDate] = useState("");
   const [newTripEndDate, setNewTripEndDate] = useState("");
   const [newTripTravelers, setNewTripTravelers] = useState("");
-  const [newTripDestinationCountry, setNewTripDestinationCountry] = useState("JP");
+  const [newTripDestinationCountry, setNewTripDestinationCountry] = useState("");
   const [newTripMemo, setNewTripMemo] = useState("");
   const [tripCreateError, setTripCreateError] = useState("");
   const [tripCreateSubmitting, setTripCreateSubmitting] = useState(false);
@@ -17,7 +17,7 @@ export function useTripCreateFormState() {
     setNewTripStartDate("");
     setNewTripEndDate("");
     setNewTripTravelers("");
-    setNewTripDestinationCountry("JP");
+    setNewTripDestinationCountry("");
     setNewTripMemo("");
   }
 

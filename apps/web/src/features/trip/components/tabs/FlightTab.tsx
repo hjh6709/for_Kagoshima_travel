@@ -1,17 +1,17 @@
 import { CheckCircle2, Plane } from "lucide-react";
 import { MaskedText } from "../../../../shared/components/MaskedText";
+import { getDestinationCountryLabel } from "../../../../shared/travelOptions";
 import type { TripPageProps } from "../../tripPageTypes";
 import { ProfileShortcutButton } from "../cards/ProfileShortcutButton";
 
 // 항공 탭 렌더링만 담당한다. 공항 체크리스트 상태 변경은 상위 핸들러를 호출한다.
 export function FlightTab({ allChecklist, checkedItems, flights, toggleCheck, trip, onNavigateToMyPage }: TripPageProps) {
-  const destCode = trip?.destinationCountry === "CN" ? "PVG" : "KOJ";
-  const destName = trip?.destinationCountry === "CN" ? "상하이 푸동" : "가고시마 공항";
+  const destinationLabel = getDestinationCountryLabel(trip?.destinationCountry);
 
   return (
     <section className="screen">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-        <h1 style={{ margin: 0 }}>항공편</h1>
+      <div className="screen-title-row">
+        <h1>항공편</h1>
         <ProfileShortcutButton onClick={onNavigateToMyPage} />
       </div>
       <p className="muted">공항에서 바로 확인할 수 있도록 출국·입국 항공편을 따로 모았습니다.</p>
@@ -25,15 +25,15 @@ export function FlightTab({ allChecklist, checkedItems, flights, toggleCheck, tr
       <div className="card-stack">
         {flights.map((flight) => {
           const isOutbound = flight.label?.includes("출국") || flight.label?.includes("가는");
-          const depCode = isOutbound ? "ICN" : destCode;
-          const depName = isOutbound ? "인천공항" : destName;
-          const arrCode = isOutbound ? destCode : "ICN";
-          const arrName = isOutbound ? destName : "인천공항";
+          const depCode = isOutbound ? "출발" : "귀국";
+          const depName = isOutbound ? "출발 공항" : destinationLabel;
+          const arrCode = isOutbound ? "도착" : "도착";
+          const arrName = isOutbound ? destinationLabel : "도착 공항";
 
           return (
             <article className="flight-card-premium" key={flight.id} style={{ marginBottom: "16px" }}>
               <div className="flight-card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
-                <span className="pill" style={{ background: "var(--c-green-light)", color: "var(--c-green)" }}>
+                <span className="pill" style={{ background: "var(--c-route-soft)", color: "var(--c-route)" }}>
                   {flight.label}
                 </span>
                 <span className="muted" style={{ fontSize: "13px", fontWeight: 700 }}>
@@ -78,7 +78,7 @@ export function FlightTab({ allChecklist, checkedItems, flights, toggleCheck, tr
               </div>
               
               {flight.memo && (
-                <div style={{ borderTop: "1px dashed rgba(28, 50, 37, 0.08)", paddingTop: "8px", marginTop: "4px", fontSize: "12px", color: "var(--c-muted)" }}>
+                <div style={{ borderTop: "1px dashed var(--border-color)", paddingTop: "8px", marginTop: "4px", fontSize: "12px", color: "var(--c-muted)" }}>
                   <MaskedText text={flight.memo} label="메모/예약번호:" />
                 </div>
               )}

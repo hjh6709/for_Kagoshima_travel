@@ -19,39 +19,28 @@ export function MapDirectionsChoice({ destinationCountry, place }: MapDirections
   const amapUrl = destinationCountry === "CN" ? amapDirectionsUrl || getAmapSearchUrl(place) : undefined;
 
   return (
-    <div style={{ display: "grid", flex: "1 1 180px", gap: "8px", width: "100%" }}>
+    <div className="directions-choice">
       <button
         aria-expanded={isOpen}
-        className="secondary-button compact-button"
+        className="destination-button compact-button directions-trigger"
         onClick={() => setIsOpen((current) => !current)}
         type="button"
-        style={{ justifyContent: "center", width: "100%" }}
       >
         <Navigation size={16} />
         길찾기 지도 선택
       </button>
 
       {isOpen && (
-        <div
-          aria-label="길찾기 지도 선택"
-          style={{
-            borderTop: "1px solid var(--border-color)",
-            display: "grid",
-            gap: "8px",
-            paddingTop: "10px",
-            marginTop: "4px",
-          }}
-        >
-          <span style={{ color: "var(--c-muted)", fontSize: "11px", fontWeight: 700 }}>
+        <div aria-label="길찾기 지도 선택" className="directions-options">
+          <span>
             사용할 지도 앱을 선택하세요
           </span>
-          <div style={{ display: "grid", gap: "6px", gridTemplateColumns: amapUrl ? "1fr 1fr" : "1fr" }}>
+          <div className={amapUrl ? "directions-grid two-options" : "directions-grid"}>
             {amapUrl && (
               <a
-                className="primary-button compact-button"
+                className="primary-button compact-button directions-link"
                 href={amapUrl}
                 rel="noopener noreferrer"
-                style={{ justifyContent: "center", textAlign: "center", textDecoration: "none" }}
                 target="_blank"
               >
                 <Map size={15} />
@@ -59,10 +48,9 @@ export function MapDirectionsChoice({ destinationCountry, place }: MapDirections
               </a>
             )}
             <a
-              className="secondary-button compact-button"
+              className="secondary-button compact-button directions-link"
               href={getGoogleDirectionsUrl(place)}
               rel="noopener noreferrer"
-              style={{ justifyContent: "center", textAlign: "center", textDecoration: "none" }}
               target="_blank"
             >
               <Map size={15} />

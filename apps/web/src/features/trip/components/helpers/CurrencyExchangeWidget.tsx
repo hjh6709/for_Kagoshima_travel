@@ -99,7 +99,7 @@ export function CurrencyExchangeWidget({ destinationCountry = "JP" }: CurrencyEx
     <article className="info-card exchange-widget" style={{ padding: "20px", display: "grid", gap: "16px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <Landmark size={20} style={{ color: "var(--c-accent-emerald)" }} />
+          <Landmark size={20} style={{ color: "var(--c-route)" }} />
           <h2 style={{ fontSize: "16px", fontWeight: 700, margin: 0, color: "var(--c-text)" }}>
             실시간 환율 계산기
           </h2>
@@ -127,12 +127,12 @@ export function CurrencyExchangeWidget({ destinationCountry = "JP" }: CurrencyEx
         </button>
       </div>
 
-      <div style={{ background: "rgba(15, 23, 42, 0.03)", padding: "12px 14px", borderRadius: "12px", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "13px" }}>
+      <div style={{ background: "var(--c-surface-cool)", padding: "12px 14px", borderRadius: "12px", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "13px" }}>
         <span style={{ color: "var(--c-muted)" }}>
           적용 환율: <strong>{isJapan ? "100엔 =" : "1위안 ="} {exchangeRate.toLocaleString()} 원</strong>
         </span>
         {apiRate && (
-          <span className="pill subtle" style={{ fontSize: "11px", background: "rgba(5, 150, 105, 0.1)", color: "var(--c-accent-emerald)" }}>
+          <span className="pill subtle" style={{ fontSize: "11px", background: "var(--c-route-soft)", color: "var(--c-route)" }}>
             실시간 고시
           </span>
         )}
@@ -171,7 +171,7 @@ export function CurrencyExchangeWidget({ destinationCountry = "JP" }: CurrencyEx
                   fontSize: "12px",
                   fontWeight: 600,
                   borderRadius: "8px",
-                  border: "1px solid rgba(15, 23, 42, 0.08)",
+                  border: "1px solid var(--border-color)",
                   background: "var(--c-surface)",
                   color: "var(--c-text)",
                 }}

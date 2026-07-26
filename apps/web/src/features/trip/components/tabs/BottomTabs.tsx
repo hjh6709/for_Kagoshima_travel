@@ -9,8 +9,8 @@ type BottomTabsProps = {
 const tabs: Array<{ id: Tab; label: string; icon: typeof Home }> = [
   { id: "today", label: "오늘", icon: Home },
   { id: "schedule", label: "일정", icon: CalendarDays },
-  { id: "flight", label: "항공", icon: Plane },
   { id: "map", label: "지도", icon: MapIcon },
+  { id: "flight", label: "항공", icon: Plane },
   { id: "concierge", label: "긴급", icon: Shield },
 ];
 

@@ -1,4 +1,5 @@
 import { CheckCircle2 } from "lucide-react";
+import { destinationCountryOptions } from "../../../../shared/travelOptions";
 import type { TripManagePageProps } from "../../manageTypes";
 
 type TripBasicInfoFormProps = Pick<
@@ -63,8 +64,16 @@ export function TripBasicInfoForm({
           onChange={(event) => onTripEditDestinationCountryChange(event.target.value)}
           value={tripEditDestinationCountry}
         >
-          <option value="JP">일본 (엔화/일어 지원)</option>
-          <option value="CN">중국 (위안화/중국어 지원)</option>
+          {!destinationCountryOptions.some(([code]) => code === tripEditDestinationCountry) && tripEditDestinationCountry && (
+            <option value={tripEditDestinationCountry}>{tripEditDestinationCountry} · 기존 설정</option>
+          )}
+          {destinationCountryOptions.map(([code, label]) => (
+            <option key={code} value={code}>
+              {label}
+              {code === "JP" ? " · 엔화/일본어 도구" : ""}
+              {code === "CN" ? " · 위안화/중국어·고덕지도" : ""}
+            </option>
+          ))}
         </select>
       </label>
 

@@ -186,7 +186,7 @@ export function SharedTripPage({ error, warning, loading, sharedTrip }: SharedTr
                       {sharedFlights.map((flight) => (
                         <article className="flight-card-premium" key={flight.id} style={{ marginBottom: "16px" }}>
                           <div className="flight-card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
-                            <span className="pill" style={{ background: "var(--c-green-light)", color: "var(--c-green)" }}>
+                            <span className="pill" style={{ background: "var(--c-route-soft)", color: "var(--c-route)" }}>
                               {getFlightDirectionLabel(flight.direction)}
                             </span>
                             <span className="muted" style={{ fontSize: "13px", fontWeight: 700 }}>
@@ -231,7 +231,7 @@ export function SharedTripPage({ error, warning, loading, sharedTrip }: SharedTr
                           </div>
                           
                           {flight.memo && (
-                            <div style={{ borderTop: "1px dashed rgba(28, 50, 37, 0.08)", paddingTop: "8px", marginTop: "4px", fontSize: "12px", color: "var(--c-muted)" }}>
+                            <div style={{ borderTop: "1px dashed var(--border-color)", paddingTop: "8px", marginTop: "4px", fontSize: "12px", color: "var(--c-muted)" }}>
                               메모: {flight.memo}
                             </div>
                           )}

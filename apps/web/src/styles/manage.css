@@ -1,0 +1,568 @@
+.owner-frame {
+  grid-template-rows: 1fr;
+}
+
+.owner-frame .content {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.owner-screen {
+  min-height: 100%;
+}
+
+.owner-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.owner-trip-card {
+  background: var(--c-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  display: grid;
+  gap: 14px;
+  padding: 22px;
+}
+
+.start-screen {
+  display: grid;
+  align-content: start;
+  gap: 22px;
+}
+
+.start-hero {
+  display: grid;
+  gap: 10px;
+  padding: 6px 0 0;
+}
+
+.start-hero h1 {
+  margin-bottom: 0;
+  font-size: 32px;
+  line-height: 1.18;
+}
+
+.start-hero > p {
+  max-width: 36ch;
+  margin-bottom: 0;
+  color: var(--c-muted);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.start-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+  color: var(--c-text);
+}
+
+.start-brand-mark {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--c-route);
+  color: #ffffff;
+}
+
+.start-brand strong {
+  font-size: 16px;
+  letter-spacing: -0.02em;
+}
+
+.start-route-preview {
+  position: relative;
+  display: grid;
+  gap: 0;
+  padding: 6px 0;
+}
+
+.start-route-preview::before {
+  position: absolute;
+  top: 28px;
+  bottom: 28px;
+  left: 19px;
+  width: 2px;
+  border-radius: 999px;
+  background: var(--c-route);
+  content: "";
+}
+
+.start-route-stop {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  align-items: center;
+  gap: 12px;
+  min-height: 70px;
+}
+
+.start-route-stop > span {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 2px solid var(--c-route);
+  border-radius: 50%;
+  background: var(--c-bg);
+  color: var(--c-route);
+}
+
+.start-route-stop.destination > span {
+  border-color: var(--c-destination);
+  background: var(--c-destination);
+  color: #ffffff;
+}
+
+.start-route-stop strong,
+.start-route-stop small {
+  display: block;
+}
+
+.start-route-stop strong {
+  color: var(--c-text);
+  font-size: 15px;
+}
+
+.start-route-stop small {
+  margin-top: 3px;
+  color: var(--c-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.start-action-stack {
+  display: grid;
+  gap: 10px;
+}
+
+.start-primary-action,
+.start-secondary-action {
+  width: 100%;
+}
+
+.start-primary-action .trailing-icon {
+  margin-left: auto;
+}
+
+.start-guide-card {
+  display: grid;
+  gap: 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: var(--c-surface);
+  box-shadow: none;
+  padding: 18px;
+}
+
+.start-guide-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.start-guide-list li {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  gap: 10px;
+  align-items: start;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  background: var(--c-surface-cool);
+  color: var(--c-route);
+  padding: 12px;
+}
+
+.start-guide-list strong,
+.start-guide-list span {
+  display: block;
+}
+
+.start-guide-list strong {
+  font-size: 14px;
+}
+
+.start-guide-list span {
+  margin-top: 2px;
+  color: var(--c-muted);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.manage-flow-card {
+  display: grid;
+  gap: 16px;
+  margin-top: 18px;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: var(--c-surface);
+  box-shadow: none;
+  padding: 18px;
+}
+
+.manage-flow-card h2 {
+  margin: 8px 0 4px;
+}
+
+.manage-flow-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.manage-flow-steps li {
+  display: grid;
+  place-items: center;
+  gap: 6px;
+  min-height: 76px;
+  border-radius: 12px;
+  background: var(--c-route-soft);
+  color: var(--c-route);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.owner-trip-detail-card {
+  background: var(--c-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: none;
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+}
+
+.owner-detail-section {
+  border-top: 1px solid rgba(23, 51, 61, 0.08);
+  padding-top: 22px;
+}
+
+.detail-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.detail-step-guide {
+  display: grid;
+  gap: 14px;
+  border-radius: 12px;
+  background: var(--c-destination-soft);
+  padding: 14px;
+}
+
+.detail-step-guide h3 {
+  margin-bottom: 0;
+  color: var(--c-text);
+  font-size: 17px;
+  letter-spacing: -0.01em;
+}
+
+.detail-step-list {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.detail-step-list li {
+  display: grid;
+  place-items: center;
+  gap: 4px;
+  min-height: 58px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.62);
+  color: var(--c-route);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.muted-label {
+  color: var(--c-muted);
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.owner-action-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.owner-linked-data-section {
+  display: grid;
+  gap: 12px;
+  border-top: 1px solid rgba(23, 51, 61, 0.08);
+  padding-top: 18px;
+}
+
+.shanghai-starter-planner {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 8px;
+  padding: 16px;
+  border: 1px solid rgba(201, 79, 61, 0.24);
+  border-radius: 14px;
+  background: var(--c-destination-soft);
+}
+
+.shanghai-planner-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--c-destination);
+}
+
+.shanghai-planner-heading h4 {
+  margin: 8px 0 0;
+  color: var(--c-text);
+  font-size: 17px;
+}
+
+.shanghai-plan-list {
+  display: grid;
+  gap: 8px;
+}
+
+.shanghai-plan-item {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid rgba(23, 51, 61, 0.1);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.shanghai-plan-time {
+  display: grid;
+  gap: 2px;
+  color: var(--c-text);
+  font-size: 12px;
+}
+
+.shanghai-plan-time span {
+  color: var(--c-muted);
+}
+
+.shanghai-plan-copy {
+  min-width: 0;
+}
+
+.shanghai-plan-copy h5 {
+  margin: 0 0 5px;
+  color: var(--c-text);
+  font-size: 15px;
+}
+
+.planner-place-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--c-muted);
+  font-size: 12px;
+}
+
+.planner-place-status.connected {
+  color: var(--c-route);
+  font-weight: 700;
+}
+
+@media (max-width: 560px) {
+  .shanghai-plan-item {
+    grid-template-columns: 1fr auto;
+  }
+
+  .shanghai-plan-time {
+    grid-column: 1 / -1;
+    grid-template-columns: auto 1fr;
+    gap: 8px;
+  }
+}
+
+.compact-card-stack {
+  gap: 8px;
+}
+
+.owner-linked-card {
+  display: grid;
+  gap: 8px;
+  border: 1px solid rgba(23, 51, 61, 0.1);
+  border-radius: 10px;
+  background: var(--c-bg);
+  padding: 14px;
+}
+
+.owner-linked-card h2 {
+  margin-bottom: 0;
+  font-size: 17px;
+}
+
+.share-link-panel {
+  display: grid;
+  gap: 10px;
+  border-radius: 12px;
+  background: var(--c-route-soft);
+  padding: 14px;
+}
+
+.share-link-panel label {
+  display: grid;
+  gap: 6px;
+  color: var(--c-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.share-link-panel input {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid rgba(23, 51, 61, 0.12);
+  border-radius: 10px;
+  background: var(--c-surface);
+  color: var(--c-text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 10px;
+}
+
+.share-link-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.owner-trip-card h2,
+.empty-state-card h2 {
+  margin-top: 10px;
+}
+
+.empty-state-card {
+  display: grid;
+  gap: 10px;
+  place-items: center;
+  text-align: center;
+  padding: 32px 24px;
+  background: var(--c-surface);
+  border: 1px dashed var(--border-color);
+}
+/* 프리미엄 로그인/회원가입 카드 리브랜딩 스타일 */
+.auth-card-premium {
+  border-top: none;
+  background: var(--c-surface);
+  border: 1px solid var(--border-color);
+  box-shadow: none;
+  border-radius: var(--radius-card);
+  padding: 28px 24px;
+}
+
+.auth-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.auth-brand-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--c-route-soft);
+  color: var(--c-route);
+}
+
+.auth-hero-icon {
+  color: var(--c-route);
+}
+
+.spin-slow {
+  animation: none;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.auth-form .auth-field-label {
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--c-muted);
+}
+
+.auth-field-label span {
+  font-size: 13px;
+  color: var(--c-text);
+  margin-left: 2px;
+}
+
+.input-with-icon {
+  position: relative;
+  width: 100%;
+}
+
+.input-with-icon .field-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--c-muted);
+  pointer-events: none;
+}
+
+.input-with-icon input {
+  padding-left: 40px;
+}
+
+/* 비밀번호 보기/숨기기 토글 관련 스타일 */
+.password-toggle-btn {
+  position: absolute;
+  right: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--c-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 10px;
+  transition: color 0.15s, opacity 0.15s;
+}
+
+.password-toggle-btn:hover {
+  color: var(--c-text);
+  opacity: 0.85;
+}
+
+.auth-form .input-with-icon input.with-password-toggle {
+  padding-right: 48px;
+}

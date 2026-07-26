@@ -158,9 +158,9 @@ export function ManagePlaceCreateForm({
       </div>
 
       {/* 지도 데이터 기반 통합 검색 컴포넌트 추가 */}
-      <div style={{ background: "var(--c-green-light)", border: "1px solid var(--border-color)", borderRadius: "12px", padding: "16px", marginBottom: "20px" }}>
+      <div style={{ background: "var(--c-route-soft)", border: "1px solid var(--border-color)", borderRadius: "12px", padding: "16px", marginBottom: "20px" }}>
         <h4 style={{ fontSize: "14px", fontWeight: 700, color: "var(--c-text)", marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
-          <Compass size={16} style={{ color: "var(--c-green)" }} />
+          <Compass size={16} style={{ color: "var(--c-route)" }} />
           Google Maps 장소 검색
         </h4>
         <p style={{ fontSize: "12px", color: "var(--c-muted)", marginBottom: "12px" }}>
@@ -220,7 +220,7 @@ export function ManagePlaceCreateForm({
                     alignItems: "center",
                     padding: "10px 12px",
                     borderRadius: "8px",
-                    border: isSelected ? "1px solid var(--c-green)" : "1px solid var(--border-color)",
+                    border: isSelected ? "1px solid var(--c-route)" : "1px solid var(--border-color)",
                     background: isSelected ? "var(--c-surface)" : "rgba(255,255,255,0.6)",
                     textAlign: "left",
                     width: "100%",
@@ -229,7 +229,7 @@ export function ManagePlaceCreateForm({
                   }}
                 >
                   <div style={{ flex: 1, paddingRight: "8px" }}>
-                    <div style={{ fontSize: "14px", fontWeight: 700, color: isSelected ? "var(--c-green)" : "var(--c-text)" }}>
+                    <div style={{ fontSize: "14px", fontWeight: 700, color: isSelected ? "var(--c-route)" : "var(--c-text)" }}>
                       {result.name}
                     </div>
                     {result.address && (
@@ -239,12 +239,12 @@ export function ManagePlaceCreateForm({
                     )}
                   </div>
                   {isSelected ? (
-                    <span style={{ color: "var(--c-green)", display: "flex", alignItems: "center", gap: "4px", fontSize: "12px", fontWeight: 500 }}>
+                    <span style={{ color: "var(--c-route)", display: "flex", alignItems: "center", gap: "4px", fontSize: "12px", fontWeight: 500 }}>
                       <Check size={14} />
                       선택됨
                     </span>
                   ) : (
-                    <span style={{ fontSize: "12px", color: "var(--c-green)", border: "1px solid var(--c-green)", borderRadius: "4px", padding: "2px 6px" }}>
+                    <span style={{ fontSize: "12px", color: "var(--c-route)", border: "1px solid var(--c-route)", borderRadius: "4px", padding: "2px 6px" }}>
                       선택
                     </span>
                   )}

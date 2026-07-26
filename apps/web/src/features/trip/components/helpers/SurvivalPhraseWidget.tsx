@@ -29,7 +29,7 @@ export function SurvivalPhraseWidget({ destinationCountry = "JP" }: SurvivalPhra
       <article className="info-card translation-widget" style={{ display: "grid", gap: "14px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <Languages size={20} style={{ color: "var(--c-accent-emerald)" }} />
+            <Languages size={20} style={{ color: "var(--c-route)" }} />
             <h2 style={{ fontSize: "16px", fontWeight: 700, margin: 0, color: "var(--c-text)" }}>
               {isJapan ? "일본어 현지 생존 회화" : "중국어 현지 생존 회화"}
             </h2>
@@ -48,9 +48,9 @@ export function SurvivalPhraseWidget({ destinationCountry = "JP" }: SurvivalPhra
                 justifyContent: "space-between",
                 alignItems: "center",
                 padding: "10px 12px",
-                background: "rgba(15, 23, 42, 0.03)",
+                background: "var(--c-surface-cool)",
                 borderRadius: "10px",
-                border: "1px solid rgba(15, 23, 42, 0.05)",
+                border: "1px solid var(--border-color)",
               }}
             >
               <div style={{ display: "grid", gap: "2px" }}>
@@ -60,7 +60,7 @@ export function SurvivalPhraseWidget({ destinationCountry = "JP" }: SurvivalPhra
                 <span style={{ fontSize: "15px", fontWeight: 800, color: "var(--c-text)" }}>
                   {phrase.foreign}
                 </span>
-                <span style={{ fontSize: "12px", color: "var(--c-accent-emerald)", fontWeight: 700 }}>
+                <span style={{ fontSize: "12px", color: "var(--c-route)", fontWeight: 700 }}>
                   [{phrase.pronunciation}]
                 </span>
               </div>
@@ -73,7 +73,7 @@ export function SurvivalPhraseWidget({ destinationCountry = "JP" }: SurvivalPhra
                   style={{
                     padding: "8px",
                     borderRadius: "8px",
-                    border: "1px solid rgba(15, 23, 42, 0.1)",
+                    border: "1px solid var(--border-color)",
                     background: "var(--c-surface)",
                     color: "var(--c-text)",
                     cursor: "pointer",
@@ -88,8 +88,8 @@ export function SurvivalPhraseWidget({ destinationCountry = "JP" }: SurvivalPhra
                   style={{
                     padding: "8px",
                     borderRadius: "8px",
-                    border: "1px solid rgba(15, 23, 42, 0.1)",
-                    background: copiedIndex === idx ? "var(--c-accent-emerald)" : "var(--c-surface)",
+                    border: "1px solid var(--border-color)",
+                    background: copiedIndex === idx ? "var(--c-route)" : "var(--c-surface)",
                     color: copiedIndex === idx ? "#ffffff" : "var(--c-text)",
                     cursor: "pointer",
                   }}
@@ -157,7 +157,7 @@ export function SurvivalPhraseWidget({ destinationCountry = "JP" }: SurvivalPhra
               {zoomedPhrase.foreign}
             </div>
 
-            <div style={{ fontSize: "18px", color: "var(--c-accent-emerald)", fontWeight: 800 }}>
+            <div style={{ fontSize: "18px", color: "var(--c-route)", fontWeight: 800 }}>
               [{zoomedPhrase.pronunciation}]
             </div>
 
