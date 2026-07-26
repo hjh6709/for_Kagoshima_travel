@@ -14,12 +14,13 @@ Manyfast 방식처럼 기획 산출물을 단계별로 나누고, 아래 카테�
 
 ### 2. 설계와 운영 (어떻게 만들고 배포할 것인가)
 
-5. [기술 설계서 (Tech Design)](./TECH_DESIGN.md)
-6. [배포 가이드](./DEPLOYMENT.md)
-7. [로컬 개발 런북](./LOCAL_DEVELOPMENT_RUNBOOK.md)
-8. [Oracle VM API 배포 런북](./ORACLE_VM_DEPLOYMENT_RUNBOOK.md)
-9. [디자인 워크플로우](./DESIGN_WORKFLOW.md)
-10. [프로젝트 트러블슈팅 및 장애 해결 가이드](./TROUBLESHOOTING.md)
+5. [개발자 종합 가이드 (Developer Guide)](./DEVELOPER_GUIDE.md)
+6. [기술 설계서 (Tech Design)](./TECH_DESIGN.md)
+7. [배포 가이드](./DEPLOYMENT.md)
+8. [로컬 개발 런북](./LOCAL_DEVELOPMENT_RUNBOOK.md)
+9. [Oracle VM API 배포 런북](./ORACLE_VM_DEPLOYMENT_RUNBOOK.md)
+10. [디자인 가이드라인](./DESIGN_GUIDELINES.md)
+11. [프로젝트 트러블슈팅 및 장애 해결 가이드](./TROUBLESHOOTING.md)
 
 ### 3. 확장 전략 (2차 백엔드 준비물)
 
