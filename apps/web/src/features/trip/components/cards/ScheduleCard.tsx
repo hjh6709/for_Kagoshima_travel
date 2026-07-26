@@ -58,6 +58,8 @@ export function ScheduleCard({
             className="secondary-button compact-button"
             onClick={() => onToggleComplete(item.id)}
             type="button"
+            aria-pressed={isCompleted}
+            aria-label={`${item.title} ${isCompleted ? "완료 취소" : "완료 처리"}`}
           >
             <CheckCircle2 size={18} />
             {isCompleted ? "완료 취소" : "완료"}
