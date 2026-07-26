@@ -471,6 +471,251 @@
   padding-top: 4px;
 }
 
+.flight-screen-intro {
+  margin: 4px 0 0;
+  color: var(--c-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.flight-manage-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding: 11px 12px;
+  border-radius: 10px;
+  background: var(--c-route-soft);
+}
+
+.flight-manage-row span {
+  color: var(--c-muted);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.flight-manage-row .secondary-button {
+  flex: 0 0 auto;
+  background: var(--c-surface);
+  font-size: 12px;
+}
+
+.flight-journey-list {
+  display: grid;
+  gap: 14px;
+}
+
+.flight-journey-card {
+  padding: 18px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  background: var(--c-surface);
+}
+
+.flight-journey-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.flight-journey-header .pill {
+  flex: 0 0 auto;
+}
+
+.flight-identity {
+  min-width: 0;
+  text-align: right;
+}
+
+.flight-identity h2 {
+  margin: 0;
+  font-size: 21px;
+  overflow-wrap: anywhere;
+}
+
+.flight-identity p {
+  margin: 2px 0 0;
+  color: var(--c-muted);
+  font-size: 12px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.flight-route {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  padding: 16px 0;
+  border-block: 1px solid var(--border-color);
+}
+
+.flight-route-point {
+  min-width: 0;
+}
+
+.flight-route-point.arrival {
+  text-align: right;
+}
+
+.flight-route-point span,
+.flight-route-point strong,
+.flight-route-point small,
+.flight-route-point b {
+  display: block;
+}
+
+.flight-route-point span {
+  margin-bottom: 3px;
+  color: var(--c-route);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.flight-route-point strong {
+  min-height: 42px;
+  color: var(--c-text);
+  font-size: 15px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.flight-route-point small {
+  margin-top: 7px;
+  color: var(--c-muted);
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.flight-route-point b {
+  margin-top: 2px;
+  color: var(--c-text);
+  font-size: 13px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.flight-route-line {
+  position: relative;
+  display: grid;
+  height: 32px;
+  place-items: center;
+  color: var(--c-destination);
+}
+
+.flight-route-line span {
+  position: absolute;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: var(--border-color);
+}
+
+.flight-route-line svg {
+  position: relative;
+  padding: 3px;
+  border-radius: 50%;
+  background: var(--c-surface);
+  transform: rotate(90deg);
+  box-sizing: content-box;
+}
+
+.flight-memo {
+  margin-top: 14px;
+}
+
+.flight-memo summary {
+  min-height: 44px;
+  padding: 11px 2px;
+  color: var(--c-muted);
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.flight-memo summary:focus-visible {
+  border-radius: 8px;
+  outline: 3px solid rgba(11, 111, 106, 0.28);
+  outline-offset: 1px;
+}
+
+.flight-memo > div {
+  padding: 11px 12px;
+  border-radius: 8px;
+  background: var(--c-surface-cool);
+  color: var(--c-muted);
+  font-size: 12px;
+}
+
+.flight-checklist-section {
+  margin-top: 30px;
+}
+
+.flight-check-count {
+  min-width: 42px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: var(--c-route);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.flight-checklist-empty {
+  margin: 0;
+  padding: 14px;
+  border-radius: 10px;
+  background: var(--c-surface-cool);
+  color: var(--c-muted);
+  font-size: 13px;
+}
+
+.flight-empty-state {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  place-items: start;
+  padding: 22px 18px;
+  text-align: left;
+}
+
+.flight-empty-state > svg {
+  color: var(--c-route);
+}
+
+.flight-empty-state strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--c-text);
+}
+
+.flight-empty-state p {
+  margin: 0 0 12px;
+  color: var(--c-muted);
+  font-size: 13px;
+}
+
+@media (max-width: 360px) {
+  .flight-manage-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .flight-route {
+    grid-template-columns: minmax(0, 1fr) 36px minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .flight-route-point strong {
+    font-size: 14px;
+  }
+}
+
 /* 상단 프로필 헤더 내 마이페이지 버튼 */
 .header-profile-btn {
   width: 44px;

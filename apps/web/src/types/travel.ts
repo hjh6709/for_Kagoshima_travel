@@ -21,11 +21,16 @@ export type Trip = {
 
 export type FlightInfo = {
   id: string;
+  direction?: string;
   label: string;
   airline?: string;
   flightNumber?: string;
+  departureAirport?: string;
+  arrivalAirport?: string;
   date?: string;
   time?: string;
+  arrivalDate?: string;
+  arrivalTime?: string;
   memo?: string;
 };
 
