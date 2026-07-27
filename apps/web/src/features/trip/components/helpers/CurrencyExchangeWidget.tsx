@@ -1,210 +1,242 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowUpDown, Landmark, RefreshCw } from "lucide-react";
+import type { CurrencyConfig } from "../../../../shared/currency";
+
+type RateStatus = "loading" | "live" | "cached" | "manual" | "error";
 
 interface CurrencyExchangeWidgetProps {
-  destinationCountry?: string;
+  config: CurrencyConfig;
 }
 
-function foreignToKrw(amount: number, rate: number, isJapan: boolean) {
-  return Math.round(isJapan ? (amount * rate) / 100 : amount * rate);
+type CachedRate = {
+  rate: number;
+  savedAt: number;
+};
+
+const CACHE_MAX_AGE = 1000 * 60 * 60 * 24 * 7;
+const REQUEST_TIMEOUT = 8000;
+
+function getCacheKey(currencyCode: string) {
+  return `map-planner:exchange-rate:${currencyCode}`;
 }
 
-function krwToForeign(amount: number, rate: number, isJapan: boolean) {
-  return isJapan ? ((amount / rate) * 100).toFixed(0) : (amount / rate).toFixed(1);
+function readCachedRate(currencyCode: string): CachedRate | null {
+  try {
+    const raw = localStorage.getItem(getCacheKey(currencyCode));
+    if (!raw) return null;
+    const cached = JSON.parse(raw) as CachedRate;
+    if (!Number.isFinite(cached.rate) || cached.rate <= 0 || Date.now() - cached.savedAt > CACHE_MAX_AGE) return null;
+    return cached;
+  } catch {
+    return null;
+  }
 }
 
-export function CurrencyExchangeWidget({ destinationCountry = "JP" }: CurrencyExchangeWidgetProps) {
-  const isJapan = destinationCountry === "JP";
-  
-  // 환율 상태 관리 (기본 디폴트 기준 환율 설정)
-  const defaultRate = isJapan ? 900 : 190;
-  const [exchangeRate, setExchangeRate] = useState<number>(defaultRate);
-  const [foreignVal, setForeignVal] = useState<string>("");
-  const [krwVal, setKrwVal] = useState<string>("");
+function saveCachedRate(currencyCode: string, rate: number) {
+  try {
+    localStorage.setItem(getCacheKey(currencyCode), JSON.stringify({ rate, savedAt: Date.now() } satisfies CachedRate));
+  } catch {
+    // 저장소를 사용할 수 없어도 현재 화면의 계산은 계속 제공한다.
+  }
+}
 
-  // 실시간 API 고시 환율 상태
-  const [apiRate, setApiRate] = useState<number | null>(null);
-  const [apiLoading, setApiLoading] = useState<boolean>(false);
+function foreignToKrw(amount: number, rate: number, rateUnit: number) {
+  return Math.round((amount * rate) / rateUnit);
+}
 
-  const currencyUnit = isJapan ? "엔 (JPY)" : "위안 (CNY)";
+function krwToForeign(amount: number, rate: number, rateUnit: number) {
+  const converted = (amount * rateUnit) / rate;
+  return converted >= 100 ? converted.toFixed(0) : converted.toFixed(2).replace(/\.00$/, "");
+}
+
+export function CurrencyExchangeWidget({ config }: CurrencyExchangeWidgetProps) {
+  const controllerRef = useRef<AbortController | null>(null);
+  const cachedRate = readCachedRate(config.code);
+  const [exchangeRate, setExchangeRate] = useState<number | null>(cachedRate?.rate ?? null);
+  const [rateInput, setRateInput] = useState(cachedRate ? String(cachedRate.rate) : "");
+  const [status, setStatus] = useState<RateStatus>(cachedRate ? "cached" : "loading");
+  const [foreignVal, setForeignVal] = useState("");
+  const [krwVal, setKrwVal] = useState("");
+
+  const fetchRealtimeRate = useCallback(async () => {
+    controllerRef.current?.abort();
+    const controller = new AbortController();
+    controllerRef.current = controller;
+    let timedOut = false;
+    const timeoutId = window.setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, REQUEST_TIMEOUT);
+    setStatus("loading");
+
+    try {
+      const response = await fetch("https://open.er-api.com/v6/latest/KRW", { signal: controller.signal });
+      if (!response.ok) throw new Error("rate-request-failed");
+      const data = (await response.json()) as { rates?: Record<string, number> };
+      const foreignPerKrw = data.rates?.[config.code];
+      if (!Number.isFinite(foreignPerKrw) || !foreignPerKrw || foreignPerKrw <= 0) throw new Error("invalid-rate");
+
+      const nextRate = config.rateUnit / foreignPerKrw;
+      setExchangeRate(nextRate);
+      setRateInput(String(Number(nextRate.toFixed(2))));
+      setStatus("live");
+      saveCachedRate(config.code, nextRate);
+    } catch {
+      if (controller.signal.aborted && !timedOut) return;
+      const cached = readCachedRate(config.code);
+      if (cached) {
+        setExchangeRate(cached.rate);
+        setRateInput(String(cached.rate));
+        setStatus("cached");
+      } else {
+        setExchangeRate(null);
+        setStatus("error");
+      }
+    } finally {
+      window.clearTimeout(timeoutId);
+      if (controllerRef.current === controller) controllerRef.current = null;
+    }
+  }, [config.code, config.rateUnit]);
 
   useEffect(() => {
-    setExchangeRate(defaultRate);
+    const cached = readCachedRate(config.code);
+    setExchangeRate(cached?.rate ?? null);
+    setRateInput(cached ? String(cached.rate) : "");
+    setStatus(cached ? "cached" : "loading");
     setForeignVal("");
     setKrwVal("");
-    setApiRate(null);
-    fetchRealtimeRate();
-  }, [destinationCountry, defaultRate]);
+    void fetchRealtimeRate();
 
-  const fetchRealtimeRate = async () => {
-    setApiLoading(true);
-    try {
-      const res = await fetch("https://open.er-api.com/v6/latest/KRW");
-      if (!res.ok) throw new Error("API status error");
-      const data = await res.json();
-      
-      if (data && data.rates) {
-        if (isJapan) {
-          if (!Number.isFinite(data.rates.JPY) || data.rates.JPY <= 0) throw new Error("Invalid JPY rate");
-          const rateJpy = 1 / data.rates.JPY;
-          const rate100Jpy = Math.round(rateJpy * 100);
-          setApiRate(rate100Jpy);
-          setExchangeRate(rate100Jpy);
-        } else {
-          if (!Number.isFinite(data.rates.CNY) || data.rates.CNY <= 0) throw new Error("Invalid CNY rate");
-          const rateCny = Math.round(1 / data.rates.CNY);
-          setApiRate(rateCny);
-          setExchangeRate(rateCny);
-        }
-      }
-    } catch {
-      // API 실패 시 기본환율 유지
-    } finally {
-      setApiLoading(false);
-    }
-  };
+    return () => controllerRef.current?.abort();
+  }, [config.code, fetchRealtimeRate]);
 
-  const handleForeignChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setForeignVal(val);
-    const num = parseFloat(val);
-    if (!isNaN(num) && num > 0 && exchangeRate > 0) {
-      setKrwVal(foreignToKrw(num, exchangeRate, isJapan).toLocaleString("ko-KR"));
-    } else {
+  const updateKrwValue = (foreignAmount: number, rate = exchangeRate) => {
+    if (!rate || foreignAmount <= 0) {
       setKrwVal("");
+      return;
     }
+    setKrwVal(foreignToKrw(foreignAmount, rate, config.rateUnit).toLocaleString("ko-KR"));
   };
 
-  const handleKrwChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawVal = e.target.value.replace(/,/g, "");
-    setKrwVal(rawVal);
-    const num = parseFloat(rawVal);
-    if (!isNaN(num) && num > 0 && exchangeRate > 0) {
-      setForeignVal(krwToForeign(num, exchangeRate, isJapan));
-    } else {
+  const handleRateChange = (value: string) => {
+    setRateInput(value);
+    const nextRate = Number(value);
+    if (!Number.isFinite(nextRate) || nextRate <= 0) {
+      setExchangeRate(null);
+      setKrwVal("");
+      setStatus("manual");
+      return;
+    }
+    setExchangeRate(nextRate);
+    setStatus("manual");
+    updateKrwValue(Number(foreignVal), nextRate);
+  };
+
+  const handleForeignChange = (value: string) => {
+    setForeignVal(value);
+    updateKrwValue(Number(value));
+  };
+
+  const handleKrwChange = (value: string) => {
+    const rawValue = value.replace(/,/g, "");
+    setKrwVal(rawValue);
+    const amount = Number(rawValue);
+    if (!exchangeRate || !Number.isFinite(amount) || amount <= 0) {
       setForeignVal("");
+      return;
     }
+    setForeignVal(krwToForeign(amount, exchangeRate, config.rateUnit));
   };
 
-  const handleQuickAddForeign = (add: number) => {
-    const current = parseFloat(foreignVal) || 0;
-    const next = current + add;
-    setForeignVal(next.toString());
-    if (exchangeRate > 0) {
-      setKrwVal(foreignToKrw(next, exchangeRate, isJapan).toLocaleString("ko-KR"));
-    }
+  const handleQuickAdd = (amount: number) => {
+    const nextValue = (Number(foreignVal) || 0) + amount;
+    setForeignVal(String(nextValue));
+    updateKrwValue(nextValue);
   };
+
+  const statusText = {
+    loading: "최신 환율 확인 중",
+    live: "최신 환율 적용",
+    cached: "최근 저장 환율 적용",
+    manual: "직접 입력 환율 적용",
+    error: "환율을 불러오지 못함",
+  }[status];
 
   return (
-    <article className="info-card exchange-widget" style={{ padding: "20px", display: "grid", gap: "16px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <Landmark size={20} style={{ color: "var(--c-route)" }} />
-          <h2 style={{ fontSize: "16px", fontWeight: 700, margin: 0, color: "var(--c-text)" }}>
-            실시간 환율 계산기
-          </h2>
+    <article className="info-card exchange-widget">
+      <header className="travel-tool-title-row">
+        <div>
+          <Landmark aria-hidden="true" size={20} />
+          <div>
+            <h2>환율 계산기</h2>
+            <p>현지 통화와 원화를 빠르게 비교합니다.</p>
+          </div>
         </div>
         <button
-          onClick={fetchRealtimeRate}
-          disabled={apiLoading}
+          aria-label="최신 환율 다시 조회"
+          className="tool-refresh-button"
+          disabled={status === "loading"}
+          onClick={() => void fetchRealtimeRate()}
           type="button"
-          aria-label="환율 새로고침"
-          style={{
-            background: "transparent",
-            border: "none",
-            color: "var(--c-muted)",
-            display: "flex",
-            alignItems: "center",
-            gap: "4px",
-            fontSize: "12px",
-            cursor: "pointer",
-            padding: "4px 8px",
-            borderRadius: "6px",
-          }}
         >
-          <RefreshCw size={13} className={apiLoading ? "spin-icon" : ""} />
-          {apiLoading ? "조회중" : "새로고침"}
+          <RefreshCw aria-hidden="true" className={status === "loading" ? "spin-icon" : ""} size={15} />
+          <span>{status === "loading" ? "조회 중" : "새로고침"}</span>
         </button>
-      </div>
+      </header>
 
-      <div style={{ background: "var(--c-surface-cool)", padding: "12px 14px", borderRadius: "12px", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "13px" }}>
-        <span style={{ color: "var(--c-muted)" }}>
-          적용 환율: <strong>{isJapan ? "100엔 =" : "1위안 ="} {exchangeRate.toLocaleString()} 원</strong>
-        </span>
-        {apiRate && (
-          <span className="pill subtle" style={{ fontSize: "11px", background: "var(--c-route-soft)", color: "var(--c-route)" }}>
-            실시간 고시
-          </span>
-        )}
-      </div>
-
-      <div style={{ display: "grid", gap: "12px" }}>
-        <div>
-          <label style={{ fontSize: "12px", color: "var(--c-muted)", fontWeight: 700, marginBottom: "4px", display: "block" }}>
-            {currencyUnit}
-          </label>
+      <div className={`exchange-rate-status ${status === "error" ? "error" : ""}`} aria-live="polite">
+        <span>{statusText}</span>
+        <label>
+          <span>{config.rateUnit.toLocaleString("ko-KR")}{config.label} =</span>
           <input
+            aria-label={`${config.rateUnit.toLocaleString("ko-KR")}${config.label}의 원화 환율`}
+            inputMode="decimal"
+            min="0"
+            onChange={(event) => handleRateChange(event.target.value)}
+            placeholder="직접 입력"
+            step="any"
             type="number"
-            placeholder={isJapan ? "예: 1000" : "예: 100"}
-            value={foreignVal}
-            onChange={handleForeignChange}
-            style={{
-              width: "100%",
-              padding: "12px 14px",
-              borderRadius: "12px",
-              border: "1px solid var(--border-color)",
-              fontSize: "16px",
-              fontWeight: 700,
-              color: "var(--c-text)",
-              background: "var(--c-surface)",
-            }}
+            value={rateInput}
           />
-          <div style={{ display: "flex", gap: "6px", marginTop: "8px" }}>
-            {[isJapan ? 100 : 10, isJapan ? 500 : 50, isJapan ? 1000 : 100, isJapan ? 5000 : 500].map((add) => (
-              <button
-                key={add}
-                type="button"
-                onClick={() => handleQuickAddForeign(add)}
-                style={{
-                  flex: 1,
-                  padding: "6px 0",
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  borderRadius: "8px",
-                  border: "1px solid var(--border-color)",
-                  background: "var(--c-surface)",
-                  color: "var(--c-text)",
-                }}
-              >
-                +{add.toLocaleString()}
+          <b>원</b>
+        </label>
+      </div>
+
+      {status === "error" && <p className="exchange-error-help">네트워크 연결을 확인하거나 위 환율을 직접 입력하세요.</p>}
+
+      <div className="exchange-fields">
+        <div className="exchange-field">
+          <label htmlFor={`foreign-${config.code}`}>{config.label} ({config.code})</label>
+          <input
+            id={`foreign-${config.code}`}
+            inputMode="decimal"
+            min="0"
+            onChange={(event) => handleForeignChange(event.target.value)}
+            placeholder="금액 입력"
+            step="any"
+            type="number"
+            value={foreignVal}
+          />
+          <div className="exchange-quick-actions" aria-label={`${config.label} 빠른 금액 추가`}>
+            {config.quickAmounts.map((amount) => (
+              <button key={amount} onClick={() => handleQuickAdd(amount)} type="button">
+                +{amount.toLocaleString("ko-KR")}
               </button>
             ))}
           </div>
         </div>
 
-        <div style={{ textAlign: "center", color: "var(--c-muted)", margin: "-4px 0" }}>
-          <ArrowUpDown size={16} />
-        </div>
+        <ArrowUpDown aria-hidden="true" className="exchange-swap-icon" size={18} />
 
-        <div>
-          <label style={{ fontSize: "12px", color: "var(--c-muted)", fontWeight: 700, marginBottom: "4px", display: "block" }}>
-            원화 (KRW)
-          </label>
+        <div className="exchange-field">
+          <label htmlFor={`krw-${config.code}`}>원화 (KRW)</label>
           <input
+            id={`krw-${config.code}`}
+            inputMode="numeric"
+            onChange={(event) => handleKrwChange(event.target.value)}
+            placeholder={exchangeRate ? "금액 입력" : "환율을 먼저 입력하세요"}
             type="text"
-            placeholder="예: 9,000"
             value={krwVal}
-            onChange={handleKrwChange}
-            style={{
-              width: "100%",
-              padding: "12px 14px",
-              borderRadius: "12px",
-              border: "1px solid var(--border-color)",
-              fontSize: "16px",
-              fontWeight: 700,
-              color: "var(--c-text)",
-              background: "var(--c-surface)",
-            }}
           />
         </div>
       </div>
