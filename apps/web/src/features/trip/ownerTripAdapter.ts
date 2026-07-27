@@ -18,11 +18,16 @@ import type { TripDates } from "../../shared/date";
 export function mapOwnerFlight(flight: SharedFlight): FlightInfo {
   return {
     id: flight.id,
+    direction: flight.direction,
     label: getFlightDirectionLabel(flight.direction),
     airline: flight.airline,
     flightNumber: flight.flightNumber,
+    departureAirport: flight.departureAirport,
+    arrivalAirport: flight.arrivalAirport,
     date: flight.departureDate,
     time: flight.departureTime,
+    arrivalDate: flight.arrivalDate,
+    arrivalTime: flight.arrivalTime,
     memo: flight.memo,
   };
 }

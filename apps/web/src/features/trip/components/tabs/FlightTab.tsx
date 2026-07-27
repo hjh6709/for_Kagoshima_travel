@@ -1,106 +1,153 @@
 import { CheckCircle2, Plane } from "lucide-react";
 import { MaskedText } from "../../../../shared/components/MaskedText";
-import { getDestinationCountryLabel } from "../../../../shared/travelOptions";
+import { formatKoreanDate } from "../../../../shared/date";
+import type { FlightInfo } from "../../../../types/travel";
 import type { TripPageProps } from "../../tripPageTypes";
 import { ProfileShortcutButton } from "../cards/ProfileShortcutButton";
 
-// 항공 탭 렌더링만 담당한다. 공항 체크리스트 상태 변경은 상위 핸들러를 호출한다.
-export function FlightTab({ allChecklist, checkedItems, flights, toggleCheck, trip, onNavigateToMyPage }: TripPageProps) {
-  const destinationLabel = getDestinationCountryLabel(trip?.destinationCountry);
+type FlightCardProps = {
+  flight: FlightInfo;
+  getDisplayDate: (date: string) => string;
+};
+
+function displayFlightDate(date: string | undefined, getDisplayDate: (date: string) => string) {
+  if (!date) return "날짜 미등록";
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return date;
+  return formatKoreanDate(getDisplayDate(date));
+}
+
+function FlightJourneyCard({ flight, getDisplayDate }: FlightCardProps) {
+  const departureDate = displayFlightDate(flight.date, getDisplayDate);
+  const arrivalDate = displayFlightDate(flight.arrivalDate, getDisplayDate);
 
   return (
-    <section className="screen">
+    <article className="flight-journey-card">
+      <header className="flight-journey-header">
+        <span className="pill">{flight.label}</span>
+        <div className="flight-identity">
+          <h2>{flight.flightNumber || "편명 미등록"}</h2>
+          <p>{flight.airline || "항공사 미등록"}</p>
+        </div>
+      </header>
+
+      <div className="flight-route" aria-label={`${flight.label} 항공 노선`}>
+        <div className="flight-route-point">
+          <span>출발</span>
+          <strong>{flight.departureAirport || "출발 공항 미등록"}</strong>
+          <small>{departureDate}</small>
+          <b>{flight.time || "시각 미등록"}</b>
+        </div>
+        <div className="flight-route-line" aria-hidden="true">
+          <span />
+          <Plane size={17} />
+        </div>
+        <div className="flight-route-point arrival">
+          <span>도착</span>
+          <strong>{flight.arrivalAirport || "도착 공항 미등록"}</strong>
+          <small>{flight.arrivalDate ? arrivalDate : "도착 날짜 미등록"}</small>
+          <b>{flight.arrivalTime || "도착 시각 미등록"}</b>
+        </div>
+      </div>
+
+      {flight.memo && (
+        <details className="flight-memo">
+          <summary>예약 메모 확인</summary>
+          <div>
+            <MaskedText text={flight.memo} />
+          </div>
+        </details>
+      )}
+    </article>
+  );
+}
+
+// 항공 탭은 실제로 등록된 노선 정보와 공항 체크 항목만 표시한다.
+export function FlightTab({
+  allChecklist,
+  checkedItems,
+  editTripHref,
+  flights,
+  getDisplayDate,
+  toggleCheck,
+  onNavigateToMyPage,
+}: TripPageProps) {
+  const airportChecklist = allChecklist.filter((item) => item.category === "airport");
+
+  return (
+    <section className="screen flight-screen">
       <div className="screen-title-row">
-        <h1>항공편</h1>
+        <div>
+          <h1>항공편</h1>
+          <p className="flight-screen-intro">공항에서 필요한 노선과 예약 정보만 모았습니다.</p>
+        </div>
         <ProfileShortcutButton onClick={onNavigateToMyPage} />
       </div>
-      <p className="muted">공항에서 바로 확인할 수 있도록 출국·입국 항공편을 따로 모았습니다.</p>
 
-      {flights.length === 0 && (
-        <article className="empty-state-card list-card">
-          <p className="muted">등록된 항공편이 없습니다. 편집 화면에서 항공편을 추가해보세요.</p>
-        </article>
+      {editTripHref && (
+        <div className="flight-manage-row">
+          <span>항공편 정보가 실제 예약과 같은지 확인하세요.</span>
+          <a className="secondary-button compact-button" href={editTripHref}>
+            항공편 관리
+          </a>
+        </div>
       )}
 
-      <div className="card-stack">
-        {flights.map((flight) => {
-          const isOutbound = flight.label?.includes("출국") || flight.label?.includes("가는");
-          const depCode = isOutbound ? "출발" : "귀국";
-          const depName = isOutbound ? "출발 공항" : destinationLabel;
-          const arrCode = isOutbound ? "도착" : "도착";
-          const arrName = isOutbound ? destinationLabel : "도착 공항";
-
-          return (
-            <article className="flight-card-premium" key={flight.id} style={{ marginBottom: "16px" }}>
-              <div className="flight-card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
-                <span className="pill" style={{ background: "var(--c-route-soft)", color: "var(--c-route)" }}>
-                  {flight.label}
-                </span>
-                <span className="muted" style={{ fontSize: "13px", fontWeight: 700 }}>
-                  {flight.flightNumber || "편명 미정"}
-                </span>
-              </div>
-
-              <div className="ticket-airport-row">
-                <div className="airport-box" style={{ textAlign: "left" }}>
-                  <span className="airport-code">{depCode}</span>
-                  <span className="airport-name">{depName}</span>
-                </div>
-                <div className="ticket-plane-divider">
-                  <div className="plane-line"></div>
-                  <div className="plane-icon-wrapper">
-                    <Plane size={16} />
-                  </div>
-                </div>
-                <div className="airport-box" style={{ textAlign: "right" }}>
-                  <span className="airport-code">{arrCode}</span>
-                  <span className="airport-name">{arrName}</span>
-                </div>
-              </div>
-
-              <div className="ticket-time-detail">
-                <div>
-                  <span style={{ display: "block", fontSize: "11px", color: "var(--c-muted)", marginBottom: "2px" }}>출발 정보</span>
-                  <span>
-                    {flight.date || "날짜 미정"}{" "}
-                    {flight.time || "시간 미정"}
-                  </span>
-                </div>
-                <div style={{ textAlign: "right" }}>
-                  <span style={{ display: "block", fontSize: "11px", color: "var(--c-muted)", marginBottom: "2px" }}>도착 정보</span>
-                  <span>상세 일정 참조</span>
-                </div>
-              </div>
-
-              <div className="ticket-bottom-info">
-                <span>{flight.airline || "항공사 미정"}</span>
-                <span>비행 정보</span>
-              </div>
-              
-              {flight.memo && (
-                <div style={{ borderTop: "1px dashed var(--border-color)", paddingTop: "8px", marginTop: "4px", fontSize: "12px", color: "var(--c-muted)" }}>
-                  <MaskedText text={flight.memo} label="메모/예약번호:" />
-                </div>
-              )}
-            </article>
-          );
-        })}
-      </div>
-
-      <section className="section-block">
-        <h2>공항에서 확인할 것</h2>
-        <div className="card-stack">
-          {allChecklist
-            .filter((item) => item.category === "airport")
-            .map((item) => (
-              <div className="check-row" key={item.id}>
-                <button className="check-toggle" onClick={() => toggleCheck(item.id)} type="button">
-                  <CheckCircle2 className={checkedItems[item.id] ? "checked" : ""} size={24} />
-                  <span>{item.title}</span>
-                </button>
-              </div>
-            ))}
+      {flights.length === 0 ? (
+        <article className="empty-state-card list-card flight-empty-state">
+          <Plane aria-hidden="true" size={23} />
+          <div>
+            <strong>등록된 항공편이 없습니다</strong>
+            <p>출발·도착 공항과 시각을 등록하면 공항에서 바로 확인할 수 있어요.</p>
+            {editTripHref && (
+              <a className="primary-button compact-button" href={editTripHref}>
+                항공편 추가
+              </a>
+            )}
+          </div>
+        </article>
+      ) : (
+        <div className="flight-journey-list">
+          {flights.map((flight) => (
+            <FlightJourneyCard flight={flight} getDisplayDate={getDisplayDate} key={flight.id} />
+          ))}
         </div>
+      )}
+
+      <section className="section-block flight-checklist-section">
+        <div className="section-title-row">
+          <div>
+            <h2>공항에서 확인</h2>
+            <p className="section-caption">탑승 전 필요한 항목만 표시합니다.</p>
+          </div>
+          {airportChecklist.length > 0 && (
+            <span className="flight-check-count">
+              {airportChecklist.filter((item) => checkedItems[item.id]).length}/{airportChecklist.length}
+            </span>
+          )}
+        </div>
+
+        {airportChecklist.length === 0 ? (
+          <p className="flight-checklist-empty">등록된 공항 체크 항목이 없습니다.</p>
+        ) : (
+          <div className="card-stack">
+            {airportChecklist.map((item) => {
+              const isChecked = Boolean(checkedItems[item.id]);
+              return (
+                <div className={`check-row${isChecked ? " completed" : ""}`} key={item.id}>
+                  <button
+                    aria-pressed={isChecked}
+                    className="check-toggle"
+                    onClick={() => toggleCheck(item.id)}
+                    type="button"
+                  >
+                    <CheckCircle2 className={isChecked ? "checked" : ""} size={24} />
+                    <span>{item.title}</span>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </section>
     </section>
   );
