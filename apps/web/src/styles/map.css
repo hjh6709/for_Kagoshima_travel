@@ -258,6 +258,136 @@
   color: #ffffff;
 }
 
+.travel-map {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.travel-map-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.travel-map-toolbar > div {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.travel-map-toolbar strong {
+  color: var(--c-text);
+  font-size: 15px;
+}
+
+.travel-map-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--c-route);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.travel-map-location-button {
+  flex: 0 0 auto;
+  min-height: 44px;
+  white-space: nowrap;
+}
+
+.travel-map-stage {
+  position: relative;
+  min-height: clamp(260px, 72vw, 340px);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  background: var(--c-surface-cool);
+}
+
+.travel-map-canvas {
+  width: 100%;
+  min-height: clamp(260px, 72vw, 340px);
+}
+
+.travel-map-state {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 8px;
+  padding: 28px;
+  background: var(--c-surface-cool);
+  color: var(--c-muted);
+  text-align: center;
+}
+
+.travel-map-state strong {
+  color: var(--c-text);
+  font-size: 15px;
+}
+
+.travel-map-state p {
+  max-width: 28ch;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.travel-map-error svg,
+.travel-map-coordinate-note svg {
+  color: var(--c-warning);
+}
+
+.travel-map-loading-dot {
+  width: 18px;
+  height: 18px;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--c-route);
+  border-radius: 50%;
+  animation: travel-map-spin 0.8s linear infinite;
+}
+
+.travel-map-coordinate-note,
+.travel-map-location-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  padding-inline: 2px;
+  color: var(--c-muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.travel-map-coordinate-note svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+.travel-map-location-error {
+  padding: 10px 12px;
+  border: 1px solid rgba(179, 58, 58, 0.25);
+  border-radius: 10px;
+  background: var(--c-danger-light);
+  color: var(--c-danger);
+}
+
+@keyframes travel-map-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .travel-map-loading-dot {
+    animation-duration: 1.8s;
+  }
+}
+
 .map-stop-copy {
   min-width: 0;
 }

@@ -5,13 +5,16 @@ export type MappableLocation = {
   longitude?: number;
 };
 
-export type MapPoint = Required<Pick<MappableLocation, "id" | "name" | "latitude" | "longitude">>;
+export type MapPoint = Pick<MappableLocation, "id" | "name"> & {
+  latitude: number;
+  longitude: number;
+};
 
 export function getMappablePlaces<T extends MappableLocation>(
   places: T[],
-): Array<T & Required<Pick<T, "latitude" | "longitude">>> {
+): Array<T & { latitude: number; longitude: number }> {
   return places.filter(
-    (place): place is T & Required<Pick<T, "latitude" | "longitude">> =>
+    (place): place is T & { latitude: number; longitude: number } =>
       typeof place.latitude === "number" &&
       typeof place.longitude === "number" &&
       Number.isFinite(place.latitude) &&
