@@ -5,14 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
+    "test:dependencies": "node --test scripts/react-version-parity.test.mjs",
     "typecheck": "tsc -b",
     "build": "tsc -b && vite build",
     "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
     "lucide-react": "^1.27.0",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.3"
+    "react": "19.2.7",
+    "react-dom": "19.2.7"
   },
   "devDependencies": {
     "@types/react": "^19.2.17",
