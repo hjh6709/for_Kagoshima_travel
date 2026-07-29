@@ -7,6 +7,11 @@ updates:
       day: monday
       time: '09:00'
       timezone: Asia/Seoul
+    groups:
+      react-runtime:
+        patterns:
+          - react
+          - react-dom
     open-pull-requests-limit: 3
 
   - package-ecosystem: gomod

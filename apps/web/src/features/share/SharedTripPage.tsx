@@ -1,11 +1,33 @@
-import { CalendarRange, Check, Compass, Copy, ExternalLink, Maximize2, Plane, Users, X } from "lucide-react";
+import {
+  CalendarDays,
+  CalendarRange,
+  CheckCircle2,
+  Circle,
+  Compass,
+  Info,
+  MapPinned,
+  Plane,
+  Users,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import type { ChecklistItemResponse } from "../../api/checklist";
+import type { SharedSchedule } from "../../api/schedules";
 import type { SharedTripResponse } from "../../api/trips";
-import { MapDirectionsChoice } from "../../shared/components/MapDirectionsChoice";
-import { formatKoreanDate, formatShortDate } from "../../shared/date";
+import {
+  formatKoreanDate,
+  formatShortDate,
+  getTodayDateString,
+  getTravelPhase,
+  getTravelStatus,
+} from "../../shared/date";
 import { sortSharedFlights } from "../../shared/sort";
 import { getFlightDirectionLabel, getScheduleTypeLabel } from "../../shared/travelOptions";
-import { getPlaceCopyText } from "../../utils/mapLinks";
+import { SharedTripMapSection } from "./SharedTripMapSection";
+import {
+  getSharedChecklistForPhase,
+  getSharedFocusDate,
+  getSharedSchedulesForDate,
+} from "./sharedTripView";
 
 type SharedTripPageProps = {
   error: string;
@@ -14,39 +36,213 @@ type SharedTripPageProps = {
   sharedTrip: SharedTripResponse | null;
 };
 
-export function SharedTripPage({ error, warning, loading, sharedTrip }: SharedTripPageProps) {
-  const [copiedPlaceID, setCopiedPlaceID] = useState("");
-  const [zoomedPlace, setZoomedPlace] = useState<{
-    name: string;
-    address?: string;
-    chineseName?: string;
-    chineseAddress?: string;
-    taxiPhrase?: string;
-  } | null>(null);
+type SharedView = "today" | "map" | "info";
 
-  async function copyPlaceInfo(placeID: string) {
-    const place = sharedTrip?.places.find((item) => item.id === placeID);
-    const copyText = place ? getPlaceCopyText(place, sharedTrip?.trip.destinationCountry === "CN") : "";
-    if (!copyText || !navigator.clipboard) return;
+const checklistCategoryLabels: Record<ChecklistItemResponse["category"], string> = {
+  before: "출발 전",
+  airport: "공항",
+  daily: "여행 중",
+  return: "귀국 전",
+};
 
-    try {
-      await navigator.clipboard.writeText(copyText);
-      setCopiedPlaceID(placeID);
-      window.setTimeout(() => setCopiedPlaceID(""), 2000);
-    } catch {
-      setCopiedPlaceID("");
-    }
+function SharedSectionHeading({
+  count,
+  description,
+  title,
+}: {
+  count?: number;
+  description: string;
+  title: string;
+}) {
+  return (
+    <div className="shared-section-heading">
+      <div>
+        <h2>{title}</h2>
+        <p>{description}</p>
+      </div>
+      {count !== undefined && <span className="shared-count">{count}</span>}
+    </div>
+  );
+}
+
+function SharedScheduleList({
+  emptyMessage,
+  placeByID,
+  schedules,
+}: {
+  emptyMessage: string;
+  placeByID: Map<string, SharedTripResponse["places"][number]>;
+  schedules: SharedSchedule[];
+}) {
+  if (schedules.length === 0) {
+    return (
+      <div className="shared-empty-state">
+        <CalendarDays aria-hidden="true" size={22} />
+        <strong>{emptyMessage}</strong>
+      </div>
+    );
   }
 
+  return (
+    <ol className="shared-schedule-list">
+      {schedules.map((schedule) => {
+        const place = placeByID.get(schedule.placeId ?? "");
+        return (
+          <li key={schedule.id}>
+            <div className="shared-schedule-time">
+              <span>{formatShortDate(schedule.date)}</span>
+              <strong>{schedule.time || "시간 미정"}</strong>
+            </div>
+            <article>
+              <div className="shared-schedule-meta">
+                <span>{getScheduleTypeLabel(schedule.type)}</span>
+                {place && <span>{place.name}</span>}
+              </div>
+              <h3>{schedule.title}</h3>
+              {schedule.transportMemo && <p>{schedule.transportMemo}</p>}
+              {schedule.guideMemo && <p>{schedule.guideMemo}</p>}
+            </article>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+function SharedChecklistList({
+  emptyMessage,
+  items,
+}: {
+  emptyMessage: string;
+  items: readonly ChecklistItemResponse[];
+}) {
+  if (items.length === 0) {
+    return (
+      <div className="shared-empty-state">
+        <CheckCircle2 aria-hidden="true" size={22} />
+        <strong>{emptyMessage}</strong>
+      </div>
+    );
+  }
+
+  return (
+    <ul className="shared-checklist-list">
+      {items.map((item) => (
+        <li className={item.isCompleted ? "completed" : ""} key={item.id}>
+          {item.isCompleted ? (
+            <CheckCircle2 aria-label="완료" size={20} />
+          ) : (
+            <Circle aria-label="미완료" size={20} />
+          )}
+          <span>
+            <strong>{item.title}</strong>
+            <small>{checklistCategoryLabels[item.category]}</small>
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function SharedFlightSection({ sharedTrip }: { sharedTrip: SharedTripResponse }) {
+  const flights = sortSharedFlights(sharedTrip.flights);
+
+  return (
+    <section className="shared-section">
+      <SharedSectionHeading
+        count={flights.length}
+        description="공항에서 필요한 출발·도착 정보를 모았습니다."
+        title="항공편"
+      />
+      {flights.length === 0 ? (
+        <div className="shared-empty-state">
+          <Plane aria-hidden="true" size={22} />
+          <strong>공유된 항공편이 없습니다</strong>
+        </div>
+      ) : (
+        <div className="shared-flight-list">
+          {flights.map((flight) => (
+            <article key={flight.id}>
+              <div className="shared-flight-topline">
+                <span>{getFlightDirectionLabel(flight.direction)}</span>
+                <strong>{flight.flightNumber || "편명 미정"}</strong>
+              </div>
+              <div className="shared-flight-route">
+                <div>
+                  <strong>{flight.departureAirport || "출발 공항"}</strong>
+                  <span>
+                    {formatShortDate(flight.departureDate)} {flight.departureTime || "시간 미정"}
+                  </span>
+                </div>
+                <Plane aria-hidden="true" size={18} />
+                <div>
+                  <strong>{flight.arrivalAirport || "도착 공항"}</strong>
+                  <span>
+                    {flight.arrivalDate ? formatShortDate(flight.arrivalDate) : "날짜 미정"}{" "}
+                    {flight.arrivalTime || "시간 미정"}
+                  </span>
+                </div>
+              </div>
+              <p>{flight.airline || "항공사 미정"} · {flight.label}</p>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function SharedRoutesSection({ sharedTrip }: { sharedTrip: SharedTripResponse }) {
+  return (
+    <section className="shared-section">
+      <SharedSectionHeading
+        count={sharedTrip.routes.length}
+        description="여행 관리자가 공유한 이동 흐름입니다."
+        title="추천 루트"
+      />
+      {sharedTrip.routes.length === 0 ? (
+        <div className="shared-empty-state">
+          <MapPinned aria-hidden="true" size={22} />
+          <strong>공유된 추천 루트가 없습니다</strong>
+        </div>
+      ) : (
+        <div className="shared-route-list">
+          {sharedTrip.routes.map((route) => (
+            <article key={route.id}>
+              <h3>{route.title}</h3>
+              {route.description && <p>{route.description}</p>}
+              {route.transportMemo && <p>{route.transportMemo}</p>}
+              {route.estimatedDuration && <span>{route.estimatedDuration}</span>}
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+export function SharedTripPage({
+  error,
+  warning,
+  loading,
+  sharedTrip,
+}: SharedTripPageProps) {
+  const [activeView, setActiveView] = useState<SharedView>("today");
+
   useEffect(() => {
-    // 검색엔진 크롤링 색인 방지 (noindex, nofollow) 메타 태그 동적 삽입
-    const meta = document.createElement("meta");
+    const existingMeta = document.head.querySelector<HTMLMetaElement>('meta[name="robots"]');
+    const previousContent = existingMeta?.content;
+    const meta = existingMeta ?? document.createElement("meta");
     meta.name = "robots";
     meta.content = "noindex, nofollow";
-    document.head.appendChild(meta);
+    if (!existingMeta) document.head.appendChild(meta);
 
     return () => {
-      document.head.removeChild(meta);
+      if (existingMeta && previousContent !== undefined) {
+        existingMeta.content = previousContent;
+      } else {
+        meta.remove();
+      }
     };
   }, []);
 
@@ -54,366 +250,182 @@ export function SharedTripPage({ error, warning, loading, sharedTrip }: SharedTr
     if (!sharedTrip) return new Map<string, SharedTripResponse["places"][number]>();
     return new Map(sharedTrip.places.map((place) => [place.id, place]));
   }, [sharedTrip]);
-  const sharedFlights = useMemo(() => sortSharedFlights(sharedTrip?.flights ?? []), [sharedTrip]);
+
+  const today = getTodayDateString();
+  const tripDates = sharedTrip
+    ? { startDate: sharedTrip.trip.startDate, endDate: sharedTrip.trip.endDate }
+    : null;
+  const focusDate = tripDates
+    ? getSharedFocusDate(tripDates.startDate, tripDates.endDate, today)
+    : "";
+  const travelPhase = tripDates ? getTravelPhase(today, tripDates) : "before";
+  const travelStatus = tripDates ? getTravelStatus(today, tripDates) : null;
+  const focusSchedules = sharedTrip
+    ? getSharedSchedulesForDate(sharedTrip.schedules, focusDate)
+    : [];
+  const focusChecklist = sharedTrip
+    ? getSharedChecklistForPhase(sharedTrip.checklist, travelPhase)
+    : [];
+  const focusTitle =
+    travelPhase === "before" ? "첫날 미리보기" : travelPhase === "during" ? "오늘 일정" : "마지막 날 기록";
 
   return (
-    <>
-      <main className="app-shell">
-        <section className="phone-frame shared-frame">
-          <div className="content">
-            <section className="screen shared-screen">
-              <article className="hero-card shared-hero-card premium-hero-card">
-                <div className="shared-brand-row">
-                  <div className="brand-badge-circle">
-                    <Compass className="brand-logo-icon" size={20} />
-                  </div>
-                <span className="pill subtle">동반자 공유 여정</span>
+    <main className="app-shell">
+      <section className="phone-frame shared-frame">
+        <div className="content">
+          <section className="screen shared-screen">
+            <header className="shared-hero">
+              <div className="shared-brand-row">
+                <span className="shared-brand-mark">
+                  <Compass aria-hidden="true" size={19} />
+                </span>
+                <span>Map Planner 공유 여행</span>
               </div>
 
               {loading && (
-                <div className="shared-loading-wrapper" style={{ display: "grid", placeItems: "center", textAlign: "center", gap: "10px", padding: "12px 0" }}>
-                  <Compass className="spin-slow" size={32} />
-                  <h1>여정을 불러오는 중입니다</h1>
-                  <p className="muted">잠시만 기다려 주세요.</p>
+                <div className="shared-load-state" role="status">
+                  <span aria-hidden="true" className="shared-loading-mark" />
+                  <h1>여행을 불러오는 중입니다</h1>
+                  <p>공유된 최신 정보를 확인하고 있습니다.</p>
                 </div>
               )}
 
               {!loading && error && (
-                <div className="shared-error-wrapper" style={{ textAlign: "center", padding: "24px 0" }}>
-                  <h1 style={{ fontSize: "20px", fontWeight: 800, color: "var(--c-rose)", marginBottom: "12px" }}>공유 링크 확인 실패</h1>
-                  <p className="form-error" style={{ marginBottom: "24px", fontSize: "14px", lineHeight: 1.5 }}>{error}</p>
-                  <div style={{ display: "grid", gap: "10px" }}>
-                    <button
-                      onClick={() => window.location.reload()}
-                      className="primary-button"
-                      type="button"
-                    >
-                      다시 시도하기
+                <div className="shared-load-state shared-load-error" role="alert">
+                  <h1>공유 여행을 열지 못했습니다</h1>
+                  <p>{error}</p>
+                  <div>
+                    <button className="primary-button" onClick={() => window.location.reload()} type="button">
+                      다시 시도
                     </button>
-                    <a
-                      href="/"
-                      className="secondary-button"
-                      style={{ textDecoration: "none", textAlign: "center", display: "block" }}
-                    >
-                      서비스 홈으로 이동
-                    </a>
+                    <a className="secondary-button" href="/">서비스 홈</a>
                   </div>
                 </div>
               )}
 
               {!loading && !error && sharedTrip && (
-                <div className="shared-success-content">
-                  {warning && (
-                    <div className="offline-warning-banner" style={{ marginBottom: "16px", padding: "12px", background: "rgba(220, 100, 0, 0.1)", border: "1px solid rgba(220, 100, 0, 0.3)", borderRadius: "8px", color: "#ffa500", fontSize: "13px", fontWeight: 700, lineHeight: 1.4 }}>
-                      ⚠️ {warning}
-                    </div>
-                  )}
-                  <h1 className="trip-title-premium" style={{ marginBottom: "12px" }}>{sharedTrip.trip.title}</h1>
-                  <div className="trip-meta-premium-row" style={{ display: "grid", gap: "8px" }}>
-                    <div className="trip-meta-item" style={{ display: "flex", alignItems: "center", gap: "8px", color: "var(--c-text)", fontSize: "14px", fontWeight: 700 }}>
-                      <CalendarRange size={16} className="muted" />
-                      <span>
-                        {formatKoreanDate(sharedTrip.trip.startDate)} ~ {formatKoreanDate(sharedTrip.trip.endDate)}
-                      </span>
-                    </div>
+                <>
+                  <span className="shared-status">{travelStatus?.label}</span>
+                  <h1>{sharedTrip.trip.title}</h1>
+                  <div className="shared-trip-meta">
+                    <span>
+                      <CalendarRange aria-hidden="true" size={17} />
+                      {formatKoreanDate(sharedTrip.trip.startDate)} ~ {formatKoreanDate(sharedTrip.trip.endDate)}
+                    </span>
                     {sharedTrip.trip.travelers.length > 0 && (
-                      <div className="trip-meta-item" style={{ display: "flex", alignItems: "center", gap: "8px", color: "var(--c-muted)", fontSize: "13px", fontWeight: 700 }}>
-                        <Users size={16} />
-                        <span>동행인: {sharedTrip.trip.travelers.join(", ")}</span>
-                      </div>
+                      <span>
+                        <Users aria-hidden="true" size={17} />
+                        {sharedTrip.trip.travelers.join(", ")}
+                      </span>
                     )}
                   </div>
-                </div>
+                </>
               )}
-            </article>
+            </header>
 
             {!loading && !error && sharedTrip && (
               <>
-                <section className="section-block">
-                  <div className="section-title-row">
-                    <div>
-                      <h2>일정</h2>
-                      <p className="section-caption">공유된 최신 일정입니다.</p>
-                    </div>
-                    <span className="pill subtle">{sharedTrip.schedules.length}개</span>
+                {warning && (
+                  <p className="shared-offline-warning" role="status">
+                    {warning}
+                  </p>
+                )}
+
+                <nav aria-label="공유 여행 보기" className="shared-view-tabs">
+                  <button
+                    aria-pressed={activeView === "today"}
+                    className={activeView === "today" ? "active" : ""}
+                    onClick={() => setActiveView("today")}
+                    type="button"
+                  >
+                    <CalendarDays aria-hidden="true" size={17} />
+                    오늘
+                  </button>
+                  <button
+                    aria-pressed={activeView === "map"}
+                    className={activeView === "map" ? "active" : ""}
+                    onClick={() => setActiveView("map")}
+                    type="button"
+                  >
+                    <MapPinned aria-hidden="true" size={17} />
+                    지도
+                  </button>
+                  <button
+                    aria-pressed={activeView === "info"}
+                    className={activeView === "info" ? "active" : ""}
+                    onClick={() => setActiveView("info")}
+                    type="button"
+                  >
+                    <Info aria-hidden="true" size={17} />
+                    여행정보
+                  </button>
+                </nav>
+
+                {activeView === "today" && (
+                  <div className="shared-view-content">
+                    <section className="shared-section">
+                      <SharedSectionHeading
+                        count={focusSchedules.length}
+                        description={`${formatKoreanDate(focusDate)}에 확인할 일정입니다.`}
+                        title={focusTitle}
+                      />
+                      <SharedScheduleList
+                        emptyMessage="이 날짜에 공유된 일정이 없습니다"
+                        placeByID={placeByID}
+                        schedules={focusSchedules}
+                      />
+                    </section>
+
+                    <section className="shared-section">
+                      <SharedSectionHeading
+                        count={focusChecklist.length}
+                        description="현재 여행 단계에서 필요한 항목만 보여줍니다."
+                        title="오늘 확인"
+                      />
+                      <SharedChecklistList
+                        emptyMessage="지금 확인할 체크 항목이 없습니다"
+                        items={focusChecklist}
+                      />
+                    </section>
                   </div>
+                )}
 
-                  {sharedTrip.schedules.length === 0 ? (
-                    <article className="empty-state-card list-card">
-                      <p className="muted">공유된 일정이 없습니다.</p>
-                    </article>
-                  ) : (
-                    <div className="card-stack timeline-stack">
-                      {sharedTrip.schedules.map((schedule) => {
-                        const place = placeByID.get(schedule.placeId ?? "");
-                        return (
-                          <article className="schedule-card shared-schedule-card" key={schedule.id}>
-                            <div className="schedule-time">
-                              <span>{formatShortDate(schedule.date)}</span>
-                              <strong>{schedule.time || "시간 미정"}</strong>
-                            </div>
-                            <div className="schedule-content">
-                              <div className="schedule-meta">
-                                <span className="pill subtle">{getScheduleTypeLabel(schedule.type)}</span>
-                                {place && <span className="place-label">{place.name}</span>}
-                              </div>
-                              <h2>{schedule.title}</h2>
-                              {schedule.transportMemo && <p>{schedule.transportMemo}</p>}
-                              {schedule.guideMemo && <p className="muted">{schedule.guideMemo}</p>}
-                            </div>
-                          </article>
-                        );
-                      })}
-                    </div>
-                  )}
-                </section>
+                {activeView === "map" && <SharedTripMapSection sharedTrip={sharedTrip} />}
 
-                <section className="section-block">
-                  <div className="section-title-row">
-                    <div>
-                      <h2>항공편</h2>
-                      <p className="section-caption">공항에서 바로 확인할 수 있는 항공 정보입니다.</p>
-                    </div>
-                    <span className="pill subtle">{sharedFlights.length}개</span>
+                {activeView === "info" && (
+                  <div className="shared-view-content">
+                    <section className="shared-section">
+                      <SharedSectionHeading
+                        count={sharedTrip.schedules.length}
+                        description="여행 전체 일정을 날짜와 시간순으로 확인하세요."
+                        title="전체 일정"
+                      />
+                      <SharedScheduleList
+                        emptyMessage="공유된 일정이 없습니다"
+                        placeByID={placeByID}
+                        schedules={sharedTrip.schedules}
+                      />
+                    </section>
+                    <SharedFlightSection sharedTrip={sharedTrip} />
+                    <SharedRoutesSection sharedTrip={sharedTrip} />
+                    <section className="shared-section">
+                      <SharedSectionHeading
+                        count={sharedTrip.checklist.length}
+                        description="여행 관리자가 공유한 전체 체크 항목입니다."
+                        title="전체 체크리스트"
+                      />
+                      <SharedChecklistList
+                        emptyMessage="공유된 체크 항목이 없습니다"
+                        items={sharedTrip.checklist}
+                      />
+                    </section>
                   </div>
-
-                  {sharedFlights.length === 0 ? (
-                    <article className="empty-state-card list-card">
-                      <p className="muted">공유된 항공편이 없습니다.</p>
-                    </article>
-                  ) : (
-                    <div className="card-stack">
-                      {sharedFlights.map((flight) => (
-                        <article className="flight-card-premium" key={flight.id} style={{ marginBottom: "16px" }}>
-                          <div className="flight-card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
-                            <span className="pill" style={{ background: "var(--c-route-soft)", color: "var(--c-route)" }}>
-                              {getFlightDirectionLabel(flight.direction)}
-                            </span>
-                            <span className="muted" style={{ fontSize: "13px", fontWeight: 700 }}>
-                              {flight.flightNumber || "편명 미정"}
-                            </span>
-                          </div>
-
-                          <div className="ticket-airport-row">
-                            <div className="airport-box" style={{ textAlign: "left" }}>
-                              <span className="airport-code">{flight.departureAirport || "DEP"}</span>
-                              <span className="airport-name">출발 공항</span>
-                            </div>
-                            <div className="ticket-plane-divider">
-                              <div className="plane-line"></div>
-                              <div className="plane-icon-wrapper">
-                                <Plane size={16} />
-                              </div>
-                            </div>
-                            <div className="airport-box" style={{ textAlign: "right" }}>
-                              <span className="airport-code">{flight.arrivalAirport || "ARR"}</span>
-                              <span className="airport-name">도착 공항</span>
-                            </div>
-                          </div>
-
-                          <div className="ticket-time-detail">
-                            <div>
-                              <span style={{ display: "block", fontSize: "11px", color: "var(--c-muted)", marginBottom: "2px" }}>출발 시각</span>
-                              <span>{formatShortDate(flight.departureDate)} {flight.departureTime}</span>
-                            </div>
-                            <div style={{ textAlign: "right" }}>
-                              <span style={{ display: "block", fontSize: "11px", color: "var(--c-muted)", marginBottom: "2px" }}>도착 시각</span>
-                              <span>
-                                {flight.arrivalDate ? formatShortDate(flight.arrivalDate) : "날짜 미정"}{" "}
-                                {flight.arrivalTime || "시간 미정"}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="ticket-bottom-info">
-                            <span>{flight.airline || "항공사 미정"}</span>
-                            <span>{flight.label}</span>
-                          </div>
-                          
-                          {flight.memo && (
-                            <div style={{ borderTop: "1px dashed var(--border-color)", paddingTop: "8px", marginTop: "4px", fontSize: "12px", color: "var(--c-muted)" }}>
-                              메모: {flight.memo}
-                            </div>
-                          )}
-                        </article>
-                      ))}
-                    </div>
-                  )}
-                </section>
-
-                <section className="section-block">
-                  <div className="section-title-row">
-                    <div>
-                      <h2>장소</h2>
-                      <p className="section-caption">지도 링크가 있으면 외부 지도 앱으로 열 수 있습니다.</p>
-                    </div>
-                    <span className="pill subtle">{sharedTrip.places.length}개</span>
-                  </div>
-
-                  {sharedTrip.places.length === 0 ? (
-                    <article className="empty-state-card list-card">
-                      <p className="muted">공유된 장소가 없습니다.</p>
-                    </article>
-                  ) : (
-                    <div className="card-stack">
-                      {sharedTrip.places.map((place) => (
-                        <article className="place-card shared-place-card" key={place.id}>
-                          <div>
-                            <span className="pill subtle">{place.category}</span>
-                            <h2>{place.name}</h2>
-                            {sharedTrip.trip.destinationCountry === "CN" && place.chineseName && (
-                              <p className="place-local-name">{place.chineseName}</p>
-                            )}
-                            {place.address && <p className="muted">{place.address}</p>}
-                            {sharedTrip.trip.destinationCountry === "CN" && place.chineseAddress && (
-                              <p className="place-local-address">{place.chineseAddress}</p>
-                            )}
-                            {sharedTrip.trip.destinationCountry === "CN" && place.subwayExit && (
-                              <p className="place-subway-exit">지하철: {place.subwayExit}</p>
-                            )}
-                            {place.recommendedReason && <p>{place.recommendedReason}</p>}
-                          </div>
-                          
-                          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "8px" }}>
-                            {place.googleMapsUrl && (
-                              <a
-                                className="secondary-button compact-button"
-                                href={place.googleMapsUrl}
-                                rel="noreferrer"
-                                target="_blank"
-                              >
-                                <ExternalLink size={16} />
-                                지도 열기
-                              </a>
-                            )}
-
-                            {sharedTrip.trip.destinationCountry === "CN" && (
-                              <>
-                                <MapDirectionsChoice
-                                  destinationCountry={sharedTrip.trip.destinationCountry}
-                                  place={place}
-                                />
-                                <button
-                                  className="secondary-button compact-button"
-                                  onClick={() => void copyPlaceInfo(place.id)}
-                                  type="button"
-                                >
-                                  {copiedPlaceID === place.id ? <Check size={16} /> : <Copy size={16} />}
-                                  {copiedPlaceID === place.id ? "복사됨" : "현지정보 복사"}
-                                </button>
-                                <button
-                                  className="secondary-button compact-button"
-                                  onClick={() => setZoomedPlace({
-                                    name: place.name,
-                                    address: place.address,
-                                    chineseName: place.chineseName,
-                                    chineseAddress: place.chineseAddress,
-                                    taxiPhrase: place.taxiPhrase,
-                                  })}
-                                  type="button"
-                                  title="큰 글씨로 보기"
-                                >
-                                  <Maximize2 size={14} /> 큰 글씨
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        </article>
-                      ))}
-                    </div>
-                  )}
-                </section>
-
-                <section className="section-block">
-                  <div className="section-title-row">
-                    <div>
-                      <h2>추천 루트</h2>
-                      <p className="section-caption">공유된 이동 흐름과 참고 메모입니다.</p>
-                    </div>
-                    <span className="pill subtle">{sharedTrip.routes.length}개</span>
-                  </div>
-
-                  {sharedTrip.routes.length === 0 ? (
-                    <article className="empty-state-card list-card">
-                      <p className="muted">공유된 추천 루트가 없습니다.</p>
-                    </article>
-                  ) : (
-                    <div className="card-stack">
-                      {sharedTrip.routes.map((route) => (
-                        <article className="info-card shared-route-card" key={route.id}>
-                          <h2>{route.title}</h2>
-                          {route.description && <p>{route.description}</p>}
-                          {route.transportMemo && <p className="muted">{route.transportMemo}</p>}
-                          {route.estimatedDuration && <span className="pill subtle">{route.estimatedDuration}</span>}
-                        </article>
-                      ))}
-                    </div>
-                  )}
-                </section>
-
-                <section className="section-block shared-checklist-section">
-                  <div className="section-title-row">
-                    <div>
-                      <h2>준비물 체크리스트</h2>
-                      <p className="section-caption">여행을 떠나기 전 챙겨야 할 필수 준비물 목록입니다. (읽기 전용)</p>
-                    </div>
-                    <span className="pill subtle">
-                      {sharedTrip.checklist ? sharedTrip.checklist.length : 0}개
-                    </span>
-                  </div>
-
-                  {(!sharedTrip.checklist || sharedTrip.checklist.length === 0) ? (
-                    <article className="empty-state-card list-card">
-                      <p className="muted">등록된 준비물이 없습니다.</p>
-                    </article>
-                  ) : (
-                    <div className="card-stack">
-                      {sharedTrip.checklist.map((item) => (
-                        <article className={`checklist-item-row ${item.isCompleted ? "completed" : ""}`} style={{ pointerEvents: 'none' }} key={item.id}>
-                          <label className="checkbox-container read-only-checkbox">
-                            <input
-                              type="checkbox"
-                              checked={item.isCompleted}
-                              readOnly
-                              disabled
-                            />
-                            <span className="checkmark"></span>
-                            <span className="item-title">{item.title}</span>
-                          </label>
-                          <span className="pill subtle category-pill">{item.category}</span>
-                        </article>
-                      ))}
-                    </div>
-                  )}
-                </section>
+                )}
               </>
             )}
           </section>
         </div>
       </section>
     </main>
-
-    {/* 대화면 텍스트 줌 모달 */}
-    {zoomedPlace && (
-      <div className="modal-overlay" onClick={() => setZoomedPlace(null)}>
-        <div className="zoom-modal-card" onClick={(e) => e.stopPropagation()}>
-          <button className="close-btn" onClick={() => setZoomedPlace(null)}>
-            <X size={24} />
-          </button>
-          <div className="zoom-modal-content">
-            <span className="zoom-korean">{zoomedPlace.name}</span>
-            <span className="zoom-foreign">{zoomedPlace.chineseName || zoomedPlace.name}</span>
-            {(zoomedPlace.chineseAddress || zoomedPlace.address) && (
-              <span className="zoom-pronun" style={{ fontSize: "16px", marginTop: "12px", color: "var(--c-muted)", wordBreak: "break-all" }}>
-                {zoomedPlace.chineseAddress || zoomedPlace.address}
-              </span>
-            )}
-            {zoomedPlace.taxiPhrase && <span className="zoom-taxi-phrase">{zoomedPlace.taxiPhrase}</span>}
-          </div>
-          <p className="zoom-instruction">현지 직원에게 스마트폰 화면을 직접 보여주세요!</p>
-        </div>
-      </div>
-    )}
-    </>
   );
 }
