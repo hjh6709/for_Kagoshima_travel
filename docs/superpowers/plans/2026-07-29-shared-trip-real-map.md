@@ -6,7 +6,7 @@
 
 **Architecture:** 기존 장소 좌표와 외부 지도 링크 로직은 유지한다. Google Maps JavaScript API를 지연 로딩하는 재사용 가능한 `TravelMap`을 만들고, 소유자 지도 탭과 공유 화면이 같은 지도 모델을 사용한다. 현재 위치는 사용자 동작 후 브라우저 메모리에만 보관하며 지도 실패 시 기존 장소 목록과 외부 길찾기를 유지한다.
 
-**Tech Stack:** React 19.2.7, TypeScript 7, Vite 8, Vitest, Testing Library, Google Maps JavaScript API, Browser Geolocation API
+**Tech Stack:** React 19.2.8, TypeScript 7, Vite 8, Vitest, Testing Library, Google Maps JavaScript API, Browser Geolocation API
 
 ## Global Constraints
 

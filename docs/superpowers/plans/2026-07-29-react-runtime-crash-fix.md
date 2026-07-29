@@ -6,7 +6,7 @@
 
 **Architecture:** 앱 코드는 변경하지 않고 React 런타임 패키지를 동일한 정확 버전으로 고정한다. 실제 `package.json`과 `package-lock.json`을 읽는 Node 내장 테스트를 빌드 앞에 추가하고 Dependabot의 React 런타임 업데이트를 한 그룹으로 묶는다.
 
-**Tech Stack:** npm, Node.js 22 내장 테스트 러너, React 19.2.7, GitHub Actions, Dependabot
+**Tech Stack:** npm, Node.js 22 내장 테스트 러너, React 19.2.8, GitHub Actions, Dependabot
 
 ## Global Constraints
 
@@ -110,10 +110,10 @@ Run:
 
 ```bash
 cd apps/web
-npm install --save-exact react@19.2.7 react-dom@19.2.7
+npm install --save-exact react@19.2.8 react-dom@19.2.8
 ```
 
-Expected: `package.json`과 lockfile 모두 두 패키지를 `19.2.7`로 기록.
+Expected: `package.json`과 lockfile 모두 두 패키지를 `19.2.8`로 기록.
 
 - [ ] **Step 2: Dependabot React 런타임 그룹 추가**
 
