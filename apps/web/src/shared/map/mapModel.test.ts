@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getMapCenter, getMappablePlaces } from "./mapModel";
+import { getMapCenter, getMappablePlaces, getMarkerAppearance } from "./mapModel";
 
 describe("getMappablePlaces", () => {
   it("유효 범위의 위도와 경도를 가진 장소만 지도에 표시한다", () => {
@@ -26,5 +26,20 @@ describe("getMapCenter", () => {
         { id: "b", name: "B", latitude: 32, longitude: 122 },
       ]),
     ).toEqual({ latitude: 31, longitude: 121 });
+  });
+});
+
+describe("getMarkerAppearance", () => {
+  it("선택된 장소 핀은 색상과 크기를 함께 강조한다", () => {
+    expect(getMarkerAppearance("people-square", "people-square")).toEqual({
+      background: "destination",
+      scale: 1.15,
+      selected: true,
+    });
+    expect(getMarkerAppearance("museum", "people-square")).toEqual({
+      background: "route",
+      scale: 1,
+      selected: false,
+    });
   });
 });

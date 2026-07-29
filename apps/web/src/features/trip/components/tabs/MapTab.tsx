@@ -12,6 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { MapDirectionsChoice } from "../../../../shared/components/MapDirectionsChoice";
+import { TravelMap } from "../../../../shared/components/TravelMap";
 import { formatKoreanDate } from "../../../../shared/date";
 import { placeCategoryLabels } from "../../../../shared/travelOptions";
 import type { Place, ScheduleItem } from "../../../../types/travel";
@@ -146,12 +147,22 @@ function SelectedDestinationPanel({
   );
 }
 
-function SavedPlaceDisclosure(props: PlaceInteractionProps) {
-  const { copied, destinationCountry, isChina, onCopyAddress, onShowPhrase, place } = props;
+type SavedPlaceDisclosureProps = PlaceInteractionProps & {
+  selected: boolean;
+  onSelect: (placeID: string) => void;
+};
+
+function SavedPlaceDisclosure(props: SavedPlaceDisclosureProps) {
+  const { copied, destinationCountry, isChina, onCopyAddress, onSelect, onShowPhrase, place, selected } = props;
 
   return (
-    <details className="map-saved-place">
-      <summary>
+    <article className={`map-saved-place${selected ? " selected" : ""}`}>
+      <button
+        aria-expanded={selected}
+        className="map-saved-summary"
+        onClick={() => onSelect(place.id)}
+        type="button"
+      >
         <span className="map-saved-marker" aria-hidden="true">
           <MapPin size={15} />
         </span>
@@ -161,21 +172,23 @@ function SavedPlaceDisclosure(props: PlaceInteractionProps) {
           {(place.subwayExit || place.address) && <span>{place.subwayExit || place.address}</span>}
         </span>
         <ChevronDown className="map-saved-chevron" aria-hidden="true" size={18} />
-      </summary>
-      <div className="map-saved-details">
-        {place.chineseName && <p className="map-local-name">{place.chineseName}</p>}
-        {place.recommendedReason && <p className="map-saved-reason">{place.recommendedReason}</p>}
-        <PlaceEssentials place={place} />
-        <MapDirectionsChoice destinationCountry={destinationCountry} place={place} />
-        <PlaceUtilityActions
-          copied={copied}
-          isChina={isChina}
-          onCopyAddress={onCopyAddress}
-          onShowPhrase={onShowPhrase}
-          place={place}
-        />
-      </div>
-    </details>
+      </button>
+      {selected && (
+        <div className="map-saved-details">
+          {place.chineseName && <p className="map-local-name">{place.chineseName}</p>}
+          {place.recommendedReason && <p className="map-saved-reason">{place.recommendedReason}</p>}
+          <PlaceEssentials place={place} />
+          <MapDirectionsChoice destinationCountry={destinationCountry} place={place} />
+          <PlaceUtilityActions
+            copied={copied}
+            isChina={isChina}
+            onCopyAddress={onCopyAddress}
+            onShowPhrase={onShowPhrase}
+            place={place}
+          />
+        </div>
+      )}
+    </article>
   );
 }
 
@@ -194,6 +207,7 @@ export function MapTab({
 }: TripPageProps) {
   const [subTab, setSubTab] = useState<"timeline" | "all">("timeline");
   const [selectedScheduleID, setSelectedScheduleID] = useState("");
+  const [selectedPlaceID, setSelectedPlaceID] = useState("");
   const [copiedPlaceID, setCopiedPlaceID] = useState("");
   const [copyError, setCopyError] = useState("");
   const [phraseModal, setPhraseModal] = useState({ open: false, title: "", address: "" });
@@ -270,6 +284,10 @@ export function MapTab({
         ? "첫 목적지"
         : "다음 목적지"
       : "선택한 정류장";
+  const selectedMapPlaceID =
+    selectedPlaceID ||
+    (subTab === "timeline" ? selectedRouteItem?.place.id : places[0]?.id) ||
+    "";
 
   const openSchedule = () => {
     setScheduleView("itinerary");
@@ -277,22 +295,41 @@ export function MapTab({
   };
 
   const showPhrase = (title: string, address: string) => setPhraseModal({ open: true, title, address });
+  const selectMapPlace = (placeID: string) => {
+    setSelectedPlaceID(placeID);
+    const connectedRouteItem = timelineItems.find(({ place }) => place.id === placeID);
+    if (connectedRouteItem) {
+      setSelectedScheduleID(connectedRouteItem.schedule.id);
+      setSubTab("timeline");
+      return;
+    }
+    setSubTab("all");
+  };
 
   return (
     <section className="screen map-screen">
       <div className="screen-title-row">
         <div>
-          <h1>길찾기</h1>
-          <p className="map-screen-intro">목적지를 고르고 사용할 지도 앱을 여세요.</p>
+          <h1>지도</h1>
+          <p className="map-screen-intro">현재 위치와 저장한 장소를 확인하고 길찾기를 이어가세요.</p>
         </div>
         <ProfileShortcutButton onClick={onNavigateToMyPage} />
       </div>
+
+      <TravelMap
+        onSelectPlace={selectMapPlace}
+        places={places}
+        selectedPlaceID={selectedMapPlaceID}
+      />
 
       <div className="map-segment-control" aria-label="지도 보기 방식">
         <button
           aria-pressed={subTab === "timeline"}
           className={subTab === "timeline" ? "active" : ""}
-          onClick={() => setSubTab("timeline")}
+          onClick={() => {
+            setSubTab("timeline");
+            if (selectedRouteItem) setSelectedPlaceID(selectedRouteItem.place.id);
+          }}
           type="button"
         >
           동선 길찾기
@@ -365,7 +402,10 @@ export function MapTab({
                       <button
                         aria-pressed={isSelected}
                         className={`map-stop-button${isSelected ? " selected" : ""}${isCompleted ? " completed" : ""}`}
-                        onClick={() => setSelectedScheduleID(schedule.id)}
+                        onClick={() => {
+                          setSelectedScheduleID(schedule.id);
+                          setSelectedPlaceID(place.id);
+                        }}
                         type="button"
                       >
                         <span className="map-stop-index" aria-hidden="true">
@@ -415,8 +455,10 @@ export function MapTab({
                   isChina={isChina}
                   key={place.id}
                   onCopyAddress={(placeID, address) => void handleCopyAddress(placeID, address)}
+                  onSelect={selectMapPlace}
                   onShowPhrase={showPhrase}
                   place={place}
+                  selected={selectedMapPlaceID === place.id}
                 />
               ))}
             </div>

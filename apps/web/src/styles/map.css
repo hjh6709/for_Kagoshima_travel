@@ -464,22 +464,26 @@
   overflow: hidden;
 }
 
-.map-saved-place summary {
+.map-saved-summary {
   display: grid;
   grid-template-columns: 38px minmax(0, 1fr) 20px;
   align-items: center;
   gap: 10px;
+  width: 100%;
   min-height: 72px;
   padding: 12px 14px;
+  border: 0;
+  background: transparent;
+  color: var(--c-text);
   cursor: pointer;
-  list-style: none;
+  text-align: left;
 }
 
-.map-saved-place summary::-webkit-details-marker {
-  display: none;
+.map-saved-place.selected {
+  border-color: rgba(11, 111, 106, 0.48);
 }
 
-.map-saved-place summary:focus-visible {
+.map-saved-summary:focus-visible {
   outline: 3px solid rgba(11, 111, 106, 0.28);
   outline-offset: -3px;
 }
@@ -520,7 +524,7 @@
   transition: transform 0.18s var(--ease-route);
 }
 
-.map-saved-place[open] .map-saved-chevron {
+.map-saved-place.selected .map-saved-chevron {
   transform: rotate(180deg);
 }
 

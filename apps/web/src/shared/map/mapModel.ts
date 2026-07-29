@@ -34,3 +34,12 @@ export function getMapCenter(points: MapPoint[]): { latitude: number; longitude:
     longitude: points.reduce((sum, point) => sum + point.longitude, 0) / points.length,
   };
 }
+
+export function getMarkerAppearance(placeID: string, selectedPlaceID: string) {
+  const selected = placeID === selectedPlaceID;
+  return {
+    background: selected ? "destination" : "route",
+    scale: selected ? 1.15 : 1,
+    selected,
+  } as const;
+}

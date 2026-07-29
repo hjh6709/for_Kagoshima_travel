@@ -1,7 +1,12 @@
 import { AlertTriangle, LocateFixed, MapPin } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { loadGoogleMaps, type GoogleMapsRuntime } from "../map/googleMapsLoader";
-import { getMapCenter, getMappablePlaces, type MappableLocation } from "../map/mapModel";
+import {
+  getMapCenter,
+  getMappablePlaces,
+  getMarkerAppearance,
+  type MappableLocation,
+} from "../map/mapModel";
 
 type TravelMapProps<T extends MappableLocation> = {
   places: T[];
@@ -93,7 +98,7 @@ export function TravelMap<T extends MappableLocation>({
     markersRef.current.forEach((marker) => marker.setMap(null));
     const bounds = new runtime.LatLngBounds();
     const nextMarkers = mappablePlaces.map((place) => {
-      const selected = place.id === selectedPlaceID;
+      const appearance = getMarkerAppearance(place.id, selectedPlaceID);
       const position = { lat: place.latitude, lng: place.longitude };
       const marker = new runtime.Marker({
         map,
@@ -101,13 +106,13 @@ export function TravelMap<T extends MappableLocation>({
         title: place.name,
         icon: {
           path: runtime.circleSymbolPath,
-          fillColor: selected ? "#C94F3D" : "#0B6F6A",
+          fillColor: appearance.background === "destination" ? "#C94F3D" : "#0B6F6A",
           fillOpacity: 1,
           strokeColor: "#FFFFFF",
-          strokeWeight: selected ? 4 : 3,
-          scale: selected ? 11 : 8,
+          strokeWeight: appearance.selected ? 4 : 3,
+          scale: 8 * appearance.scale,
         },
-        zIndex: selected ? 20 : 10,
+        zIndex: appearance.selected ? 20 : 10,
       });
       marker.addListener("click", () => onSelectPlace(place.id));
       bounds.extend(position);
