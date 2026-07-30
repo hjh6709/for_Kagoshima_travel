@@ -538,6 +538,158 @@
   padding-left: 40px;
 }
 
+.forgot-password-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  align-items: center;
+  justify-items: center;
+  overflow-y: auto;
+  padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom));
+  background: rgba(23, 51, 61, 0.72);
+}
+
+.forgot-password-dialog {
+  display: grid;
+  width: min(100%, 380px);
+  min-width: 0;
+  gap: 16px;
+  padding: 24px;
+  border-radius: var(--radius-sheet);
+  background: var(--c-surface);
+  box-shadow: var(--shadow-overlay);
+}
+
+.forgot-password-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.forgot-password-header > div {
+  min-width: 0;
+}
+
+.forgot-password-header span {
+  color: var(--c-route);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.forgot-password-header h2 {
+  margin: 3px 0 0;
+  color: var(--c-text);
+  font-size: 22px;
+  line-height: 1.3;
+  letter-spacing: -0.025em;
+}
+
+.forgot-password-close {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  place-items: center;
+  margin: -8px -8px 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--c-muted);
+}
+
+.forgot-password-close:hover {
+  background: var(--c-surface-cool);
+  color: var(--c-text);
+}
+
+.forgot-password-description {
+  margin: 0;
+  color: var(--c-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.forgot-password-form {
+  min-width: 0;
+  margin-top: 0;
+}
+
+.forgot-password-form .auth-field-label,
+.forgot-password-form .input-with-icon,
+.forgot-password-form input {
+  min-width: 0;
+  width: 100%;
+}
+
+.forgot-password-error {
+  margin: 0;
+  font-size: 12px;
+}
+
+.forgot-password-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.forgot-password-actions .primary-button,
+.forgot-password-actions .secondary-button,
+.forgot-password-result .primary-button {
+  width: 100%;
+  min-width: 0;
+  margin-top: 0;
+}
+
+.forgot-password-result {
+  display: grid;
+  gap: 14px;
+  text-align: center;
+}
+
+.forgot-password-password {
+  padding: 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--c-route-soft);
+}
+
+.forgot-password-password span,
+.forgot-password-password strong {
+  display: block;
+}
+
+.forgot-password-password span {
+  color: var(--c-muted);
+  font-size: 12px;
+}
+
+.forgot-password-password strong {
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+  color: var(--c-route);
+  font-size: 24px;
+  letter-spacing: 0.08em;
+}
+
+@media (max-width: 360px) {
+  .forgot-password-overlay {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+
+  .forgot-password-dialog {
+    padding: 20px;
+  }
+
+  .forgot-password-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* 비밀번호 보기/숨기기 토글 관련 스타일 */
 .password-toggle-btn {
   position: absolute;

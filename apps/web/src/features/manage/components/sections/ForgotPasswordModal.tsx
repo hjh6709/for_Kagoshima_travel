@@ -1,5 +1,5 @@
+import { Key, Mail, X } from "lucide-react";
 import { useState } from "react";
-import { Mail, Key } from "lucide-react";
 import { forgotPassword } from "../../../../api/auth";
 
 interface ForgotPasswordModalProps {
@@ -14,17 +14,21 @@ export function ForgotPasswordModal({ onClose, onSuccessToast }: ForgotPasswordM
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setSubmitting(true);
     setError("");
 
     try {
-      const res = await forgotPassword(email, code);
-      setTempPassword(res.temporaryPassword);
+      const response = await forgotPassword(email, code);
+      setTempPassword(response.temporaryPassword);
       onSuccessToast("임시 비밀번호가 성공적으로 발급되었습니다!");
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "임시 비밀번호 발급에 실패했습니다. 코드 및 이메일을 확인해주세요.");
+    } catch (requestError: unknown) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "임시 비밀번호 발급에 실패했습니다. 코드 및 이메일을 확인해 주세요.",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -32,65 +36,54 @@ export function ForgotPasswordModal({ onClose, onSuccessToast }: ForgotPasswordM
 
   const handleCopyAndClose = () => {
     if (tempPassword) {
-      navigator.clipboard?.writeText(tempPassword);
+      void navigator.clipboard?.writeText(tempPassword);
       onSuccessToast("임시 비밀번호가 클립보드에 복사되었습니다!");
     }
     onClose();
   };
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0, 0, 0, 0.75)",
-        display: "grid",
-        placeItems: "center",
-        zIndex: 1000,
-        padding: "20px",
-      }}
-    >
-      <div
-        style={{
-          background: "var(--c-surface)",
-          padding: "28px 24px",
-          borderRadius: "20px",
-          maxWidth: "380px",
-          width: "100%",
-          display: "grid",
-          gap: "16px",
-          boxShadow: "0 20px 48px rgba(0, 0, 0, 0.3)",
-        }}
+    <div className="forgot-password-overlay">
+      <section
+        aria-describedby="forgot-password-description"
+        aria-labelledby="forgot-password-title"
+        aria-modal="true"
+        className="forgot-password-dialog"
+        role="dialog"
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h2 style={{ fontSize: "18px", fontWeight: 800, margin: 0, color: "var(--c-text)" }}>
-            비밀번호 찾기 (임시 발급)
-          </h2>
+        <header className="forgot-password-header">
+          <div>
+            <span>계정 복구</span>
+            <h2 id="forgot-password-title">비밀번호 찾기</h2>
+          </div>
           <button
-            type="button"
+            aria-label="비밀번호 찾기 닫기"
+            className="forgot-password-close"
             onClick={onClose}
-            style={{ background: "transparent", border: "none", fontSize: "18px", cursor: "pointer", color: "var(--c-muted)" }}
+            type="button"
           >
-            ✕
+            <X aria-hidden="true" size={21} />
           </button>
-        </div>
+        </header>
 
-        <p style={{ fontSize: "12px", color: "var(--c-muted)", margin: 0, lineHeight: 1.5 }}>
+        <p className="forgot-password-description" id="forgot-password-description">
           가입 시 사용한 이메일과 수신한 6자리 인증코드를 입력하시면 8자리 임시 비밀번호를 발급해 드립니다.
         </p>
 
         {!tempPassword ? (
-          <form onSubmit={handleSubmit} style={{ display: "grid", gap: "12px" }}>
+          <form className="auth-form forgot-password-form" onSubmit={handleSubmit}>
             <label className="auth-field-label">
               <span>계정 이메일</span>
               <div className="input-with-icon">
-                <Mail size={16} className="field-icon" />
+                <Mail aria-hidden="true" className="field-icon" size={16} />
                 <input
-                  type="email"
-                  required
+                  autoComplete="email"
+                  autoFocus
+                  onChange={(event) => setEmail(event.target.value)}
                   placeholder="you@example.com"
+                  required
+                  type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
             </label>
@@ -98,57 +91,44 @@ export function ForgotPasswordModal({ onClose, onSuccessToast }: ForgotPasswordM
             <label className="auth-field-label">
               <span>6자리 인증코드</span>
               <div className="input-with-icon">
-                <Key size={16} className="field-icon" />
+                <Key aria-hidden="true" className="field-icon" size={16} />
                 <input
-                  type="text"
-                  required
+                  autoComplete="one-time-code"
+                  inputMode="numeric"
                   maxLength={6}
+                  onChange={(event) => setCode(event.target.value)}
                   placeholder="인증코드 6자리"
+                  required
+                  type="text"
                   value={code}
-                  onChange={(e) => setCode(e.target.value)}
                 />
               </div>
             </label>
 
-            {error && <p className="form-error" style={{ fontSize: "12px", margin: 0 }}>{error}</p>}
+            {error && <p className="form-error forgot-password-error">{error}</p>}
 
-            <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={onClose}
-                style={{ flex: 1, marginTop: 0 }}
-              >
+            <div className="forgot-password-actions">
+              <button className="secondary-button" onClick={onClose} type="button">
                 취소
               </button>
-              <button
-                type="submit"
-                className="primary-button"
-                disabled={submitting}
-                style={{ flex: 1, marginTop: 0 }}
-              >
+              <button className="primary-button" disabled={submitting} type="submit">
                 {submitting ? "발급 중" : "임시 비밀번호 생성"}
               </button>
             </div>
           </form>
         ) : (
-          <div style={{ display: "grid", gap: "14px", textAlign: "center" }}>
-            <div style={{ background: "var(--c-route-soft)", padding: "16px", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
-              <span style={{ fontSize: "12px", color: "var(--c-muted)", display: "block" }}>새로 발급된 임시 비밀번호</span>
-              <strong style={{ fontSize: "24px", color: "var(--c-route)", letterSpacing: "2px" }}>{tempPassword}</strong>
+          <div className="forgot-password-result">
+            <div className="forgot-password-password">
+              <span>새로 발급된 임시 비밀번호</span>
+              <strong>{tempPassword}</strong>
             </div>
 
-            <button
-              type="button"
-              className="primary-button"
-              onClick={handleCopyAndClose}
-              style={{ marginTop: 0 }}
-            >
-              📋 복사하고 창 닫기
+            <button className="primary-button" onClick={handleCopyAndClose} type="button">
+              임시 비밀번호 복사하고 닫기
             </button>
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }
