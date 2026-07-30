@@ -48,11 +48,17 @@ export function ForgotPasswordModal({ onClose, onSuccessToast }: ForgotPasswordM
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    const normalizedCode = code.replace(/\D/g, "").slice(0, 6);
+    if (normalizedCode.length !== 6) {
+      setError("6자리 인증코드를 입력해 주세요.");
+      return;
+    }
+
     setSubmitting(true);
     setError("");
 
     try {
-      const response = await forgotPassword(email, code);
+      const response = await forgotPassword(email.trim(), normalizedCode);
       setTempPassword(response.temporaryPassword);
       onSuccessToast("임시 비밀번호가 성공적으로 발급되었습니다!");
     } catch (requestError: unknown) {
@@ -66,12 +72,21 @@ export function ForgotPasswordModal({ onClose, onSuccessToast }: ForgotPasswordM
     }
   };
 
-  const handleCopyAndClose = () => {
-    if (tempPassword) {
-      void navigator.clipboard?.writeText(tempPassword);
-      onSuccessToast("임시 비밀번호가 클립보드에 복사되었습니다!");
+  const handleCopyAndClose = async () => {
+    if (!navigator.clipboard || !tempPassword) {
+      setError(
+        "이 브라우저에서는 자동 복사를 지원하지 않습니다. 임시 비밀번호를 직접 복사해 주세요.",
+      );
+      return;
     }
-    onClose();
+
+    try {
+      await navigator.clipboard.writeText(tempPassword);
+      onSuccessToast("임시 비밀번호를 복사했습니다.");
+      onClose();
+    } catch {
+      setError("임시 비밀번호를 복사하지 못했습니다. 직접 복사한 뒤 로그인해 주세요.");
+    }
   };
 
   return (
@@ -101,6 +116,12 @@ export function ForgotPasswordModal({ onClose, onSuccessToast }: ForgotPasswordM
         <p className="forgot-password-description" id="forgot-password-description">
           가입 이메일로 인증코드를 받은 뒤 8자리 임시 비밀번호를 발급하세요.
         </p>
+
+        {error && (
+          <p className="form-error forgot-password-error" role="alert">
+            {error}
+          </p>
+        )}
 
         {!tempPassword ? (
           <form className="auth-form forgot-password-form" onSubmit={handleSubmit}>
@@ -154,7 +175,9 @@ export function ForgotPasswordModal({ onClose, onSuccessToast }: ForgotPasswordM
                   autoComplete="one-time-code"
                   inputMode="numeric"
                   maxLength={6}
-                  onChange={(event) => setCode(event.target.value)}
+                  onChange={(event) => {
+                    setCode(event.target.value.replace(/\D/g, "").slice(0, 6));
+                  }}
                   placeholder="인증코드 6자리"
                   required
                   type="text"
@@ -163,17 +186,15 @@ export function ForgotPasswordModal({ onClose, onSuccessToast }: ForgotPasswordM
               </div>
             </label>
 
-            {error && (
-              <p className="form-error forgot-password-error" role="alert">
-                {error}
-              </p>
-            )}
-
             <div className="forgot-password-actions">
               <button className="secondary-button" onClick={onClose} type="button">
                 취소
               </button>
-              <button className="primary-button" disabled={submitting} type="submit">
+              <button
+                className="primary-button"
+                disabled={submitting || code.length !== 6}
+                type="submit"
+              >
                 {submitting ? "발급 중" : "임시 비밀번호 생성"}
               </button>
             </div>
@@ -185,7 +206,11 @@ export function ForgotPasswordModal({ onClose, onSuccessToast }: ForgotPasswordM
               <strong>{tempPassword}</strong>
             </div>
 
-            <button className="primary-button" onClick={handleCopyAndClose} type="button">
+            <button
+              className="primary-button"
+              onClick={() => void handleCopyAndClose()}
+              type="button"
+            >
               임시 비밀번호 복사하고 닫기
             </button>
           </div>
