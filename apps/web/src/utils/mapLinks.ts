@@ -52,7 +52,6 @@ export function getAmapSearchUrl(place: MappablePlace) {
 
   const params = new URLSearchParams({
     keyword,
-    city: "310000",
     view: "map",
     src: "map-planner",
     callnative: "1",
