@@ -37,8 +37,11 @@ Vercel에서 GitHub 리포지토리의 `main` 브랜치를 기준으로 자동 �
 ### 필수 환경 변수
 * **`VITE_API_BASE_URL`**: `https://api.hjh-dev.site` (운영계 Go API 서버 도메인)
 * **`VITE_GOOGLE_MAPS_BROWSER_KEY`**: Google Maps JavaScript API용 브라우저 키
+* **`VITE_GOOGLE_MAPS_MAP_ID`**: Advanced Marker를 활성화하는 JavaScript용 운영 Map ID
 
 지도 키는 Vercel의 Production 환경변수에만 실제 값을 저장합니다. Google Cloud에서는 웹사이트 제한에 `https://kagoshima.hjh-dev.site/*`를 등록하고 API 제한을 Maps JavaScript API로 한정합니다. 이 키는 브라우저 번들에서 보이는 식별자이므로 키 자체를 숨기는 대신 도메인·API·할당량 제한으로 보호하며, 실제 값은 저장소에 커밋하지 않습니다.
+
+`VITE_GOOGLE_MAPS_MAP_ID`가 없으면 기존 마커를 사용해 지도 기능을 유지합니다. Google Cloud Console에서 플랫폼이 JavaScript인 운영용 Map ID를 생성해 등록하면 접근성과 모바일 식별성이 개선된 Advanced Marker로 전환됩니다. `DEMO_MAP_ID`는 테스트 전용이므로 운영 환경에는 사용하지 않습니다.
 
 ---
 
