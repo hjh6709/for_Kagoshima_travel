@@ -156,8 +156,10 @@ describe("TravelMap", () => {
               latitude: 37.5665,
               longitude: 126.978,
               speed: null,
+              toJSON: () => ({}),
             },
             timestamp: 0,
+            toJSON: () => ({}),
           }),
       },
     });
