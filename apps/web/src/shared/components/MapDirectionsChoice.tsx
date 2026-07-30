@@ -31,7 +31,11 @@ export function MapDirectionsChoice({ destinationCountry, place }: MapDirections
       </button>
 
       {isOpen && (
-        <div aria-label="길찾기 지도 선택" className="directions-options">
+        <div
+          aria-label="길찾기 지도 선택"
+          className="directions-options"
+          role="group"
+        >
           <span>
             사용할 지도 앱을 선택하세요
           </span>
