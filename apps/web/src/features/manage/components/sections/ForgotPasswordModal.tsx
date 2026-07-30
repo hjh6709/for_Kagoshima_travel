@@ -1,6 +1,6 @@
 import { Key, Mail, X } from "lucide-react";
 import { useState } from "react";
-import { forgotPassword } from "../../../../api/auth";
+import { forgotPassword, sendVerificationCode } from "../../../../api/auth";
 
 interface ForgotPasswordModalProps {
   onClose: () => void;
@@ -12,7 +12,39 @@ export function ForgotPasswordModal({ onClose, onSuccessToast }: ForgotPasswordM
   const [code, setCode] = useState("");
   const [tempPassword, setTempPassword] = useState("");
   const [error, setError] = useState("");
+  const [status, setStatus] = useState("");
+  const [developmentCode, setDevelopmentCode] = useState("");
+  const [codeSent, setCodeSent] = useState(false);
+  const [sendingCode, setSendingCode] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  const handleSendCode = async () => {
+    const normalizedEmail = email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      setStatus("");
+      setError("올바른 이메일 주소를 입력해 주세요.");
+      return;
+    }
+
+    setSendingCode(true);
+    setError("");
+    setStatus("");
+
+    try {
+      const response = await sendVerificationCode(normalizedEmail, "forgot");
+      setCodeSent(true);
+      setDevelopmentCode(window.location.hostname === "localhost" ? response.code : "");
+      setStatus("인증코드를 이메일로 보냈습니다. 5분 안에 입력해 주세요.");
+    } catch (requestError: unknown) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "인증코드를 보내지 못했습니다. 잠시 후 다시 시도해 주세요.",
+      );
+    } finally {
+      setSendingCode(false);
+    }
+  };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -67,7 +99,7 @@ export function ForgotPasswordModal({ onClose, onSuccessToast }: ForgotPasswordM
         </header>
 
         <p className="forgot-password-description" id="forgot-password-description">
-          가입 시 사용한 이메일과 수신한 6자리 인증코드를 입력하시면 8자리 임시 비밀번호를 발급해 드립니다.
+          가입 이메일로 인증코드를 받은 뒤 8자리 임시 비밀번호를 발급하세요.
         </p>
 
         {!tempPassword ? (
@@ -79,7 +111,12 @@ export function ForgotPasswordModal({ onClose, onSuccessToast }: ForgotPasswordM
                 <input
                   autoComplete="email"
                   autoFocus
-                  onChange={(event) => setEmail(event.target.value)}
+                  onChange={(event) => {
+                    setEmail(event.target.value);
+                    setCodeSent(false);
+                    setDevelopmentCode("");
+                    setStatus("");
+                  }}
                   placeholder="you@example.com"
                   required
                   type="email"
@@ -87,6 +124,27 @@ export function ForgotPasswordModal({ onClose, onSuccessToast }: ForgotPasswordM
                 />
               </div>
             </label>
+
+            <button
+              className="secondary-button forgot-password-send-code"
+              disabled={sendingCode}
+              onClick={() => void handleSendCode()}
+              type="button"
+            >
+              {sendingCode ? "전송 중" : codeSent ? "인증코드 다시 받기" : "인증코드 받기"}
+            </button>
+
+            {status && (
+              <p className="forgot-password-status" role="status">
+                {status}
+              </p>
+            )}
+
+            {developmentCode && (
+              <p className="forgot-password-development-code">
+                개발용 인증코드 <strong>{developmentCode}</strong>
+              </p>
+            )}
 
             <label className="auth-field-label">
               <span>6자리 인증코드</span>
@@ -105,7 +163,11 @@ export function ForgotPasswordModal({ onClose, onSuccessToast }: ForgotPasswordM
               </div>
             </label>
 
-            {error && <p className="form-error forgot-password-error">{error}</p>}
+            {error && (
+              <p className="form-error forgot-password-error" role="alert">
+                {error}
+              </p>
+            )}
 
             <div className="forgot-password-actions">
               <button className="secondary-button" onClick={onClose} type="button">

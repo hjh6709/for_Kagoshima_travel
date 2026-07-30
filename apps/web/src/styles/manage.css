@@ -624,6 +624,37 @@
   width: 100%;
 }
 
+.forgot-password-send-code {
+  width: 100%;
+  margin-top: -2px;
+}
+
+.forgot-password-status,
+.forgot-password-development-code {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-control);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.forgot-password-status {
+  background: var(--c-route-soft);
+  color: var(--c-route-deep);
+}
+
+.forgot-password-development-code {
+  border: 1px dashed var(--border-color);
+  background: var(--c-surface-cool);
+  color: var(--c-muted);
+}
+
+.forgot-password-development-code strong {
+  color: var(--c-text);
+  letter-spacing: 0.08em;
+}
+
 .forgot-password-error {
   margin: 0;
   font-size: 12px;
