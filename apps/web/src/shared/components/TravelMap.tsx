@@ -242,6 +242,18 @@ export function TravelMap<T extends MappableLocation>({
         </p>
       )}
 
+      {currentLocation && !locationError && (
+        <p
+          aria-label="현재 위치 표시 상태"
+          aria-live="polite"
+          className="travel-map-location-success"
+          role="status"
+        >
+          <LocateFixed aria-hidden="true" size={14} />
+          현재 위치를 지도에 표시했습니다.
+        </p>
+      )}
+
       {locationError && (
         <p className="travel-map-location-error" role="alert">
           {locationError}
