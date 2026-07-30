@@ -142,6 +142,7 @@ describe("TravelMap", () => {
 
   it("현재 위치를 저장 장소와 같은 지도에 표시하고 성공 상태를 알린다", async () => {
     installLoadedMapRuntime();
+    const onSelectPlace = vi.fn();
     Object.defineProperty(navigator, "geolocation", {
       configurable: true,
       value: {
@@ -163,7 +164,7 @@ describe("TravelMap", () => {
 
     render(
       <TravelMap
-        onSelectPlace={() => undefined}
+        onSelectPlace={onSelectPlace}
         places={[mappablePlace]}
         selectedPlaceID=""
       />,
@@ -183,6 +184,15 @@ describe("TravelMap", () => {
       lat: 37.5665,
       lng: 126.978,
     });
+    const storedPlaceMarker = markerInstances
+      .filter((marker) => marker.options.title === "인민광장")
+      .at(-1);
+    expect(storedPlaceMarker?.options.position).toEqual({
+      lat: 31.2304,
+      lng: 121.4737,
+    });
+    storedPlaceMarker?.click();
+    expect(onSelectPlace).toHaveBeenCalledWith("people-square");
     expect(boundsInstances.at(-1)?.extend).toHaveBeenCalledWith({
       lat: 31.2304,
       lng: 121.4737,
