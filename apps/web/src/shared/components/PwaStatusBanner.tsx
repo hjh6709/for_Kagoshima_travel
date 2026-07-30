@@ -28,8 +28,8 @@ function noticeForPwaStatus(status: PwaStatus): StatusNotice {
         toast: {
           id: status,
           type: "info",
-          title: "새 버전을 사용할 수 있습니다",
-          message: "업데이트하면 최신 기능과 수정 사항이 바로 적용됩니다.",
+          title: "진행 중인 작업이 있습니다",
+          message: "저장이나 요청이 끝난 뒤 ‘지금 업데이트’를 눌러 최신 버전을 적용해 주세요.",
         },
         duration: 0,
         actionLabel: "지금 업데이트",

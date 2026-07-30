@@ -23,6 +23,8 @@ export class ApiError extends Error {
 }
 
 const apiBaseURL = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") ?? "";
+const mutationMethods = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+let pendingMutationCount = 0;
 
 function getApiBaseURL() {
   // VITE_API_BASE_URL이 생략된 경우, 상대 경로(/api/...) 통신을 보장하기 위해 빈 문자열을 리턴합니다.
@@ -30,21 +32,32 @@ function getApiBaseURL() {
 }
 
 export async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const response = await fetch(`${getApiBaseURL()}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  });
+  const isMutation = mutationMethods.has(options.method?.toUpperCase() ?? "GET");
+  if (isMutation) pendingMutationCount += 1;
 
-  const body = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    const message = typeof body?.error === "string" ? body.error : "요청을 처리하지 못했습니다.";
-    throw new ApiError(message, response.status);
+  try {
+    const response = await fetch(`${getApiBaseURL()}${path}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    });
+
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const message = typeof body?.error === "string" ? body.error : "요청을 처리하지 못했습니다.";
+      throw new ApiError(message, response.status);
+    }
+
+    return body as T;
+  } finally {
+    if (isMutation) pendingMutationCount -= 1;
   }
+}
 
-  return body as T;
+export function hasPendingApiMutation() {
+  return pendingMutationCount > 0;
 }
 
 export function login(email: string, password: string) {

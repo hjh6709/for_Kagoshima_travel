@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "test": "npm run test:dependencies && vitest run",
-    "test:dependencies": "node --test scripts/react-version-parity.test.mjs",
+    "test:dependencies": "node --test scripts/*.test.mjs",
     "test:unit": "vitest run",
     "typecheck": "tsc -b",
     "build": "tsc -b && vite build",
