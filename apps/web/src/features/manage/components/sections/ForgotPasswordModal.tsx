@@ -1,6 +1,6 @@
+import { Key, Mail, X } from "lucide-react";
 import { useState } from "react";
-import { Mail, Key } from "lucide-react";
-import { forgotPassword } from "../../../../api/auth";
+import { forgotPassword, sendVerificationCode } from "../../../../api/auth";
 
 interface ForgotPasswordModalProps {
   onClose: () => void;
@@ -12,143 +12,210 @@ export function ForgotPasswordModal({ onClose, onSuccessToast }: ForgotPasswordM
   const [code, setCode] = useState("");
   const [tempPassword, setTempPassword] = useState("");
   const [error, setError] = useState("");
+  const [status, setStatus] = useState("");
+  const [developmentCode, setDevelopmentCode] = useState("");
+  const [codeSent, setCodeSent] = useState(false);
+  const [sendingCode, setSendingCode] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSendCode = async () => {
+    const normalizedEmail = email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      setStatus("");
+      setError("올바른 이메일 주소를 입력해 주세요.");
+      return;
+    }
+
+    setSendingCode(true);
+    setError("");
+    setStatus("");
+
+    try {
+      const response = await sendVerificationCode(normalizedEmail, "forgot");
+      setCodeSent(true);
+      setDevelopmentCode(window.location.hostname === "localhost" ? response.code : "");
+      setStatus("인증코드를 이메일로 보냈습니다. 5분 안에 입력해 주세요.");
+    } catch (requestError: unknown) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "인증코드를 보내지 못했습니다. 잠시 후 다시 시도해 주세요.",
+      );
+    } finally {
+      setSendingCode(false);
+    }
+  };
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const normalizedCode = code.replace(/\D/g, "").slice(0, 6);
+    if (normalizedCode.length !== 6) {
+      setError("6자리 인증코드를 입력해 주세요.");
+      return;
+    }
+
     setSubmitting(true);
     setError("");
 
     try {
-      const res = await forgotPassword(email, code);
-      setTempPassword(res.temporaryPassword);
+      const response = await forgotPassword(email.trim(), normalizedCode);
+      setTempPassword(response.temporaryPassword);
       onSuccessToast("임시 비밀번호가 성공적으로 발급되었습니다!");
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "임시 비밀번호 발급에 실패했습니다. 코드 및 이메일을 확인해주세요.");
+    } catch (requestError: unknown) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "임시 비밀번호 발급에 실패했습니다. 코드 및 이메일을 확인해 주세요.",
+      );
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleCopyAndClose = () => {
-    if (tempPassword) {
-      navigator.clipboard?.writeText(tempPassword);
-      onSuccessToast("임시 비밀번호가 클립보드에 복사되었습니다!");
+  const handleCopyAndClose = async () => {
+    if (!navigator.clipboard || !tempPassword) {
+      setError(
+        "이 브라우저에서는 자동 복사를 지원하지 않습니다. 임시 비밀번호를 직접 복사해 주세요.",
+      );
+      return;
     }
-    onClose();
+
+    try {
+      await navigator.clipboard.writeText(tempPassword);
+      onSuccessToast("임시 비밀번호를 복사했습니다.");
+      onClose();
+    } catch {
+      setError("임시 비밀번호를 복사하지 못했습니다. 직접 복사한 뒤 로그인해 주세요.");
+    }
   };
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0, 0, 0, 0.75)",
-        display: "grid",
-        placeItems: "center",
-        zIndex: 1000,
-        padding: "20px",
-      }}
-    >
-      <div
-        style={{
-          background: "var(--c-surface)",
-          padding: "28px 24px",
-          borderRadius: "20px",
-          maxWidth: "380px",
-          width: "100%",
-          display: "grid",
-          gap: "16px",
-          boxShadow: "0 20px 48px rgba(0, 0, 0, 0.3)",
-        }}
+    <div className="forgot-password-overlay">
+      <section
+        aria-describedby="forgot-password-description"
+        aria-labelledby="forgot-password-title"
+        aria-modal="true"
+        className="forgot-password-dialog"
+        role="dialog"
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h2 style={{ fontSize: "18px", fontWeight: 800, margin: 0, color: "var(--c-text)" }}>
-            비밀번호 찾기 (임시 발급)
-          </h2>
+        <header className="forgot-password-header">
+          <div>
+            <span>계정 복구</span>
+            <h2 id="forgot-password-title">비밀번호 찾기</h2>
+          </div>
           <button
-            type="button"
+            aria-label="비밀번호 찾기 닫기"
+            className="forgot-password-close"
             onClick={onClose}
-            style={{ background: "transparent", border: "none", fontSize: "18px", cursor: "pointer", color: "var(--c-muted)" }}
+            type="button"
           >
-            ✕
+            <X aria-hidden="true" size={21} />
           </button>
-        </div>
+        </header>
 
-        <p style={{ fontSize: "12px", color: "var(--c-muted)", margin: 0, lineHeight: 1.5 }}>
-          가입 시 사용한 이메일과 수신한 6자리 인증코드를 입력하시면 8자리 임시 비밀번호를 발급해 드립니다.
+        <p className="forgot-password-description" id="forgot-password-description">
+          가입 이메일로 인증코드를 받은 뒤 8자리 임시 비밀번호를 발급하세요.
         </p>
 
+        {error && (
+          <p className="form-error forgot-password-error" role="alert">
+            {error}
+          </p>
+        )}
+
         {!tempPassword ? (
-          <form onSubmit={handleSubmit} style={{ display: "grid", gap: "12px" }}>
+          <form className="auth-form forgot-password-form" onSubmit={handleSubmit}>
             <label className="auth-field-label">
               <span>계정 이메일</span>
               <div className="input-with-icon">
-                <Mail size={16} className="field-icon" />
+                <Mail aria-hidden="true" className="field-icon" size={16} />
                 <input
-                  type="email"
-                  required
+                  autoComplete="email"
+                  autoFocus
+                  onChange={(event) => {
+                    setEmail(event.target.value);
+                    setCodeSent(false);
+                    setDevelopmentCode("");
+                    setStatus("");
+                  }}
                   placeholder="you@example.com"
+                  required
+                  type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
             </label>
+
+            <button
+              className="secondary-button forgot-password-send-code"
+              disabled={sendingCode}
+              onClick={() => void handleSendCode()}
+              type="button"
+            >
+              {sendingCode ? "전송 중" : codeSent ? "인증코드 다시 받기" : "인증코드 받기"}
+            </button>
+
+            {status && (
+              <p className="forgot-password-status" role="status">
+                {status}
+              </p>
+            )}
+
+            {developmentCode && (
+              <p className="forgot-password-development-code">
+                개발용 인증코드 <strong>{developmentCode}</strong>
+              </p>
+            )}
 
             <label className="auth-field-label">
               <span>6자리 인증코드</span>
               <div className="input-with-icon">
-                <Key size={16} className="field-icon" />
+                <Key aria-hidden="true" className="field-icon" size={16} />
                 <input
-                  type="text"
-                  required
+                  autoComplete="one-time-code"
+                  inputMode="numeric"
                   maxLength={6}
+                  onChange={(event) => {
+                    setCode(event.target.value.replace(/\D/g, "").slice(0, 6));
+                  }}
                   placeholder="인증코드 6자리"
+                  required
+                  type="text"
                   value={code}
-                  onChange={(e) => setCode(e.target.value)}
                 />
               </div>
             </label>
 
-            {error && <p className="form-error" style={{ fontSize: "12px", margin: 0 }}>{error}</p>}
-
-            <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={onClose}
-                style={{ flex: 1, marginTop: 0 }}
-              >
+            <div className="forgot-password-actions">
+              <button className="secondary-button" onClick={onClose} type="button">
                 취소
               </button>
               <button
-                type="submit"
                 className="primary-button"
-                disabled={submitting}
-                style={{ flex: 1, marginTop: 0 }}
+                disabled={submitting || code.length !== 6}
+                type="submit"
               >
                 {submitting ? "발급 중" : "임시 비밀번호 생성"}
               </button>
             </div>
           </form>
         ) : (
-          <div style={{ display: "grid", gap: "14px", textAlign: "center" }}>
-            <div style={{ background: "var(--c-route-soft)", padding: "16px", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
-              <span style={{ fontSize: "12px", color: "var(--c-muted)", display: "block" }}>새로 발급된 임시 비밀번호</span>
-              <strong style={{ fontSize: "24px", color: "var(--c-route)", letterSpacing: "2px" }}>{tempPassword}</strong>
+          <div className="forgot-password-result">
+            <div className="forgot-password-password">
+              <span>새로 발급된 임시 비밀번호</span>
+              <strong>{tempPassword}</strong>
             </div>
 
             <button
-              type="button"
               className="primary-button"
-              onClick={handleCopyAndClose}
-              style={{ marginTop: 0 }}
+              onClick={() => void handleCopyAndClose()}
+              type="button"
             >
-              📋 복사하고 창 닫기
+              임시 비밀번호 복사하고 닫기
             </button>
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }

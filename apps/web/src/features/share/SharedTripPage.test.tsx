@@ -9,6 +9,11 @@ vi.mock("../../shared/map/googleMapsLoader", () => ({
   loadGoogleMaps: vi.fn(),
 }));
 
+vi.mock("../../shared/date", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../shared/date")>()),
+  getTodayDateString: () => "2026-07-29",
+}));
+
 const sharedTrip: SharedTripResponse = {
   trip: {
     id: "trip-1",
