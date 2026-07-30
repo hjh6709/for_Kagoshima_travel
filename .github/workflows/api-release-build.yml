@@ -67,7 +67,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Download Linux ARM64 API binary
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: travel-api-linux-arm64
           path: deploy-dist
