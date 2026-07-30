@@ -20,19 +20,48 @@ const placeWithoutCoordinates = {
   name: "좌표 없는 장소",
 };
 
+const mapInstances: FakeMap[] = [];
+const markerInstances: FakeMarker[] = [];
+const boundsInstances: FakeLatLngBounds[] = [];
+
 class FakeMap {
   fitBounds = vi.fn();
   setCenter = vi.fn();
   setZoom = vi.fn();
+
+  constructor() {
+    mapInstances.push(this);
+  }
 }
 
 class FakeMarker {
-  addListener = vi.fn();
+  readonly options: {
+    position?: { lat: number; lng: number };
+    title?: string;
+  };
+  private clickListener?: () => void;
+
+  constructor(options: FakeMarker["options"]) {
+    this.options = options;
+    markerInstances.push(this);
+  }
+
+  addListener = vi.fn((eventName: string, listener: () => void) => {
+    if (eventName === "click") this.clickListener = listener;
+  });
   setMap = vi.fn();
+
+  click() {
+    this.clickListener?.();
+  }
 }
 
 class FakeLatLngBounds {
   extend = vi.fn();
+
+  constructor() {
+    boundsInstances.push(this);
+  }
 }
 
 function installLoadedMapRuntime() {
@@ -47,6 +76,9 @@ function installLoadedMapRuntime() {
 describe("TravelMap", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mapInstances.length = 0;
+    markerInstances.length = 0;
+    boundsInstances.length = 0;
   });
 
   it("지도 SDK를 불러오지 못해도 장소 목록과 길찾기를 계속 쓸 수 있다고 안내한다", async () => {
@@ -106,5 +138,62 @@ describe("TravelMap", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("위치 권한을 허용하지 않았습니다");
     expect(screen.getByLabelText("저장 장소 지도")).toBeVisible();
+  });
+
+  it("현재 위치를 저장 장소와 같은 지도에 표시하고 성공 상태를 알린다", async () => {
+    installLoadedMapRuntime();
+    Object.defineProperty(navigator, "geolocation", {
+      configurable: true,
+      value: {
+        getCurrentPosition: (success: PositionCallback) =>
+          success({
+            coords: {
+              accuracy: 8,
+              altitude: null,
+              altitudeAccuracy: null,
+              heading: null,
+              latitude: 37.5665,
+              longitude: 126.978,
+              speed: null,
+            },
+            timestamp: 0,
+          }),
+      },
+    });
+
+    render(
+      <TravelMap
+        onSelectPlace={() => undefined}
+        places={[mappablePlace]}
+        selectedPlaceID=""
+      />,
+    );
+
+    await userEvent.click(await screen.findByRole("button", { name: "현재 위치 표시" }));
+
+    expect(await screen.findByRole("status", { name: "현재 위치 표시 상태" })).toHaveTextContent(
+      "현재 위치를 지도에 표시했습니다",
+    );
+    expect(screen.getByRole("button", { name: "현재 위치 갱신" })).toBeVisible();
+
+    const currentLocationMarker = markerInstances.find(
+      (marker) => marker.options.title === "현재 위치",
+    );
+    expect(currentLocationMarker?.options.position).toEqual({
+      lat: 37.5665,
+      lng: 126.978,
+    });
+    expect(boundsInstances.at(-1)?.extend).toHaveBeenCalledWith({
+      lat: 31.2304,
+      lng: 121.4737,
+    });
+    expect(boundsInstances.at(-1)?.extend).toHaveBeenCalledWith({
+      lat: 37.5665,
+      lng: 126.978,
+    });
+    expect(mapInstances[0]?.fitBounds).toHaveBeenCalledWith(
+      boundsInstances.at(-1),
+      48,
+    );
   });
 });

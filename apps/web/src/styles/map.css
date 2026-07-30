@@ -351,6 +351,7 @@
 }
 
 .travel-map-coordinate-note,
+.travel-map-location-success,
 .travel-map-location-error {
   display: flex;
   align-items: flex-start;
@@ -364,6 +365,15 @@
 }
 
 .travel-map-coordinate-note svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+.travel-map-location-success {
+  color: var(--c-success);
+}
+
+.travel-map-location-success svg {
   flex: 0 0 auto;
   margin-top: 2px;
 }
