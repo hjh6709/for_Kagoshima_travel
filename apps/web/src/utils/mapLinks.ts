@@ -9,6 +9,7 @@ export type MappablePlace = {
   address?: string;
   googleMapsUrl?: string;
   googlePlaceId?: string;
+  coordinateSystem?: "wgs84" | "gcj02";
   chineseName?: string;
   chineseAddress?: string;
   subwayExit?: string;
@@ -31,8 +32,8 @@ export function hasPlaceCoordinates(place?: MappablePlace): place is MappablePla
 }
 
 export function getAmapDirectionsUrl(place: MappablePlace, mode: TravelMode = "transit") {
-  // Google Places 좌표는 고덕지도 경로 입력으로 넘기지 않고 현지 장소명 검색으로 연결한다.
-  if (place.googlePlaceId) return undefined;
+  // 고덕지도는 GCJ-02 좌표만 직접 길찾기에 사용한다. 출처가 없거나 WGS84이면 현지 장소명 검색으로 연결한다.
+  if (place.coordinateSystem !== "gcj02") return undefined;
   if (!hasPlaceCoordinates(place)) return undefined;
 
   const destinationName = place.chineseName || place.name || "目的地";
@@ -94,7 +95,7 @@ export function getDirectionUrl(
 /** 외부 지도에서 장소 위치를 연다. 좌표가 없으면 동일 제공자의 장소 검색으로 대체한다. */
 export function getPlaceMarkerUrl(provider: "amap" | "google" | "apple", params: MapLinkParams): string {
   if (provider === "amap") {
-    if (params.googlePlaceId || !hasPlaceCoordinates(params)) {
+    if (params.coordinateSystem !== "gcj02" || !hasPlaceCoordinates(params)) {
       return getAmapSearchUrl(params) || "https://uri.amap.com/search";
     }
     const markerParams = new URLSearchParams({
