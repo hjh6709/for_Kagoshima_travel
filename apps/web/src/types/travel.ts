@@ -76,6 +76,7 @@ export type Place = {
   budgetMemo?: string;
   cautionMemo?: string;
   googlePlaceId?: string;
+  coordinateSystem?: "wgs84" | "gcj02";
   chineseName?: string;
   chineseAddress?: string;
   subwayExit?: string;

@@ -13,6 +13,7 @@ type ScheduleCardProps = {
   onMove: (scheduleID: string, direction: "up" | "down") => void;
   onToggleComplete: (scheduleID: string) => void;
   place?: Place;
+  showGuideMemo?: boolean;
 };
 
 // 일정 카드 한 개의 렌더링만 담당한다. 완료/순서 변경 동작은 상위 핸들러를 호출한다.
@@ -25,6 +26,7 @@ export function ScheduleCard({
   onMove,
   onToggleComplete,
   place,
+  showGuideMemo = false,
 }: ScheduleCardProps) {
   return (
     <article className={`schedule-card ${isCompleted ? "completed" : ""}`}>
@@ -49,9 +51,16 @@ export function ScheduleCard({
           </p>
         )}
         {item.guideMemo && (
-          <div className="muted" style={{ marginTop: "4px", fontSize: "12px" }}>
-            <MaskedText text={item.guideMemo} label="안내:" />
-          </div>
+          showGuideMemo ? (
+            <p className="schedule-detail muted">
+              <strong>안내</strong>
+              {item.guideMemo}
+            </p>
+          ) : (
+            <div className="muted" style={{ marginTop: "4px", fontSize: "12px" }}>
+              <MaskedText text={item.guideMemo} label="안내:" />
+            </div>
+          )
         )}
         <div className="schedule-actions">
           <button

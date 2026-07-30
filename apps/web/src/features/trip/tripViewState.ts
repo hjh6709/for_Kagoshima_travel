@@ -8,13 +8,14 @@ export type ChecklistCategory = ChecklistItem["category"];
 export type CustomChecklistItem = ChecklistItem & { custom: true };
 export type ScheduleOrderByDate = Record<string, string[]>;
 
+const demoStoragePrefix = "map-planner-shanghai-demo-v1";
 const tripStorageKeys = {
-  tripDates: "kagoshima-trip-dates",
-  checklistCompletions: "kagoshima-checklist",
-  customChecklist: "kagoshima-custom-checklist",
-  hiddenChecklist: "kagoshima-hidden-checklist",
-  scheduleCompletions: "kagoshima-schedule-completions",
-  scheduleOrder: "kagoshima-schedule-order",
+  tripDates: `${demoStoragePrefix}-trip-dates`,
+  checklistCompletions: `${demoStoragePrefix}-checklist`,
+  customChecklist: `${demoStoragePrefix}-custom-checklist`,
+  hiddenChecklist: `${demoStoragePrefix}-hidden-checklist`,
+  scheduleCompletions: `${demoStoragePrefix}-schedule-completions`,
+  scheduleOrder: `${demoStoragePrefix}-schedule-order`,
 } as const;
 
 export function getPlace(placeId?: string) {

@@ -18,6 +18,7 @@ export function ScheduleTab({
   getPlace,
   groupedChecklist,
   hiddenChecklistIDs,
+  isDemo,
   isChecklistEditing,
   moveSchedule,
   newChecklistCategory,
@@ -103,6 +104,7 @@ export function ScheduleTab({
                     onMove={moveSchedule}
                     onToggleComplete={toggleScheduleComplete}
                     place={place}
+                    showGuideMemo={isDemo}
                   />
                 );
               })}
