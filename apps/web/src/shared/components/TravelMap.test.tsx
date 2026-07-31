@@ -22,14 +22,18 @@ const placeWithoutCoordinates = {
 
 const mapInstances: FakeMap[] = [];
 const markerInstances: FakeMarker[] = [];
+const advancedMarkerInstances: FakeAdvancedMarker[] = [];
+const pinInstances: FakePinElement[] = [];
 const boundsInstances: FakeLatLngBounds[] = [];
 
 class FakeMap {
   fitBounds = vi.fn();
+  readonly options: { mapId?: string };
   setCenter = vi.fn();
   setZoom = vi.fn();
 
-  constructor() {
+  constructor(_element: HTMLElement, options: FakeMap["options"]) {
+    this.options = options;
     mapInstances.push(this);
   }
 }
@@ -56,6 +60,52 @@ class FakeMarker {
   }
 }
 
+class FakeAdvancedMarker {
+  readonly options: {
+    gmpClickable?: boolean;
+    map?: FakeMap | null;
+    position?: { lat: number; lng: number };
+    title?: string;
+    zIndex?: number;
+  };
+  private clickListener?: () => void;
+  map: FakeMap | null;
+  readonly children: FakePinElement[] = [];
+
+  constructor(options: FakeAdvancedMarker["options"]) {
+    this.options = options;
+    this.map = options.map ?? null;
+    advancedMarkerInstances.push(this);
+  }
+
+  addListener = vi.fn((eventName: string, listener: () => void) => {
+    if (eventName === "click") this.clickListener = listener;
+  });
+
+  append(pin: FakePinElement) {
+    this.children.push(pin);
+  }
+
+  click() {
+    this.clickListener?.();
+  }
+}
+
+class FakePinElement {
+  readonly options: {
+    background?: string;
+    borderColor?: string;
+    glyphColor?: string;
+    glyphText?: string;
+    scale?: number;
+  };
+
+  constructor(options: FakePinElement["options"]) {
+    this.options = options;
+    pinInstances.push(this);
+  }
+}
+
 class FakeLatLngBounds {
   extend = vi.fn();
 
@@ -64,12 +114,15 @@ class FakeLatLngBounds {
   }
 }
 
-function installLoadedMapRuntime() {
+function installLoadedMapRuntime(mapID = "") {
   vi.mocked(loadGoogleMaps).mockResolvedValue({
+    AdvancedMarkerElement: FakeAdvancedMarker,
     Map: FakeMap,
-    Marker: FakeMarker,
+    LegacyMarker: FakeMarker,
     LatLngBounds: FakeLatLngBounds,
+    PinElement: FakePinElement,
     circleSymbolPath: 0,
+    mapID,
   } as never);
 }
 
@@ -78,6 +131,8 @@ describe("TravelMap", () => {
     vi.clearAllMocks();
     mapInstances.length = 0;
     markerInstances.length = 0;
+    advancedMarkerInstances.length = 0;
+    pinInstances.length = 0;
     boundsInstances.length = 0;
   });
 
@@ -207,5 +262,39 @@ describe("TravelMap", () => {
       boundsInstances.at(-1),
       48,
     );
+  });
+
+  it("운영 Map ID가 있으면 접근 가능한 Advanced Marker 핀을 사용한다", async () => {
+    installLoadedMapRuntime("travel-map-id");
+    const onSelectPlace = vi.fn();
+
+    render(
+      <TravelMap
+        onSelectPlace={onSelectPlace}
+        places={[mappablePlace]}
+        selectedPlaceID="people-square"
+      />,
+    );
+
+    await screen.findByRole("button", { name: "현재 위치 표시" });
+
+    expect(mapInstances[0]?.options.mapId).toBe("travel-map-id");
+    expect(markerInstances).toHaveLength(0);
+    expect(advancedMarkerInstances).toHaveLength(1);
+    expect(advancedMarkerInstances[0]?.options).toMatchObject({
+      gmpClickable: true,
+      position: { lat: 31.2304, lng: 121.4737 },
+      title: "인민광장",
+      zIndex: 20,
+    });
+    expect(pinInstances[0]?.options).toMatchObject({
+      background: "#C94F3D",
+      borderColor: "#FFFFFF",
+      glyphColor: "#FFFFFF",
+      scale: 1.15,
+    });
+
+    advancedMarkerInstances[0]?.click();
+    expect(onSelectPlace).toHaveBeenCalledWith("people-square");
   });
 });

@@ -21,6 +21,81 @@ type CurrentLocation = {
 
 type MapLoadState = "idle" | "loading" | "ready" | "error";
 
+type RemovableMarker = {
+  remove: () => void;
+};
+
+type CreateMarkerOptions = {
+  background: string;
+  glyphText?: string;
+  legacyStrokeWeight: number;
+  map: google.maps.Map;
+  onClick?: () => void;
+  position: google.maps.LatLngLiteral;
+  runtime: GoogleMapsRuntime;
+  scale: number;
+  title: string;
+  zIndex: number;
+};
+
+function createMapMarker({
+  background,
+  glyphText,
+  legacyStrokeWeight,
+  map,
+  onClick,
+  position,
+  runtime,
+  scale,
+  title,
+  zIndex,
+}: CreateMarkerOptions): RemovableMarker {
+  if (runtime.mapID) {
+    const pin = new runtime.PinElement({
+      background,
+      borderColor: "#FFFFFF",
+      glyphColor: "#FFFFFF",
+      glyphText,
+      scale,
+    });
+    const marker = new runtime.AdvancedMarkerElement({
+      gmpClickable: Boolean(onClick),
+      map,
+      position,
+      title,
+      zIndex,
+    });
+    marker.append(pin);
+    if (onClick) marker.addListener("click", onClick);
+
+    return {
+      remove: () => {
+        marker.map = null;
+      },
+    };
+  }
+
+  const marker = new runtime.LegacyMarker({
+    map,
+    position,
+    title,
+    icon: {
+      path: runtime.circleSymbolPath,
+      fillColor: background,
+      fillOpacity: 1,
+      strokeColor: "#FFFFFF",
+      strokeWeight: legacyStrokeWeight,
+      scale: 8 * scale,
+    },
+    zIndex,
+  });
+  if (onClick) marker.addListener("click", onClick);
+
+  return {
+    remove: () => marker.setMap(null),
+  };
+}
+
 function getLocationErrorMessage(error: GeolocationPositionError) {
   if (error.code === error.PERMISSION_DENIED) {
     return "위치 권한을 허용하지 않았습니다. 저장한 장소는 계속 확인할 수 있습니다.";
@@ -39,7 +114,7 @@ export function TravelMap<T extends MappableLocation>({
   const mapElementRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const runtimeRef = useRef<GoogleMapsRuntime | null>(null);
-  const markersRef = useRef<google.maps.Marker[]>([]);
+  const markersRef = useRef<RemovableMarker[]>([]);
   const [loadState, setLoadState] = useState<MapLoadState>("idle");
   const [currentLocation, setCurrentLocation] = useState<CurrentLocation | null>(null);
   const [locationError, setLocationError] = useState("");
@@ -64,6 +139,7 @@ export function TravelMap<T extends MappableLocation>({
         const map = new runtime.Map(mapElementRef.current, {
           center: { lat: initialCenter.latitude, lng: initialCenter.longitude },
           zoom: 13,
+          ...(runtime.mapID ? { mapId: runtime.mapID } : {}),
           clickableIcons: false,
           disableDefaultUI: true,
           gestureHandling: "cooperative",
@@ -83,7 +159,7 @@ export function TravelMap<T extends MappableLocation>({
 
     return () => {
       active = false;
-      markersRef.current.forEach((marker) => marker.setMap(null));
+      markersRef.current.forEach((marker) => marker.remove());
       markersRef.current = [];
       runtimeRef.current = null;
       mapRef.current = null;
@@ -95,26 +171,22 @@ export function TravelMap<T extends MappableLocation>({
     const runtime = runtimeRef.current;
     if (loadState !== "ready" || !map || !runtime) return;
 
-    markersRef.current.forEach((marker) => marker.setMap(null));
+    markersRef.current.forEach((marker) => marker.remove());
     const bounds = new runtime.LatLngBounds();
     const nextMarkers = mappablePlaces.map((place) => {
       const appearance = getMarkerAppearance(place.id, selectedPlaceID);
       const position = { lat: place.latitude, lng: place.longitude };
-      const marker = new runtime.Marker({
+      const marker = createMapMarker({
+        background: appearance.background === "destination" ? "#C94F3D" : "#0B6F6A",
+        legacyStrokeWeight: appearance.selected ? 4 : 3,
         map,
+        onClick: () => onSelectPlace(place.id),
         position,
+        runtime,
+        scale: appearance.scale,
         title: place.name,
-        icon: {
-          path: runtime.circleSymbolPath,
-          fillColor: appearance.background === "destination" ? "#C94F3D" : "#0B6F6A",
-          fillOpacity: 1,
-          strokeColor: "#FFFFFF",
-          strokeWeight: appearance.selected ? 4 : 3,
-          scale: 8 * appearance.scale,
-        },
         zIndex: appearance.selected ? 20 : 10,
       });
-      marker.addListener("click", () => onSelectPlace(place.id));
       bounds.extend(position);
       return marker;
     });
@@ -122,18 +194,15 @@ export function TravelMap<T extends MappableLocation>({
     if (currentLocation) {
       const position = { lat: currentLocation.latitude, lng: currentLocation.longitude };
       nextMarkers.push(
-        new runtime.Marker({
+        createMapMarker({
+          background: "#17333D",
+          glyphText: "●",
+          legacyStrokeWeight: 4,
           map,
           position,
+          runtime,
+          scale: 0.9,
           title: "현재 위치",
-          icon: {
-            path: runtime.circleSymbolPath,
-            fillColor: "#17333D",
-            fillOpacity: 1,
-            strokeColor: "#FFFFFF",
-            strokeWeight: 4,
-            scale: 7,
-          },
           zIndex: 30,
         }),
       );
@@ -153,7 +222,7 @@ export function TravelMap<T extends MappableLocation>({
     }
 
     return () => {
-      nextMarkers.forEach((marker) => marker.setMap(null));
+      nextMarkers.forEach((marker) => marker.remove());
     };
   }, [currentLocation, loadState, mappablePlaces, onSelectPlace, selectedPlaceID]);
 

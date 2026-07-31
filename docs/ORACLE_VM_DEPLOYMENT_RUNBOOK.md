@@ -354,9 +354,12 @@ Vercel Web 프로젝트에 다음 환경변수를 설정합니다.
 ```env
 VITE_API_BASE_URL=https://api.hjh-dev.site
 VITE_GOOGLE_MAPS_BROWSER_KEY=<GOOGLE_MAPS_BROWSER_KEY>
+VITE_GOOGLE_MAPS_MAP_ID=<GOOGLE_MAPS_JAVASCRIPT_MAP_ID>
 ```
 
 `VITE_GOOGLE_MAPS_BROWSER_KEY`는 Google Maps JavaScript API 전용 브라우저 키입니다. Google Cloud에서 웹사이트 제한을 `https://kagoshima.hjh-dev.site/*`로, API 제한을 Maps JavaScript API로 설정합니다. 서버용 `GOOGLE_MAPS_API_KEY`와 재사용하지 않으며 실제 키 값은 저장소에 커밋하지 않습니다.
+
+`VITE_GOOGLE_MAPS_MAP_ID`는 Google Cloud Console에서 플랫폼을 JavaScript로 지정해 만든 운영용 Map ID입니다. 값이 없으면 기존 마커로 안전하게 동작하고, 등록하면 Advanced Marker가 활성화됩니다. 테스트용 `DEMO_MAP_ID`는 운영 환경에 등록하지 않습니다.
 
 변경 후 프론트 재배포가 필요합니다.
 
