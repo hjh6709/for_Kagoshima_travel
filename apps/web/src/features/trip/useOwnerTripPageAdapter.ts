@@ -14,6 +14,7 @@ import { phrases } from "../../data/sampleTrip";
 import type { ChecklistItem } from "../../types/travel";
 import {
   deriveAccommodation,
+  deriveEmergencies,
   getOwnerPlaceById,
   getOwnerSchedulesForDate,
   getSavedOwnerScheduleCompletions,
@@ -133,31 +134,7 @@ export function useOwnerTripPageAdapter({
   const homeChecklistItems = allChecklist.filter((item) => homeChecklistCategories.includes(item.category)).slice(0, 4);
   const homeChecklistCompletedCount = homeChecklistItems.filter((item) => checkedItems[item.id]).length;
 
-  const emergencies = useMemo(() => {
-    const hotel = places.find((place) => place.category === "hotel");
-    return [
-      {
-        id: "emergency-family",
-        title: "가족 연락",
-        description: "문제가 생기면 가장 먼저 가족에게 연락하세요.",
-        phone: undefined,
-      },
-      {
-        id: "emergency-hotel",
-        title: "숙소 연락",
-        description: hotel 
-          ? `${hotel.name}\n${hotel.address || ""}` 
-          : "장소 관리에서 숙소(호텔)를 등록하면 여기에 표시됩니다.",
-        phone: undefined,
-        address: hotel?.address,
-      },
-      {
-        id: "emergency-passport",
-        title: "여권 분실",
-        description: "가족에게 연락한 뒤 가까운 경찰서와 영사관 안내를 확인하세요.",
-      },
-    ];
-  }, [places]);
+  const emergencies = useMemo(() => deriveEmergencies(places), [places]);
 
   const groupedChecklist = useMemo(
     () =>

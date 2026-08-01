@@ -8,6 +8,7 @@ type NextScheduleCardProps = {
   focusDate: string;
   getDisplayDate: (dateStr: string) => string;
   getPlace: (placeId?: string) => Place | undefined;
+  isReadOnly?: boolean;
   nextSchedule: ScheduleItem | null;
   onOpenSchedule: () => void;
   travelPhase: TravelPhase;
@@ -19,6 +20,7 @@ export function NextScheduleCard({
   focusDate,
   getDisplayDate,
   getPlace,
+  isReadOnly,
   nextSchedule,
   onOpenSchedule,
   travelPhase,
@@ -33,7 +35,9 @@ export function NextScheduleCard({
           <h2>{travelPhase === "before" ? "첫 일정을 준비해 주세요" : "남은 일정이 없습니다"}</h2>
           <p>
             {travelPhase === "before"
-              ? "일정을 추가하면 출발일의 첫 장소와 길찾기가 여기에 표시됩니다."
+              ? isReadOnly
+                ? "출발일에 공유된 일정이 아직 없습니다."
+                : "일정을 추가하면 출발일의 첫 장소와 길찾기가 여기에 표시됩니다."
               : "오늘 할 일을 모두 마쳤다면 여유롭게 다음 계획을 확인해 보세요."}
           </p>
         </div>

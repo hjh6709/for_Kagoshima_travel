@@ -16,6 +16,7 @@ export function TodayTab(props: TripPageProps) {
     homeChecklistCompletedCount,
     homeChecklistItems,
     isDemo,
+    isReadOnly,
     nextSchedule,
     setActiveTab,
     setScheduleView,
@@ -32,6 +33,7 @@ export function TodayTab(props: TripPageProps) {
         travelStatus={travelStatus}
         trip={trip}
         tripDates={tripDates}
+        isReadOnly={isReadOnly}
         onNavigateToMyPage={onNavigateToMyPage}
       />
       <NextScheduleCard
@@ -39,6 +41,7 @@ export function TodayTab(props: TripPageProps) {
         focusDate={focusDate}
         getDisplayDate={getDisplayDate}
         getPlace={getPlace}
+        isReadOnly={isReadOnly}
         nextSchedule={nextSchedule}
         onOpenSchedule={() => {
           setScheduleView("itinerary");
@@ -58,6 +61,7 @@ export function TodayTab(props: TripPageProps) {
         }}
         toggleCheck={toggleCheck}
         travelPhase={travelStatus.phase}
+        isReadOnly={isReadOnly}
       />
       {isDemo && (
         <details className="date-details today-demo-tools">

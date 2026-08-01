@@ -65,4 +65,5 @@ export type TripPageProps = {
   updateTripDate: (field: "startDate" | "endDate", value: string) => void;
   onNavigateToMyPage?: () => void;
   isDemo?: boolean;
+  isReadOnly?: boolean;
 };

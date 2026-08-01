@@ -198,6 +198,7 @@ export function MapTab({
   focusSchedules,
   getDisplayDate,
   getPlace,
+  isReadOnly,
   places,
   setActiveTab,
   setScheduleView,
@@ -352,8 +353,12 @@ export function MapTab({
               <strong>{focusSchedules.length > 0 ? "일정에 연결된 장소가 없습니다" : `${routeLabel}이 비어 있습니다`}</strong>
               <p>
                 {focusSchedules.length > 0
-                  ? "여행 관리에서 각 일정에 장소를 연결해 주세요."
-                  : "일정을 추가하고 장소를 연결하면 길찾기 동선이 만들어집니다."}
+                  ? isReadOnly
+                    ? "공유된 일정에 연결된 장소 정보가 없습니다."
+                    : "여행 관리에서 각 일정에 장소를 연결해 주세요."
+                  : isReadOnly
+                    ? "이 날짜에는 공유된 일정과 장소가 없습니다."
+                    : "일정을 추가하고 장소를 연결하면 길찾기 동선이 만들어집니다."}
               </p>
               <button className="secondary-button compact-button" onClick={openSchedule} type="button">
                 일정 보기
@@ -389,7 +394,7 @@ export function MapTab({
                   </p>
                 </div>
                 <button className="secondary-button compact-button" onClick={openSchedule} type="button">
-                  일정 관리
+                  {isReadOnly ? "일정 보기" : "일정 관리"}
                 </button>
               </div>
 
@@ -443,7 +448,7 @@ export function MapTab({
               <MapPin aria-hidden="true" size={24} />
               <div>
                 <strong>저장한 장소가 없습니다</strong>
-                <p>편집 화면에서 카페, 식당, 관광지를 검색해 추가해 보세요.</p>
+                <p>{isReadOnly ? "여행 관리자가 장소를 추가하면 여기에 표시됩니다." : "편집 화면에서 카페, 식당, 관광지를 검색해 추가해 보세요."}</p>
               </div>
             </article>
           ) : (

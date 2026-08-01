@@ -68,6 +68,7 @@ export function FlightTab({
   editTripHref,
   flights,
   getDisplayDate,
+  isReadOnly,
   toggleCheck,
   onNavigateToMyPage,
 }: TripPageProps) {
@@ -134,15 +135,23 @@ export function FlightTab({
               const isChecked = Boolean(checkedItems[item.id]);
               return (
                 <div className={`check-row${isChecked ? " completed" : ""}`} key={item.id}>
-                  <button
-                    aria-pressed={isChecked}
-                    className="check-toggle"
-                    onClick={() => toggleCheck(item.id)}
-                    type="button"
-                  >
-                    <CheckCircle2 className={isChecked ? "checked" : ""} size={24} />
-                    <span>{item.title}</span>
-                  </button>
+                  {isReadOnly ? (
+                    <div className="check-toggle">
+                      <CheckCircle2 className={isChecked ? "checked" : ""} size={24} />
+                      <span>{item.title}</span>
+                      <span className="visually-hidden">{isChecked ? "완료" : "미완료"}</span>
+                    </div>
+                  ) : (
+                    <button
+                      aria-pressed={isChecked}
+                      className="check-toggle"
+                      onClick={() => toggleCheck(item.id)}
+                      type="button"
+                    >
+                      <CheckCircle2 className={isChecked ? "checked" : ""} size={24} />
+                      <span>{item.title}</span>
+                    </button>
+                  )}
                 </div>
               );
             })}

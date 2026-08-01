@@ -12,6 +12,7 @@ type ChecklistSectionProps = Pick<
   | "groupedChecklist"
   | "hiddenChecklistIDs"
   | "isChecklistEditing"
+  | "isReadOnly"
   | "newChecklistCategory"
   | "newChecklistTitle"
   | "removeChecklistItem"
@@ -31,6 +32,7 @@ export function ChecklistSection({
   groupedChecklist,
   hiddenChecklistIDs,
   isChecklistEditing,
+  isReadOnly,
   newChecklistCategory,
   newChecklistTitle,
   removeChecklistItem,
@@ -44,13 +46,15 @@ export function ChecklistSection({
     <section className="section-block">
       <div className="section-title-row">
         <h2>준비 체크리스트</h2>
-        <button
-          className="secondary-button compact-button"
-          onClick={() => setIsChecklistEditing(!isChecklistEditing)}
-          type="button"
-        >
-          {isChecklistEditing ? "완료" : "편집"}
-        </button>
+        {!isReadOnly && (
+          <button
+            className="secondary-button compact-button"
+            onClick={() => setIsChecklistEditing(!isChecklistEditing)}
+            type="button"
+          >
+            {isChecklistEditing ? "완료" : "편집"}
+          </button>
+        )}
       </div>
       <div className="check-summary">
         <p className="muted">
@@ -103,15 +107,23 @@ export function ChecklistSection({
               <div className="card-stack">
                 {group.items.map((item) => (
                   <div className={`check-row${checkedItems[item.id] ? " completed" : ""}`} key={item.id}>
-                    <button
-                      aria-pressed={Boolean(checkedItems[item.id])}
-                      className="check-toggle"
-                      onClick={() => toggleCheck(item.id)}
-                      type="button"
-                    >
-                      <CheckCircle2 className={checkedItems[item.id] ? "checked" : ""} size={24} />
-                      <span>{item.title}</span>
-                    </button>
+                    {isReadOnly ? (
+                      <div className="check-toggle">
+                        <CheckCircle2 className={checkedItems[item.id] ? "checked" : ""} size={24} />
+                        <span>{item.title}</span>
+                        <span className="visually-hidden">{checkedItems[item.id] ? "완료" : "미완료"}</span>
+                      </div>
+                    ) : (
+                      <button
+                        aria-pressed={Boolean(checkedItems[item.id])}
+                        className="check-toggle"
+                        onClick={() => toggleCheck(item.id)}
+                        type="button"
+                      >
+                        <CheckCircle2 className={checkedItems[item.id] ? "checked" : ""} size={24} />
+                        <span>{item.title}</span>
+                      </button>
+                    )}
                     {isChecklistEditing && (
                       <button
                         aria-label={`${item.title} 삭제`}
@@ -132,7 +144,7 @@ export function ChecklistSection({
             <ListChecks aria-hidden="true" size={22} />
             <div>
               <strong>준비 항목이 없습니다</strong>
-              <p>편집을 눌러 여행에 필요한 항목을 추가해 보세요.</p>
+              <p>{isReadOnly ? "공유된 준비 항목이 없습니다." : "편집을 눌러 여행에 필요한 항목을 추가해 보세요."}</p>
             </div>
           </article>
         )}
