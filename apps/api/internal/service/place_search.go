@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/dto"
 )
@@ -47,6 +48,9 @@ func buildGoogleTextSearchRequest(query, country string) googleTextSearchRequest
 	}
 
 	request.LanguageCode = "zh-CN"
+	if containsHangul(request.TextQuery) {
+		request.LanguageCode = "ko"
+	}
 	request.RegionCode = "CN"
 	request.LocationRestriction = &googleLocationRestriction{Rectangle: googleRectangle{
 		Low:  googleCoordinate{Latitude: 30.67, Longitude: 120.85},
@@ -61,6 +65,24 @@ func buildGoogleTextSearchRequest(query, country string) googleTextSearchRequest
 		request.StrictTypeFiltering = true
 	}
 	return request
+}
+
+func containsHangul(value string) bool {
+	for _, character := range value {
+		if unicode.In(character, unicode.Hangul) {
+			return true
+		}
+	}
+	return false
+}
+
+func containsHan(value string) bool {
+	for _, character := range value {
+		if unicode.In(character, unicode.Han) {
+			return true
+		}
+	}
+	return false
 }
 
 func searchGooglePlaces(query, country string) ([]dto.PlaceSearchResult, error) {
@@ -119,8 +141,12 @@ func searchGooglePlaces(query, country string) ([]dto.PlaceSearchResult, error) 
 			GooglePlaceID: place.ID,
 		}
 		if country == "CN" {
-			result.ChineseName = place.DisplayName.Text
-			result.ChineseAddress = place.FormattedAddress
+			if containsHan(place.DisplayName.Text) {
+				result.ChineseName = place.DisplayName.Text
+			}
+			if containsHan(place.FormattedAddress) {
+				result.ChineseAddress = place.FormattedAddress
+			}
 		}
 		results = append(results, result)
 	}

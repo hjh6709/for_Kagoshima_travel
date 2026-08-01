@@ -59,13 +59,14 @@ func TestPlaceSearchHTTPClientHasTimeout(t *testing.T) {
 
 func TestGoogleSearchRequestLimitsKoreanCategoriesToShanghai(t *testing.T) {
 	tests := []struct {
-		query    string
-		wantType string
+		query        string
+		wantType     string
+		wantLanguage string
 	}{
-		{query: "카페", wantType: "cafe"},
-		{query: "식당", wantType: "restaurant"},
-		{query: "맛집", wantType: "restaurant"},
-		{query: "东方明珠", wantType: ""},
+		{query: "카페", wantType: "cafe", wantLanguage: "ko"},
+		{query: "식당", wantType: "restaurant", wantLanguage: "ko"},
+		{query: "맛집", wantType: "restaurant", wantLanguage: "ko"},
+		{query: "东方明珠", wantType: "", wantLanguage: "zh-CN"},
 	}
 
 	for _, tt := range tests {
@@ -77,7 +78,7 @@ func TestGoogleSearchRequestLimitsKoreanCategoriesToShanghai(t *testing.T) {
 			if request.IncludedType != tt.wantType {
 				t.Errorf("included type = %q, want %q", request.IncludedType, tt.wantType)
 			}
-			if request.PageSize != 20 || request.LanguageCode != "zh-CN" || request.RegionCode != "CN" {
+			if request.PageSize != 20 || request.LanguageCode != tt.wantLanguage || request.RegionCode != "CN" {
 				t.Errorf("Shanghai request metadata = %#v", request)
 			}
 			if request.LocationRestriction == nil {

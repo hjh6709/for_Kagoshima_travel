@@ -1,4 +1,4 @@
-import { PlusCircle } from "lucide-react";
+import { CalendarPlus, PlusCircle } from "lucide-react";
 import { scheduleTypeOptions } from "../../../../shared/travelOptions";
 import type { ScheduleItem } from "../../../../types/travel";
 import type { TripManagePageProps } from "../../manageTypes";
@@ -79,20 +79,10 @@ export function ManageScheduleCreateForm({
     <section className="owner-linked-data-section">
       <div className="section-title-row compact-title-row">
         <div>
-          <h3>일정</h3>
-          <p className="section-caption">저장한 장소를 연결해 날짜별 여행 일정을 만듭니다.</p>
+          <h3>일정 추가</h3>
+          <p className="section-caption">날짜와 시간을 먼저 정하고, 저장한 장소는 필요할 때 연결하세요.</p>
         </div>
       </div>
-
-      {destinationCountry === "CN" && (
-        <ShanghaiStarterPlanner
-          onApply={applyShanghaiPlanItem}
-          ownerPlaces={ownerPlaces}
-          ownerSchedules={ownerSchedules}
-          tripEndDate={tripEndDate}
-          tripStartDate={tripStartDate}
-        />
-      )}
 
       <form className="auth-form compact-owner-form" id="schedule-create-form" onSubmit={onSubmitNewSchedule}>
         <div className="form-grid-two">
@@ -111,13 +101,16 @@ export function ManageScheduleCreateForm({
             시간
             <input
               onChange={(event) => onNewScheduleTimeChange(event.target.value)}
-              placeholder="예: 10:30"
               required
-              type="text"
+              type="time"
               value={newScheduleTime}
             />
           </label>
         </div>
+
+        {ownerPlaces.length === 0 && (
+          <p className="field-help">장소를 아직 저장하지 않아도 일정을 먼저 추가하고 나중에 연결할 수 있습니다.</p>
+        )}
 
         <div className="form-grid-two">
           <label>
@@ -184,6 +177,23 @@ export function ManageScheduleCreateForm({
           {scheduleCreateSubmitting ? "일정 추가 중" : "일정 추가"}
         </button>
       </form>
+
+      {destinationCountry === "CN" && (
+        <details className="schedule-recommendations">
+          <summary>
+            <CalendarPlus aria-hidden="true" size={18} />
+            <span>상하이 추천 일정 보기</span>
+            <small>선택 사항</small>
+          </summary>
+          <ShanghaiStarterPlanner
+            onApply={applyShanghaiPlanItem}
+            ownerPlaces={ownerPlaces}
+            ownerSchedules={ownerSchedules}
+            tripEndDate={tripEndDate}
+            tripStartDate={tripStartDate}
+          />
+        </details>
+      )}
     </section>
   );
 }
