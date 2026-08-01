@@ -73,8 +73,7 @@ func (s *AuthService) Register(req dto.RegisterRequest) (dto.AuthResponse, error
 			return dto.AuthResponse{}, errors.New("캡차 정답이 올바르지 않습니다")
 		}
 
-		storedCode, ok := s.verificationCodes.Load(strings.ToLower(req.Email))
-		if !ok || storedCode.(string) != req.Code {
+		if err := s.VerifyCode(req.Email, req.Code); err != nil {
 			return dto.AuthResponse{}, errors.New("이메일 인증코드가 일치하지 않거나 만료되었습니다")
 		}
 	}
@@ -486,7 +485,8 @@ func (s *AuthService) VerifyCode(email, code string) error {
 		return ErrInvalidVerificationCode
 	}
 
-	s.verificationCodes.Delete(cleanEmail)
+	// 사전 확인 단계에서는 코드를 소비하지 않습니다. 회원가입 또는 비밀번호 재설정이
+	// 실제로 성공한 뒤 각 작업에서 삭제해야 후속 요청이 같은 코드를 사용할 수 있습니다.
 	return nil
 }
 
