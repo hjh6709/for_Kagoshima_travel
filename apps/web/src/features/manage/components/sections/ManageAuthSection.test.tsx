@@ -82,4 +82,17 @@ describe("ManageAuthSection", () => {
     expect(screen.getByLabelText("이메일 인증 코드 (6자리)")).toHaveValue("");
     expect(screen.getByRole("button", { name: "인증코드 전송" })).toBeInTheDocument();
   });
+
+  it("서버 응답에 인증코드가 포함돼도 화면에 코드를 노출하지 않는다", async () => {
+    vi.mocked(sendVerificationCode).mockResolvedValue({ code: "123456" });
+    const user = userEvent.setup();
+    render(<AuthHarness />);
+
+    await user.type(screen.getByLabelText("이메일 주소"), "traveler@example.com");
+    await user.click(screen.getByRole("button", { name: "인증코드 전송" }));
+
+    expect(screen.queryByText("가상 이메일 수신 시뮬레이터")).not.toBeInTheDocument();
+    expect(screen.queryByText("123456")).not.toBeInTheDocument();
+    expect(screen.getByText("인증 메일 발송 완료")).toBeInTheDocument();
+  });
 });

@@ -27,7 +27,6 @@ export function ManageAuthSection({
   const [inputCode, setInputCode] = useState("");
   const [isCodeVerified, setIsCodeVerified] = useState(false);
   const [verifyingSubmitting, setVerifyingSubmitting] = useState(false);
-  const [verificationPopup, setVerificationPopup] = useState("");
   const [codeExpiresAt, setCodeExpiresAt] = useState<number | null>(null);
   const [toast, setToast] = useState<ToastMessage | null>(null);
 
@@ -41,7 +40,6 @@ export function ManageAuthSection({
   };
 
   const resetVerification = () => {
-    setVerificationPopup("");
     setCodeSent(false);
     setInputCode("");
     setIsCodeVerified(false);
@@ -74,7 +72,7 @@ export function ManageAuthSection({
     return () => window.clearTimeout(timeout);
   }, [codeExpiresAt]);
 
-  // 회원가입 폼에서 입력한 이메일 주소로 6자리 가상/실제 인증코드를 요청하는 핸들러입니다.
+  // 회원가입 폼에서 입력한 이메일 주소로 6자리 인증코드를 요청하는 핸들러입니다.
   // api/auth.ts 내 공통화된 통신 함수를 호출하여 주소 중복을 막고, catch 블록에서 세부 에러 응답을 매핑합니다.
   // 사용자가 입력한 6자리 인증 코드가 유효한지 백엔드와 사전 검증하는 핸들러입니다.
   const handleVerifyCodeSubmit = async () => {
@@ -107,17 +105,12 @@ export function ManageAuthSection({
     setIsCodeVerified(false);
     try {
       // 가입(register) 목적의 인증코드 발송임을 명시하여 중복 이메일 가입 방지 검증을 활성화합니다.
-      const data = await sendVerificationCode(authEmail, "register");
+      await sendVerificationCode(authEmail, "register");
 
       setCodeSent(true);
       setInputCode("");
       setCodeExpiresAt(Date.now() + 5 * 60 * 1000);
-      if (data.code) {
-        setVerificationPopup(data.code);
-      } else {
-        setVerificationPopup("");
-        showToast("기재하신 이메일 주소로 인증 메일이 실제로 전송되었습니다. 메일함을 확인해 주세요.", "success", "인증 메일 발송 완료");
-      }
+      showToast("입력한 이메일 주소로 인증코드를 보냈습니다. 메일함을 확인해 주세요.", "success", "인증 메일 발송 완료");
     } catch (err: any) {
       if (err.status === 409) {
         showToast("이미 등록된 이메일 주소입니다. 다른 이메일로 가입해 주세요.", "error", "가입 불가");
@@ -185,53 +178,7 @@ export function ManageAuthSection({
   }
 
   return (
-    <>
-      {verificationPopup && (
-        <div style={{
-          position: "fixed",
-          top: "16px",
-          left: "50%",
-          transform: "translateX(-50%)",
-          zIndex: 9999,
-          background: "var(--c-surface)",
-          border: "1px dashed var(--c-route)",
-          borderRadius: "12px",
-          padding: "14px 20px",
-          boxShadow: "0 8px 30px rgba(0,0,0,0.15)",
-          width: "90%",
-          maxWidth: "360px"
-        }}>
-          <span style={{ display: "block", fontSize: "11px", fontWeight: 700, color: "var(--c-route)", marginBottom: "4px" }}>
-            📨 가상 이메일 수신 시뮬레이터
-          </span>
-          <p style={{ fontSize: "13px", margin: 0, color: "var(--c-text)" }}>
-            인증 코드가 발급되었습니다: <strong style={{ fontSize: "16px", color: "var(--c-route)" }}>{verificationPopup}</strong>
-          </p>
-          <button
-            onClick={() => {
-              navigator.clipboard.writeText(verificationPopup);
-              alert("인증코드가 클립보드에 복사되었습니다!");
-              setVerificationPopup("");
-            }}
-            type="button"
-            style={{
-              marginTop: "10px",
-              width: "100%",
-              padding: "6px",
-              fontSize: "11px",
-              background: "var(--c-route)",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: "pointer",
-              fontWeight: 700
-            }}
-          >
-            📋 인증코드 복사 및 팝업 닫기
-          </button>
-        </div>
-      )}
-      <article className="info-card auth-card auth-card-premium">
+    <article className="info-card auth-card auth-card-premium">
       <div className="auth-brand-row">
         <div className="auth-brand-circle">
           <Compass className="auth-hero-icon" size={24} />
@@ -425,6 +372,5 @@ export function ManageAuthSection({
 
       <ToastNotification toast={toast} onClose={() => setToast(null)} />
     </article>
-    </>
   );
 }

@@ -3,9 +3,28 @@ package service
 import (
 	"testing"
 
+	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/dto"
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/model"
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/repository"
 )
+
+func TestCreateTripPreservesWorldwideDestinationCountry(t *testing.T) {
+	tripRepo := repository.NewMemoryTripRepository()
+	service := NewTripService(tripRepo, repository.NewMemoryChecklistRepository())
+
+	created, err := service.CreateTrip("owner-worldwide", dto.CreateTripRequest{
+		Title:              "서울 여행",
+		StartDate:          "2026-08-10",
+		EndDate:            "2026-08-12",
+		DestinationCountry: "KR",
+	})
+	if err != nil {
+		t.Fatalf("CreateTrip() error = %v", err)
+	}
+	if created.DestinationCountry != "KR" {
+		t.Fatalf("destinationCountry = %q, want KR", created.DestinationCountry)
+	}
+}
 
 func TestGetSharedTripSensitiveDataMasking(t *testing.T) {
 	tripRepo := repository.NewMemoryTripRepository()

@@ -570,8 +570,8 @@ func (s *TripService) CreateTrip(ownerID string, req dto.CreateTripRequest) (dto
 	if err != nil {
 		return dto.TripResponse{}, err
 	}
-	destCountry := req.DestinationCountry
-	if destCountry == "" || (destCountry != "JP" && destCountry != "CN") {
+	destCountry := strings.ToUpper(strings.TrimSpace(req.DestinationCountry))
+	if destCountry == "" {
 		destCountry = "JP"
 	}
 	trip := model.Trip{
