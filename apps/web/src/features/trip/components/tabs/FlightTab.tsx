@@ -65,7 +65,7 @@ function FlightJourneyCard({ flight, getDisplayDate }: FlightCardProps) {
 export function FlightTab({
   allChecklist,
   checkedItems,
-  editTripHref,
+  editFlightsHref,
   flights,
   getDisplayDate,
   isReadOnly,
@@ -84,10 +84,10 @@ export function FlightTab({
         <ProfileShortcutButton onClick={onNavigateToMyPage} />
       </div>
 
-      {editTripHref && (
+      {editFlightsHref && flights.length > 0 && (
         <div className="flight-manage-row">
           <span>항공편 정보가 실제 예약과 같은지 확인하세요.</span>
-          <a className="secondary-button compact-button" href={editTripHref}>
+          <a className="secondary-button compact-button" href={editFlightsHref}>
             항공편 관리
           </a>
         </div>
@@ -99,8 +99,8 @@ export function FlightTab({
           <div>
             <strong>등록된 항공편이 없습니다</strong>
             <p>출발·도착 공항과 시각을 등록하면 공항에서 바로 확인할 수 있어요.</p>
-            {editTripHref && (
-              <a className="primary-button compact-button" href={editTripHref}>
+            {editFlightsHref && (
+              <a className="primary-button compact-button" href={editFlightsHref}>
                 항공편 추가
               </a>
             )}

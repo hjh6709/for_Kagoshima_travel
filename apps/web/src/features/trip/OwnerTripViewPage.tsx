@@ -127,6 +127,9 @@ export function OwnerTripViewPage({ tripId }: OwnerTripViewPageProps) {
   return (
     <OwnerTripViewContent
       checklistItems={checklistItems}
+      editFlightsHref={`/manage/trips/${selectedOwnerTrip.id}/edit/flights`}
+      editPlacesHref={`/manage/trips/${selectedOwnerTrip.id}/edit/places`}
+      editSchedulesHref={`/manage/trips/${selectedOwnerTrip.id}/edit/schedules`}
       editTripHref={`/manage/trips/${selectedOwnerTrip.id}/edit`}
       newChecklistCategory={newChecklistCategory}
       newChecklistTitle={newChecklistTitle}

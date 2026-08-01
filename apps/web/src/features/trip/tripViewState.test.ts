@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { trip } from "../../data/sampleTrip";
-import { getSavedTripDates } from "./tripViewState";
+import { getInitialTripView, getSavedTripDates } from "./tripViewState";
 
 describe("demo tripViewState", () => {
   beforeEach(() => {
@@ -24,5 +24,12 @@ describe("demo tripViewState", () => {
       startDate: trip.startDate,
       endDate: trip.endDate,
     });
+  });
+
+  it("관리 화면에서 돌아온 항목의 탭을 바로 연다", () => {
+    expect(getInitialTripView("#schedule")).toEqual({ activeTab: "schedule", scheduleView: "itinerary" });
+    expect(getInitialTripView("#schedule-checklist")).toEqual({ activeTab: "schedule", scheduleView: "checklist" });
+    expect(getInitialTripView("#map")).toEqual({ activeTab: "map", scheduleView: "itinerary" });
+    expect(getInitialTripView("#unknown")).toEqual({ activeTab: "today", scheduleView: "itinerary" });
   });
 });

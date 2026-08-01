@@ -11,7 +11,7 @@ export function ConciergeTab({
   addressCopied,
   copyAccommodationAddress,
   emergencies,
-  editTripHref,
+  editPlacesHref,
   trip,
   onNavigateToMyPage,
 }: TripPageProps) {
@@ -58,7 +58,6 @@ export function ConciergeTab({
                 <h2>긴급 연락</h2>
                 <p className="section-caption">전화 연결 전 번호와 대상을 한 번 더 확인하세요.</p>
               </div>
-              {editTripHref && <a className="text-link" href={editTripHref}>관리</a>}
             </div>
 
             {emergencies.length === 0 ? (
@@ -98,6 +97,7 @@ export function ConciergeTab({
                 <h2>숙소 정보</h2>
                 <p className="section-caption">체크인과 이동 중 바로 꺼내 보는 정보입니다.</p>
               </div>
+              {editPlacesHref && <a className="text-link" href={editPlacesHref}>숙소 관리</a>}
             </div>
 
             {!hasAccommodation ? (
@@ -106,7 +106,7 @@ export function ConciergeTab({
                 <div>
                   <strong>등록된 숙소가 없습니다</strong>
                   <p>숙소 이름과 주소를 등록하면 현지에서 바로 확인할 수 있어요.</p>
-                  {editTripHref && <a className="text-link" href={editTripHref}>숙소 정보 관리</a>}
+                  {editPlacesHref && <a className="text-link" href={editPlacesHref}>숙소 정보 관리</a>}
                 </div>
               </article>
             ) : (

@@ -8,6 +8,15 @@ export type ChecklistCategory = ChecklistItem["category"];
 export type CustomChecklistItem = ChecklistItem & { custom: true };
 export type ScheduleOrderByDate = Record<string, string[]>;
 
+export function getInitialTripView(hash: string): { activeTab: Tab; scheduleView: "itinerary" | "checklist" } {
+  if (hash === "#map") return { activeTab: "map", scheduleView: "itinerary" };
+  if (hash === "#flight") return { activeTab: "flight", scheduleView: "itinerary" };
+  if (hash === "#schedule") return { activeTab: "schedule", scheduleView: "itinerary" };
+  if (hash === "#schedule-checklist") return { activeTab: "schedule", scheduleView: "checklist" };
+  if (hash === "#mypage") return { activeTab: "mypage", scheduleView: "itinerary" };
+  return { activeTab: "today", scheduleView: "itinerary" };
+}
+
 const demoStoragePrefix = "map-planner-shanghai-demo-v1";
 const tripStorageKeys = {
   tripDates: `${demoStoragePrefix}-trip-dates`,

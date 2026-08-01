@@ -29,7 +29,7 @@ import {
   saveOwnerTripDates,
 } from "./ownerTripAdapter";
 import type { TripPageProps } from "./tripPageTypes";
-import type { ChecklistCategory, ScheduleOrderByDate, Tab } from "./tripViewState";
+import { getInitialTripView, type ChecklistCategory, type ScheduleOrderByDate, type Tab } from "./tripViewState";
 
 type UseOwnerTripPageAdapterParams = {
   selectedOwnerTrip: OwnerTrip;
@@ -44,6 +44,9 @@ type UseOwnerTripPageAdapterParams = {
   onAddChecklistItem: (event: FormEvent<HTMLFormElement>) => void;
   onToggleChecklistItem: (itemID: string, isCompleted: boolean) => void;
   onDeleteChecklistItem: (itemID: string) => void;
+  editFlightsHref: string;
+  editPlacesHref: string;
+  editSchedulesHref: string;
   editTripHref: string;
 };
 
@@ -62,13 +65,17 @@ export function useOwnerTripPageAdapter({
   onAddChecklistItem,
   onToggleChecklistItem,
   onDeleteChecklistItem,
+  editFlightsHref,
+  editPlacesHref,
+  editSchedulesHref,
   editTripHref,
 }: UseOwnerTripPageAdapterParams): TripPageProps {
   const contentRef = useRef<HTMLDivElement>(null);
   const tripId = selectedOwnerTrip.id;
+  const initialView = getInitialTripView(window.location.hash);
 
-  const [activeTab, setActiveTab] = useState<Tab>("today");
-  const [scheduleView, setScheduleView] = useState<"itinerary" | "checklist">("itinerary");
+  const [activeTab, setActiveTab] = useState<Tab>(initialView.activeTab);
+  const [scheduleView, setScheduleView] = useState<"itinerary" | "checklist">(initialView.scheduleView);
   const [addressCopied, setAddressCopied] = useState(false);
   const [isChecklistEditing, setIsChecklistEditing] = useState(false);
   const [tripDates, setTripDatesState] = useState<TripDates>(() =>
@@ -219,6 +226,9 @@ export function useOwnerTripPageAdapter({
     completedSchedules,
     contentRef,
     dates,
+    editFlightsHref,
+    editPlacesHref,
+    editSchedulesHref,
     editTripHref,
     emergencies,
     flights,

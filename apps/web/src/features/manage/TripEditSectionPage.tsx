@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Compass } from "lucide-react";
 import { formatKoreanDate } from "../../shared/date";
-import type { EditSection } from "../../shared/manageRoute";
+import { getManageTripReturnPath, type EditSection } from "../../shared/manageRoute";
 import {
   ManageAuthSection,
   ManageChecklistSection,
@@ -103,8 +103,8 @@ export function TripEditSectionPage({ tripId, section }: TripEditSectionPageProp
                   {formatKoreanDate(selectedOwnerTrip.startDate)} ~ {formatKoreanDate(selectedOwnerTrip.endDate)}
                 </p>
               </div>
-              <a className="secondary-button compact-button" href={`/manage/trips/${selectedOwnerTrip.id}/edit`}>
-                편집 허브로
+              <a className="secondary-button compact-button" href={getManageTripReturnPath(selectedOwnerTrip.id, section)}>
+                여행으로
               </a>
             </div>
 

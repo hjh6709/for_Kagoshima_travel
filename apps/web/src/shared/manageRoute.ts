@@ -16,6 +16,19 @@ export function getManageTripEditorPath(tripId: string) {
   return `/manage/trips/${encodeURIComponent(tripId)}/edit`;
 }
 
+const EDIT_SECTION_RETURN_HASH: Record<EditSection, string> = {
+  basic: "today",
+  places: "map",
+  flights: "flight",
+  schedules: "schedule",
+  checklist: "schedule-checklist",
+  share: "mypage",
+};
+
+export function getManageTripReturnPath(tripId: string, section: EditSection) {
+  return `/manage/trips/${encodeURIComponent(tripId)}#${EDIT_SECTION_RETURN_HASH[section]}`;
+}
+
 export function navigateToManageTripEditor(tripId: string) {
   window.location.assign(getManageTripEditorPath(tripId));
 }
