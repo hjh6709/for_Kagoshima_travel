@@ -19,6 +19,7 @@ export function ScheduleTab({
   groupedChecklist,
   hiddenChecklistIDs,
   isDemo,
+  isReadOnly,
   isChecklistEditing,
   moveSchedule,
   newChecklistCategory,
@@ -97,6 +98,7 @@ export function ScheduleTab({
                   <ScheduleCard
                     index={index}
                     isCompleted={Boolean(isCompleted)}
+                    isReadOnly={isReadOnly}
                     isLast={index === selectedSchedules.length - 1}
                     item={item}
                     key={item.id}
@@ -114,7 +116,7 @@ export function ScheduleTab({
               <CalendarDays aria-hidden="true" size={22} />
               <div>
                 <strong>이 날짜에 등록된 일정이 없습니다</strong>
-                <p>여행 관리에서 장소를 일정에 연결하면 여기에 표시됩니다.</p>
+                <p>{isReadOnly ? "이 날짜에는 공유된 일정이 없습니다." : "여행 관리에서 장소를 일정에 연결하면 여기에 표시됩니다."}</p>
               </div>
             </article>
           )}
@@ -130,6 +132,7 @@ export function ScheduleTab({
             groupedChecklist={groupedChecklist}
             hiddenChecklistIDs={hiddenChecklistIDs}
             isChecklistEditing={isChecklistEditing}
+            isReadOnly={isReadOnly}
             newChecklistCategory={newChecklistCategory}
             newChecklistTitle={newChecklistTitle}
             removeChecklistItem={removeChecklistItem}

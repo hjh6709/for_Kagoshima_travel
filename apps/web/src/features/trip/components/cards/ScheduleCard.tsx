@@ -7,6 +7,7 @@ import type { Place, ScheduleItem } from "../../../../types/travel";
 type ScheduleCardProps = {
   index: number;
   isCompleted: boolean;
+  isReadOnly?: boolean;
   isLast: boolean;
   item: ScheduleItem;
   destinationCountry?: string;
@@ -20,6 +21,7 @@ type ScheduleCardProps = {
 export function ScheduleCard({
   index,
   isCompleted,
+  isReadOnly,
   isLast,
   item,
   destinationCountry,
@@ -62,36 +64,38 @@ export function ScheduleCard({
             </div>
           )
         )}
-        <div className="schedule-actions">
-          <button
-            className="secondary-button compact-button"
-            onClick={() => onToggleComplete(item.id)}
-            type="button"
-          >
-            <CheckCircle2 size={18} />
-            {isCompleted ? "완료 취소" : "완료"}
-          </button>
-          <div className="schedule-move-actions" aria-label={`${item.title} 순서 변경`}>
+        {!isReadOnly && (
+          <div className="schedule-actions">
             <button
-              aria-label={`${item.title} 위로 이동`}
-              className="icon-button neutral"
-              disabled={index === 0}
-              onClick={() => onMove(item.id, "up")}
+              className="secondary-button compact-button"
+              onClick={() => onToggleComplete(item.id)}
               type="button"
             >
-              <ArrowUp size={18} />
+              <CheckCircle2 size={18} />
+              {isCompleted ? "완료 취소" : "완료"}
             </button>
-            <button
-              aria-label={`${item.title} 아래로 이동`}
-              className="icon-button neutral"
-              disabled={isLast}
-              onClick={() => onMove(item.id, "down")}
-              type="button"
-            >
-              <ArrowDown size={18} />
-            </button>
+            <div className="schedule-move-actions" aria-label={`${item.title} 순서 변경`}>
+              <button
+                aria-label={`${item.title} 위로 이동`}
+                className="icon-button neutral"
+                disabled={index === 0}
+                onClick={() => onMove(item.id, "up")}
+                type="button"
+              >
+                <ArrowUp size={18} />
+              </button>
+              <button
+                aria-label={`${item.title} 아래로 이동`}
+                className="icon-button neutral"
+                disabled={isLast}
+                onClick={() => onMove(item.id, "down")}
+                type="button"
+              >
+                <ArrowDown size={18} />
+              </button>
+            </div>
           </div>
-        </div>
+        )}
         {place && (
           <div style={{ marginTop: "12px" }}>
             <MapDirectionsChoice destinationCountry={destinationCountry} place={place} />

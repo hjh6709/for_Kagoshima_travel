@@ -1,4 +1,4 @@
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Share2 } from "lucide-react";
 import { formatKoreanDate, type TravelPhase, type TripDates } from "../../../../shared/date";
 import { getDestinationCountryLabel } from "../../../../shared/travelOptions";
 import type { Trip } from "../../../../types/travel";
@@ -8,6 +8,7 @@ type TodayHeaderSectionProps = {
   travelStatus: { phase: TravelPhase; label: string; description: string };
   trip: Trip;
   tripDates: TripDates;
+  isReadOnly?: boolean;
   onNavigateToMyPage?: () => void;
 };
 
@@ -47,20 +48,30 @@ function getDDayLabel(startDateStr: string, endDateStr: string): { text: string;
 }
 
 // 여행 홈 상단의 제목, 기간, 현재 여행 상태를 더 풍부하게 표시한다.
-export function TodayHeaderSection({ travelStatus, trip, tripDates, onNavigateToMyPage }: TodayHeaderSectionProps) {
+export function TodayHeaderSection({ travelStatus, trip, tripDates, isReadOnly, onNavigateToMyPage }: TodayHeaderSectionProps) {
   const countryBadge = getCountryBadge(trip.destinationCountry);
   const dday = getDDayLabel(tripDates.startDate, tripDates.endDate);
 
   return (
-    <div className="trip-header">
+    <div className={`trip-header${isReadOnly ? " shared-trip-header" : ""}`}>
       <div className="trip-header-meta">
-        <a href="/manage" className="back-to-list-link" aria-label="여행 목록으로 이동">
+        <a
+          href={isReadOnly ? "/" : "/manage"}
+          className="back-to-list-link"
+          aria-label={isReadOnly ? "서비스 홈으로 이동" : "여행 목록으로 이동"}
+        >
           <ChevronLeft size={16} />
-          <span>목록으로</span>
+          <span>{isReadOnly ? "홈으로" : "목록으로"}</span>
         </a>
         <div className="trip-badges">
           <span className="badge-item country-badge">{countryBadge}</span>
           <span className={`badge-item dday-badge ${dday.className}`}>{dday.text}</span>
+          {isReadOnly && (
+            <span className="badge-item shared-view-badge">
+              <Share2 aria-hidden="true" size={14} />
+              공유 보기
+            </span>
+          )}
           <ProfileShortcutButton onClick={onNavigateToMyPage} />
         </div>
       </div>

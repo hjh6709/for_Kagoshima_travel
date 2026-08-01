@@ -8,6 +8,7 @@ type HomeChecklistSectionProps = {
   focusScheduleCount: number;
   homeChecklistCompletedCount: number;
   homeChecklistItems: ChecklistItem[];
+  isReadOnly?: boolean;
   onOpenChecklist: () => void;
   toggleCheck: (id: string) => void;
   travelPhase: TravelPhase;
@@ -20,6 +21,7 @@ export function HomeChecklistSection({
   focusScheduleCount,
   homeChecklistCompletedCount,
   homeChecklistItems,
+  isReadOnly,
   onOpenChecklist,
   toggleCheck,
   travelPhase,
@@ -76,18 +78,31 @@ export function HomeChecklistSection({
 
       <div className="home-checklist-card">
         {homeChecklistItems.length > 0 ? (
-          homeChecklistItems.map((item) => (
-            <button
-              aria-pressed={Boolean(checkedItems[item.id])}
-              className={`home-check-item${checkedItems[item.id] ? " completed" : ""}`}
-              key={item.id}
-              onClick={() => toggleCheck(item.id)}
-              type="button"
-            >
-              <CheckCircle2 className={checkedItems[item.id] ? "checked" : ""} size={22} />
-              <span>{item.title}</span>
-            </button>
-          ))
+          homeChecklistItems.map((item) => {
+            const content = (
+              <>
+                <CheckCircle2 className={checkedItems[item.id] ? "checked" : ""} size={22} />
+                <span>{item.title}</span>
+              </>
+            );
+            const className = `home-check-item${checkedItems[item.id] ? " completed" : ""}`;
+            return isReadOnly ? (
+              <div className={className} key={item.id}>
+                {content}
+                <span className="visually-hidden">{checkedItems[item.id] ? "완료" : "미완료"}</span>
+              </div>
+            ) : (
+              <button
+                aria-pressed={Boolean(checkedItems[item.id])}
+                className={className}
+                key={item.id}
+                onClick={() => toggleCheck(item.id)}
+                type="button"
+              >
+                {content}
+              </button>
+            );
+          })
         ) : (
           <p className="muted">지금 확인할 준비 항목이 없습니다.</p>
         )}
