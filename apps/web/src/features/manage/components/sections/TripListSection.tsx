@@ -1,4 +1,4 @@
-import { Compass, Trash2 } from "lucide-react";
+import { ArrowRight, CalendarDays, Compass, Trash2, UsersRound } from "lucide-react";
 import { formatKoreanDate } from "../../../../shared/date";
 import type { TripListSectionProps } from "../../manageTypes";
 
@@ -37,15 +37,23 @@ export function TripListSection({
             const isDeleting = deletingTripID === ownerTrip.id;
             return (
               <article className="owner-trip-card" key={ownerTrip.id} style={isDeleting ? { opacity: 0.6 } : undefined}>
-                <div style={{ flex: 1 }}>
+                <div className="owner-trip-summary">
                   <span className="pill subtle">여행</span>
                   <h2>{ownerTrip.title}</h2>
-                  <p className="muted">
+                  <p className="owner-trip-meta">
+                    <CalendarDays aria-hidden="true" size={16} />
                     {formatKoreanDate(ownerTrip.startDate)} ~ {formatKoreanDate(ownerTrip.endDate)}
                   </p>
-                  <p>{ownerTrip.travelers.length > 0 ? ownerTrip.travelers.join(", ") : "여행자 미입력"}</p>
+                  <p className="owner-trip-meta">
+                    <UsersRound aria-hidden="true" size={16} />
+                    {ownerTrip.travelers.length > 0 ? ownerTrip.travelers.join(", ") : "여행자 미입력"}
+                  </p>
                 </div>
-                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <div className="owner-trip-actions">
+                  <a className="primary-button compact-button" href={`/manage/trips/${ownerTrip.id}`}>
+                    여행 열기
+                    <ArrowRight aria-hidden="true" size={17} />
+                  </a>
                   <button
                     className="danger-button compact-button"
                     disabled={isDeleting}
@@ -60,9 +68,6 @@ export function TripListSection({
                   >
                     <Trash2 size={16} />
                   </button>
-                  <a className="secondary-button compact-button" href={`/manage/trips/${ownerTrip.id}`}>
-                    관리하기
-                  </a>
                 </div>
               </article>
             );
