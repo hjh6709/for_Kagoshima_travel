@@ -1,4 +1,4 @@
-import { ManageAuthSection, ManageFlowGuide, ManageHeader, TripCreateSection, TripListSection } from "./components";
+import { ManageAuthSection, ManageHeader, TripCreateSection, TripListSection } from "./components";
 import type { TripManagePageProps } from "./manageTypes";
 
 // API 호출과 세션 상태는 useTripManageController가 담당한다.
@@ -16,7 +16,6 @@ export function TripManagePage(props: TripManagePageProps) {
             {authChecked && auth && (
               <>
                 <ManageHeader auth={auth} onLogout={onLogout} />
-                <ManageFlowGuide hasSelectedTrip={false} tripCount={ownerTrips.length} />
                 <TripListSection {...props} />
                 <TripCreateSection {...props} />
               </>

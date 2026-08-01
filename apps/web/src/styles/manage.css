@@ -12,19 +12,70 @@
 
 .owner-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
+  padding-bottom: 4px;
+}
+
+.owner-header h1 {
+  margin: 4px 0 2px;
+}
+
+.owner-account-email {
+  margin: 0;
+  color: var(--c-muted);
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .owner-trip-card {
   background: var(--c-surface);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card);
   display: grid;
   gap: 14px;
-  padding: 22px;
+  padding: 18px;
+}
+
+.owner-trip-summary {
+  min-width: 0;
+}
+
+.owner-trip-summary h2 {
+  margin: 10px 0 12px;
+}
+
+.owner-trip-meta {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 6px 0 0;
+  color: var(--c-muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.owner-trip-meta svg {
+  flex: 0 0 auto;
+  color: var(--c-route);
+}
+
+.owner-trip-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.owner-trip-actions .primary-button {
+  width: auto;
+  flex: 1;
+}
+
+.owner-trip-actions .danger-button {
+  width: 44px;
+  min-width: 44px;
+  padding: 8px;
 }
 
 .start-screen {
