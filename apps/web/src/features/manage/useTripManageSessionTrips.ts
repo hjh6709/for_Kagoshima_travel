@@ -201,13 +201,11 @@ export function useTripManageSessionTrips({
       const email = authEmail.trim();
       const formData = new FormData(event.currentTarget);
       const code = (formData.get("code") as string) || (formData.get("verificationCode") as string) || "";
-      const captchaAnswer = parseInt((formData.get("captchaAnswer") as string) || "0");
-      const captchaKey = (formData.get("captchaKey") as string) || "";
 
       const response =
         authMode === "login"
           ? await login(email, authPassword)
-          : await register(email, authPassword, code, captchaAnswer, captchaKey);
+          : await register(email, authPassword, code);
       setOwnerAuth(response);
       setAuthPassword("");
       window.localStorage.setItem(ownerAuthStorageKey, JSON.stringify(response));

@@ -3,12 +3,14 @@ package service
 import (
 	"bufio"
 	"bytes"
+	"crypto/hmac"
 	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
-	"html"
 	"math/big"
 	"net/http"
 	"net/mail"
@@ -16,7 +18,6 @@ import (
 	"net/textproto"
 	"os"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/auth"
@@ -30,34 +31,38 @@ var (
 	ErrEmailTaken              = errors.New("email already taken")
 	ErrInvalidInput            = errors.New("invalid input")
 	ErrInvalidVerificationCode = errors.New("invalid verification code")
+	ErrVerificationRateLimit   = errors.New("하루에 최대 3회까지만 인증코드를 요청할 수 있습니다")
+	ErrEmailNotFound           = errors.New("가입되어 있지 않은 이메일 주소입니다")
+	ErrEmailDelivery           = errors.New("이메일을 전송하지 못했습니다")
+	ErrCurrentPasswordMismatch = errors.New("현재 비밀번호가 일치하지 않습니다")
 	ErrPasswordComplexity      = errors.New("비밀번호는 영문 대문자, 소문자, 숫자, 특수문자가 각각 1개 이상 포함되어야 합니다")
 )
 
-type RateLimitEntry struct {
-	Count      int
-	LastAccess time.Time
-}
-
-type verificationItem struct {
-	code      string
-	expiresAt time.Time
-}
+const (
+	maxDailyVerificationSends = 3
+	maxVerificationAttempts   = 5
+)
 
 type AuthService struct {
-	userRepo          repository.UserRepository
-	jwtSecret         string
-	verificationCodes sync.Map
-	rateLimits        sync.Map // 하루 3회 이메일 전송 제한을 추적하는 인메모리 맵입니다.
+	userRepo         repository.UserRepository
+	verificationRepo repository.VerificationRepository
+	jwtSecret        string
 }
 
-func NewAuthService(userRepo repository.UserRepository, jwtSecret string) *AuthService {
+func NewAuthService(
+	userRepo repository.UserRepository,
+	verificationRepo repository.VerificationRepository,
+	jwtSecret string,
+) *AuthService {
 	return &AuthService{
-		userRepo:  userRepo,
-		jwtSecret: jwtSecret,
+		userRepo:         userRepo,
+		verificationRepo: verificationRepo,
+		jwtSecret:        jwtSecret,
 	}
 }
 
 func (s *AuthService) Register(req dto.RegisterRequest) (dto.AuthResponse, error) {
+	req.Email = normalizeEmail(req.Email)
 	if err := validateRegister(req); err != nil {
 		return dto.AuthResponse{}, err
 	}
@@ -67,14 +72,13 @@ func (s *AuthService) Register(req dto.RegisterRequest) (dto.AuthResponse, error
 		return dto.AuthResponse{}, err
 	}
 
-	// Captcha 및 이메일 인증코드 검증 (테스트 환경이 아닐 때만 필수 실행)
+	// 이메일 인증코드는 실제 회원가입이 성공하기 전까지 소비하지 않습니다.
 	if !isTesting() {
-		if !validateCaptcha(req.CaptchaKey, req.CaptchaAnswer) {
-			return dto.AuthResponse{}, errors.New("캡차 정답이 올바르지 않습니다")
-		}
-
-		if err := s.VerifyCode(req.Email, req.Code); err != nil {
-			return dto.AuthResponse{}, errors.New("이메일 인증코드가 일치하지 않거나 만료되었습니다")
+		if err := s.VerifyCode(req.Email, "register", req.Code); err != nil {
+			if errors.Is(err, ErrInvalidVerificationCode) || errors.Is(err, ErrInvalidInput) {
+				return dto.AuthResponse{}, ErrInvalidVerificationCode
+			}
+			return dto.AuthResponse{}, err
 		}
 	}
 
@@ -90,9 +94,17 @@ func (s *AuthService) Register(req dto.RegisterRequest) (dto.AuthResponse, error
 
 	user := model.User{
 		ID:        id,
-		Email:     strings.ToLower(req.Email),
+		Email:     req.Email,
 		Password:  hashed,
 		CreatedAt: time.Now(),
+	}
+
+	// 코드 소비가 실패했는데 계정만 생성되는 부분 성공을 막기 위해 저장 전에 소비합니다.
+	if !isTesting() {
+		codeHash := s.hashVerificationCode(req.Email, "register", strings.TrimSpace(req.Code))
+		if err := s.verificationRepo.Consume(req.Email, "register", codeHash, time.Now()); err != nil {
+			return dto.AuthResponse{}, fmt.Errorf("consume registration verification: %w", err)
+		}
 	}
 
 	if err := s.userRepo.Save(user); err != nil {
@@ -102,16 +114,11 @@ func (s *AuthService) Register(req dto.RegisterRequest) (dto.AuthResponse, error
 		return dto.AuthResponse{}, err
 	}
 
-	// 회원가입 성공 후, 동일 코드가 재사용되는 것을 방어하기 위해 인증 캐시를 즉시 삭제합니다.
-	if !isTesting() {
-		s.verificationCodes.Delete(strings.ToLower(req.Email))
-	}
-
 	return s.issueAuthResponse(user)
 }
 
 func (s *AuthService) Login(req dto.LoginRequest) (dto.AuthResponse, error) {
-	user, err := s.userRepo.FindByEmail(strings.ToLower(req.Email))
+	user, err := s.userRepo.FindByEmail(normalizeEmail(req.Email))
 	if err != nil {
 		return dto.AuthResponse{}, ErrInvalidCredentials
 	}
@@ -135,7 +142,7 @@ func (s *AuthService) issueAuthResponse(user model.User) (dto.AuthResponse, erro
 }
 
 func validateRegister(req dto.RegisterRequest) error {
-	if !strings.Contains(req.Email, "@") || len(req.Email) < 5 {
+	if err := validateEmail(req.Email); err != nil {
 		return ErrInvalidInput
 	}
 	if len(req.Password) < 8 {
@@ -146,15 +153,22 @@ func validateRegister(req dto.RegisterRequest) error {
 
 // 비밀번호 토글 및 찾기 기능 관련 유틸 및 비즈니스 로직
 func (s *AuthService) ForgotPassword(email string, code string) (string, error) {
-	user, err := s.userRepo.FindByEmail(strings.ToLower(email))
+	email = normalizeEmail(email)
+	user, err := s.userRepo.FindByEmail(email)
 	if err != nil {
-		return "", errors.New("존재하지 않는 이메일 주소입니다")
+		if errors.Is(err, repository.ErrNotFound) {
+			return "", ErrEmailNotFound
+		}
+		return "", err
 	}
 
 	// 비밀번호 재설정 시 이메일 인증코드 대조 검증 (테스트 아닐 때 필수)
 	if !isTesting() {
-		if err := s.VerifyCode(email, code); err != nil {
-			return "", errors.New("이메일 인증코드가 일치하지 않거나 만료되었습니다")
+		if err := s.VerifyCode(email, "forgot", code); err != nil {
+			if errors.Is(err, ErrInvalidVerificationCode) || errors.Is(err, ErrInvalidInput) {
+				return "", ErrInvalidVerificationCode
+			}
+			return "", err
 		}
 	}
 
@@ -164,26 +178,32 @@ func (s *AuthService) ForgotPassword(email string, code string) (string, error) 
 		return "", err
 	}
 
-	if err := s.userRepo.UpdatePassword(user.Email, hashed); err != nil {
-		return "", err
+	// 코드 소비 실패 후 비밀번호만 바뀌어 임시 비밀번호를 잃는 부분 성공을 막습니다.
+	if !isTesting() {
+		codeHash := s.hashVerificationCode(email, "forgot", strings.TrimSpace(code))
+		if err := s.verificationRepo.Consume(email, "forgot", codeHash, time.Now()); err != nil {
+			return "", fmt.Errorf("consume password verification: %w", err)
+		}
 	}
 
-	// 임시 비밀번호 발급 성공 후, 동일 코드가 재사용되는 것을 방어하기 위해 인증 캐시를 즉시 삭제합니다.
-	if !isTesting() {
-		s.verificationCodes.Delete(strings.ToLower(email))
+	if err := s.userRepo.UpdatePassword(user.Email, hashed); err != nil {
+		return "", err
 	}
 
 	return tempPassword, nil
 }
 
 func (s *AuthService) ChangePassword(email string, currentPassword string, newPassword string) error {
-	user, err := s.userRepo.FindByEmail(strings.ToLower(email))
+	user, err := s.userRepo.FindByEmail(normalizeEmail(email))
 	if err != nil {
-		return errors.New("존재하지 않는 사용자입니다")
+		if errors.Is(err, repository.ErrNotFound) {
+			return ErrEmailNotFound
+		}
+		return err
 	}
 
 	if !auth.CheckPassword(currentPassword, user.Password) {
-		return errors.New("현재 비밀번호가 일치하지 않습니다")
+		return ErrCurrentPasswordMismatch
 	}
 
 	// 새 비밀번호 복잡성 검증
@@ -268,55 +288,29 @@ func cryptoRandInt(max int64) (int64, error) {
 // 이메일 주소로 회원가입 또는 비밀번호 재설정 목적의 6자리 인증코드를 전송하는 메서드입니다.
 // SMTP 환경 변수가 주입되어 있다면 실제 메일이 전송되고, 그렇지 않다면 가상 시뮬레이터 연동용 코드를 반환합니다.
 func (s *AuthService) SendVerificationCode(email string, purpose string) (string, error) {
-	if email == "" {
-		return "", errors.New("이메일을 입력해 주세요")
-	}
-
-	normalizedEmail := strings.ToLower(email)
-
-	// RFC 5322 이메일 포맷 규격을 준수하는지 net/mail 패키지로 정밀 구문 파싱 검증하여 인젝션 공격을 예방합니다.
-	parsedAddr, err := mail.ParseAddress(normalizedEmail)
-	if err != nil || parsedAddr.Address != normalizedEmail {
+	cleanEmail := normalizeEmail(email)
+	if err := validateEmail(cleanEmail); err != nil {
 		return "", errors.New("올바르지 않은 이메일 형식입니다")
 	}
-	// CodeQL Taint Analyzer가 안전한 살균 완료 상태로 확실히 인지하게끔 html.EscapeString을 명시적으로 적용합니다.
-	cleanEmail := html.EscapeString(parsedAddr.Address)
-
-	// 테스트 환경이 아닐 때만 하루 최대 3회 제한 검사를 수행합니다.
-	if !isTesting() {
-		now := time.Now()
-		if val, ok := s.rateLimits.Load(cleanEmail); ok {
-			entry := val.(RateLimitEntry)
-			// 마지막 발송 날짜와 오늘의 날짜가 같은지 확인하여 횟수를 제한합니다.
-			if entry.LastAccess.Format("2006-01-02") == now.Format("2006-01-02") {
-				if entry.Count >= 3 {
-					return "", errors.New("하루에 최대 3회까지만 인증코드를 요청할 수 있습니다")
-				}
-				entry.Count++
-			} else {
-				// 날짜가 달라졌다면 카운트를 1로 리셋합니다.
-				entry.Count = 1
-			}
-			entry.LastAccess = now
-			s.rateLimits.Store(cleanEmail, entry)
-		} else {
-			// 첫 요청인 경우 기록을 새로 생성합니다.
-			s.rateLimits.Store(cleanEmail, RateLimitEntry{
-				Count:      1,
-				LastAccess: now,
-			})
-		}
+	if purpose != "register" && purpose != "forgot" {
+		return "", ErrInvalidInput
 	}
 
 	// 목적별 이메일 존재 유무 사전 확인 (중복 가입 방어 및 유효 계정 타겟 발송)
 	_, findErr := s.userRepo.FindByEmail(cleanEmail)
 	if purpose == "register" {
 		if findErr == nil {
-			return "", errors.New("이미 등록된 이메일 주소입니다")
+			return "", ErrEmailTaken
+		}
+		if !errors.Is(findErr, repository.ErrNotFound) {
+			return "", fmt.Errorf("find registration email: %w", findErr)
 		}
 	} else if purpose == "forgot" {
+		if errors.Is(findErr, repository.ErrNotFound) {
+			return "", ErrEmailNotFound
+		}
 		if findErr != nil {
-			return "", errors.New("가입되어 있지 않은 이메일 주소입니다")
+			return "", fmt.Errorf("find password email: %w", findErr)
 		}
 	}
 
@@ -325,11 +319,21 @@ func (s *AuthService) SendVerificationCode(email string, purpose string) (string
 		return "", err
 	}
 	code := fmt.Sprintf("%06d", num.Int64()+100000) // 100000 ~ 999999
-	expiresAt := time.Now().Add(5 * time.Minute)
-	s.verificationCodes.Store(cleanEmail, verificationItem{
-		code:      code,
-		expiresAt: expiresAt,
-	})
+	now := time.Now()
+	expiresAt := now.Add(5 * time.Minute)
+	if err := s.verificationRepo.Issue(
+		cleanEmail,
+		purpose,
+		s.hashVerificationCode(cleanEmail, purpose, code),
+		expiresAt,
+		now,
+		maxDailyVerificationSends,
+	); err != nil {
+		if errors.Is(err, repository.ErrVerificationRateLimit) {
+			return "", ErrVerificationRateLimit
+		}
+		return "", fmt.Errorf("store verification challenge: %w", err)
+	}
 
 	// Resend API 키가 주입되어 있고 테스트 환경이 아니라면 Resend HTTP API로 실제 메일을 전송합니다.
 	resendKey := os.Getenv("RESEND_API_KEY")
@@ -426,7 +430,7 @@ func (s *AuthService) SendVerificationCode(email string, purpose string) (string
 		}
 
 		if err := smtp.SendMail(addr, authClient, smtpUser, []string{cleanEmail}, buf.Bytes()); err != nil {
-			return "", fmt.Errorf("실제 이메일 인증코드 발송 도중 오류가 발생했습니다: %v", err)
+			return "", fmt.Errorf("%w: %v", ErrEmailDelivery, err)
 		}
 
 		// 실제 이메일 발송에 성공했다면 브라우저 네트워크 응답에 인증 코드가 노출되지 않도록 은닉 처리합니다.
@@ -435,59 +439,78 @@ func (s *AuthService) SendVerificationCode(email string, purpose string) (string
 
 	// 운영 환경에서는 SMTP/Resend 설정이 없거나 발송이 실패하더라도 보안상 인증 코드를 절대 반환하지 않습니다.
 	if isProduction() {
-		return "", errors.New("이메일 발송 장치 설정이 비정상적이거나 발송에 실패했습니다. 관리자에게 문의하세요")
+		return "", ErrEmailDelivery
 	}
 
 	// SMTP 설정이 없는 로컬 개발/테스트 모드인 경우 시뮬레이터 배너 노출용 원본 코드를 그대로 반환합니다.
 	return code, nil
 }
 
-func validateCaptcha(key string, answer int) bool {
-	var valA, valB int
-	n, err := fmt.Sscanf(key, "%d+%d", &valA, &valB)
-	if err == nil && n == 2 {
-		return valA+valB == answer
-	}
-	n, err = fmt.Sscanf(key, "%d-%d", &valA, &valB)
-	if err == nil && n == 2 {
-		return valA-valB == answer
-	}
-	return false
-}
-
-func (s *AuthService) VerifyCode(email, code string) error {
-	cleanEmail := strings.ToLower(strings.TrimSpace(email))
+func (s *AuthService) VerifyCode(email, purpose, code string) error {
+	cleanEmail := normalizeEmail(email)
 	cleanCode := strings.TrimSpace(code)
-	if cleanEmail == "" || cleanCode == "" {
+	if cleanEmail == "" || !isSixDigitCode(cleanCode) || (purpose != "register" && purpose != "forgot") {
 		return ErrInvalidInput
 	}
 
-	val, ok := s.verificationCodes.Load(cleanEmail)
-	if !ok {
+	challenge, err := s.verificationRepo.Find(cleanEmail, purpose)
+	if errors.Is(err, repository.ErrNotFound) {
+		return ErrInvalidVerificationCode
+	}
+	if err != nil {
+		return fmt.Errorf("find verification challenge: %w", err)
+	}
+
+	if challenge.ConsumedAt != nil || challenge.Attempts >= maxVerificationAttempts || time.Now().After(challenge.ExpiresAt) {
 		return ErrInvalidVerificationCode
 	}
 
-	item, ok := val.(verificationItem)
-	if !ok {
-		storedCode, ok := val.(string)
-		if !ok || storedCode != cleanCode {
-			return ErrInvalidVerificationCode
+	wantHash := s.hashVerificationCode(cleanEmail, purpose, cleanCode)
+	if !hmac.Equal([]byte(challenge.CodeHash), []byte(wantHash)) {
+		if _, err := s.verificationRepo.RecordFailedAttempt(cleanEmail, purpose, time.Now()); err != nil {
+			return fmt.Errorf("record verification failure: %w", err)
 		}
-		return nil
-	}
-
-	if time.Now().After(item.expiresAt) {
-		s.verificationCodes.Delete(cleanEmail)
-		return errors.New("인증 코드가 만료되었습니다. 다시 발송해 주세요")
-	}
-
-	if item.code != cleanCode {
 		return ErrInvalidVerificationCode
 	}
 
-	// 사전 확인 단계에서는 코드를 소비하지 않습니다. 회원가입 또는 비밀번호 재설정이
-	// 실제로 성공한 뒤 각 작업에서 삭제해야 후속 요청이 같은 코드를 사용할 수 있습니다.
 	return nil
+}
+
+func normalizeEmail(email string) string {
+	return strings.ToLower(strings.TrimSpace(email))
+}
+
+func validateEmail(email string) error {
+	if email == "" {
+		return ErrInvalidInput
+	}
+	parsedAddr, err := mail.ParseAddress(email)
+	if err != nil || parsedAddr.Address != email {
+		return ErrInvalidInput
+	}
+	return nil
+}
+
+func isSixDigitCode(code string) bool {
+	if len(code) != 6 {
+		return false
+	}
+	for _, character := range code {
+		if character < '0' || character > '9' {
+			return false
+		}
+	}
+	return true
+}
+
+func (s *AuthService) hashVerificationCode(email, purpose, code string) string {
+	mac := hmac.New(sha256.New, []byte(s.jwtSecret))
+	_, _ = mac.Write([]byte(email))
+	_, _ = mac.Write([]byte("\x00"))
+	_, _ = mac.Write([]byte(purpose))
+	_, _ = mac.Write([]byte("\x00"))
+	_, _ = mac.Write([]byte(code))
+	return hex.EncodeToString(mac.Sum(nil))
 }
 
 func isProduction() bool {

@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/dto"
@@ -35,13 +36,11 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 			httpjson.WriteError(w, http.StatusBadRequest, err.Error())
 		case errors.Is(err, service.ErrInvalidInput):
 			httpjson.WriteError(w, http.StatusBadRequest, "이메일 또는 비밀번호가 올바르지 않습니다.")
+		case errors.Is(err, service.ErrInvalidVerificationCode):
+			httpjson.WriteError(w, http.StatusBadRequest, "이메일 인증코드가 일치하지 않거나 만료되었습니다.")
 		default:
-			// 커스텀 리턴 에러(예: 8자 미만, 인증코드 불일치)는 400 Bad Request 로 메시지 전달
-			if err.Error() != "" {
-				httpjson.WriteError(w, http.StatusBadRequest, err.Error())
-			} else {
-				httpjson.WriteError(w, http.StatusInternalServerError, "서버 오류가 발생했습니다.")
-			}
+			log.Printf("register user: %v", err)
+			httpjson.WriteError(w, http.StatusInternalServerError, "회원가입을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.")
 		}
 		return
 	}
@@ -93,7 +92,15 @@ func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 
 	tempPass, err := h.authService.ForgotPassword(req.Email, req.Code)
 	if err != nil {
-		httpjson.WriteError(w, http.StatusBadRequest, err.Error())
+		switch {
+		case errors.Is(err, service.ErrEmailNotFound):
+			httpjson.WriteError(w, http.StatusBadRequest, err.Error())
+		case errors.Is(err, service.ErrInvalidVerificationCode), errors.Is(err, service.ErrInvalidInput):
+			httpjson.WriteError(w, http.StatusBadRequest, "이메일 인증코드가 일치하지 않거나 만료되었습니다.")
+		default:
+			log.Printf("reset password: %v", err)
+			httpjson.WriteError(w, http.StatusInternalServerError, "비밀번호 재설정을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.")
+		}
 		return
 	}
 
@@ -117,7 +124,15 @@ func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 
 	err := h.authService.ChangePassword(claims.Email, req.CurrentPassword, req.NewPassword)
 	if err != nil {
-		httpjson.WriteError(w, http.StatusBadRequest, err.Error())
+		switch {
+		case errors.Is(err, service.ErrEmailNotFound),
+			errors.Is(err, service.ErrCurrentPasswordMismatch),
+			errors.Is(err, service.ErrPasswordComplexity):
+			httpjson.WriteError(w, http.StatusBadRequest, err.Error())
+		default:
+			log.Printf("change password: %v", err)
+			httpjson.WriteError(w, http.StatusInternalServerError, "비밀번호 변경을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.")
+		}
 		return
 	}
 
@@ -133,7 +148,22 @@ func (h *AuthHandler) SendVerificationCode(w http.ResponseWriter, r *http.Reques
 
 	code, err := h.authService.SendVerificationCode(req.Email, req.Purpose)
 	if err != nil {
-		httpjson.WriteError(w, http.StatusBadRequest, err.Error())
+		switch {
+		case errors.Is(err, service.ErrEmailTaken):
+			httpjson.WriteError(w, http.StatusConflict, "이미 등록된 이메일 주소입니다.")
+		case errors.Is(err, service.ErrEmailNotFound):
+			httpjson.WriteError(w, http.StatusBadRequest, err.Error())
+		case errors.Is(err, service.ErrVerificationRateLimit):
+			httpjson.WriteError(w, http.StatusTooManyRequests, err.Error())
+		case errors.Is(err, service.ErrInvalidInput):
+			httpjson.WriteError(w, http.StatusBadRequest, "이메일 주소 또는 인증 목적이 올바르지 않습니다.")
+		case errors.Is(err, service.ErrEmailDelivery):
+			log.Printf("send verification email: %v", err)
+			httpjson.WriteError(w, http.StatusBadGateway, "인증 메일을 보내지 못했습니다. 잠시 후 다시 시도해 주세요.")
+		default:
+			log.Printf("prepare verification email: %v", err)
+			httpjson.WriteError(w, http.StatusInternalServerError, "인증 요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.")
+		}
 		return
 	}
 
@@ -147,8 +177,13 @@ func (h *AuthHandler) VerifyCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.authService.VerifyCode(req.Email, req.Code); err != nil {
-		httpjson.WriteError(w, http.StatusBadRequest, "인증 코드가 일치하지 않거나 만료되었습니다.")
+	if err := h.authService.VerifyCode(req.Email, req.Purpose, req.Code); err != nil {
+		if errors.Is(err, service.ErrInvalidVerificationCode) || errors.Is(err, service.ErrInvalidInput) {
+			httpjson.WriteError(w, http.StatusBadRequest, "인증 코드가 일치하지 않거나 만료되었습니다.")
+			return
+		}
+		log.Printf("verify email code: %v", err)
+		httpjson.WriteError(w, http.StatusInternalServerError, "인증 요청을 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.")
 		return
 	}
 

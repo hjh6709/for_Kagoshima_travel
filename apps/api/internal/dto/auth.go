@@ -1,11 +1,9 @@
 package dto
 
 type RegisterRequest struct {
-	Email         string `json:"email"`
-	Password      string `json:"password"`
-	Code          string `json:"code"`
-	CaptchaAnswer int    `json:"captchaAnswer"`
-	CaptchaKey    string `json:"captchaKey"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	Code     string `json:"code"`
 }
 
 type LoginRequest struct {
@@ -51,6 +49,7 @@ type SendVerificationCodeResponse struct {
 }
 
 type VerifyCodeRequest struct {
-	Email string `json:"email"`
-	Code  string `json:"code"`
+	Email   string `json:"email"`
+	Purpose string `json:"purpose"`
+	Code    string `json:"code"`
 }

@@ -475,6 +475,12 @@
   padding: 28px 24px;
 }
 
+.auth-card-premium h1 {
+  max-width: 100%;
+  font-size: clamp(26px, 8vw, 30px);
+  text-wrap: balance;
+}
+
 .auth-brand-row {
   display: flex;
   align-items: center;
@@ -512,6 +518,34 @@
   font-size: 13px;
   font-weight: 700;
   color: var(--c-muted);
+}
+
+.auth-field-label > label {
+  color: var(--c-text);
+}
+
+.auth-verification-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  min-width: 0;
+}
+
+.auth-verification-row > input {
+  min-width: 0;
+}
+
+.auth-code-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.auth-field-hint {
+  margin: 0;
+  color: var(--c-muted);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
 }
 
 .auth-field-label span {
@@ -707,6 +741,20 @@
 }
 
 @media (max-width: 360px) {
+  .auth-verification-row {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-verification-row > .secondary-button,
+  .auth-verification-row > .auth-code-actions {
+    width: 100%;
+  }
+
+  .auth-code-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
   .forgot-password-overlay {
     padding-right: 16px;
     padding-left: 16px;

@@ -9,6 +9,22 @@ CREATE TABLE users (
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE auth_verification_challenges (
+    email         TEXT NOT NULL,
+    purpose       TEXT NOT NULL CHECK (purpose IN ('register', 'forgot')),
+    code_hash     TEXT NOT NULL,
+    expires_at    TIMESTAMPTZ NOT NULL,
+    attempts      INTEGER NOT NULL DEFAULT 0 CHECK (attempts >= 0),
+    request_count INTEGER NOT NULL DEFAULT 1 CHECK (request_count >= 1),
+    request_date  DATE NOT NULL,
+    consumed_at   TIMESTAMPTZ,
+    updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (email, purpose)
+);
+
+CREATE INDEX auth_verification_challenges_expires_at_idx
+    ON auth_verification_challenges (expires_at);
+
 CREATE TABLE trips (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     owner_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,

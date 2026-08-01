@@ -22,13 +22,13 @@ export function ManageAuthSection({
   const [showPassword, setShowPassword] = useState(false);
   const [isForgotMode, setIsForgotMode] = useState(false);
 
-  const [captchaQuestion, setCaptchaQuestion] = useState("");
   const [sendSubmitting, setSendSubmitting] = useState(false);
   const [codeSent, setCodeSent] = useState(false);
   const [inputCode, setInputCode] = useState("");
   const [isCodeVerified, setIsCodeVerified] = useState(false);
   const [verifyingSubmitting, setVerifyingSubmitting] = useState(false);
   const [verificationPopup, setVerificationPopup] = useState("");
+  const [codeExpiresAt, setCodeExpiresAt] = useState<number | null>(null);
   const [toast, setToast] = useState<ToastMessage | null>(null);
 
   const showToast = (message: string, type: ToastType = "info", title?: string) => {
@@ -40,25 +40,39 @@ export function ManageAuthSection({
     });
   };
 
-  const regenerateCaptcha = () => {
-    const valA = Math.floor(Math.random() * 15) + 1;
-    const valB = Math.floor(Math.random() * 9) + 1;
-    const isAdd = Math.random() > 0.5;
-    if (isAdd) {
-      setCaptchaQuestion(`${valA}+${valB}`);
-    } else {
-      setCaptchaQuestion(`${valA + valB}-${valA}`);
-    }
+  const resetVerification = () => {
+    setVerificationPopup("");
+    setCodeSent(false);
+    setInputCode("");
+    setIsCodeVerified(false);
+    setVerifyingSubmitting(false);
+    setCodeExpiresAt(null);
   };
 
   useEffect(() => {
-    if (authMode === "register") {
-      regenerateCaptcha();
-    } else {
-      setVerificationPopup("");
-      setCodeSent(false);
-    }
+    resetVerification();
   }, [authMode]);
+
+  useEffect(() => {
+    if (!codeExpiresAt) return;
+
+    const remaining = codeExpiresAt - Date.now();
+    if (remaining <= 0) {
+      resetVerification();
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      resetVerification();
+      setToast({
+        id: Date.now().toString(),
+        type: "warning",
+        title: "인증코드 만료",
+        message: "인증코드 유효 시간이 지났습니다. 새 코드를 받아 주세요.",
+      });
+    }, remaining);
+    return () => window.clearTimeout(timeout);
+  }, [codeExpiresAt]);
 
   // 회원가입 폼에서 입력한 이메일 주소로 6자리 가상/실제 인증코드를 요청하는 핸들러입니다.
   // api/auth.ts 내 공통화된 통신 함수를 호출하여 주소 중복을 막고, catch 블록에서 세부 에러 응답을 매핑합니다.
@@ -73,7 +87,7 @@ export function ManageAuthSection({
     }
     setVerifyingSubmitting(true);
     try {
-      await verifyCode(targetEmail, targetCode);
+      await verifyCode(targetEmail, "register", targetCode);
       setIsCodeVerified(true);
       showToast("이메일 소유권 인증이 성공적으로 완료되었습니다!", "success", "인증 완료");
     } catch (err: any) {
@@ -94,8 +108,10 @@ export function ManageAuthSection({
     try {
       // 가입(register) 목적의 인증코드 발송임을 명시하여 중복 이메일 가입 방지 검증을 활성화합니다.
       const data = await sendVerificationCode(authEmail, "register");
-      
+
       setCodeSent(true);
+      setInputCode("");
+      setCodeExpiresAt(Date.now() + 5 * 60 * 1000);
       if (data.code) {
         setVerificationPopup(data.code);
       } else {
@@ -119,8 +135,12 @@ export function ManageAuthSection({
     }
   };
 
-
-
+  const handleEmailChange = (value: string) => {
+    if (value !== authEmail && (codeSent || inputCode || isCodeVerified)) {
+      resetVerification();
+    }
+    onAuthEmailChange(value);
+  };
   const handleSubmitForm = (e: React.FormEvent<HTMLFormElement>) => {
     if (authMode === "register") {
       if (!isCodeVerified) {
@@ -225,11 +245,11 @@ export function ManageAuthSection({
       </p>
 
       <form className="auth-form" onSubmit={handleSubmitForm}>
-        <label className="auth-field-label">
+        <div className="auth-field-label">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span>이메일 주소</span>
+            <label htmlFor="manage-auth-email">이메일 주소</label>
             {isCodeVerified && (
-              <span style={{ fontSize: "11px", color: "var(--c-route)", fontWeight: 600, display: "flex", alignItems: "center", gap: "2px" }}>
+              <span aria-live="polite" style={{ fontSize: "11px", color: "var(--c-route)", fontWeight: 600, display: "flex", alignItems: "center", gap: "2px" }}>
                 <CheckCircle2 size={12} /> 이메일 인증 완료
               </span>
             )}
@@ -237,10 +257,11 @@ export function ManageAuthSection({
           <div className="input-with-icon">
             <Mail size={16} className="field-icon" />
             <input
+              id="manage-auth-email"
               autoComplete="email"
               inputMode="email"
               readOnly={isCodeVerified}
-              onChange={(event) => onAuthEmailChange(event.target.value)}
+              onChange={(event) => handleEmailChange(event.target.value)}
               placeholder="you@example.com"
               required
               type="email"
@@ -248,16 +269,21 @@ export function ManageAuthSection({
               style={isCodeVerified ? { backgroundColor: "var(--c-route-soft)", borderColor: "var(--c-route)" } : undefined}
             />
           </div>
-        </label>
+        </div>
 
         {authMode === "register" && (
-          <label className="auth-field-label" style={{ marginTop: "12px" }}>
-            <span>이메일 인증 코드 (6자리)</span>
-            <div style={{ display: "flex", gap: "8px" }}>
+          <div className="auth-field-label" style={{ marginTop: "12px" }}>
+            <label htmlFor="manage-auth-code">이메일 인증 코드 (6자리)</label>
+            <div className="auth-verification-row">
               <input
+                id="manage-auth-code"
+                aria-describedby={codeSent && !isCodeVerified ? "manage-auth-code-hint" : undefined}
+                autoComplete="one-time-code"
+                inputMode="numeric"
                 name="code"
                 readOnly={isCodeVerified}
-                onChange={(e) => setInputCode(e.target.value)}
+                onChange={(event) => setInputCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                pattern="[0-9]{6}"
                 placeholder="수신된 6자리 코드를 입력하세요"
                 required
                 type="text"
@@ -271,7 +297,7 @@ export function ManageAuthSection({
                   disabled={sendSubmitting}
                   onClick={handleSendCode}
                   type="button"
-                  style={{ marginTop: 0, padding: "0 12px", whiteSpace: "nowrap", height: "42px", fontSize: "12px" }}
+                  style={{ marginTop: 0, padding: "0 12px", whiteSpace: "nowrap", height: "44px", fontSize: "13px" }}
                 >
                   {sendSubmitting ? "전송 중" : "인증코드 전송"}
                 </button>
@@ -284,8 +310,8 @@ export function ManageAuthSection({
                     marginTop: 0,
                     padding: "0 12px",
                     whiteSpace: "nowrap",
-                    height: "42px",
-                    fontSize: "12px",
+                    height: "44px",
+                    fontSize: "13px",
                     backgroundColor: "var(--c-route-soft)",
                     color: "var(--c-route)",
                     borderColor: "var(--c-route)",
@@ -294,13 +320,13 @@ export function ManageAuthSection({
                   인증 완료 ✓
                 </button>
               ) : (
-                <div style={{ display: "flex", gap: "4px" }}>
+                <div className="auth-code-actions">
                   <button
                     className="primary-button"
                     disabled={verifyingSubmitting || inputCode.length < 6}
                     onClick={handleVerifyCodeSubmit}
                     type="button"
-                    style={{ marginTop: 0, padding: "0 12px", whiteSpace: "nowrap", height: "42px", fontSize: "12px" }}
+                    style={{ marginTop: 0, padding: "0 12px", whiteSpace: "nowrap", height: "44px", fontSize: "13px" }}
                   >
                     {verifyingSubmitting ? "검증 중" : "코드 확인"}
                   </button>
@@ -310,21 +336,27 @@ export function ManageAuthSection({
                     onClick={handleSendCode}
                     type="button"
                     title="인증코드 재전송"
-                    style={{ marginTop: 0, padding: "0 8px", whiteSpace: "nowrap", height: "42px", fontSize: "11px" }}
+                    style={{ marginTop: 0, padding: "0 10px", whiteSpace: "nowrap", height: "44px", fontSize: "12px" }}
                   >
                     재전송
                   </button>
                 </div>
               )}
             </div>
-          </label>
+            {codeSent && !isCodeVerified && (
+              <p className="auth-field-hint" id="manage-auth-code-hint">
+                인증코드는 전송 후 5분 동안 유효합니다.
+              </p>
+            )}
+          </div>
         )}
         
-        <label className="auth-field-label">
-          <span>비밀번호</span>
+        <div className="auth-field-label">
+          <label htmlFor="manage-auth-password">비밀번호</label>
           <div className="input-with-icon">
             <Key size={16} className="field-icon" />
             <input
+              id="manage-auth-password"
               autoComplete={authMode === "login" ? "current-password" : "new-password"}
               className="with-password-toggle"
               minLength={8}
@@ -335,16 +367,15 @@ export function ManageAuthSection({
               value={authPassword}
             />
             <button
+              aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 보기"}
               className="password-toggle-btn"
               onClick={() => setShowPassword(!showPassword)}
               type="button"
-              tabIndex={-1}
-              title={showPassword ? "비밀번호 숨기기" : "비밀번호 보기"}
             >
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
-        </label>
+        </div>
 
         {authMode === "register" && authPassword && !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/.test(authPassword) && (
           <p className="form-error" style={{ fontSize: "11px", marginTop: "4px", color: "var(--c-muted)" }}>
@@ -352,37 +383,14 @@ export function ManageAuthSection({
           </p>
         )}
 
-        {authMode === "register" && (
-          <label className="auth-field-label" style={{ marginTop: "12px" }}>
-            <span>사람 인증 (수학 퀴즈 방지)</span>
-            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-              <span style={{ fontWeight: 700, fontSize: "15px", whiteSpace: "nowrap", color: "var(--c-route)" }}>
-                {captchaQuestion} =
-              </span>
-              <input
-                name="captchaAnswer"
-                placeholder="정답 입력"
-                required
-                type="number"
-                style={{ flex: 1 }}
-              />
-              <input type="hidden" name="captchaKey" value={captchaQuestion} />
-              <button
-                className="secondary-button"
-                onClick={regenerateCaptcha}
-                type="button"
-                title="새 캡차 문제 생성"
-                style={{ marginTop: 0, padding: "0 10px", height: "42px" }}
-              >
-                🔄
-              </button>
-            </div>
-          </label>
-        )}
+        {authError && <p className="form-error" role="alert">{authError}</p>}
 
-        {authError && <p className="form-error">{authError}</p>}
-
-        <button className="primary-button" disabled={authSubmitting} type="submit" style={{ marginTop: "6px" }}>
+        <button
+          className="primary-button"
+          disabled={authSubmitting || (authMode === "register" && !isCodeVerified)}
+          type="submit"
+          style={{ marginTop: "6px" }}
+        >
           <LockKeyhole size={18} />
           {authSubmitting ? "처리 중" : authMode === "login" ? "로그인" : "회원가입 완료"}
         </button>
