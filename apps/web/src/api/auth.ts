@@ -67,16 +67,10 @@ export function login(email: string, password: string) {
   });
 }
 
-export function register(
-  email: string,
-  password: string,
-  code?: string,
-  captchaAnswer?: number,
-  captchaKey?: string
-) {
+export function register(email: string, password: string, code?: string) {
   return apiRequest<AuthResponse>("/api/auth/register", {
     method: "POST",
-    body: JSON.stringify({ email, password, code, captchaAnswer, captchaKey }),
+    body: JSON.stringify({ email, password, code }),
   });
 }
 
@@ -97,10 +91,10 @@ export function sendVerificationCode(email: string, purpose: string) {
 }
 
 // 입력한 이메일과 6자리 인증코드가 일치하는지 백엔드와 사전 대조합니다.
-export function verifyCode(email: string, code: string) {
+export function verifyCode(email: string, purpose: "register" | "forgot", code: string) {
   return apiRequest<{ verified: boolean }>("/api/auth/verify-code", {
     method: "POST",
-    body: JSON.stringify({ email, code }),
+    body: JSON.stringify({ email, purpose, code }),
   });
 }
 

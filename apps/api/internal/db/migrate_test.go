@@ -46,6 +46,9 @@ func TestRunMigrationsAppliesCurrentSchemaIdempotently(t *testing.T) {
 	if !strings.Contains(joined, "CREATE TABLE IF NOT EXISTS external_api_monthly_usage") {
 		t.Error("migration SQL does not create external_api_monthly_usage")
 	}
+	if !strings.Contains(joined, "CREATE TABLE IF NOT EXISTS auth_verification_challenges") {
+		t.Error("migration SQL does not create auth_verification_challenges")
+	}
 }
 
 func TestRunMigrationsReportsFailingMigration(t *testing.T) {

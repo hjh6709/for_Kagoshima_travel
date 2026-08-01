@@ -19,10 +19,28 @@
     "schemas": {
       "RegisterRequest": {
         "type": "object",
-        "required": ["email", "password"],
+        "required": ["email", "password", "code"],
         "properties": {
           "email": { "type": "string", "example": "user@example.com" },
-          "password": { "type": "string", "minLength": 8, "example": "password123" }
+          "password": { "type": "string", "minLength": 8, "example": "Strong1!Password" },
+          "code": { "type": "string", "pattern": "^[0-9]{6}$", "example": "123456" }
+        }
+      },
+      "SendVerificationCodeRequest": {
+        "type": "object",
+        "required": ["email", "purpose"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "purpose": { "type": "string", "enum": ["register", "forgot"] }
+        }
+      },
+      "VerifyCodeRequest": {
+        "type": "object",
+        "required": ["email", "purpose", "code"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "purpose": { "type": "string", "enum": ["register", "forgot"] },
+          "code": { "type": "string", "pattern": "^[0-9]{6}$" }
         }
       },
       "LoginRequest": {
@@ -270,6 +288,37 @@
           "201": { "description": "가입 성공", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthResponse" } } } },
           "400": { "description": "입력 오류", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
           "409": { "description": "이미 사용 중인 이메일", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/auth/send-verification-code": {
+      "post": {
+        "summary": "이메일 인증코드 발송",
+        "tags": ["인증"],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SendVerificationCodeRequest" } } }
+        },
+        "responses": {
+          "200": { "description": "발송 성공" },
+          "400": { "description": "입력 오류" },
+          "409": { "description": "이미 등록된 이메일" },
+          "429": { "description": "일일 발송 한도 초과" },
+          "502": { "description": "메일 발송 실패" }
+        }
+      }
+    },
+    "/api/auth/verify-code": {
+      "post": {
+        "summary": "이메일 인증코드 사전 확인",
+        "tags": ["인증"],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/VerifyCodeRequest" } } }
+        },
+        "responses": {
+          "200": { "description": "확인 성공" },
+          "400": { "description": "코드 불일치 또는 만료" }
         }
       }
     },

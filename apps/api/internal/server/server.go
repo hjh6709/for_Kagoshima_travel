@@ -32,6 +32,7 @@ func New() *Server {
 	var tripRepository repository.TripRepository
 	var userRepository repository.UserRepository
 	var checklistRepository repository.ChecklistRepository
+	var verificationRepository repository.VerificationRepository
 
 	if dbURL := os.Getenv("DATABASE_URL"); dbURL != "" {
 		pool, err := db.NewPool(dbURL)
@@ -48,15 +49,17 @@ func New() *Server {
 		tripRepository = repository.NewPostgresTripRepository(pool)
 		userRepository = repository.NewPostgresUserRepository(pool)
 		checklistRepository = repository.NewPostgresChecklistRepository(pool)
+		verificationRepository = repository.NewPostgresVerificationRepository(pool)
 	} else {
 		log.Println("in-memory 리포지토리 사용 (DATABASE_URL 미설정)")
 		tripRepository = repository.NewMemoryTripRepository()
 		userRepository = repository.NewMemoryUserRepository()
 		checklistRepository = repository.NewMemoryChecklistRepository()
+		verificationRepository = repository.NewMemoryVerificationRepository()
 	}
 
 	tripService := service.NewTripService(tripRepository, checklistRepository)
-	authService := service.NewAuthService(userRepository, jwtSecret)
+	authService := service.NewAuthService(userRepository, verificationRepository, jwtSecret)
 	checklistService := service.NewChecklistService(checklistRepository, tripRepository)
 
 	s := &Server{
