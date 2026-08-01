@@ -78,6 +78,70 @@
   padding: 8px;
 }
 
+.place-advanced-fields,
+.schedule-recommendations {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-control);
+  background: var(--c-surface-cool);
+}
+
+.place-advanced-fields > summary,
+.schedule-recommendations > summary {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 14px;
+  color: var(--c-text);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  list-style: none;
+}
+
+.place-advanced-fields > summary::-webkit-details-marker,
+.schedule-recommendations > summary::-webkit-details-marker {
+  display: none;
+}
+
+.place-advanced-fields > summary::after,
+.schedule-recommendations > summary::after {
+  margin-left: auto;
+  color: var(--c-muted);
+  content: "+";
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.place-advanced-fields[open] > summary::after,
+.schedule-recommendations[open] > summary::after {
+  content: "−";
+}
+
+.place-advanced-fields-body {
+  display: grid;
+  gap: 12px;
+  padding: 0 14px 14px;
+}
+
+.schedule-recommendations {
+  margin-top: 16px;
+}
+
+.schedule-recommendations > summary {
+  color: var(--c-route);
+}
+
+.schedule-recommendations > summary small {
+  color: var(--c-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.schedule-recommendations .shanghai-starter-planner {
+  margin: 0 12px 12px;
+}
+
 .start-screen {
   display: grid;
   align-content: start;
