@@ -177,7 +177,12 @@ func (h *AuthHandler) VerifyCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.authService.VerifyCode(req.Email, req.Purpose, req.Code); err != nil {
+	purpose := req.Purpose
+	if purpose == "" {
+		purpose = "register"
+	}
+
+	if err := h.authService.VerifyCode(req.Email, purpose, req.Code); err != nil {
 		if errors.Is(err, service.ErrInvalidVerificationCode) || errors.Is(err, service.ErrInvalidInput) {
 			httpjson.WriteError(w, http.StatusBadRequest, "인증 코드가 일치하지 않거나 만료되었습니다.")
 			return

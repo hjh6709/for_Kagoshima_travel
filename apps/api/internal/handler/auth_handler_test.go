@@ -77,3 +77,29 @@ func TestSendVerificationCodeMapsDeliveryFailureToSafeGatewayError(t *testing.T)
 		t.Fatalf("response = %s, want retry guidance", response.Body.String())
 	}
 }
+
+func TestVerifyCodeKeepsCompatibilityWithCachedRegisterClient(t *testing.T) {
+	t.Setenv("APP_ENV", "development")
+	authService := service.NewAuthService(
+		repository.NewMemoryUserRepository(),
+		repository.NewMemoryVerificationRepository(),
+		"test-jwt-secret",
+	)
+	code, err := authService.SendVerificationCode("cached@example.com", "register")
+	if err != nil {
+		t.Fatalf("SendVerificationCode: %v", err)
+	}
+	handler := NewAuthHandler(authService)
+	request := httptest.NewRequest(
+		http.MethodPost,
+		"/api/auth/verify-code",
+		strings.NewReader(`{"email":"cached@example.com","code":"`+code+`"}`),
+	)
+	response := httptest.NewRecorder()
+
+	handler.VerifyCode(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d; body=%s", response.Code, http.StatusOK, response.Body.String())
+	}
+}
