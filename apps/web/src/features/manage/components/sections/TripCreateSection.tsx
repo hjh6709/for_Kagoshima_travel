@@ -25,11 +25,11 @@ export function TripCreateSection({
       <div className="section-title-row">
         <div>
           <h2>새 여행 만들기</h2>
-          <p className="section-caption">여행명과 기간만 입력하면 먼저 여행 공간을 만들 수 있습니다.</p>
+          <p className="section-caption">여행명, 목적지와 기간을 입력하면 여행 공간을 만들 수 있습니다.</p>
         </div>
       </div>
 
-      <form className="auth-form trip-create-form" onSubmit={onSubmitNewTrip}>
+      <form className="auth-form trip-create-form" noValidate onSubmit={onSubmitNewTrip}>
         <label>
           여행명
           <input
@@ -42,7 +42,7 @@ export function TripCreateSection({
         </label>
 
         <label>
-          목적지 국가
+          목적지 국가 <span aria-hidden="true">*</span>
           <select
             onChange={(event) => onNewTripDestinationCountryChange(event.target.value)}
             required

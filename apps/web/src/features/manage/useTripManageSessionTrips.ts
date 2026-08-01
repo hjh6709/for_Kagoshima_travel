@@ -233,8 +233,8 @@ export function useTripManageSessionTrips({
     const travelers = parseTravelers(tripCreateForm.newTripTravelers);
     const memo = optionalTrimmedText(tripCreateForm.newTripMemo);
 
-    if (!title || !startDate || !endDate) {
-      tripCreateForm.setTripCreateError("여행명과 여행 날짜를 입력해주세요.");
+    if (!title || !tripCreateForm.newTripDestinationCountry || !startDate || !endDate) {
+      tripCreateForm.setTripCreateError("여행명, 목적지 국가와 여행 날짜를 모두 입력해주세요.");
       return;
     }
     if (isEndDateBeforeStartDate(startDate, endDate)) {

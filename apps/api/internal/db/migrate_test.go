@@ -49,6 +49,12 @@ func TestRunMigrationsAppliesCurrentSchemaIdempotently(t *testing.T) {
 	if !strings.Contains(joined, "CREATE TABLE IF NOT EXISTS auth_verification_challenges") {
 		t.Error("migration SQL does not create auth_verification_challenges")
 	}
+	if !strings.Contains(joined, "ALTER TABLE IF EXISTS trips\n    ADD COLUMN IF NOT EXISTS destination_country") {
+		t.Error("migration SQL does not add trips.destination_country for existing databases")
+	}
+	if !strings.Contains(joined, "ALTER TABLE IF EXISTS checklists\n    ADD COLUMN IF NOT EXISTS destination_country") {
+		t.Error("migration SQL does not add checklists.destination_country for existing databases")
+	}
 }
 
 func TestRunMigrationsReportsFailingMigration(t *testing.T) {

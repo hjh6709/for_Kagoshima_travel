@@ -1,0 +1,5 @@
+ALTER TABLE IF EXISTS trips
+    ADD COLUMN IF NOT EXISTS destination_country TEXT NOT NULL DEFAULT 'JP';
+
+ALTER TABLE IF EXISTS checklists
+    ADD COLUMN IF NOT EXISTS destination_country TEXT;
