@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type Dispatch, type FormEvent, type SetStateAction } from "react";
 import { ApiError, getCurrentUser, login, register, type AuthResponse } from "../../api/auth";
 import { createTrip, listMyTrips, updateTrip, deleteTrip, type OwnerTrip } from "../../api/trips";
+import { navigateToManageTripEditor } from "../../shared/manageRoute";
 import { isOnline, getLocalCache, setLocalCache, OFFLINE_CACHE_KEYS } from "../../utils/offlineCache";
 import {
   handleManageApiError,
@@ -257,6 +258,7 @@ export function useTripManageSessionTrips({
       setSelectedOwnerTripID(createdTrip.id);
       tripCreateForm.resetTripCreateForm();
       setOwnerTripsError("");
+      navigateToManageTripEditor(createdTrip.id);
     } catch (error) {
       handleManageApiError(error, {
         clearOwnerSession: clearOwnerSessionBase,
