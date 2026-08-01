@@ -60,6 +60,13 @@ p {
   margin-bottom: 0;
 }
 
+.screen-title-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+}
+
 .screen-kicker {
   display: block;
   margin-bottom: 5px;
@@ -556,6 +563,10 @@ p {
   color: var(--c-muted);
   font-size: 13px;
   line-height: 1.5;
+}
+
+.empty-state-action {
+  margin-top: 12px;
 }
 
 .trip-checklist-view {

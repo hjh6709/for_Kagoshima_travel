@@ -14,6 +14,7 @@ export function ScheduleTab({
   completedScheduleCount,
   completedSchedules,
   dates,
+  editSchedulesHref,
   getDisplayDate,
   getPlace,
   groupedChecklist,
@@ -43,7 +44,12 @@ export function ScheduleTab({
     <section className="screen">
       <div className="screen-title-row">
         <h1>일정</h1>
-        <ProfileShortcutButton onClick={onNavigateToMyPage} />
+        <div className="screen-title-actions">
+          {editSchedulesHref && dates.length > 0 && (
+            <a className="secondary-button compact-button" href={editSchedulesHref}>일정 관리</a>
+          )}
+          <ProfileShortcutButton onClick={onNavigateToMyPage} />
+        </div>
       </div>
 
       <div className="segment-control-wrapper schedule-view-switch" aria-label="일정 화면 보기 방식">
@@ -117,6 +123,11 @@ export function ScheduleTab({
               <div>
                 <strong>이 날짜에 등록된 일정이 없습니다</strong>
                 <p>{isReadOnly ? "이 날짜에는 공유된 일정이 없습니다." : "여행 관리에서 장소를 일정에 연결하면 여기에 표시됩니다."}</p>
+                {editSchedulesHref && (
+                  <a className="primary-button compact-button empty-state-action" href={editSchedulesHref}>
+                    일정 추가
+                  </a>
+                )}
               </div>
             </article>
           )}

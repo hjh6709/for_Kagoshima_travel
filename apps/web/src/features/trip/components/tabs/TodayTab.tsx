@@ -8,6 +8,7 @@ import { TodayHeaderSection } from "../sections/TodayHeaderSection";
 export function TodayTab(props: TripPageProps) {
   const {
     checkedItems,
+    editSchedulesHref,
     focusDate,
     focusCompletedScheduleCount,
     focusSchedules,
@@ -38,6 +39,7 @@ export function TodayTab(props: TripPageProps) {
       />
       <NextScheduleCard
         destinationCountry={trip.destinationCountry}
+        editSchedulesHref={editSchedulesHref}
         focusDate={focusDate}
         getDisplayDate={getDisplayDate}
         getPlace={getPlace}

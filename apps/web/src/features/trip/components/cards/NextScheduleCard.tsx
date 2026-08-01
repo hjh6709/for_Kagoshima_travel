@@ -5,6 +5,7 @@ import { CalendarPlus, Clock, MapPin } from "lucide-react";
 
 type NextScheduleCardProps = {
   destinationCountry?: string;
+  editSchedulesHref?: string;
   focusDate: string;
   getDisplayDate: (dateStr: string) => string;
   getPlace: (placeId?: string) => Place | undefined;
@@ -17,6 +18,7 @@ type NextScheduleCardProps = {
 // 홈 화면의 다음 일정 카드만 담당한다.
 export function NextScheduleCard({
   destinationCountry,
+  editSchedulesHref,
   focusDate,
   getDisplayDate,
   getPlace,
@@ -41,9 +43,15 @@ export function NextScheduleCard({
               : "오늘 할 일을 모두 마쳤다면 여유롭게 다음 계획을 확인해 보세요."}
           </p>
         </div>
-        <button className="secondary-button compact-button" onClick={onOpenSchedule} type="button">
-          일정 보기
-        </button>
+        {editSchedulesHref && !isReadOnly ? (
+          <a className="primary-button compact-button" href={editSchedulesHref}>
+            {travelPhase === "before" ? "첫 일정 추가" : "일정 추가"}
+          </a>
+        ) : (
+          <button className="secondary-button compact-button" onClick={onOpenSchedule} type="button">
+            일정 보기
+          </button>
+        )}
       </article>
     );
   }

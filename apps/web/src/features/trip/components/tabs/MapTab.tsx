@@ -194,6 +194,8 @@ function SavedPlaceDisclosure(props: SavedPlaceDisclosureProps) {
 
 export function MapTab({
   completedSchedules,
+  editPlacesHref,
+  editSchedulesHref,
   focusDate,
   focusSchedules,
   getDisplayDate,
@@ -314,7 +316,12 @@ export function MapTab({
           <h1>지도</h1>
           <p className="map-screen-intro">현재 위치와 저장한 장소를 확인하고 길찾기를 이어가세요.</p>
         </div>
-        <ProfileShortcutButton onClick={onNavigateToMyPage} />
+        <div className="screen-title-actions">
+          {editPlacesHref && places.length > 0 && (
+            <a className="secondary-button compact-button" href={editPlacesHref}>장소 관리</a>
+          )}
+          <ProfileShortcutButton onClick={onNavigateToMyPage} />
+        </div>
       </div>
 
       <TravelMap
@@ -360,9 +367,19 @@ export function MapTab({
                     ? "이 날짜에는 공유된 일정과 장소가 없습니다."
                     : "일정을 추가하고 장소를 연결하면 길찾기 동선이 만들어집니다."}
               </p>
-              <button className="secondary-button compact-button" onClick={openSchedule} type="button">
-                일정 보기
-              </button>
+              {isReadOnly ? (
+                <button className="secondary-button compact-button" onClick={openSchedule} type="button">
+                  일정 보기
+                </button>
+              ) : places.length === 0 && editPlacesHref ? (
+                <a className="primary-button compact-button" href={editPlacesHref}>장소 추가</a>
+              ) : editSchedulesHref ? (
+                <a className="primary-button compact-button" href={editSchedulesHref}>일정 추가</a>
+              ) : (
+                <button className="secondary-button compact-button" onClick={openSchedule} type="button">
+                  일정 보기
+                </button>
+              )}
             </div>
           </article>
         ) : (
@@ -393,9 +410,13 @@ export function MapTab({
                     {missingPlaceCount > 0 && ` · 장소 연결 필요 ${missingPlaceCount}개`}
                   </p>
                 </div>
-                <button className="secondary-button compact-button" onClick={openSchedule} type="button">
-                  {isReadOnly ? "일정 보기" : "일정 관리"}
-                </button>
+                {isReadOnly || !editSchedulesHref ? (
+                  <button className="secondary-button compact-button" onClick={openSchedule} type="button">
+                    일정 보기
+                  </button>
+                ) : (
+                  <a className="secondary-button compact-button" href={editSchedulesHref}>일정 관리</a>
+                )}
               </div>
 
               <ol className="map-stop-list">
@@ -449,6 +470,9 @@ export function MapTab({
               <div>
                 <strong>저장한 장소가 없습니다</strong>
                 <p>{isReadOnly ? "여행 관리자가 장소를 추가하면 여기에 표시됩니다." : "편집 화면에서 카페, 식당, 관광지를 검색해 추가해 보세요."}</p>
+                {editPlacesHref && (
+                  <a className="primary-button compact-button" href={editPlacesHref}>장소 추가</a>
+                )}
               </div>
             </article>
           ) : (
