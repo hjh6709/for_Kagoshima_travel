@@ -12,6 +12,14 @@ export type ManageRoute =
   | { view: "editHub"; tripId: string }
   | { view: "editSection"; tripId: string; section: EditSection };
 
+export function getManageTripEditorPath(tripId: string) {
+  return `/manage/trips/${encodeURIComponent(tripId)}/edit`;
+}
+
+export function navigateToManageTripEditor(tripId: string) {
+  window.location.assign(getManageTripEditorPath(tripId));
+}
+
 // "/manage/trips/:id/edit/:section" -> 카테고리 편집 페이지 (section이 알 수 없는 값이면 편집 허브로 되돌린다),
 // "/manage/trips/:id/edit" -> 편집 허브, "/manage/trips/:id" -> 보기 화면,
 // 그 외 "/manage"로 시작하는 모든 경로 -> 목록 화면.

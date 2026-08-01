@@ -55,6 +55,9 @@ func TestRunMigrationsAppliesCurrentSchemaIdempotently(t *testing.T) {
 	if !strings.Contains(joined, "ALTER TABLE IF EXISTS checklists\n    ADD COLUMN IF NOT EXISTS destination_country") {
 		t.Error("migration SQL does not add checklists.destination_country for existing databases")
 	}
+	if !strings.Contains(joined, "CREATE TABLE IF NOT EXISTS checklists") {
+		t.Error("migration SQL does not create checklists for existing databases")
+	}
 }
 
 func TestRunMigrationsReportsFailingMigration(t *testing.T) {
@@ -100,6 +103,9 @@ func TestRunMigrationsUpgradesLegacyPlacesSchema(t *testing.T) {
 	if _, err := tx.Exec(ctx, "CREATE TABLE places (id UUID PRIMARY KEY)"); err != nil {
 		t.Fatalf("create legacy places table: %v", err)
 	}
+	if _, err := tx.Exec(ctx, "CREATE TABLE trips (id UUID PRIMARY KEY)"); err != nil {
+		t.Fatalf("create legacy trips table: %v", err)
+	}
 
 	// A second run verifies that API restarts do not fail after the migration was applied once.
 	for run := 1; run <= 2; run++ {
@@ -127,5 +133,17 @@ func TestRunMigrationsUpgradesLegacyPlacesSchema(t *testing.T) {
 		if count != 1 {
 			t.Errorf("column %s count = %d, want 1", column, count)
 		}
+	}
+
+	var checklistTableCount int
+	if err := tx.QueryRow(ctx, `
+		SELECT COUNT(*)
+		FROM information_schema.tables
+		WHERE table_schema = $1 AND table_name = 'checklists'
+	`, schemaName).Scan(&checklistTableCount); err != nil {
+		t.Fatalf("query checklists table: %v", err)
+	}
+	if checklistTableCount != 1 {
+		t.Fatalf("checklists table count = %d, want 1", checklistTableCount)
 	}
 }
