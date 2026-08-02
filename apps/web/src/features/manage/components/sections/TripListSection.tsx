@@ -1,6 +1,35 @@
-import { ArrowRight, CalendarDays, Compass, Trash2, UsersRound } from "lucide-react";
-import { formatKoreanDate } from "../../../../shared/date";
+import { ArrowRight, CalendarDays, ChevronDown, Compass, Trash2, UsersRound } from "lucide-react";
+import type { OwnerTrip } from "../../../../api/trips";
+import {
+  formatKoreanDate,
+  getTodayDateString,
+  getTravelPhase,
+  getTravelStatus,
+  type TravelPhase,
+} from "../../../../shared/date";
 import type { TripListSectionProps } from "../../manageTypes";
+
+const phasePriority: Record<TravelPhase, number> = {
+  during: 0,
+  before: 1,
+  after: 2,
+};
+
+export function sortOwnerTripsByRelevance(ownerTrips: OwnerTrip[], today: string): OwnerTrip[] {
+  return ownerTrips
+    .map((trip, index) => ({ trip, index, phase: getTravelPhase(today, trip) }))
+    .sort((a, b) => {
+      const phaseOrder = phasePriority[a.phase] - phasePriority[b.phase];
+      if (phaseOrder !== 0) return phaseOrder;
+
+      if (a.phase === "after") {
+        return b.trip.endDate.localeCompare(a.trip.endDate) || a.index - b.index;
+      }
+
+      return a.trip.startDate.localeCompare(b.trip.startDate) || a.index - b.index;
+    })
+    .map(({ trip }) => trip);
+}
 
 // 여행 목록 렌더링만 담당한다. 관리 상세 화면 이동은 링크(전체 페이지 이동)로 처리한다.
 export function TripListSection({
@@ -10,6 +39,9 @@ export function TripListSection({
   deletingTripID,
   onDeleteTrip,
 }: TripListSectionProps) {
+  const today = getTodayDateString();
+  const sortedOwnerTrips = sortOwnerTripsByRelevance(ownerTrips, today);
+
   return (
     <section className="section-block">
       <div className="section-title-row">
@@ -33,42 +65,53 @@ export function TripListSection({
 
       {!ownerTripsLoading && !ownerTripsError && ownerTrips.length > 0 && (
         <div className="card-stack">
-          {ownerTrips.map((ownerTrip) => {
+          {sortedOwnerTrips.map((ownerTrip) => {
             const isDeleting = deletingTripID === ownerTrip.id;
+            const status = getTravelStatus(today, ownerTrip);
             return (
-              <article className="owner-trip-card" key={ownerTrip.id} style={isDeleting ? { opacity: 0.6 } : undefined}>
+              <article className={`owner-trip-card${isDeleting ? " is-deleting" : ""}`} key={ownerTrip.id}>
                 <div className="owner-trip-summary">
-                  <span className="pill subtle">여행</span>
+                  <span className={`pill owner-trip-status status-${status.phase}`}>{status.label}</span>
                   <h2>{ownerTrip.title}</h2>
                   <p className="owner-trip-meta">
                     <CalendarDays aria-hidden="true" size={16} />
                     {formatKoreanDate(ownerTrip.startDate)} ~ {formatKoreanDate(ownerTrip.endDate)}
                   </p>
-                  <p className="owner-trip-meta">
-                    <UsersRound aria-hidden="true" size={16} />
-                    {ownerTrip.travelers.length > 0 ? ownerTrip.travelers.join(", ") : "여행자 미입력"}
-                  </p>
+                  {ownerTrip.travelers.length > 0 && (
+                    <p className="owner-trip-meta">
+                      <UsersRound aria-hidden="true" size={16} />
+                      {ownerTrip.travelers.join(", ")}
+                    </p>
+                  )}
                 </div>
                 <div className="owner-trip-actions">
                   <a className="primary-button compact-button" href={`/manage/trips/${ownerTrip.id}`}>
                     여행 열기
                     <ArrowRight aria-hidden="true" size={17} />
                   </a>
-                  <button
-                    className="danger-button compact-button"
-                    disabled={isDeleting}
-                    onClick={() => {
-                      if (window.confirm(`정말로 '${ownerTrip.title}' 여행 일정을 영구 삭제하시겠습니까?`)) {
-                        onDeleteTrip(ownerTrip.id);
-                      }
-                    }}
-                    type="button"
-                    style={{ padding: "8px" }}
-                    aria-label="여행 삭제"
-                  >
-                    <Trash2 size={16} />
-                  </button>
                 </div>
+                <details className="owner-trip-manage">
+                  <summary>
+                    여행 관리
+                    <ChevronDown aria-hidden="true" size={16} />
+                  </summary>
+                  <div className="owner-trip-manage-panel">
+                    <p>삭제하면 일정과 장소를 복구할 수 없습니다.</p>
+                    <button
+                      className="danger-button compact-button"
+                      disabled={isDeleting}
+                      onClick={() => {
+                        if (window.confirm(`정말로 '${ownerTrip.title}' 여행 일정을 영구 삭제하시겠습니까?`)) {
+                          onDeleteTrip(ownerTrip.id);
+                        }
+                      }}
+                      type="button"
+                    >
+                      <Trash2 aria-hidden="true" size={16} />
+                      {isDeleting ? "삭제 중" : "여행 삭제"}
+                    </button>
+                  </div>
+                </details>
               </article>
             );
           })}

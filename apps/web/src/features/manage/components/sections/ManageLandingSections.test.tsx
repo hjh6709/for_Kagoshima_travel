@@ -1,7 +1,20 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+import type { OwnerTrip } from "../../../../api/trips";
 import { ManageHeader } from "./ManageHeader";
-import { TripListSection } from "./TripListSection";
+import { sortOwnerTripsByRelevance, TripListSection } from "./TripListSection";
+
+function createTrip(id: string, title: string, startDate: string, endDate: string): OwnerTrip {
+  return {
+    id,
+    title,
+    startDate,
+    endDate,
+    travelers: ["나"],
+    destinationCountry: "CN",
+  };
+}
 
 describe("로그인 후 여행 목록", () => {
   it("제품 설명 카드 대신 간결한 계정 헤더를 표시한다", () => {
@@ -40,5 +53,56 @@ describe("로그인 후 여행 목록", () => {
 
     expect(screen.getByRole("link", { name: "여행 열기" })).toHaveAttribute("href", "/manage/trips/trip-1");
     expect(screen.queryByRole("link", { name: "관리하기" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "여행 삭제" })).not.toBeVisible();
+  });
+
+  it("여행 중, 가까운 예정 여행, 최근 지난 여행 순으로 정렬한다", () => {
+    const sorted = sortOwnerTripsByRelevance(
+      [
+        createTrip("past-old", "오래된 여행", "2025-01-01", "2025-01-03"),
+        createTrip("future-later", "나중 여행", "2026-10-01", "2026-10-04"),
+        createTrip("active", "여행 중", "2026-08-01", "2026-08-05"),
+        createTrip("past-recent", "최근 여행", "2026-07-01", "2026-07-05"),
+        createTrip("future-near", "다음 여행", "2026-08-20", "2026-08-23"),
+      ],
+      "2026-08-03",
+    );
+
+    expect(sorted.map((trip) => trip.id)).toEqual([
+      "active",
+      "future-near",
+      "future-later",
+      "past-recent",
+      "past-old",
+    ]);
+  });
+
+  it("삭제는 여행 관리 안에서 경고를 확인한 뒤 실행한다", async () => {
+    const onDeleteTrip = vi.fn();
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+
+    render(
+      <TripListSection
+        deletingTripID=""
+        onDeleteTrip={onDeleteTrip}
+        ownerTrips={[createTrip("trip-1", "상하이 여행", "2026-08-03", "2026-08-06")]}
+        ownerTripsError=""
+        ownerTripsLoading={false}
+      />,
+    );
+
+    const card = screen.getByRole("article");
+    const deleteButton = within(card).getByRole("button", { name: "여행 삭제" });
+    expect(deleteButton).not.toBeVisible();
+
+    await userEvent.click(within(card).getByText("여행 관리"));
+    expect(deleteButton).toBeVisible();
+    expect(within(card).getByText("삭제하면 일정과 장소를 복구할 수 없습니다.")).toBeVisible();
+
+    await userEvent.click(deleteButton);
+    expect(confirmSpy).toHaveBeenCalledOnce();
+    expect(onDeleteTrip).toHaveBeenCalledWith("trip-1");
+
+    confirmSpy.mockRestore();
   });
 });
