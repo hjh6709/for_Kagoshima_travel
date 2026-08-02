@@ -10,6 +10,7 @@ it("목적지를 빠뜨려도 제출을 가로막지 않고 앱의 안내 흐름
 
   render(
     <TripCreateSection
+      isOpen
       newTripEndDate="2026-08-12"
       newTripMemo=""
       newTripStartDate="2026-08-10"
@@ -23,6 +24,7 @@ it("목적지를 빠뜨려도 제출을 가로막지 않고 앱의 안내 흐름
       onNewTripTravelersChange={vi.fn()}
       onNewTripDestinationCountryChange={vi.fn()}
       onSubmitNewTrip={onSubmitNewTrip}
+      onOpenChange={vi.fn()}
       tripCreateError=""
       tripCreateSubmitting={false}
     />
