@@ -1,6 +1,11 @@
 import { expect, it } from "vitest";
 import { getManageTripEditorPath, getManageTripReturnPath, parseManageRoute } from "./manageRoute";
 
+it("로그인 직후 목록에서 전역 마이페이지로 이동한다", () => {
+  expect(parseManageRoute("/manage/account")).toEqual({ view: "account" });
+  expect(parseManageRoute("/manage/account/")).toEqual({ view: "account" });
+});
+
 it("새 여행의 편집 허브 경로를 안전하게 만든다", () => {
   const path = getManageTripEditorPath("trip/상하이");
 

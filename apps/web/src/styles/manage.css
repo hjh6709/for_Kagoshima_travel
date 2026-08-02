@@ -18,6 +18,20 @@
   padding-bottom: 4px;
 }
 
+.owner-header > div {
+  min-width: 0;
+}
+
+.owner-account-link {
+  width: auto;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.account-back-link {
+  justify-self: start;
+}
+
 .owner-header h1 {
   margin: 4px 0 2px;
 }
@@ -27,6 +41,7 @@
   color: var(--c-muted);
   font-size: 13px;
   font-weight: 600;
+  overflow-wrap: anywhere;
 }
 
 .owner-trip-card {
