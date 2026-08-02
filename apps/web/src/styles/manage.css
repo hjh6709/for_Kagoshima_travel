@@ -44,6 +44,128 @@
   overflow-wrap: anywhere;
 }
 
+.trip-create-disclosure {
+  overflow: clip;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  background: var(--c-surface);
+}
+
+.trip-create-disclosure > summary {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 20px;
+  min-height: 78px;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.trip-create-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+
+.trip-create-disclosure > summary:focus-visible {
+  outline: 3px solid rgba(11, 111, 106, 0.28);
+  outline-offset: -3px;
+}
+
+.trip-create-disclosure > summary[aria-disabled="true"] {
+  cursor: progress;
+}
+
+.trip-create-summary-icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--c-route-soft);
+  color: var(--c-route);
+}
+
+.trip-create-summary-copy {
+  min-width: 0;
+}
+
+.trip-create-summary-copy strong,
+.trip-create-summary-copy > span {
+  display: block;
+}
+
+.trip-create-summary-copy strong {
+  color: var(--c-text);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.trip-create-summary-copy > span {
+  margin-top: 2px;
+  color: var(--c-muted);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.trip-create-summary-chevron {
+  color: var(--c-muted);
+  transition: transform 0.2s var(--ease-route);
+}
+
+.trip-create-disclosure[open] .trip-create-summary-chevron {
+  transform: rotate(180deg);
+}
+
+.trip-create-disclosure .trip-create-form {
+  margin-top: 0;
+  padding: 18px 16px 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.trip-create-optional-fields {
+  border-top: 1px solid var(--border-color);
+}
+
+.trip-create-optional-fields > summary {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  gap: 8px;
+  color: var(--c-text);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+  list-style: none;
+}
+
+.trip-create-optional-fields > summary::-webkit-details-marker {
+  display: none;
+}
+
+.trip-create-optional-fields > summary::after {
+  margin-left: auto;
+  color: var(--c-muted);
+  content: "+";
+  font-size: 18px;
+}
+
+.trip-create-optional-fields[open] > summary::after {
+  content: "−";
+}
+
+.trip-create-optional-fields > summary span {
+  color: var(--c-muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.trip-create-optional-fields > div {
+  display: grid;
+  gap: 12px;
+  padding: 4px 0 12px;
+}
+
 .owner-trip-card {
   background: var(--c-surface);
   border: 1px solid var(--border-color);
