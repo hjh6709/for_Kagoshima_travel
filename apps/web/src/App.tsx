@@ -1,4 +1,5 @@
 import { TripManagePage } from "./features/manage/TripManagePage";
+import { ManageAccountPage } from "./features/manage/ManageAccountPage";
 import { TripEditHubPage } from "./features/manage/TripEditHubPage";
 import { TripEditSectionPage } from "./features/manage/TripEditSectionPage";
 import { useTripManageController } from "./features/manage/useTripManageController";
@@ -30,6 +31,9 @@ function App() {
       const manageRoute = parseManageRoute(currentPath);
       if (manageRoute.view === "trip") {
         return <OwnerTripViewPage tripId={manageRoute.tripId} />;
+      }
+      if (manageRoute.view === "account") {
+        return <ManageAccountPage {...managePageProps} />;
       }
       if (manageRoute.view === "editSection") {
         return <TripEditSectionPage section={manageRoute.section} tripId={manageRoute.tripId} />;

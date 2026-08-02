@@ -4,7 +4,7 @@ import type { TripManagePageProps } from "./manageTypes";
 // API 호출과 세션 상태는 useTripManageController가 담당한다.
 // 이 컴포넌트는 여행 목록과 새 여행 생성만 다룬다 — 특정 여행 보기/편집은 /manage/trips/:id로 분리됐다.
 export function TripManagePage(props: TripManagePageProps) {
-  const { auth, authChecked, onLogout, ownerTrips } = props;
+  const { auth, authChecked } = props;
 
   return (
     <main className="app-shell">
@@ -15,7 +15,7 @@ export function TripManagePage(props: TripManagePageProps) {
 
             {authChecked && auth && (
               <>
-                <ManageHeader auth={auth} onLogout={onLogout} />
+                <ManageHeader auth={auth} />
                 <TripListSection {...props} />
                 <TripCreateSection {...props} />
               </>
