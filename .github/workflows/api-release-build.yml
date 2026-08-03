@@ -41,6 +41,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Test deployment rollback compatibility
+        working-directory: .
+        run: bash scripts/deploy-api-on-vm.test.sh
+
       - uses: actions/setup-go@v7
         with:
           go-version-file: apps/api/go.mod

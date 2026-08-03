@@ -6,6 +6,7 @@ SERVICE_NAME=${2:-travel-api}
 ENV_FILE="$TARGET_DIR/.env"
 CURRENT_BINARY="$TARGET_DIR/travel-api"
 NEXT_BINARY="$TARGET_DIR/travel-api.next"
+LEGACY_ROLLBACK_BINARY="$TARGET_DIR/travel-api.old"
 SERVICE_FILE="$TARGET_DIR/travel-api.service"
 DEPLOY_ID=$(date -u +%Y%m%dT%H%M%SZ)
 ROLLBACK_BINARY="$TARGET_DIR/travel-api.rollback-$DEPLOY_ID"
@@ -32,8 +33,10 @@ validate_production_config() {
     local jwt_value
     jwt_value=$(env_value JWT_SECRET)
     [ "${#jwt_value}" -ge 32 ] || fail "JWT_SECRET must be at least 32 characters"
-    case "${jwt_value,,}" in
-        *replace*|*change-me*|*super-secret*) fail "JWT_SECRET must not be a placeholder" ;;
+    case "$jwt_value" in
+        *[Rr][Ee][Pp][Ll][Aa][Cc][Ee]*|*[Cc][Hh][Aa][Nn][Gg][Ee]-[Mm][Ee]*|*[Ss][Uu][Pp][Ee][Rr]-[Ss][Ee][Cc][Rr][Ee][Tt]*)
+            fail "JWT_SECRET must not be a placeholder"
+            ;;
     esac
 
     local port_value
@@ -88,6 +91,10 @@ sudo systemctl enable "$SERVICE_NAME"
 
 if [ -f "$CURRENT_BINARY" ]; then
     mv "$CURRENT_BINARY" "$ROLLBACK_BINARY"
+elif [ -f "$LEGACY_ROLLBACK_BINARY" ]; then
+    # 이전 워크플로가 활성 바이너리를 .old로 옮긴 뒤 중단된 경우에도
+    # 첫 새 배포 실패 시 해당 바이너리로 복구할 수 있어야 한다.
+    mv "$LEGACY_ROLLBACK_BINARY" "$ROLLBACK_BINARY"
 fi
 mv "$NEXT_BINARY" "$CURRENT_BINARY"
 
