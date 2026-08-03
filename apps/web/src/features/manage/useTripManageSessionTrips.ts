@@ -96,15 +96,20 @@ export function useTripManageSessionTrips({
     [ownerTrips, selectedOwnerTripID],
   );
 
-  // 인증이 만료되었거나 로그아웃할 때 계정과 여행 선택 상태를 비운다.
+  // 인증이 만료되었을 때 계정과 여행 선택 상태를 로컬에서 비운다.
+  // 서버 로그아웃은 logoutOwnerSession에서 먼저 끝내 재로그인 쿠키와 경쟁하지 않게 한다.
   function clearOwnerSessionBase() {
     clearLegacyOwnerAuthStorage();
-    void logout().catch(() => {
-      // 로컬 상태는 이미 비웠으므로 네트워크 실패가 로그아웃 UI를 막지 않게 한다.
-    });
     setOwnerAuth(null);
     setOwnerTrips([]);
     setSelectedOwnerTripID(null);
+  }
+
+  async function logoutOwnerSession() {
+    // 서버가 HttpOnly 쿠키를 실제로 지운 뒤에만 로컬 로그인 화면을 연다.
+    // 실패 시 기존 세션을 유지해야 사용자가 로그아웃을 다시 시도할 수 있다.
+    await logout();
+    clearOwnerSessionBase();
   }
 
   function replaceOwnerAuth(nextAuth: AuthResponse) {
@@ -429,6 +434,7 @@ export function useTripManageSessionTrips({
     authSubmitting,
     changeAuthMode,
     clearOwnerSessionBase,
+    logoutOwnerSession,
     ownerAuth,
     ownerTrips,
     ownerTripsError,

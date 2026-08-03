@@ -30,7 +30,7 @@ export type ManageAuthSectionProps = {
 };
 
 export type ManageSessionActionProps = {
-  onLogout: () => void;
+  onLogout: () => void | Promise<void>;
   onAuthChanged: (auth: AuthResponse) => void;
 };
 

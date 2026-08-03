@@ -1,6 +1,8 @@
 [Unit]
 Description=Travel Planner Go API Server
 After=network.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
 
 [Service]
 Type=simple
@@ -8,7 +10,26 @@ User=opc
 WorkingDirectory=/home/opc/travel-api
 ExecStart=/home/opc/travel-api/travel-api
 Restart=on-failure
+RestartSec=3
 EnvironmentFile=/home/opc/travel-api/.env
+UMask=0077
+NoNewPrivileges=true
+PrivateDevices=true
+PrivateTmp=true
+ProtectControlGroups=true
+ProtectHome=read-only
+ProtectKernelLogs=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectSystem=strict
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+CapabilityBoundingSet=
+AmbientCapabilities=
+SystemCallArchitectures=native
+TimeoutStopSec=20
 
 [Install]
 WantedBy=multi-user.target

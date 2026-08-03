@@ -64,6 +64,15 @@ func TestRunMigrationsAppliesCurrentSchemaIdempotently(t *testing.T) {
 	if !strings.Contains(joined, "ADD COLUMN IF NOT EXISTS token_version") {
 		t.Error("migration SQL does not add users.token_version for existing databases")
 	}
+	for _, trigger := range []string{
+		"schedules_trip_date_guard",
+		"checklists_trip_date_guard",
+		"trips_dated_items_guard",
+	} {
+		if !strings.Contains(joined, trigger) {
+			t.Errorf("migration SQL does not create %s", trigger)
+		}
+	}
 }
 
 func TestRunMigrationsReportsFailingMigration(t *testing.T) {
@@ -163,5 +172,90 @@ func TestRunMigrationsUpgradesLegacyPlacesSchema(t *testing.T) {
 	}
 	if scheduledDateColumnCount != 1 {
 		t.Fatalf("checklists scheduled_date column count = %d, want 1", scheduledDateColumnCount)
+	}
+}
+
+func TestTripDateInvariantTriggersRejectInvalidWrites(t *testing.T) {
+	databaseURL := os.Getenv("TEST_DATABASE_URL")
+	if databaseURL == "" {
+		t.Skip("TEST_DATABASE_URL is not set")
+	}
+
+	ctx := context.Background()
+	pool, err := NewPool(databaseURL)
+	if err != nil {
+		t.Fatalf("NewPool() error = %v", err)
+	}
+	defer pool.Close()
+	if err := RunMigrations(ctx, pool); err != nil {
+		t.Fatalf("RunMigrations() error = %v", err)
+	}
+
+	tests := []struct {
+		name           string
+		wantConstraint string
+		write          func(context.Context, pgx.Tx, string) error
+	}{
+		{
+			name:           "schedule outside trip",
+			wantConstraint: "schedules_within_trip_dates",
+			write: func(ctx context.Context, tx pgx.Tx, tripID string) error {
+				_, err := tx.Exec(ctx, `INSERT INTO schedules (trip_id, date, time, type, title) VALUES ($1, '2026-08-07', '09:00', 'visit', '기간 밖 일정')`, tripID)
+				return err
+			},
+		},
+		{
+			name:           "checklist outside trip",
+			wantConstraint: "checklists_within_trip_dates",
+			write: func(ctx context.Context, tx pgx.Tx, tripID string) error {
+				_, err := tx.Exec(ctx, `INSERT INTO checklists (trip_id, category, title, scheduled_date) VALUES ($1, 'daily', '기간 밖 준비물', '2026-08-07')`, tripID)
+				return err
+			},
+		},
+		{
+			name:           "trip shrink excludes schedule",
+			wantConstraint: "trip_contains_dated_items",
+			write: func(ctx context.Context, tx pgx.Tx, tripID string) error {
+				if _, err := tx.Exec(ctx, `INSERT INTO schedules (trip_id, date, time, type, title) VALUES ($1, '2026-08-06', '09:00', 'visit', '마지막 날 일정')`, tripID); err != nil {
+					return err
+				}
+				_, err := tx.Exec(ctx, `UPDATE trips SET end_date = '2026-08-05' WHERE id = $1`, tripID)
+				return err
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tx, err := pool.Begin(ctx)
+			if err != nil {
+				t.Fatalf("Begin() error = %v", err)
+			}
+			defer func() { _ = tx.Rollback(ctx) }()
+
+			var ownerID string
+			if err := tx.QueryRow(ctx,
+				`INSERT INTO users (email, password) VALUES ($1, 'hash') RETURNING id::text`,
+				fmt.Sprintf("date-trigger-%d@example.com", time.Now().UnixNano()),
+			).Scan(&ownerID); err != nil {
+				t.Fatalf("insert owner: %v", err)
+			}
+			var tripID string
+			if err := tx.QueryRow(ctx,
+				`INSERT INTO trips (owner_id, title, start_date, end_date) VALUES ($1, '상하이 여행', '2026-08-03', '2026-08-06') RETURNING id::text`,
+				ownerID,
+			).Scan(&tripID); err != nil {
+				t.Fatalf("insert trip: %v", err)
+			}
+
+			err = tt.write(ctx, tx, tripID)
+			var postgresError *pgconn.PgError
+			if !errors.As(err, &postgresError) {
+				t.Fatalf("write error = %v, want PostgreSQL constraint error", err)
+			}
+			if postgresError.ConstraintName != tt.wantConstraint {
+				t.Fatalf("constraint = %q, want %q", postgresError.ConstraintName, tt.wantConstraint)
+			}
+		})
 	}
 }

@@ -736,6 +736,9 @@ func (s *TripService) findOwnedTrip(tripID, ownerID string) (model.Trip, error) 
 }
 
 func mapRepositoryError(err error) error {
+	if errors.Is(err, repository.ErrTripDateConflict) {
+		return ErrTripDateConflict
+	}
 	if errors.Is(err, repository.ErrNotFound) {
 		return ErrTripNotFound
 	}

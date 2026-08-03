@@ -66,5 +66,8 @@ func validateFlightDates(departureDate, arrivalDate string) bool {
 		return true
 	}
 	arrival, arrivalOK := parseISODate(arrivalDate)
-	return arrivalOK && !arrival.Before(departure)
+	// 국제 날짜변경선을 서쪽에서 동쪽으로 넘으면 도착지 현지 날짜가
+	// 출발지보다 하루 빠를 수 있다. 시간대 정보가 없는 현재 모델에서는
+	// 전날까지 허용하고, 이틀 이상 역전된 값은 입력 오류로 본다.
+	return arrivalOK && !arrival.Before(departure.AddDate(0, 0, -1))
 }

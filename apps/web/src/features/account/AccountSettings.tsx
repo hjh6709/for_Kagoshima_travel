@@ -20,13 +20,29 @@ const PASSWORD_PATTERN =
 
 type AccountSummaryCardProps = {
   email: string;
-  onLogout: () => void;
+  onLogout: () => void | Promise<void>;
 };
 
 export function AccountSummaryCard({
   email,
   onLogout,
 }: AccountSummaryCardProps) {
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [logoutError, setLogoutError] = useState("");
+
+  async function handleLogout() {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    setLogoutError("");
+    try {
+      await onLogout();
+    } catch {
+      setLogoutError("로그아웃하지 못했습니다. 연결을 확인하고 다시 시도해 주세요.");
+    } finally {
+      setLoggingOut(false);
+    }
+  }
+
   return (
     <article className="mypage-account-card" aria-label="계정 정보">
       <div className="mypage-account-main">
@@ -43,13 +59,19 @@ export function AccountSummaryCard({
         <span className="pill subtle">여정 관리자</span>
         <button
           className="mypage-logout-button"
-          onClick={onLogout}
+          disabled={loggingOut}
+          onClick={handleLogout}
           type="button"
         >
           <LogOut size={16} />
-          로그아웃
+          {loggingOut ? "로그아웃 중" : "로그아웃"}
         </button>
       </div>
+      {logoutError && (
+        <p className="form-error" role="alert">
+          {logoutError}
+        </p>
+      )}
     </article>
   );
 }

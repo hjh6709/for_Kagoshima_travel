@@ -29,7 +29,13 @@ func TestBrowserSessionUsesHttpOnlyCookieAndLogoutClearsIt(t *testing.T) {
 		t.Fatalf("marshal register payload: %v", err)
 	}
 
-	registerResponse, err := client.Post(httpServer.URL+"/api/auth/register", "application/json", bytes.NewReader(payload))
+	registerRequest, err := http.NewRequest(http.MethodPost, httpServer.URL+"/api/auth/register", bytes.NewReader(payload))
+	if err != nil {
+		t.Fatalf("create register request: %v", err)
+	}
+	registerRequest.Header.Set("Content-Type", "application/json")
+	registerRequest.Header.Set("Origin", httpServer.URL)
+	registerResponse, err := client.Do(registerRequest)
 	if err != nil {
 		t.Fatalf("register with cookie client: %v", err)
 	}
@@ -51,7 +57,13 @@ func TestBrowserSessionUsesHttpOnlyCookieAndLogoutClearsIt(t *testing.T) {
 		t.Fatalf("cookie session status = %d, want %d", meResponse.StatusCode, http.StatusOK)
 	}
 
-	logoutResponse, err := client.Post(httpServer.URL+"/api/auth/logout", "application/json", nil)
+	logoutRequest, err := http.NewRequest(http.MethodPost, httpServer.URL+"/api/auth/logout", nil)
+	if err != nil {
+		t.Fatalf("create logout request: %v", err)
+	}
+	logoutRequest.Header.Set("Content-Type", "application/json")
+	logoutRequest.Header.Set("Origin", httpServer.URL)
+	logoutResponse, err := client.Do(logoutRequest)
 	if err != nil {
 		t.Fatalf("logout cookie session: %v", err)
 	}

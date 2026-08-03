@@ -100,4 +100,34 @@ describe("useTripManageChecklistActions", () => {
     expect(createChecklistItem).not.toHaveBeenCalled();
     expect(result.current.checklistError).toContain("오프라인 상태에서는 준비물을 추가할 수 없습니다");
   });
+
+  it("HttpOnly 쿠키로 복원한 세션에서도 준비물을 조회하고 추가한다", async () => {
+    vi.mocked(createChecklistItem).mockResolvedValue(createdItem);
+
+    const { result } = renderHook(() =>
+      useTripManageChecklistActions({
+        accessToken: "",
+        clearOwnerSession: vi.fn(),
+        tripID: "trip-1",
+      }),
+    );
+
+    await waitFor(() =>
+      expect(listChecklist).toHaveBeenCalledWith("trip-1", ""),
+    );
+    act(() => result.current.setNewChecklistTitle("여권 사본"));
+    await act(async () => {
+      await result.current.handleAddChecklistItem({
+        preventDefault: vi.fn(),
+      } as unknown as FormEvent);
+    });
+
+    expect(createChecklistItem).toHaveBeenCalledWith(
+      "trip-1",
+      "",
+      "before",
+      "여권 사본",
+      "",
+    );
+  });
 });

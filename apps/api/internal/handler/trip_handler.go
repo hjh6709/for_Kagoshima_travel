@@ -277,7 +277,7 @@ func writeServiceError(w http.ResponseWriter, err error) {
 	case errors.Is(err, service.ErrInvalidTrip):
 		httpjson.WriteError(w, http.StatusBadRequest, "필수 항목이 누락됐습니다.")
 	case errors.Is(err, service.ErrTripDateConflict):
-		httpjson.WriteError(w, http.StatusConflict, "여행 기간 밖에 일정이나 날짜별 준비물이 있어 날짜를 변경할 수 없습니다.")
+		httpjson.WriteError(w, http.StatusConflict, "일정과 날짜별 준비물은 여행 기간 안의 날짜로 저장해 주세요.")
 	case errors.Is(err, service.ErrInvalidChecklist):
 		httpjson.WriteError(w, http.StatusBadRequest, "준비물 이름과 구분을 확인해 주세요.")
 	case errors.Is(err, service.ErrPlaceSearchUnavailable):
