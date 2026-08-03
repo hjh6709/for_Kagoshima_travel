@@ -37,7 +37,7 @@ func (s *ChecklistService) ensureTripOwner(ctx context.Context, tripID, userID s
 }
 
 func (s *ChecklistService) findOwnedTrip(ctx context.Context, tripID, userID string) (model.Trip, error) {
-	trip, err := s.tripRepository.FindTrip(tripID)
+	trip, err := repository.WithTripRepositoryContext(s.tripRepository, ctx).FindTrip(tripID)
 	if err != nil {
 		return model.Trip{}, ErrTripNotFound
 	}

@@ -3,6 +3,7 @@ package middleware
 import (
 	"net"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -17,10 +18,12 @@ type client struct {
 }
 
 type RateLimiter struct {
-	mu      sync.RWMutex
-	clients map[string]*client
-	rate    rate.Limit
-	burst   int
+	mu       sync.RWMutex
+	clients  map[string]*client
+	rate     rate.Limit
+	burst    int
+	stop     chan struct{}
+	stopOnce sync.Once
 }
 
 func NewRateLimiter(r rate.Limit, b int) *RateLimiter {
@@ -28,6 +31,7 @@ func NewRateLimiter(r rate.Limit, b int) *RateLimiter {
 		clients: make(map[string]*client),
 		rate:    r,
 		burst:   b,
+		stop:    make(chan struct{}),
 	}
 
 	go rl.cleanup()
@@ -60,28 +64,46 @@ func (rl *RateLimiter) Limit(next http.Handler) http.Handler {
 }
 
 func (rl *RateLimiter) cleanup() {
+	ticker := time.NewTicker(time.Minute)
+	defer ticker.Stop()
 	for {
-		time.Sleep(1 * time.Minute)
-		rl.mu.Lock()
-		for ip, client := range rl.clients {
-			if time.Since(client.lastSeen) > 3*time.Minute {
-				delete(rl.clients, ip)
+		select {
+		case <-ticker.C:
+			rl.mu.Lock()
+			for ip, client := range rl.clients {
+				if time.Since(client.lastSeen) > 3*time.Minute {
+					delete(rl.clients, ip)
+				}
 			}
+			rl.mu.Unlock()
+		case <-rl.stop:
+			return
 		}
-		rl.mu.Unlock()
 	}
 }
 
+func (rl *RateLimiter) Close() {
+	rl.stopOnce.Do(func() { close(rl.stop) })
+}
+
 func getIP(r *http.Request) string {
-	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
-		if ip, _, err := net.SplitHostPort(xff); err == nil {
-			return ip
+	remoteIP := parseRemoteIP(r.RemoteAddr)
+	if remoteIP != nil && remoteIP.IsLoopback() {
+		forwarded := strings.TrimSpace(strings.Split(r.Header.Get("X-Forwarded-For"), ",")[0])
+		if forwardedIP := net.ParseIP(forwarded); forwardedIP != nil {
+			return forwardedIP.String()
 		}
-		return xff
 	}
-	ip, _, err := net.SplitHostPort(r.RemoteAddr)
+	if remoteIP != nil {
+		return remoteIP.String()
+	}
+	return r.RemoteAddr
+}
+
+func parseRemoteIP(remoteAddr string) net.IP {
+	ip, _, err := net.SplitHostPort(remoteAddr)
 	if err != nil {
-		return r.RemoteAddr
+		return net.ParseIP(remoteAddr)
 	}
-	return ip
+	return net.ParseIP(ip)
 }

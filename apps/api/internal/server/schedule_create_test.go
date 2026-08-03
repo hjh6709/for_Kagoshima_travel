@@ -9,7 +9,7 @@ import (
 func TestScheduleCreateBoundaries(t *testing.T) {
 	setServerTestEnv(t)
 
-	srv := New()
+	srv := newTestServer(t)
 	httpServer := httptest.NewServer(srv.Routes())
 	defer httpServer.Close()
 
@@ -42,6 +42,13 @@ func TestScheduleCreateBoundaries(t *testing.T) {
 	}
 	if created.body["title"] != payload["title"] {
 		t.Fatalf("created schedule title = %#v, want %#v", created.body["title"], payload["title"])
+	}
+
+	outsideTrip := createSchedule(t, httpServer.URL, ownerToken, tripID, map[string]any{
+		"date": "2026-07-13", "time": "09:00", "type": "daily", "title": "여행 밖 일정",
+	})
+	if outsideTrip.status != http.StatusBadRequest {
+		t.Fatalf("outside-trip schedule status = %d, want 400", outsideTrip.status)
 	}
 
 	list := getJSON(t, httpServer.URL+"/api/trips/"+tripID+"/schedules", ownerToken)

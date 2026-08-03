@@ -109,7 +109,13 @@ jobs:
           key: ${{ secrets.OCI_SSH_KEY }}
           envs: GOOGLE_MAPS_API_KEY
           script: |
-            [ -f /home/opc/travel-api/.env ] || echo -e 'PORT=8080\nJWT_SECRET=super-secret-key-change-me' > /home/opc/travel-api/.env
+            ENV_FILE=/home/opc/travel-api/.env
+            [ -f "$ENV_FILE" ] || { echo "missing $ENV_FILE" >&2; exit 1; }
+            grep -Eq '^APP_ENV=(production|prod)$' "$ENV_FILE" || { echo 'APP_ENV must be production' >&2; exit 1; }
+            grep -Eq '^DATABASE_URL=.+$' "$ENV_FILE" || { echo 'DATABASE_URL is required' >&2; exit 1; }
+            JWT_VALUE=$(sed -n 's/^JWT_SECRET=//p' "$ENV_FILE" | tail -n 1)
+            [ "${#JWT_VALUE}" -ge 32 ] || { echo 'JWT_SECRET must be at least 32 characters' >&2; exit 1; }
+            case "$JWT_VALUE" in *replace*|*REPLACE*|*change-me*|*CHANGE-ME*) echo 'JWT_SECRET must not be a placeholder' >&2; exit 1;; esac
             if [ -n "$GOOGLE_MAPS_API_KEY" ]; then
               sed -i '/^GOOGLE_MAPS_API_KEY=/d' /home/opc/travel-api/.env
               printf 'GOOGLE_MAPS_API_KEY=%s\n' "$GOOGLE_MAPS_API_KEY" >> /home/opc/travel-api/.env

@@ -3,10 +3,11 @@ package model
 import "time"
 
 type User struct {
-	ID        string    `json:"id"`
-	Email     string    `json:"email"`
-	Password  string    `json:"-"` // bcrypt hash, JSON 직렬화에서 제외
-	CreatedAt time.Time `json:"createdAt"`
+	ID           string    `json:"id"`
+	Email        string    `json:"email"`
+	Password     string    `json:"-"` // bcrypt hash, JSON 직렬화에서 제외
+	TokenVersion int       `json:"-"`
+	CreatedAt    time.Time `json:"createdAt"`
 }
 
 type ShareLink struct {

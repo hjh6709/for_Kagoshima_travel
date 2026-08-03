@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/dto"
@@ -26,7 +27,22 @@ func TestCreateTripPreservesWorldwideDestinationCountry(t *testing.T) {
 	}
 }
 
-func TestGetSharedTripSensitiveDataMasking(t *testing.T) {
+func TestCreateTripRejectsInvalidDateRangeAndCountryCode(t *testing.T) {
+	tripRepo := repository.NewMemoryTripRepository()
+	tripService := NewTripService(tripRepo, repository.NewMemoryChecklistRepository())
+
+	for _, request := range []dto.CreateTripRequest{
+		{Title: "역전된 날짜", StartDate: "2026-08-12", EndDate: "2026-08-10", DestinationCountry: "KR"},
+		{Title: "잘못된 날짜", StartDate: "2026/08/10", EndDate: "2026-08-12", DestinationCountry: "KR"},
+		{Title: "잘못된 국가", StartDate: "2026-08-10", EndDate: "2026-08-12", DestinationCountry: "KOR"},
+	} {
+		if _, err := tripService.CreateTrip("owner", request); !errors.Is(err, ErrInvalidTrip) {
+			t.Fatalf("CreateTrip(%+v) error = %v, want ErrInvalidTrip", request, err)
+		}
+	}
+}
+
+func TestGetSharedTripOmitsSensitiveInternalMemos(t *testing.T) {
 	tripRepo := repository.NewMemoryTripRepository()
 	checklistRepo := repository.NewMemoryChecklistRepository()
 
@@ -81,19 +97,16 @@ func TestGetSharedTripSensitiveDataMasking(t *testing.T) {
 		t.Fatalf("GetSharedTrip failed: %v", err)
 	}
 
-	// 6. 스케줄 가이드/이동 메모 마스킹 검증
+	// 6. 스케줄 가이드/이동 메모 비공개 검증
 	var foundSchedule bool
 	for _, sch := range sharedResp.Schedules {
 		if sch.ID == "sch-sensitive" {
 			foundSchedule = true
-			if sch.GuideMemo == "CONFIRM-998811" || sch.GuideMemo == "" {
-				t.Errorf("GuideMemo was not properly masked: %s", sch.GuideMemo)
+			if sch.GuideMemo != "" {
+				t.Errorf("GuideMemo = %q, want omitted", sch.GuideMemo)
 			}
-			if sch.GuideMemo != "CON••••" {
-				t.Errorf("GuideMemo masked output mismatch: got %s, want CON••••", sch.GuideMemo)
-			}
-			if sch.TransportMemo != "BUS••••" {
-				t.Errorf("TransportMemo masked output mismatch: got %s, want BUS••••", sch.TransportMemo)
+			if sch.TransportMemo != "" {
+				t.Errorf("TransportMemo = %q, want omitted", sch.TransportMemo)
 			}
 		}
 	}
@@ -101,16 +114,13 @@ func TestGetSharedTripSensitiveDataMasking(t *testing.T) {
 		t.Errorf("sensitive schedule not found in shared response")
 	}
 
-	// 7. 비행편 메모 마스킹 검증
+	// 7. 비행편 메모 비공개 검증
 	var foundFlight bool
 	for _, fl := range sharedResp.Flights {
 		if fl.ID == "fl-sensitive" {
 			foundFlight = true
-			if fl.Memo == "티켓번호 777-1234-5678" || fl.Memo == "" {
-				t.Errorf("Flight Memo was not properly masked: %s", fl.Memo)
-			}
-			if fl.Memo != "티켓번••••" {
-				t.Errorf("Flight Memo masked output mismatch: got %s, want 티켓번••••", fl.Memo)
+			if fl.Memo != "" {
+				t.Errorf("Flight Memo = %q, want omitted", fl.Memo)
 			}
 		}
 	}

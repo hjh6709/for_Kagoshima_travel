@@ -1,10 +1,10 @@
 package handler
 
 import (
-	"encoding/json"
 	"errors"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/dto"
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/httpjson"
@@ -13,21 +13,57 @@ import (
 )
 
 type AuthHandler struct {
-	authService *service.AuthService
+	authService  *service.AuthService
+	secureCookie bool
 }
 
-func NewAuthHandler(authService *service.AuthService) *AuthHandler {
-	return &AuthHandler{authService: authService}
+func (h *AuthHandler) service(r *http.Request) *service.AuthService {
+	return h.authService.WithContext(r.Context())
+}
+
+func NewAuthHandler(authService *service.AuthService, secureCookie bool) *AuthHandler {
+	return &AuthHandler{authService: authService, secureCookie: secureCookie}
+}
+
+func preventAuthResponseCaching(w http.ResponseWriter) {
+	w.Header().Set("Cache-Control", "no-store")
+	w.Header().Set("Pragma", "no-cache")
+}
+
+func (h *AuthHandler) setSessionCookie(w http.ResponseWriter, accessToken string) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     middleware.SessionCookieName,
+		Value:    accessToken,
+		Path:     "/",
+		MaxAge:   int((24 * time.Hour).Seconds()),
+		Expires:  time.Now().Add(24 * time.Hour),
+		HttpOnly: true,
+		Secure:   h.secureCookie,
+		SameSite: http.SameSiteLaxMode,
+	})
+}
+
+func (h *AuthHandler) clearSessionCookie(w http.ResponseWriter) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     middleware.SessionCookieName,
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		Expires:  time.Unix(1, 0),
+		HttpOnly: true,
+		Secure:   h.secureCookie,
+		SameSite: http.SameSiteLaxMode,
+	})
 }
 
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
+	preventAuthResponseCaching(w)
 	var req dto.RegisterRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httpjson.WriteError(w, http.StatusBadRequest, "요청 형식이 올바르지 않습니다.")
+	if !httpjson.DecodeRequest(w, r, &req) {
 		return
 	}
 
-	res, err := h.authService.Register(req)
+	res, err := h.service(r).Register(req)
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrEmailTaken):
@@ -45,17 +81,18 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.setSessionCookie(w, res.AccessToken)
 	httpjson.Write(w, http.StatusCreated, res)
 }
 
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+	preventAuthResponseCaching(w)
 	var req dto.LoginRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httpjson.WriteError(w, http.StatusBadRequest, "요청 형식이 올바르지 않습니다.")
+	if !httpjson.DecodeRequest(w, r, &req) {
 		return
 	}
 
-	res, err := h.authService.Login(req)
+	res, err := h.service(r).Login(req)
 	if err != nil {
 		if errors.Is(err, service.ErrInvalidCredentials) {
 			httpjson.WriteError(w, http.StatusUnauthorized, "이메일 또는 비밀번호가 올바르지 않습니다.")
@@ -65,10 +102,12 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.setSessionCookie(w, res.AccessToken)
 	httpjson.Write(w, http.StatusOK, res)
 }
 
 func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
+	preventAuthResponseCaching(w)
 	claims := middleware.GetClaims(r)
 	if claims == nil {
 		httpjson.WriteError(w, http.StatusUnauthorized, "인증이 필요합니다.")
@@ -83,14 +122,20 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (h *AuthHandler) Logout(w http.ResponseWriter, _ *http.Request) {
+	preventAuthResponseCaching(w)
+	h.clearSessionCookie(w)
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
+	preventAuthResponseCaching(w)
 	var req dto.ForgotPasswordRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httpjson.WriteError(w, http.StatusBadRequest, "요청 형식이 올바르지 않습니다.")
+	if !httpjson.DecodeRequest(w, r, &req) {
 		return
 	}
 
-	tempPass, err := h.authService.ForgotPassword(req.Email, req.Code)
+	tempPass, err := h.service(r).ForgotPassword(req.Email, req.Code)
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrEmailNotFound):
@@ -110,6 +155,7 @@ func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
+	preventAuthResponseCaching(w)
 	claims := middleware.GetClaims(r)
 	if claims == nil {
 		httpjson.WriteError(w, http.StatusUnauthorized, "인증이 필요합니다.")
@@ -117,12 +163,11 @@ func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req dto.ChangePasswordRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httpjson.WriteError(w, http.StatusBadRequest, "요청 형식이 올바르지 않습니다.")
+	if !httpjson.DecodeRequest(w, r, &req) {
 		return
 	}
 
-	err := h.authService.ChangePassword(claims.Email, req.CurrentPassword, req.NewPassword)
+	res, err := h.service(r).ChangePassword(claims.Email, req.CurrentPassword, req.NewPassword)
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrEmailNotFound),
@@ -136,17 +181,52 @@ func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	httpjson.Write(w, http.StatusOK, map[string]string{"message": "비밀번호가 성공적으로 변경되었습니다."})
+	h.setSessionCookie(w, res.AccessToken)
+	httpjson.Write(w, http.StatusOK, res)
 }
 
-func (h *AuthHandler) SendVerificationCode(w http.ResponseWriter, r *http.Request) {
-	var req dto.SendVerificationCodeRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httpjson.WriteError(w, http.StatusBadRequest, "요청 형식이 올바르지 않습니다.")
+func (h *AuthHandler) DeleteAccount(w http.ResponseWriter, r *http.Request) {
+	preventAuthResponseCaching(w)
+	claims := middleware.GetClaims(r)
+	if claims == nil {
+		httpjson.WriteError(w, http.StatusUnauthorized, "인증이 필요합니다.")
 		return
 	}
 
-	code, err := h.authService.SendVerificationCode(req.Email, req.Purpose)
+	var req dto.DeleteAccountRequest
+	if !httpjson.DecodeRequest(w, r, &req) {
+		return
+	}
+	if req.CurrentPassword == "" {
+		httpjson.WriteError(w, http.StatusBadRequest, "현재 비밀번호를 입력해 주세요.")
+		return
+	}
+
+	if err := h.service(r).DeleteAccount(claims.UserID, claims.Email, req.CurrentPassword); err != nil {
+		switch {
+		case errors.Is(err, service.ErrEmailNotFound):
+			httpjson.WriteError(w, http.StatusNotFound, "계정을 찾을 수 없습니다.")
+		case errors.Is(err, service.ErrCurrentPasswordMismatch):
+			httpjson.WriteError(w, http.StatusBadRequest, err.Error())
+		default:
+			log.Printf("delete account: %v", err)
+			httpjson.WriteError(w, http.StatusInternalServerError, "계정을 삭제하지 못했습니다. 잠시 후 다시 시도해 주세요.")
+		}
+		return
+	}
+
+	h.clearSessionCookie(w)
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *AuthHandler) SendVerificationCode(w http.ResponseWriter, r *http.Request) {
+	preventAuthResponseCaching(w)
+	var req dto.SendVerificationCodeRequest
+	if !httpjson.DecodeRequest(w, r, &req) {
+		return
+	}
+
+	code, err := h.service(r).SendVerificationCode(req.Email, req.Purpose)
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrEmailTaken):
@@ -171,9 +251,9 @@ func (h *AuthHandler) SendVerificationCode(w http.ResponseWriter, r *http.Reques
 }
 
 func (h *AuthHandler) VerifyCode(w http.ResponseWriter, r *http.Request) {
+	preventAuthResponseCaching(w)
 	var req dto.VerifyCodeRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httpjson.WriteError(w, http.StatusBadRequest, "요청 형식이 올바르지 않습니다.")
+	if !httpjson.DecodeRequest(w, r, &req) {
 		return
 	}
 
@@ -182,7 +262,7 @@ func (h *AuthHandler) VerifyCode(w http.ResponseWriter, r *http.Request) {
 		purpose = "register"
 	}
 
-	if err := h.authService.VerifyCode(req.Email, purpose, req.Code); err != nil {
+	if err := h.service(r).VerifyCode(req.Email, purpose, req.Code); err != nil {
 		if errors.Is(err, service.ErrInvalidVerificationCode) || errors.Is(err, service.ErrInvalidInput) {
 			httpjson.WriteError(w, http.StatusBadRequest, "인증 코드가 일치하지 않거나 만료되었습니다.")
 			return

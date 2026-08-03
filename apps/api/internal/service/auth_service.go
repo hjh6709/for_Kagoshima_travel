@@ -3,13 +3,13 @@ package service
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"flag"
 	"fmt"
 	"math/big"
 	"net/http"
@@ -47,6 +47,23 @@ type AuthService struct {
 	userRepo         repository.UserRepository
 	verificationRepo repository.VerificationRepository
 	jwtSecret        string
+	ctx              context.Context
+}
+
+func (s *AuthService) WithContext(ctx context.Context) *AuthService {
+	return &AuthService{
+		userRepo:         repository.WithUserRepositoryContext(s.userRepo, ctx),
+		verificationRepo: repository.WithVerificationRepositoryContext(s.verificationRepo, ctx),
+		jwtSecret:        s.jwtSecret,
+		ctx:              ctx,
+	}
+}
+
+func (s *AuthService) context() context.Context {
+	if s.ctx != nil {
+		return s.ctx
+	}
+	return context.Background()
 }
 
 func NewAuthService(
@@ -73,7 +90,7 @@ func (s *AuthService) Register(req dto.RegisterRequest) (dto.AuthResponse, error
 	}
 
 	// 이메일 인증코드는 실제 회원가입이 성공하기 전까지 소비하지 않습니다.
-	if !isTesting() {
+	if !allowAuthTestBypass() {
 		if err := s.VerifyCode(req.Email, "register", req.Code); err != nil {
 			if errors.Is(err, ErrInvalidVerificationCode) || errors.Is(err, ErrInvalidInput) {
 				return dto.AuthResponse{}, ErrInvalidVerificationCode
@@ -99,19 +116,31 @@ func (s *AuthService) Register(req dto.RegisterRequest) (dto.AuthResponse, error
 		CreatedAt: time.Now(),
 	}
 
-	// 코드 소비가 실패했는데 계정만 생성되는 부분 성공을 막기 위해 저장 전에 소비합니다.
-	if !isTesting() {
+	if verifiedRepo, ok := s.userRepo.(repository.VerifiedUserRepository); !allowAuthTestBypass() && ok {
 		codeHash := s.hashVerificationCode(req.Email, "register", strings.TrimSpace(req.Code))
-		if err := s.verificationRepo.Consume(req.Email, "register", codeHash, time.Now()); err != nil {
-			return dto.AuthResponse{}, fmt.Errorf("consume registration verification: %w", err)
+		if err := verifiedRepo.SaveVerifiedUser(user, "register", codeHash, time.Now()); err != nil {
+			if errors.Is(err, repository.ErrNotFound) {
+				return dto.AuthResponse{}, ErrInvalidVerificationCode
+			}
+			if errors.Is(err, repository.ErrDuplicateEmail) {
+				return dto.AuthResponse{}, ErrEmailTaken
+			}
+			return dto.AuthResponse{}, err
 		}
-	}
-
-	if err := s.userRepo.Save(user); err != nil {
-		if errors.Is(err, repository.ErrDuplicateEmail) {
-			return dto.AuthResponse{}, ErrEmailTaken
+	} else {
+		// 인메모리 개발 환경도 부분 성공을 최소화하기 위해 소비 후 저장합니다.
+		if !allowAuthTestBypass() {
+			codeHash := s.hashVerificationCode(req.Email, "register", strings.TrimSpace(req.Code))
+			if err := s.verificationRepo.Consume(req.Email, "register", codeHash, time.Now()); err != nil {
+				return dto.AuthResponse{}, ErrInvalidVerificationCode
+			}
 		}
-		return dto.AuthResponse{}, err
+		if err := s.userRepo.Save(user); err != nil {
+			if errors.Is(err, repository.ErrDuplicateEmail) {
+				return dto.AuthResponse{}, ErrEmailTaken
+			}
+			return dto.AuthResponse{}, err
+		}
 	}
 
 	return s.issueAuthResponse(user)
@@ -131,7 +160,7 @@ func (s *AuthService) Login(req dto.LoginRequest) (dto.AuthResponse, error) {
 }
 
 func (s *AuthService) issueAuthResponse(user model.User) (dto.AuthResponse, error) {
-	token, err := auth.IssueToken(user.ID, user.Email, s.jwtSecret)
+	token, err := auth.IssueToken(user.ID, user.Email, user.TokenVersion, s.jwtSecret)
 	if err != nil {
 		return dto.AuthResponse{}, err
 	}
@@ -163,7 +192,7 @@ func (s *AuthService) ForgotPassword(email string, code string) (string, error) 
 	}
 
 	// 비밀번호 재설정 시 이메일 인증코드 대조 검증 (테스트 아닐 때 필수)
-	if !isTesting() {
+	if !allowAuthTestBypass() {
 		if err := s.VerifyCode(email, "forgot", code); err != nil {
 			if errors.Is(err, ErrInvalidVerificationCode) || errors.Is(err, ErrInvalidInput) {
 				return "", ErrInvalidVerificationCode
@@ -178,45 +207,71 @@ func (s *AuthService) ForgotPassword(email string, code string) (string, error) 
 		return "", err
 	}
 
-	// 코드 소비 실패 후 비밀번호만 바뀌어 임시 비밀번호를 잃는 부분 성공을 막습니다.
-	if !isTesting() {
+	if verifiedRepo, ok := s.userRepo.(repository.VerifiedUserRepository); !allowAuthTestBypass() && ok {
 		codeHash := s.hashVerificationCode(email, "forgot", strings.TrimSpace(code))
-		if err := s.verificationRepo.Consume(email, "forgot", codeHash, time.Now()); err != nil {
-			return "", fmt.Errorf("consume password verification: %w", err)
+		if _, err := verifiedRepo.ResetVerifiedPassword(email, hashed, "forgot", codeHash, time.Now()); err != nil {
+			if errors.Is(err, repository.ErrNotFound) {
+				return "", ErrInvalidVerificationCode
+			}
+			return "", err
 		}
-	}
-
-	if err := s.userRepo.UpdatePassword(user.Email, hashed); err != nil {
-		return "", err
+	} else {
+		if !allowAuthTestBypass() {
+			codeHash := s.hashVerificationCode(email, "forgot", strings.TrimSpace(code))
+			if err := s.verificationRepo.Consume(email, "forgot", codeHash, time.Now()); err != nil {
+				return "", ErrInvalidVerificationCode
+			}
+		}
+		if _, err := s.userRepo.UpdatePassword(user.Email, hashed); err != nil {
+			return "", err
+		}
 	}
 
 	return tempPassword, nil
 }
 
-func (s *AuthService) ChangePassword(email string, currentPassword string, newPassword string) error {
+func (s *AuthService) ChangePassword(email string, currentPassword string, newPassword string) (dto.AuthResponse, error) {
 	user, err := s.userRepo.FindByEmail(normalizeEmail(email))
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return dto.AuthResponse{}, ErrEmailNotFound
+		}
+		return dto.AuthResponse{}, err
+	}
+
+	if !auth.CheckPassword(currentPassword, user.Password) {
+		return dto.AuthResponse{}, ErrCurrentPasswordMismatch
+	}
+
+	// 새 비밀번호 복잡성 검증
+	if err := validatePasswordComplexity(newPassword); err != nil {
+		return dto.AuthResponse{}, err
+	}
+
+	hashed, err := auth.HashPassword(newPassword)
+	if err != nil {
+		return dto.AuthResponse{}, err
+	}
+
+	updatedUser, err := s.userRepo.UpdatePassword(user.Email, hashed)
+	if err != nil {
+		return dto.AuthResponse{}, err
+	}
+	return s.issueAuthResponse(updatedUser)
+}
+
+func (s *AuthService) DeleteAccount(userID, email, currentPassword string) error {
+	user, err := s.userRepo.FindByID(userID)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return ErrEmailNotFound
 		}
 		return err
 	}
-
-	if !auth.CheckPassword(currentPassword, user.Password) {
+	if user.Email != normalizeEmail(email) || !auth.CheckPassword(currentPassword, user.Password) {
 		return ErrCurrentPasswordMismatch
 	}
-
-	// 새 비밀번호 복잡성 검증
-	if err := validatePasswordComplexity(newPassword); err != nil {
-		return err
-	}
-
-	hashed, err := auth.HashPassword(newPassword)
-	if err != nil {
-		return err
-	}
-
-	return s.userRepo.UpdatePassword(user.Email, hashed)
+	return s.userRepo.DeleteAccount(user.ID)
 }
 
 func generateRandomPassword() string {
@@ -252,7 +307,7 @@ func generateRandomPassword() string {
 }
 
 func validatePasswordComplexity(password string) error {
-	if isTesting() {
+	if allowAuthTestBypass() {
 		return nil
 	}
 	if len(password) < 8 {
@@ -337,7 +392,7 @@ func (s *AuthService) SendVerificationCode(email string, purpose string) (string
 
 	// Resend API 키가 주입되어 있고 테스트 환경이 아니라면 Resend HTTP API로 실제 메일을 전송합니다.
 	resendKey := os.Getenv("RESEND_API_KEY")
-	if resendKey != "" && !isTesting() {
+	if resendKey != "" && !allowAuthTestBypass() {
 		fromAddr := os.Getenv("RESEND_FROM")
 		if fromAddr == "" {
 			fromAddr = "Map Planner <noreply@hjh-dev.site>"
@@ -366,7 +421,7 @@ func (s *AuthService) SendVerificationCode(email string, purpose string) (string
 		}
 		jsonBytes, err := json.Marshal(payload)
 		if err == nil {
-			req, err := http.NewRequest("POST", "https://api.resend.com/emails", bytes.NewBuffer(jsonBytes))
+			req, err := http.NewRequestWithContext(s.context(), "POST", "https://api.resend.com/emails", bytes.NewBuffer(jsonBytes))
 			if err == nil {
 				req.Header.Set("Authorization", "Bearer "+resendKey)
 				req.Header.Set("Content-Type", "application/json")
@@ -391,7 +446,7 @@ func (s *AuthService) SendVerificationCode(email string, purpose string) (string
 	smtpPass := os.Getenv("SMTP_PASS")
 
 	// SMTP 설정이 모두 등록되어 있고, 테스트 환경이 아니라면 실제 이메일을 발송합니다.
-	if smtpHost != "" && smtpPort != "" && smtpUser != "" && smtpPass != "" && !isTesting() {
+	if smtpHost != "" && smtpPort != "" && smtpUser != "" && smtpPass != "" && !allowAuthTestBypass() {
 		addr := smtpHost + ":" + smtpPort
 		authClient := smtp.PlainAuth("", smtpUser, smtpPass, smtpHost)
 
@@ -521,6 +576,6 @@ func isProduction() bool {
 	return strings.ToLower(env) == "production" || strings.ToLower(env) == "prod"
 }
 
-func isTesting() bool {
-	return flag.Lookup("test.v") != nil
+func allowAuthTestBypass() bool {
+	return !isProduction() && os.Getenv("AUTH_TEST_BYPASS") == "1"
 }

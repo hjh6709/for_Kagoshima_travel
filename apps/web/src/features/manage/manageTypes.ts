@@ -1,6 +1,12 @@
 import type { FormEvent } from "react";
 import type { AuthResponse } from "../../api/auth";
-import type { OwnerTrip, PlaceSearchSelection, SharedFlight, SharedPlace, SharedSchedule } from "../../api/trips";
+import type {
+  OwnerTrip,
+  PlaceSearchSelection,
+  SharedFlight,
+  SharedPlace,
+  SharedSchedule,
+} from "../../api/trips";
 import type { FlightDirection } from "../../shared/travelOptions";
 import type { PlaceCategory, ScheduleItem } from "../../types/travel";
 import type { ChecklistItemResponse } from "../../api/checklist";
@@ -25,6 +31,7 @@ export type ManageAuthSectionProps = {
 
 export type ManageSessionActionProps = {
   onLogout: () => void;
+  onAuthChanged: (auth: AuthResponse) => void;
 };
 
 export type TripCreateSectionProps = {
@@ -229,29 +236,31 @@ export type SelectedTripDetailSectionProps = {
   shareLinkCopied: boolean;
   shareLinkError: string;
   shareLinkSubmitting: boolean;
-	tripEditEndDate: string;
-	tripEditError: string;
-	tripEditMemo: string;
-	tripEditStartDate: string;
-	tripEditSubmitting: boolean;
-	tripEditTitle: string;
-	tripEditTravelers: string;
-	tripEditDestinationCountry: string;
+  tripEditEndDate: string;
+  tripEditError: string;
+  tripEditMemo: string;
+  tripEditStartDate: string;
+  tripEditSubmitting: boolean;
+  tripEditTitle: string;
+  tripEditTravelers: string;
+  tripEditDestinationCountry: string;
 
-	// 체크리스트 고도화 필드
-	checklistItems: ChecklistItemResponse[];
-	checklistLoading: boolean;
-	checklistError: string;
-	newChecklistTitle: string;
-	onNewChecklistTitleChange: (value: string) => void;
-	newChecklistCategory: "before" | "airport" | "daily" | "return";
-	onNewChecklistCategoryChange: (value: "before" | "airport" | "daily" | "return") => void;
-	newChecklistDate: string;
-	onNewChecklistDateChange: (value: string) => void;
-	checklistSubmitting: boolean;
-	onAddChecklistItem: (e: React.FormEvent) => void;
-	onToggleChecklistItem: (itemID: string, isCompleted: boolean) => void;
-	onDeleteChecklistItem: (itemID: string) => void;
+  // 체크리스트 고도화 필드
+  checklistItems: ChecklistItemResponse[];
+  checklistLoading: boolean;
+  checklistError: string;
+  newChecklistTitle: string;
+  onNewChecklistTitleChange: (value: string) => void;
+  newChecklistCategory: "before" | "airport" | "daily" | "return";
+  onNewChecklistCategoryChange: (
+    value: "before" | "airport" | "daily" | "return",
+  ) => void;
+  newChecklistDate: string;
+  onNewChecklistDateChange: (value: string) => void;
+  checklistSubmitting: boolean;
+  onAddChecklistItem: (e: React.FormEvent) => void;
+  onToggleChecklistItem: (itemID: string, isCompleted: boolean) => void;
+  onDeleteChecklistItem: (itemID: string) => void;
 };
 
 // /manage/trips/:id, /manage/trips/:id/edit가 URL의 tripId로 여행을 자동 선택할 때 쓴다.

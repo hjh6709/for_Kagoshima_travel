@@ -18,6 +18,7 @@ var (
 	ErrShareNotFound            = errors.New("share link not found")
 	ErrForbidden                = errors.New("forbidden")
 	ErrInvalidTrip              = errors.New("invalid trip input")
+	ErrTripDateConflict         = errors.New("trip date conflicts with dated items")
 	ErrPlaceSearchUnavailable   = errors.New("place search unavailable")
 	ErrPlaceSearchQuotaExceeded = errors.New("place search monthly quota exceeded")
 )
@@ -27,6 +28,22 @@ const googlePlacesMonthlyLimit = 4500
 type TripService struct {
 	tripRepository      repository.TripRepository
 	checklistRepository repository.ChecklistRepository
+	ctx                 context.Context
+}
+
+func (s *TripService) WithContext(ctx context.Context) *TripService {
+	return &TripService{
+		tripRepository:      repository.WithTripRepositoryContext(s.tripRepository, ctx),
+		checklistRepository: s.checklistRepository,
+		ctx:                 ctx,
+	}
+}
+
+func (s *TripService) context() context.Context {
+	if s.ctx != nil {
+		return s.ctx
+	}
+	return context.Background()
 }
 
 func NewTripService(tripRepository repository.TripRepository, checklistRepository repository.ChecklistRepository) *TripService {
@@ -112,24 +129,18 @@ func (s *TripService) GetSharedTrip(token string) (dto.SharedTripResponse, error
 		return dto.SharedTripResponse{}, err
 	}
 
-	// 공유 화면에서는 민감한 항공 메모 및 일정 예약번호 마스킹 처리
+	// 공유 링크는 로그인 없이 열리므로 내부 메모를 일부라도 노출하지 않습니다.
 	sharedFlights := make([]dto.FlightResponse, len(flights))
 	copy(sharedFlights, flights)
 	for i := range sharedFlights {
-		if sharedFlights[i].Memo != "" {
-			sharedFlights[i].Memo = maskSensitiveText(sharedFlights[i].Memo)
-		}
+		sharedFlights[i].Memo = ""
 	}
 
 	sharedSchedules := make([]dto.ScheduleResponse, len(schedules))
 	copy(sharedSchedules, schedules)
 	for i := range sharedSchedules {
-		if sharedSchedules[i].GuideMemo != "" {
-			sharedSchedules[i].GuideMemo = maskSensitiveText(sharedSchedules[i].GuideMemo)
-		}
-		if sharedSchedules[i].TransportMemo != "" {
-			sharedSchedules[i].TransportMemo = maskSensitiveText(sharedSchedules[i].TransportMemo)
-		}
+		sharedSchedules[i].GuideMemo = ""
+		sharedSchedules[i].TransportMemo = ""
 	}
 
 	routes, err := s.ListRoutes(link.TripID)
@@ -137,7 +148,7 @@ func (s *TripService) GetSharedTrip(token string) (dto.SharedTripResponse, error
 		return dto.SharedTripResponse{}, err
 	}
 
-	checklistItems, err := s.checklistRepository.FindByTrip(context.Background(), link.TripID)
+	checklistItems, err := s.checklistRepository.FindByTrip(s.context(), link.TripID)
 	if err != nil {
 		return dto.SharedTripResponse{}, err
 	}
@@ -154,17 +165,6 @@ func (s *TripService) GetSharedTrip(token string) (dto.SharedTripResponse, error
 		Routes:    routes,
 		Checklist: sharedChecklist,
 	}, nil
-}
-
-func maskSensitiveText(text string) string {
-	if text == "" {
-		return ""
-	}
-	runes := []rune(text)
-	if len(runes) <= 3 {
-		return "••••"
-	}
-	return string(runes[:3]) + "••••"
 }
 
 func (s *TripService) ListSchedules(tripID string) ([]dto.ScheduleResponse, error) {
@@ -188,11 +188,18 @@ func (s *TripService) ListSchedulesForOwner(tripID, ownerID string) ([]dto.Sched
 }
 
 func (s *TripService) CreateSchedule(tripID, ownerID string, req dto.CreateScheduleRequest) (dto.ScheduleResponse, error) {
-	if err := s.ensureTripOwner(tripID, ownerID); err != nil {
+	trip, err := s.findOwnedTrip(tripID, ownerID)
+	if err != nil {
 		return dto.ScheduleResponse{}, err
 	}
-	if req.Date == "" || req.Time == "" || req.Type == "" || req.Title == "" {
+	title, validTitle := normalizeRequiredText(req.Title, maxTitleRunes)
+	if !validTitle || strings.TrimSpace(req.Time) == "" || strings.TrimSpace(req.Type) == "" || !isDateWithinTrip(req.Date, trip) {
 		return dto.ScheduleResponse{}, ErrInvalidTrip
+	}
+	if req.PlaceID != "" {
+		if _, err := s.tripRepository.FindPlace(tripID, req.PlaceID); err != nil {
+			return dto.ScheduleResponse{}, mapRepositoryError(err)
+		}
 	}
 	id, err := newID()
 	if err != nil {
@@ -205,7 +212,7 @@ func (s *TripService) CreateSchedule(tripID, ownerID string, req dto.CreateSched
 		Date:          req.Date,
 		Time:          req.Time,
 		Type:          req.Type,
-		Title:         req.Title,
+		Title:         title,
 		TransportMemo: req.TransportMemo,
 		GuideMemo:     req.GuideMemo,
 	}
@@ -217,7 +224,8 @@ func (s *TripService) CreateSchedule(tripID, ownerID string, req dto.CreateSched
 
 // UpdateSchedule은 여행 소유자만 기존 일정을 부분 수정할 수 있게 한다.
 func (s *TripService) UpdateSchedule(tripID, scheduleID, ownerID string, req dto.UpdateScheduleRequest) (dto.ScheduleResponse, error) {
-	if err := s.ensureTripOwner(tripID, ownerID); err != nil {
+	trip, err := s.findOwnedTrip(tripID, ownerID)
+	if err != nil {
 		return dto.ScheduleResponse{}, err
 	}
 	schedule, err := s.tripRepository.FindSchedule(tripID, scheduleID)
@@ -249,8 +257,15 @@ func (s *TripService) UpdateSchedule(tripID, scheduleID, ownerID string, req dto
 	}
 
 	// 수정 후에도 일정 화면의 핵심 필드는 비어 있으면 안 된다.
-	if schedule.Date == "" || schedule.Time == "" || schedule.Type == "" || schedule.Title == "" {
+	title, validTitle := normalizeRequiredText(schedule.Title, maxTitleRunes)
+	if !validTitle || strings.TrimSpace(schedule.Time) == "" || strings.TrimSpace(schedule.Type) == "" || !isDateWithinTrip(schedule.Date, trip) {
 		return dto.ScheduleResponse{}, ErrInvalidTrip
+	}
+	schedule.Title = title
+	if schedule.PlaceID != "" {
+		if _, err := s.tripRepository.FindPlace(tripID, schedule.PlaceID); err != nil {
+			return dto.ScheduleResponse{}, mapRepositoryError(err)
+		}
 	}
 	if err := s.tripRepository.UpdateSchedule(schedule); err != nil {
 		return dto.ScheduleResponse{}, mapRepositoryError(err)
@@ -272,7 +287,8 @@ func (s *TripService) CreatePlace(tripID, ownerID string, req dto.CreatePlaceReq
 	if err := s.ensureTripOwner(tripID, ownerID); err != nil {
 		return dto.PlaceResponse{}, err
 	}
-	if req.Name == "" || req.Category == "" {
+	name, validName := normalizeRequiredText(req.Name, 160)
+	if !validName || strings.TrimSpace(req.Category) == "" || !validCoordinates(req.Latitude, req.Longitude) {
 		return dto.PlaceResponse{}, ErrInvalidTrip
 	}
 	id, err := newID()
@@ -282,7 +298,7 @@ func (s *TripService) CreatePlace(tripID, ownerID string, req dto.CreatePlaceReq
 	place := model.Place{
 		ID:                id,
 		TripID:            tripID,
-		Name:              req.Name,
+		Name:              name,
 		Category:          req.Category,
 		Address:           req.Address,
 		GoogleMapsURL:     req.GoogleMapsURL,
@@ -350,9 +366,11 @@ func (s *TripService) UpdatePlace(tripID, placeID, ownerID string, req dto.Updat
 	}
 
 	// 장소 카드가 화면에 의미 있게 표시되려면 이름과 분류는 수정 후에도 필수다.
-	if place.Name == "" || place.Category == "" {
+	name, validName := normalizeRequiredText(place.Name, 160)
+	if !validName || strings.TrimSpace(place.Category) == "" || !validCoordinates(place.Latitude, place.Longitude) {
 		return dto.PlaceResponse{}, ErrInvalidTrip
 	}
+	place.Name = name
 	if err := s.tripRepository.UpdatePlace(place); err != nil {
 		return dto.PlaceResponse{}, mapRepositoryError(err)
 	}
@@ -393,8 +411,9 @@ func (s *TripService) CreateFlight(tripID, ownerID string, req dto.CreateFlightR
 	if err := s.ensureTripOwner(tripID, ownerID); err != nil {
 		return dto.FlightResponse{}, err
 	}
-	if req.Direction == "" || req.Label == "" || req.DepartureAirport == "" || req.ArrivalAirport == "" ||
-		req.DepartureDate == "" || req.DepartureTime == "" {
+	if strings.TrimSpace(req.Direction) == "" || strings.TrimSpace(req.Label) == "" ||
+		strings.TrimSpace(req.DepartureAirport) == "" || strings.TrimSpace(req.ArrivalAirport) == "" ||
+		strings.TrimSpace(req.DepartureTime) == "" || !validateFlightDates(req.DepartureDate, req.ArrivalDate) {
 		return dto.FlightResponse{}, ErrInvalidTrip
 	}
 	id, err := newID()
@@ -488,8 +507,9 @@ func (s *TripService) UpdateFlight(tripID, flightID, ownerID string, req dto.Upd
 	}
 
 	// 공유 화면에서 항공편 카드가 성립하려면 핵심 이동 정보는 수정 후에도 비어 있으면 안 된다.
-	if flight.Direction == "" || flight.Label == "" || flight.DepartureAirport == "" || flight.ArrivalAirport == "" ||
-		flight.DepartureDate == "" || flight.DepartureTime == "" {
+	if strings.TrimSpace(flight.Direction) == "" || strings.TrimSpace(flight.Label) == "" ||
+		strings.TrimSpace(flight.DepartureAirport) == "" || strings.TrimSpace(flight.ArrivalAirport) == "" ||
+		strings.TrimSpace(flight.DepartureTime) == "" || !validateFlightDates(flight.DepartureDate, flight.ArrivalDate) {
 		return dto.FlightResponse{}, ErrInvalidTrip
 	}
 	if err := s.tripRepository.UpdateFlight(flight); err != nil {
@@ -563,31 +583,25 @@ var defaultChecklistPresets = []PresetItem{
 }
 
 func (s *TripService) CreateTrip(ownerID string, req dto.CreateTripRequest) (dto.TripResponse, error) {
-	if req.Title == "" || req.StartDate == "" || req.EndDate == "" {
+	title, validTitle := normalizeRequiredText(req.Title, maxTitleRunes)
+	destCountry, validCountry := normalizeCountryCode(req.DestinationCountry)
+	if !validTitle || !validCountry || !validateDateRange(req.StartDate, req.EndDate) {
 		return dto.TripResponse{}, ErrInvalidTrip
 	}
 	id, err := newID()
 	if err != nil {
 		return dto.TripResponse{}, err
 	}
-	destCountry := strings.ToUpper(strings.TrimSpace(req.DestinationCountry))
-	if destCountry == "" {
-		destCountry = "JP"
-	}
 	trip := model.Trip{
 		ID:                 id,
 		OwnerID:            ownerID,
-		Title:              req.Title,
+		Title:              title,
 		StartDate:          req.StartDate,
 		EndDate:            req.EndDate,
 		Travelers:          req.Travelers,
 		DestinationCountry: destCountry,
 		Memo:               req.Memo,
 	}
-	if err := s.tripRepository.Save(trip); err != nil {
-		return dto.TripResponse{}, err
-	}
-
 	// 기본 체크리스트 프리셋 자동 주입
 	presetItems := make([]model.ChecklistItem, 0)
 	for _, preset := range defaultChecklistPresets {
@@ -608,8 +622,18 @@ func (s *TripService) CreateTrip(ownerID string, req dto.CreateTripRequest) (dto
 			})
 		}
 	}
-	if err := s.checklistRepository.SaveAll(context.Background(), presetItems); err != nil {
-		return dto.TripResponse{}, err
+	if transactional, ok := s.tripRepository.(repository.TripWithChecklistRepository); ok {
+		if err := transactional.SaveTripWithChecklist(s.context(), trip, presetItems); err != nil {
+			return dto.TripResponse{}, err
+		}
+	} else {
+		if err := s.tripRepository.Save(trip); err != nil {
+			return dto.TripResponse{}, err
+		}
+		if err := s.checklistRepository.SaveAll(s.context(), presetItems); err != nil {
+			_ = s.tripRepository.Delete(trip.ID)
+			return dto.TripResponse{}, err
+		}
 	}
 
 	return mapTripResponse(trip), nil
@@ -636,7 +660,7 @@ func (s *TripService) UpdateTrip(id, ownerID string, req dto.UpdateTripRequest) 
 		return dto.TripResponse{}, ErrForbidden
 	}
 	if req.Title != nil {
-		trip.Title = *req.Title
+		trip.Title = strings.TrimSpace(*req.Title)
 	}
 	if req.StartDate != nil {
 		trip.StartDate = *req.StartDate
@@ -648,14 +672,35 @@ func (s *TripService) UpdateTrip(id, ownerID string, req dto.UpdateTripRequest) 
 		trip.Travelers = req.Travelers
 	}
 	if req.DestinationCountry != nil {
-		dc := *req.DestinationCountry
-		if dc == "" || (dc != "JP" && dc != "CN") {
-			dc = "JP"
+		dc, valid := normalizeCountryCode(*req.DestinationCountry)
+		if !valid {
+			return dto.TripResponse{}, ErrInvalidTrip
 		}
 		trip.DestinationCountry = dc
 	}
 	if req.Memo != nil {
 		trip.Memo = *req.Memo
+	}
+	if _, valid := normalizeRequiredText(trip.Title, maxTitleRunes); !valid || !validateDateRange(trip.StartDate, trip.EndDate) {
+		return dto.TripResponse{}, ErrInvalidTrip
+	}
+	schedules, err := s.tripRepository.FindSchedules(id)
+	if err != nil {
+		return dto.TripResponse{}, mapRepositoryError(err)
+	}
+	for _, schedule := range schedules {
+		if !isDateWithinTrip(schedule.Date, trip) {
+			return dto.TripResponse{}, ErrTripDateConflict
+		}
+	}
+	checklistItems, err := s.checklistRepository.FindByTrip(s.context(), id)
+	if err != nil {
+		return dto.TripResponse{}, err
+	}
+	for _, item := range checklistItems {
+		if item.ScheduledDate != "" && !isDateWithinTrip(item.ScheduledDate, trip) {
+			return dto.TripResponse{}, ErrTripDateConflict
+		}
 	}
 	if err := s.tripRepository.Update(trip); err != nil {
 		return dto.TripResponse{}, mapRepositoryError(err)
@@ -675,14 +720,19 @@ func (s *TripService) DeleteTrip(id, ownerID string) error {
 }
 
 func (s *TripService) ensureTripOwner(tripID, ownerID string) error {
+	_, err := s.findOwnedTrip(tripID, ownerID)
+	return err
+}
+
+func (s *TripService) findOwnedTrip(tripID, ownerID string) (model.Trip, error) {
 	trip, err := s.tripRepository.FindTrip(tripID)
 	if err != nil {
-		return mapRepositoryError(err)
+		return model.Trip{}, mapRepositoryError(err)
 	}
 	if !sameID(trip.OwnerID, ownerID) {
-		return ErrForbidden
+		return model.Trip{}, ErrForbidden
 	}
-	return nil
+	return trip, nil
 }
 
 func mapRepositoryError(err error) error {
@@ -821,7 +871,7 @@ func (s *TripService) searchPlacesByCountry(country, query string) ([]dto.PlaceS
 
 func (s *TripService) searchPlacesGoogle(query, country string) ([]dto.PlaceSearchResult, error) {
 	if strings.TrimSpace(os.Getenv("GOOGLE_MAPS_API_KEY")) == "" {
-		return searchGooglePlaces(query, country)
+		return searchGooglePlaces(s.context(), query, country)
 	}
 	periodStart := time.Now().UTC().Format("2006-01") + "-01"
 	allowed, err := s.tripRepository.ConsumeMonthlyAPIRequest("google-places-text-search", periodStart, googlePlacesMonthlyLimit)
@@ -831,7 +881,7 @@ func (s *TripService) searchPlacesGoogle(query, country string) ([]dto.PlaceSear
 	if !allowed {
 		return nil, ErrPlaceSearchQuotaExceeded
 	}
-	return searchGooglePlaces(query, country)
+	return searchGooglePlaces(s.context(), query, country)
 }
 
 // getMockPlaces는 Google Places 키가 유실되었거나 개발/로컬 환경일 때,

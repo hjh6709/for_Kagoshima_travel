@@ -47,7 +47,7 @@ func (r *PostgresChecklistRepository) SaveAll(ctx context.Context, items []model
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(context.WithoutCancel(ctx)) }()
 
 	for _, item := range items {
 		destCountry := toNullableString(item.DestinationCountry)

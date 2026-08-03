@@ -11,6 +11,7 @@ import (
 
 func TestRateLimiter(t *testing.T) {
 	rl := NewRateLimiter(rate.Limit(10), 3)
+	defer rl.Close()
 
 	dummyHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -59,5 +60,21 @@ func TestRateLimiter(t *testing.T) {
 
 	if recRetry.Code != http.StatusOK {
 		t.Errorf("대기 후 재요청: 기대값 200 OK, 결과값 %d", recRetry.Code)
+	}
+}
+
+func TestGetIPTrustsForwardedHeaderOnlyFromLoopbackProxy(t *testing.T) {
+	direct := httptest.NewRequest(http.MethodGet, "http://example.com", nil)
+	direct.RemoteAddr = "198.51.100.10:4567"
+	direct.Header.Set("X-Forwarded-For", "203.0.113.20")
+	if got := getIP(direct); got != "198.51.100.10" {
+		t.Fatalf("direct request IP = %q, want remote address", got)
+	}
+
+	proxied := httptest.NewRequest(http.MethodGet, "http://example.com", nil)
+	proxied.RemoteAddr = "127.0.0.1:8080"
+	proxied.Header.Set("X-Forwarded-For", "203.0.113.20, 127.0.0.1")
+	if got := getIP(proxied); got != "203.0.113.20" {
+		t.Fatalf("proxied request IP = %q, want first validated forwarded IP", got)
 	}
 }

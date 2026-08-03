@@ -61,6 +61,9 @@ func TestRunMigrationsAppliesCurrentSchemaIdempotently(t *testing.T) {
 	if !strings.Contains(joined, "ADD COLUMN IF NOT EXISTS scheduled_date") {
 		t.Error("migration SQL does not add checklists.scheduled_date for existing databases")
 	}
+	if !strings.Contains(joined, "ADD COLUMN IF NOT EXISTS token_version") {
+		t.Error("migration SQL does not add users.token_version for existing databases")
+	}
 }
 
 func TestRunMigrationsReportsFailingMigration(t *testing.T) {

@@ -21,7 +21,7 @@ type jsonResponse struct {
 func TestShareSecurityBoundaries(t *testing.T) {
 	setServerTestEnv(t)
 
-	srv := New()
+	srv := newTestServer(t)
 	httpServer := httptest.NewServer(srv.Routes())
 	defer httpServer.Close()
 
@@ -80,6 +80,17 @@ func setServerTestEnv(t *testing.T) {
 		t.Setenv("DATABASE_URL", "")
 	}
 	t.Setenv("JWT_SECRET", "test-secret")
+	t.Setenv("AUTH_TEST_BYPASS", "1")
+}
+
+func newTestServer(t *testing.T) *Server {
+	t.Helper()
+	srv, err := New()
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	t.Cleanup(srv.Close)
+	return srv
 }
 
 func uniqueTestEmail(t *testing.T, prefix string) string {

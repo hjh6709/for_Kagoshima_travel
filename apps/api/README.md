@@ -48,7 +48,7 @@ cp .env.example .env
 - `DATABASE_URL`: PostgreSQL 연결 문자열. 루트 `docker-compose.yml`의 PostgreSQL을 사용할 때는 `localhost:5433`을 사용
 - `JWT_SECRET`: JWT 서명 비밀키
 - `GOOGLE_MAPS_API_KEY`: 여행지 후보를 찾는 Google Places 검색 키
-- `ALLOWED_ORIGINS`: CORS 허용 origin
+- `ALLOWED_ORIGINS`: 자격 증명 요청을 허용할 CORS origin. 여러 개면 쉼표로 구분
 
 실제 `.env` 파일은 커밋하지 않습니다.
 
@@ -68,6 +68,10 @@ Go 백엔드는 Spring Boot의 executable jar처럼 단독 실행 바이너리�
 - `GET /openapi.json`
 - `POST /api/auth/register`
 - `POST /api/auth/login`
+- `POST /api/auth/logout`
+- `GET /api/auth/me`
+- `POST /api/auth/change-password`
+- `DELETE /api/auth/account`
 - `GET /api/share/{token}`
 - `GET /api/trips`
 - `POST /api/trips`
@@ -85,7 +89,8 @@ Go 백엔드는 Spring Boot의 executable jar처럼 단독 실행 바이너리�
 - `POST /api/trips/{tripID}/flights`
 - `GET /api/trips/{tripID}/routes`
 
-`/api/trips` 계열 엔드포인트는 `Authorization: Bearer <token>` 헤더가 필요합니다.
+브라우저 로그인은 `HttpOnly`, `SameSite=Lax` 세션 쿠키를 사용합니다. 네이티브 또는 API 클라이언트는
+`Authorization: Bearer <token>` 헤더도 사용할 수 있습니다. 운영 환경의 쿠키에는 `Secure` 속성이 추가됩니다.
 `/api/share/{token}`은 부모님/가족용 읽기 전용 공개 조회 엔드포인트이며 로그인 없이 접근합니다.
 `DATABASE_URL`이 설정되면 PostgreSQL을 사용하고, 설정하지 않으면 개발용 in-memory 저장소를 사용합니다.
 
@@ -105,9 +110,9 @@ dto         API 요청/응답 모델
 
 스프링 시큐리티의 인증/인가 개념을 Go에서는 middleware로 구현합니다.
 
-- 인증: 이메일/비밀번호 로그인 후 JWT 발급
+- 인증: 이메일/비밀번호 로그인 후 브라우저에는 HttpOnly 쿠키, API 클라이언트에는 JWT 발급
 - 비밀번호: bcrypt 해시 저장
-- 인가: JWT에 포함된 역할을 middleware에서 확인
-- 관리자 API: `admin` 역할만 접근
+- 인가: JWT 사용자와 현재 DB 사용자의 이메일·토큰 버전을 middleware에서 매 요청 확인
+- 세션 폐기: 비밀번호 변경·재설정 및 계정 삭제 시 기존 JWT 무효화
 - 가족 공유: 로그인 대신 공유 토큰 기반 읽기 전용 접근
 - 소셜 로그인: 초기 Beta에서는 제외하고, 상용 서비스 검증 이후 Google/Kakao/Apple 로그인을 검토

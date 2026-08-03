@@ -1,11 +1,27 @@
 package repository
 
 import (
+	"context"
 	"errors"
 	"sync"
 
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/model"
 )
+
+type TripRepositoryContextProvider interface {
+	WithContext(context.Context) TripRepository
+}
+
+type TripWithChecklistRepository interface {
+	SaveTripWithChecklist(context.Context, model.Trip, []model.ChecklistItem) error
+}
+
+func WithTripRepositoryContext(repo TripRepository, ctx context.Context) TripRepository {
+	if contextual, ok := repo.(TripRepositoryContextProvider); ok {
+		return contextual.WithContext(ctx)
+	}
+	return repo
+}
 
 var (
 	ErrNotFound       = errors.New("not found")

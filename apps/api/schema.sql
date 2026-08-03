@@ -5,7 +5,8 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 CREATE TABLE users (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email       TEXT NOT NULL UNIQUE,
-    password    TEXT NOT NULL,  -- bcrypt hash
+    password      TEXT NOT NULL,  -- bcrypt hash
+    token_version INTEGER NOT NULL DEFAULT 0,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

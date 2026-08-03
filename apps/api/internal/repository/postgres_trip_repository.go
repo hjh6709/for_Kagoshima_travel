@@ -12,14 +12,26 @@ import (
 
 type PostgresTripRepository struct {
 	pool *pgxpool.Pool
+	ctx  context.Context
 }
 
 func NewPostgresTripRepository(pool *pgxpool.Pool) *PostgresTripRepository {
 	return &PostgresTripRepository{pool: pool}
 }
 
+func (r *PostgresTripRepository) WithContext(ctx context.Context) TripRepository {
+	return &PostgresTripRepository{pool: r.pool, ctx: ctx}
+}
+
+func (r *PostgresTripRepository) context() context.Context {
+	if r.ctx != nil {
+		return r.ctx
+	}
+	return context.Background()
+}
+
 func (r *PostgresTripRepository) FindTrip(id string) (model.Trip, error) {
-	row := r.pool.QueryRow(context.Background(),
+	row := r.pool.QueryRow(r.context(),
 		`SELECT id::text, owner_id::text, title, start_date::text, end_date::text, travelers, destination_country, COALESCE(memo,'') FROM trips WHERE id = $1`, id)
 
 	var t model.Trip
@@ -33,7 +45,7 @@ func (r *PostgresTripRepository) FindTrip(id string) (model.Trip, error) {
 }
 
 func (r *PostgresTripRepository) FindByOwner(ownerID string) ([]model.Trip, error) {
-	rows, err := r.pool.Query(context.Background(),
+	rows, err := r.pool.Query(r.context(),
 		`SELECT id::text, owner_id::text, title, start_date::text, end_date::text, travelers, destination_country, COALESCE(memo,'') FROM trips WHERE owner_id = $1 ORDER BY start_date`, ownerID)
 	if err != nil {
 		return nil, err
@@ -52,7 +64,7 @@ func (r *PostgresTripRepository) FindByOwner(ownerID string) ([]model.Trip, erro
 }
 
 func (r *PostgresTripRepository) FindShareLinkByToken(token string) (model.ShareLink, error) {
-	row := r.pool.QueryRow(context.Background(),
+	row := r.pool.QueryRow(r.context(),
 		`SELECT id::text, trip_id::text, token, created_at, expires_at
 		 FROM share_links
 		 WHERE token = $1 AND (expires_at IS NULL OR expires_at > NOW())`, token)
@@ -68,23 +80,64 @@ func (r *PostgresTripRepository) FindShareLinkByToken(token string) (model.Share
 }
 
 func (r *PostgresTripRepository) Save(trip model.Trip) error {
-	_, err := r.pool.Exec(context.Background(),
+	_, err := r.pool.Exec(r.context(),
 		`INSERT INTO trips (id, owner_id, title, start_date, end_date, travelers, destination_country, memo) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
 		trip.ID, trip.OwnerID, trip.Title, trip.StartDate, trip.EndDate, trip.Travelers, trip.DestinationCountry, trip.Memo)
 	return err
 }
 
-func (r *PostgresTripRepository) SaveShareLink(link model.ShareLink) error {
-	// 기존 해당 여행에 발급된 모든 공유 링크를 삭제하여 이전 링크를 강제 만료(무효화)시킵니다.
-	_, err := r.pool.Exec(context.Background(), `DELETE FROM share_links WHERE trip_id = $1`, link.TripID)
+func (r *PostgresTripRepository) SaveTripWithChecklist(ctx context.Context, trip model.Trip, items []model.ChecklistItem) error {
+	tx, err := r.pool.Begin(ctx)
 	if err != nil {
 		return err
 	}
+	defer func() { _ = tx.Rollback(context.WithoutCancel(ctx)) }()
 
-	_, err = r.pool.Exec(context.Background(),
+	if _, err := tx.Exec(ctx,
+		`INSERT INTO trips (id, owner_id, title, start_date, end_date, travelers, destination_country, memo) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+		trip.ID, trip.OwnerID, trip.Title, trip.StartDate, trip.EndDate, trip.Travelers, trip.DestinationCountry, trip.Memo,
+	); err != nil {
+		return err
+	}
+	for _, item := range items {
+		var destinationCountry any
+		if item.DestinationCountry != "" {
+			destinationCountry = item.DestinationCountry
+		}
+		var scheduledDate any
+		if item.ScheduledDate != "" {
+			scheduledDate = item.ScheduledDate
+		}
+		if _, err := tx.Exec(ctx,
+			`INSERT INTO checklists (id, trip_id, category, title, is_completed, custom, destination_country, scheduled_date, created_at)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+			item.ID, item.TripID, item.Category, item.Title, item.IsCompleted, item.Custom, destinationCountry, scheduledDate, item.CreatedAt,
+		); err != nil {
+			return err
+		}
+	}
+	return tx.Commit(ctx)
+}
+
+func (r *PostgresTripRepository) SaveShareLink(link model.ShareLink) error {
+	ctx := r.context()
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback(context.WithoutCancel(ctx)) }()
+
+	// 이전 링크 무효화와 새 링크 저장은 반드시 함께 성공하거나 함께 취소합니다.
+	if _, err := tx.Exec(ctx, `DELETE FROM share_links WHERE trip_id = $1`, link.TripID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx,
 		`INSERT INTO share_links (id, trip_id, token, created_at, expires_at) VALUES ($1,$2,$3,$4,$5)`,
-		link.ID, link.TripID, link.Token, link.CreatedAt, link.ExpiresAt)
-	return err
+		link.ID, link.TripID, link.Token, link.CreatedAt, link.ExpiresAt,
+	); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
 }
 
 func (r *PostgresTripRepository) SaveSchedule(schedule model.Schedule) error {
@@ -92,7 +145,7 @@ func (r *PostgresTripRepository) SaveSchedule(schedule model.Schedule) error {
 	if schedule.PlaceID != "" {
 		placeID = schedule.PlaceID
 	}
-	_, err := r.pool.Exec(context.Background(),
+	_, err := r.pool.Exec(r.context(),
 		`INSERT INTO schedules (id, trip_id, place_id, date, time, type, title, transport_memo, guide_memo)
 		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
 		schedule.ID, schedule.TripID, placeID, schedule.Date, schedule.Time, schedule.Type, schedule.Title,
@@ -102,7 +155,7 @@ func (r *PostgresTripRepository) SaveSchedule(schedule model.Schedule) error {
 
 // FindSchedule은 PATCH 전에 기존 일정 값을 보존하기 위해 단건을 조회한다.
 func (r *PostgresTripRepository) FindSchedule(tripID, scheduleID string) (model.Schedule, error) {
-	row := r.pool.QueryRow(context.Background(),
+	row := r.pool.QueryRow(r.context(),
 		`SELECT id::text, trip_id::text, COALESCE(place_id::text,''), date::text, time, type, title,
 		        COALESCE(transport_memo,''), COALESCE(guide_memo,'')
 		 FROM schedules WHERE trip_id = $1 AND id = $2`, tripID, scheduleID)
@@ -124,7 +177,7 @@ func (r *PostgresTripRepository) UpdateSchedule(schedule model.Schedule) error {
 	if schedule.PlaceID != "" {
 		placeID = schedule.PlaceID
 	}
-	tag, err := r.pool.Exec(context.Background(),
+	tag, err := r.pool.Exec(r.context(),
 		`UPDATE schedules
 		 SET place_id = $1, date = $2, time = $3, type = $4, title = $5,
 		     transport_memo = $6, guide_memo = $7
@@ -141,7 +194,7 @@ func (r *PostgresTripRepository) UpdateSchedule(schedule model.Schedule) error {
 }
 
 func (r *PostgresTripRepository) SavePlace(place model.Place) error {
-	_, err := r.pool.Exec(context.Background(),
+	_, err := r.pool.Exec(r.context(),
 		`INSERT INTO places (id, trip_id, name, category, address, google_maps_url, recommended_reason, 
 		                     latitude, longitude, google_place_id, chinese_name, chinese_address, subway_exit, taxi_phrase)
 		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
@@ -152,7 +205,7 @@ func (r *PostgresTripRepository) SavePlace(place model.Place) error {
 
 // FindPlace는 PATCH 전에 기존 장소 값을 유지하기 위해 단건을 조회한다.
 func (r *PostgresTripRepository) FindPlace(tripID, placeID string) (model.Place, error) {
-	row := r.pool.QueryRow(context.Background(),
+	row := r.pool.QueryRow(r.context(),
 		`SELECT id::text, trip_id::text, name, category, COALESCE(address,''),
 		        COALESCE(google_maps_url,''), COALESCE(recommended_reason,''),
 		        latitude, longitude, COALESCE(google_place_id,''), COALESCE(chinese_name,''),
@@ -173,7 +226,7 @@ func (r *PostgresTripRepository) FindPlace(tripID, placeID string) (model.Place,
 
 // UpdatePlace는 places 스키마에 실제로 존재하는 컬럼만 수정한다.
 func (r *PostgresTripRepository) UpdatePlace(place model.Place) error {
-	tag, err := r.pool.Exec(context.Background(),
+	tag, err := r.pool.Exec(r.context(),
 		`UPDATE places
 		 SET name = $1, category = $2, address = $3, google_maps_url = $4, recommended_reason = $5,
 		     latitude = $6, longitude = $7, google_place_id = $8, chinese_name = $9, chinese_address = $10,
@@ -196,7 +249,7 @@ func (r *PostgresTripRepository) SaveFlight(flight model.Flight) error {
 	if flight.ArrivalDate != "" {
 		arrivalDate = flight.ArrivalDate
 	}
-	_, err := r.pool.Exec(context.Background(),
+	_, err := r.pool.Exec(r.context(),
 		`INSERT INTO flights (
 			id, trip_id, direction, label, airline, flight_number,
 			departure_airport, arrival_airport, departure_date, departure_time,
@@ -210,7 +263,7 @@ func (r *PostgresTripRepository) SaveFlight(flight model.Flight) error {
 
 // FindFlight는 PATCH 전에 기존 항공편 값을 유지하기 위해 단건을 조회한다.
 func (r *PostgresTripRepository) FindFlight(tripID, flightID string) (model.Flight, error) {
-	row := r.pool.QueryRow(context.Background(),
+	row := r.pool.QueryRow(r.context(),
 		`SELECT id::text, trip_id::text, direction, label, COALESCE(airline,''), COALESCE(flight_number,''),
 		        departure_airport, arrival_airport, departure_date::text, departure_time,
 		        COALESCE(arrival_date::text,''), COALESCE(arrival_time,''), COALESCE(memo,'')
@@ -234,7 +287,7 @@ func (r *PostgresTripRepository) UpdateFlight(flight model.Flight) error {
 	if flight.ArrivalDate != "" {
 		arrivalDate = flight.ArrivalDate
 	}
-	tag, err := r.pool.Exec(context.Background(),
+	tag, err := r.pool.Exec(r.context(),
 		`UPDATE flights
 		 SET direction = $1, label = $2, airline = $3, flight_number = $4,
 		     departure_airport = $5, arrival_airport = $6, departure_date = $7, departure_time = $8,
@@ -253,7 +306,7 @@ func (r *PostgresTripRepository) UpdateFlight(flight model.Flight) error {
 }
 
 func (r *PostgresTripRepository) DeleteSchedule(tripID, scheduleID string) error {
-	tag, err := r.pool.Exec(context.Background(), `DELETE FROM schedules WHERE trip_id = $1 AND id = $2`, tripID, scheduleID)
+	tag, err := r.pool.Exec(r.context(), `DELETE FROM schedules WHERE trip_id = $1 AND id = $2`, tripID, scheduleID)
 	if err != nil {
 		return err
 	}
@@ -264,7 +317,7 @@ func (r *PostgresTripRepository) DeleteSchedule(tripID, scheduleID string) error
 }
 
 func (r *PostgresTripRepository) DeletePlace(tripID, placeID string) error {
-	tag, err := r.pool.Exec(context.Background(), `DELETE FROM places WHERE trip_id = $1 AND id = $2`, tripID, placeID)
+	tag, err := r.pool.Exec(r.context(), `DELETE FROM places WHERE trip_id = $1 AND id = $2`, tripID, placeID)
 	if err != nil {
 		return err
 	}
@@ -276,7 +329,7 @@ func (r *PostgresTripRepository) DeletePlace(tripID, placeID string) error {
 
 func (r *PostgresTripRepository) DeleteFlight(tripID, flightID string) error {
 	// WHERE 절에 trip_id를 함께 둬서 다른 여행의 항공편을 실수로 지우지 않게 한다.
-	tag, err := r.pool.Exec(context.Background(), `DELETE FROM flights WHERE trip_id = $1 AND id = $2`, tripID, flightID)
+	tag, err := r.pool.Exec(r.context(), `DELETE FROM flights WHERE trip_id = $1 AND id = $2`, tripID, flightID)
 	if err != nil {
 		return err
 	}
@@ -287,7 +340,7 @@ func (r *PostgresTripRepository) DeleteFlight(tripID, flightID string) error {
 }
 
 func (r *PostgresTripRepository) ConsumeMonthlyAPIRequest(provider, periodStart string, limit int) (bool, error) {
-	row := r.pool.QueryRow(context.Background(), `
+	row := r.pool.QueryRow(r.context(), `
 		WITH consumed AS (
 			INSERT INTO external_api_monthly_usage (provider, period_start, request_count)
 			VALUES ($1, $2::date, 1)
@@ -307,7 +360,7 @@ func (r *PostgresTripRepository) ConsumeMonthlyAPIRequest(provider, periodStart 
 }
 
 func (r *PostgresTripRepository) Update(trip model.Trip) error {
-	tag, err := r.pool.Exec(context.Background(),
+	tag, err := r.pool.Exec(r.context(),
 		`UPDATE trips SET title=$1, start_date=$2, end_date=$3, travelers=$4, destination_country=$5, memo=$6, updated_at=NOW() WHERE id=$7`,
 		trip.Title, trip.StartDate, trip.EndDate, trip.Travelers, trip.DestinationCountry, trip.Memo, trip.ID)
 	if err != nil {
@@ -320,7 +373,7 @@ func (r *PostgresTripRepository) Update(trip model.Trip) error {
 }
 
 func (r *PostgresTripRepository) Delete(id string) error {
-	tag, err := r.pool.Exec(context.Background(), `DELETE FROM trips WHERE id = $1`, id)
+	tag, err := r.pool.Exec(r.context(), `DELETE FROM trips WHERE id = $1`, id)
 	if err != nil {
 		return err
 	}
@@ -331,7 +384,7 @@ func (r *PostgresTripRepository) Delete(id string) error {
 }
 
 func (r *PostgresTripRepository) FindSchedules(tripID string) ([]model.Schedule, error) {
-	rows, err := r.pool.Query(context.Background(),
+	rows, err := r.pool.Query(r.context(),
 		`SELECT id::text, trip_id::text, COALESCE(place_id::text,''), date::text, time, type, title,
 		        COALESCE(transport_memo,''), COALESCE(guide_memo,'')
 		 FROM schedules WHERE trip_id = $1 ORDER BY date, sort_order`, tripID)
@@ -353,7 +406,7 @@ func (r *PostgresTripRepository) FindSchedules(tripID string) ([]model.Schedule,
 }
 
 func (r *PostgresTripRepository) FindPlaces(tripID string) ([]model.Place, error) {
-	rows, err := r.pool.Query(context.Background(),
+	rows, err := r.pool.Query(r.context(),
 		`SELECT id::text, trip_id::text, name, category, COALESCE(address,''),
 		        COALESCE(google_maps_url,''), COALESCE(recommended_reason,''),
 		        latitude, longitude, COALESCE(google_place_id,''), COALESCE(chinese_name,''),
@@ -378,7 +431,7 @@ func (r *PostgresTripRepository) FindPlaces(tripID string) ([]model.Place, error
 }
 
 func (r *PostgresTripRepository) FindFlights(tripID string) ([]model.Flight, error) {
-	rows, err := r.pool.Query(context.Background(),
+	rows, err := r.pool.Query(r.context(),
 		`SELECT id::text, trip_id::text, direction, label, COALESCE(airline,''), COALESCE(flight_number,''),
 		        departure_airport, arrival_airport, departure_date::text, departure_time,
 		        COALESCE(arrival_date::text,''), COALESCE(arrival_time,''), COALESCE(memo,'')
@@ -402,7 +455,7 @@ func (r *PostgresTripRepository) FindFlights(tripID string) ([]model.Flight, err
 }
 
 func (r *PostgresTripRepository) FindRoutes(tripID string) ([]model.Route, error) {
-	rows, err := r.pool.Query(context.Background(),
+	rows, err := r.pool.Query(r.context(),
 		`SELECT r.id::text, r.title, COALESCE(r.description,''), COALESCE(r.transport_memo,''),
 		        COALESCE(r.estimated_duration,''),
 		        COALESCE(array_agg(rp.place_id::text ORDER BY rp.sort_order) FILTER (WHERE rp.place_id IS NOT NULL), '{}')

@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/dto"
@@ -42,8 +41,7 @@ func (h *ChecklistHandler) CreateChecklistCustomItem(w http.ResponseWriter, r *h
 	tripID := r.PathValue("tripID")
 
 	var req dto.CreateChecklistItemRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httpjson.WriteError(w, http.StatusBadRequest, "요청 형식이 올바르지 않습니다.")
+	if !httpjson.DecodeRequest(w, r, &req) {
 		return
 	}
 
@@ -62,8 +60,7 @@ func (h *ChecklistHandler) UpdateChecklistItem(w http.ResponseWriter, r *http.Re
 	checklistID := r.PathValue("checklistID")
 
 	var req dto.UpdateChecklistItemRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httpjson.WriteError(w, http.StatusBadRequest, "요청 형식이 올바르지 않습니다.")
+	if !httpjson.DecodeRequest(w, r, &req) {
 		return
 	}
 

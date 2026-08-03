@@ -20,8 +20,16 @@ describe("ManageAccountPage", () => {
 
     expect(screen.getByRole("heading", { name: "마이페이지" })).toBeVisible();
     expect(screen.getByText("traveler@example.com")).toBeVisible();
-    expect(screen.getByRole("link", { name: "여행 목록" })).toHaveAttribute("href", "/manage");
-    expect(screen.getByText("현재 비밀번호를 확인한 뒤 변경할 수 있습니다.")).toBeVisible();
+    expect(screen.getByRole("link", { name: "여행 목록" })).toHaveAttribute(
+      "href",
+      "/manage",
+    );
+    expect(
+      screen.getByText("현재 비밀번호를 확인한 뒤 변경할 수 있습니다."),
+    ).toBeVisible();
+    expect(
+      screen.getByText("계정에 저장된 여행과 체크리스트가 모두 삭제됩니다."),
+    ).toBeVisible();
 
     await userEvent.click(screen.getByRole("button", { name: "로그아웃" }));
     expect(onLogout).toHaveBeenCalledOnce();

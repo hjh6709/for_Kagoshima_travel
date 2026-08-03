@@ -20,22 +20,31 @@ func (r failingUserRepository) FindByEmail(string) (model.User, error) {
 	return model.User{}, repository.ErrNotFound
 }
 
+func (r failingUserRepository) FindByID(string) (model.User, error) {
+	return model.User{}, repository.ErrNotFound
+}
+
 func (r failingUserRepository) Save(model.User) error {
 	return r.saveError
 }
 
-func (r failingUserRepository) UpdatePassword(string, string) error {
+func (r failingUserRepository) UpdatePassword(string, string) (model.User, error) {
+	return model.User{}, nil
+}
+
+func (r failingUserRepository) DeleteAccount(string) error {
 	return nil
 }
 
 func TestRegisterDoesNotExposeInternalRepositoryError(t *testing.T) {
+	t.Setenv("AUTH_TEST_BYPASS", "1")
 	internalError := errors.New("database host secret.internal failed")
 	authService := service.NewAuthService(
 		failingUserRepository{saveError: internalError},
 		repository.NewMemoryVerificationRepository(),
 		"test-jwt-secret",
 	)
-	handler := NewAuthHandler(authService)
+	handler := NewAuthHandler(authService, false)
 	request := httptest.NewRequest(
 		http.MethodPost,
 		"/api/auth/register",
@@ -51,6 +60,9 @@ func TestRegisterDoesNotExposeInternalRepositoryError(t *testing.T) {
 	if strings.Contains(response.Body.String(), internalError.Error()) {
 		t.Fatalf("response exposed internal error: %s", response.Body.String())
 	}
+	if got := response.Header().Get("Cache-Control"); got != "no-store" {
+		t.Fatalf("auth cache control = %q, want no-store", got)
+	}
 }
 
 func TestSendVerificationCodeMapsDeliveryFailureToSafeGatewayError(t *testing.T) {
@@ -60,7 +72,7 @@ func TestSendVerificationCodeMapsDeliveryFailureToSafeGatewayError(t *testing.T)
 		repository.NewMemoryVerificationRepository(),
 		"test-jwt-secret",
 	)
-	handler := NewAuthHandler(authService)
+	handler := NewAuthHandler(authService, false)
 	request := httptest.NewRequest(
 		http.MethodPost,
 		"/api/auth/send-verification-code",
@@ -89,7 +101,7 @@ func TestVerifyCodeKeepsCompatibilityWithCachedRegisterClient(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SendVerificationCode: %v", err)
 	}
-	handler := NewAuthHandler(authService)
+	handler := NewAuthHandler(authService, false)
 	request := httptest.NewRequest(
 		http.MethodPost,
 		"/api/auth/verify-code",
@@ -101,5 +113,21 @@ func TestVerifyCodeKeepsCompatibilityWithCachedRegisterClient(t *testing.T) {
 
 	if response.Code != http.StatusOK {
 		t.Fatalf("status = %d, want %d; body=%s", response.Code, http.StatusOK, response.Body.String())
+	}
+}
+
+func TestProductionSessionCookieUsesBrowserSecurityAttributes(t *testing.T) {
+	handler := NewAuthHandler(nil, true)
+	response := httptest.NewRecorder()
+
+	handler.setSessionCookie(response, "signed-session-token")
+
+	cookies := response.Result().Cookies()
+	if len(cookies) != 1 {
+		t.Fatalf("cookie count = %d, want 1", len(cookies))
+	}
+	cookie := cookies[0]
+	if !cookie.HttpOnly || !cookie.Secure || cookie.SameSite != http.SameSiteLaxMode || cookie.Path != "/" {
+		t.Fatalf("session cookie is missing security attributes: %#v", cookie)
 	}
 }

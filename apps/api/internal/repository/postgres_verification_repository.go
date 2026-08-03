@@ -11,6 +11,18 @@ import (
 
 type PostgresVerificationRepository struct {
 	pool *pgxpool.Pool
+	ctx  context.Context
+}
+
+func (r *PostgresVerificationRepository) WithContext(ctx context.Context) VerificationRepository {
+	return &PostgresVerificationRepository{pool: r.pool, ctx: ctx}
+}
+
+func (r *PostgresVerificationRepository) context() context.Context {
+	if r.ctx != nil {
+		return r.ctx
+	}
+	return context.Background()
 }
 
 func NewPostgresVerificationRepository(pool *pgxpool.Pool) *PostgresVerificationRepository {
@@ -22,7 +34,7 @@ func (r *PostgresVerificationRepository) Issue(
 	expiresAt, now time.Time,
 	dailyLimit int,
 ) error {
-	commandTag, err := r.pool.Exec(context.Background(), `
+	commandTag, err := r.pool.Exec(r.context(), `
 		INSERT INTO auth_verification_challenges (
 			email, purpose, code_hash, expires_at, attempts, request_count, request_date, consumed_at, updated_at
 		) VALUES ($1, $2, $3, $4, 0, 1, ($5 AT TIME ZONE 'UTC')::date, NULL, $5)
@@ -51,7 +63,7 @@ func (r *PostgresVerificationRepository) Issue(
 }
 
 func (r *PostgresVerificationRepository) Find(email, purpose string) (VerificationChallenge, error) {
-	row := r.pool.QueryRow(context.Background(), `
+	row := r.pool.QueryRow(r.context(), `
 		SELECT email, purpose, code_hash, expires_at, attempts, request_count, request_date::text, consumed_at
 		FROM auth_verification_challenges
 		WHERE email = $1 AND purpose = $2
@@ -78,7 +90,7 @@ func (r *PostgresVerificationRepository) Find(email, purpose string) (Verificati
 
 func (r *PostgresVerificationRepository) RecordFailedAttempt(email, purpose string, now time.Time) (int, error) {
 	var attempts int
-	err := r.pool.QueryRow(context.Background(), `
+	err := r.pool.QueryRow(r.context(), `
 		UPDATE auth_verification_challenges
 		SET attempts = attempts + 1, updated_at = $3
 		WHERE email = $1 AND purpose = $2
@@ -91,7 +103,7 @@ func (r *PostgresVerificationRepository) RecordFailedAttempt(email, purpose stri
 }
 
 func (r *PostgresVerificationRepository) Consume(email, purpose, codeHash string, now time.Time) error {
-	commandTag, err := r.pool.Exec(context.Background(), `
+	commandTag, err := r.pool.Exec(r.context(), `
 		UPDATE auth_verification_challenges
 		SET code_hash = '', consumed_at = $4, updated_at = $4
 		WHERE email = $1 AND purpose = $2 AND code_hash = $3 AND consumed_at IS NULL

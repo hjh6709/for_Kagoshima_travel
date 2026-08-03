@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "여행 공유 API",
-    "version": "2.0.0",
-    "description": "여행 공유 앱 백엔드 API"
+    "version": "2.2.0",
+    "description": "전 세계 여행 계획, 장소 검색, 날짜별 체크리스트와 공유 기능을 제공하는 Map Planner API"
   },
   "servers": [
     { "url": "http://localhost:8080", "description": "로컬 개발" }
@@ -14,6 +14,12 @@
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "JWT"
+      },
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "map_planner_session",
+        "description": "브라우저 로그인 시 발급되는 HttpOnly 세션 쿠키"
       }
     },
     "schemas": {
@@ -51,6 +57,29 @@
           "password": { "type": "string", "example": "password123" }
         }
       },
+      "ForgotPasswordRequest": {
+        "type": "object",
+        "required": ["email", "code"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "code": { "type": "string", "pattern": "^[0-9]{6}$" }
+        }
+      },
+      "ChangePasswordRequest": {
+        "type": "object",
+        "required": ["currentPassword", "newPassword"],
+        "properties": {
+          "currentPassword": { "type": "string" },
+          "newPassword": { "type": "string", "minLength": 8 }
+        }
+      },
+      "DeleteAccountRequest": {
+        "type": "object",
+        "required": ["currentPassword"],
+        "properties": {
+          "currentPassword": { "type": "string" }
+        }
+      },
       "AuthResponse": {
         "type": "object",
         "properties": {
@@ -85,6 +114,7 @@
           "startDate": { "type": "string", "example": "2026-06-27" },
           "endDate": { "type": "string", "example": "2026-06-30" },
           "travelers": { "type": "array", "items": { "type": "string" } },
+          "destinationCountry": { "type": "string", "pattern": "^[A-Z]{2}$", "example": "CN" },
           "memo": { "type": "string" }
         }
       },
@@ -106,6 +136,7 @@
           "startDate": { "type": "string", "example": "2026-06-27" },
           "endDate": { "type": "string", "example": "2026-06-30" },
           "travelers": { "type": "array", "items": { "type": "string" }, "example": ["여행자 1", "여행자 2"] },
+          "destinationCountry": { "type": "string", "pattern": "^[A-Z]{2}$", "default": "JP" },
           "memo": { "type": "string" }
         }
       },
@@ -116,6 +147,7 @@
           "startDate": { "type": "string" },
           "endDate": { "type": "string" },
           "travelers": { "type": "array", "items": { "type": "string" } },
+          "destinationCountry": { "type": "string", "pattern": "^[A-Z]{2}$" },
           "memo": { "type": "string" }
         }
       },
@@ -164,6 +196,9 @@
           "name": { "type": "string", "example": "공항 렌터카 센터" },
           "category": { "type": "string", "example": "transport" },
           "address": { "type": "string", "example": "공항 1층" },
+          "latitude": { "type": "number", "minimum": -90, "maximum": 90 },
+          "longitude": { "type": "number", "minimum": -180, "maximum": 180 },
+          "googlePlaceId": { "type": "string" },
           "googleMapsUrl": { "type": "string", "example": "https://www.google.com/maps/search/?api=1&query=airport" },
           "recommendedReason": { "type": "string", "example": "도착 후 바로 이동할 장소" }
         }
@@ -174,6 +209,9 @@
           "name": { "type": "string", "example": "공항 렌터카 센터 변경" },
           "category": { "type": "string", "example": "transport" },
           "address": { "type": "string", "example": "공항 2층" },
+          "latitude": { "type": "number", "minimum": -90, "maximum": 90 },
+          "longitude": { "type": "number", "minimum": -180, "maximum": 180 },
+          "googlePlaceId": { "type": "string" },
           "googleMapsUrl": { "type": "string", "example": "https://www.google.com/maps/search/?api=1&query=airport" },
           "recommendedReason": { "type": "string", "example": "도착 후 바로 이동할 장소" }
         }
@@ -218,6 +256,9 @@
           "name": { "type": "string" },
           "category": { "type": "string" },
           "address": { "type": "string" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "googlePlaceId": { "type": "string" },
           "googleMapsUrl": { "type": "string" },
           "recommendedReason": { "type": "string" }
         }
@@ -255,7 +296,51 @@
           "schedules": { "type": "array", "items": { "type": "object" } },
           "places": { "type": "array", "items": { "type": "object" } },
           "flights": { "type": "array", "items": { "$ref": "#/components/schemas/FlightResponse" } },
-          "routes": { "type": "array", "items": { "type": "object" } }
+          "routes": { "type": "array", "items": { "type": "object" } },
+          "checklist": { "type": "array", "items": { "$ref": "#/components/schemas/ChecklistItemResponse" } }
+        }
+      },
+      "ChecklistItemResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "category": { "type": "string", "enum": ["before", "airport", "daily", "return"] },
+          "title": { "type": "string" },
+          "isCompleted": { "type": "boolean" },
+          "custom": { "type": "boolean" },
+          "destinationCountry": { "type": "string" },
+          "scheduledDate": { "type": "string", "format": "date" }
+        }
+      },
+      "CreateChecklistItemRequest": {
+        "type": "object",
+        "required": ["category", "title"],
+        "properties": {
+          "category": { "type": "string", "enum": ["before", "airport", "daily", "return"] },
+          "title": { "type": "string", "maxLength": 120 },
+          "scheduledDate": { "type": "string", "format": "date" }
+        }
+      },
+      "UpdateChecklistItemRequest": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "maxLength": 120 },
+          "isCompleted": { "type": "boolean" },
+          "scheduledDate": { "type": "string" }
+        }
+      },
+      "PlaceSearchResult": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "address": { "type": "string" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "googlePlaceId": { "type": "string" },
+          "chineseName": { "type": "string" },
+          "chineseAddress": { "type": "string" },
+          "subwayExit": { "type": "string" },
+          "taxiPhrase": { "type": "string" }
         }
       },
       "Error": {
@@ -340,10 +425,65 @@
       "get": {
         "summary": "현재 로그인 사용자 확인",
         "tags": ["인증"],
-        "security": [{ "bearerAuth": [] }],
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
         "responses": {
           "200": { "description": "현재 사용자", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthSessionResponse" } } } },
           "401": { "description": "인증 필요", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "summary": "브라우저 세션 종료",
+        "tags": ["인증"],
+        "responses": {
+          "204": { "description": "로그아웃 성공 및 세션 쿠키 삭제" }
+        }
+      }
+    },
+    "/api/auth/forgot-password": {
+      "post": {
+        "summary": "인증코드로 임시 비밀번호 발급",
+        "tags": ["인증"],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ForgotPasswordRequest" } } }
+        },
+        "responses": {
+          "200": { "description": "임시 비밀번호 발급 성공" },
+          "400": { "description": "코드 불일치, 만료 또는 가입되지 않은 이메일" }
+        }
+      }
+    },
+    "/api/auth/change-password": {
+      "post": {
+        "summary": "비밀번호 변경 및 새 세션 발급",
+        "tags": ["인증"],
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ChangePasswordRequest" } } }
+        },
+        "responses": {
+          "200": { "description": "변경 성공", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuthResponse" } } } },
+          "400": { "description": "현재 비밀번호 불일치 또는 새 비밀번호 규칙 위반" },
+          "401": { "description": "인증 필요" }
+        }
+      }
+    },
+    "/api/auth/account": {
+      "delete": {
+        "summary": "내 계정과 연결 데이터 영구 삭제",
+        "tags": ["인증"],
+        "security": [{ "cookieAuth": [] }, { "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DeleteAccountRequest" } } }
+        },
+        "responses": {
+          "204": { "description": "삭제 성공" },
+          "400": { "description": "현재 비밀번호 불일치" },
+          "401": { "description": "인증 필요" }
         }
       }
     },
@@ -550,6 +690,71 @@
           "403": { "description": "권한 없음" },
           "404": { "description": "여행 또는 장소 없음" }
         }
+      }
+    },
+    "/api/trips/{tripID}/places/search": {
+      "parameters": [
+        { "name": "tripID", "in": "path", "required": true, "schema": { "type": "string" } },
+        { "name": "q", "in": "query", "required": true, "schema": { "type": "string", "minLength": 1 } }
+      ],
+      "get": {
+        "summary": "여행 국가 기준 장소 검색",
+        "tags": ["장소"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "검색 성공", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/PlaceSearchResult" } } } } },
+          "429": { "description": "월간 외부 API 한도 초과" },
+          "502": { "description": "외부 장소 검색 서비스 오류" }
+        }
+      }
+    },
+    "/api/trips/{tripID}/checklists": {
+      "parameters": [
+        { "name": "tripID", "in": "path", "required": true, "schema": { "type": "string" } }
+      ],
+      "get": {
+        "summary": "여행 전체 및 날짜별 체크리스트 조회",
+        "tags": ["체크리스트"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "조회 성공", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/ChecklistItemResponse" } } } } }
+        }
+      },
+      "post": {
+        "summary": "체크리스트 항목 추가",
+        "tags": ["체크리스트"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateChecklistItemRequest" } } }
+        },
+        "responses": {
+          "201": { "description": "추가 성공", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ChecklistItemResponse" } } } },
+          "400": { "description": "입력 또는 날짜 범위 오류" }
+        }
+      }
+    },
+    "/api/trips/checklists/{checklistID}": {
+      "parameters": [
+        { "name": "checklistID", "in": "path", "required": true, "schema": { "type": "string" } }
+      ],
+      "patch": {
+        "summary": "체크리스트 항목 수정",
+        "tags": ["체크리스트"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UpdateChecklistItemRequest" } } }
+        },
+        "responses": {
+          "200": { "description": "수정 성공", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ChecklistItemResponse" } } } }
+        }
+      },
+      "delete": {
+        "summary": "체크리스트 항목 삭제",
+        "tags": ["체크리스트"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "204": { "description": "삭제 성공" } }
       }
     },
     "/api/trips/{tripID}/routes": {

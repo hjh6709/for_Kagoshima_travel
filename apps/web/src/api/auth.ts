@@ -31,22 +31,33 @@ function getApiBaseURL() {
   return apiBaseURL;
 }
 
-export async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const isMutation = mutationMethods.has(options.method?.toUpperCase() ?? "GET");
+export async function apiRequest<T>(
+  path: string,
+  options: RequestInit = {},
+): Promise<T> {
+  const isMutation = mutationMethods.has(
+    options.method?.toUpperCase() ?? "GET",
+  );
   if (isMutation) pendingMutationCount += 1;
 
   try {
+    const headers = new Headers(options.headers);
+    headers.set("Content-Type", "application/json");
+    if (headers.get("Authorization")?.trim() === "Bearer") {
+      headers.delete("Authorization");
+    }
     const response = await fetch(`${getApiBaseURL()}${path}`, {
       ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
+      credentials: "include",
+      headers,
     });
 
     const body = await response.json().catch(() => ({}));
     if (!response.ok) {
-      const message = typeof body?.error === "string" ? body.error : "요청을 처리하지 못했습니다.";
+      const message =
+        typeof body?.error === "string"
+          ? body.error
+          : "요청을 처리하지 못했습니다.";
       throw new ApiError(message, response.status);
     }
 
@@ -74,12 +85,16 @@ export function register(email: string, password: string, code?: string) {
   });
 }
 
-export function getCurrentUser(accessToken: string) {
+export function getCurrentUser(accessToken = "") {
   return apiRequest<AuthSessionResponse>("/api/auth/me", {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
   });
+}
+
+export function logout() {
+  return apiRequest<void>("/api/auth/logout", { method: "POST" });
 }
 
 // 이메일 인증코드 발송 시, 가입(register) 또는 분실(forgot) 목적 구분 파라미터(purpose)를 실어서 보냅니다.
@@ -91,7 +106,11 @@ export function sendVerificationCode(email: string, purpose: string) {
 }
 
 // 입력한 이메일과 6자리 인증코드가 일치하는지 백엔드와 사전 대조합니다.
-export function verifyCode(email: string, purpose: "register" | "forgot", code: string) {
+export function verifyCode(
+  email: string,
+  purpose: "register" | "forgot",
+  code: string,
+) {
   return apiRequest<{ verified: boolean }>("/api/auth/verify-code", {
     method: "POST",
     body: JSON.stringify({ email, purpose, code }),
@@ -99,19 +118,36 @@ export function verifyCode(email: string, purpose: "register" | "forgot", code: 
 }
 
 export function forgotPassword(email: string, code: string) {
-  return apiRequest<{ temporaryPassword: string }>("/api/auth/forgot-password", {
-    method: "POST",
-    body: JSON.stringify({ email, code }),
-  });
+  return apiRequest<{ temporaryPassword: string }>(
+    "/api/auth/forgot-password",
+    {
+      method: "POST",
+      body: JSON.stringify({ email, code }),
+    },
+  );
 }
 
 // 마이페이지에서 본인의 비밀번호를 변경하기 위한 API 호출 헬퍼입니다.
-export function changePassword(accessToken: string, currentPassword: string, newPassword: string) {
-  return apiRequest<void>("/api/auth/change-password", {
+export function changePassword(
+  accessToken: string,
+  currentPassword: string,
+  newPassword: string,
+) {
+  return apiRequest<AuthResponse>("/api/auth/change-password", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
     body: JSON.stringify({ currentPassword, newPassword }),
+  });
+}
+
+export function deleteAccount(accessToken: string, currentPassword: string) {
+  return apiRequest<void>("/api/auth/account", {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ currentPassword }),
   });
 }
