@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -85,7 +86,7 @@ func containsHan(value string) bool {
 	return false
 }
 
-func searchGooglePlaces(query, country string) ([]dto.PlaceSearchResult, error) {
+func searchGooglePlaces(ctx context.Context, query, country string) ([]dto.PlaceSearchResult, error) {
 	key := os.Getenv("GOOGLE_MAPS_API_KEY")
 	if key == "" {
 		return nil, errors.New("google maps api key not found")
@@ -95,7 +96,7 @@ func searchGooglePlaces(query, country string) ([]dto.PlaceSearchResult, error) 
 	if err != nil {
 		return nil, err
 	}
-	req, err := http.NewRequest(http.MethodPost, "https://places.googleapis.com/v1/places:searchText", bytes.NewBuffer(reqBody))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "https://places.googleapis.com/v1/places:searchText", bytes.NewBuffer(reqBody))
 	if err != nil {
 		return nil, err
 	}

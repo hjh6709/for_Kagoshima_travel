@@ -100,7 +100,9 @@ p {
   color: var(--c-muted);
   font-size: 13px;
   font-weight: 700;
-  transition: background-color 0.18s var(--ease-route), color 0.18s var(--ease-route);
+  transition:
+    background-color 0.18s var(--ease-route),
+    color 0.18s var(--ease-route);
 }
 
 .segment-btn.active {
@@ -1029,6 +1031,42 @@ p {
 
 .mypage-password-submit {
   margin-top: 2px;
+}
+
+.mypage-danger-card .mypage-security-icon {
+  background: var(--c-danger-light);
+  color: var(--c-danger);
+}
+
+.mypage-delete-warning {
+  margin: 0;
+  color: var(--c-danger);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.55;
+}
+
+.mypage-delete-confirm {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  align-items: start;
+  gap: 9px;
+  color: var(--c-muted);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.mypage-delete-confirm input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--c-danger);
+}
+
+.mypage-delete-submit {
+  width: 100%;
+  min-height: 48px;
 }
 
 @media (max-width: 360px) {

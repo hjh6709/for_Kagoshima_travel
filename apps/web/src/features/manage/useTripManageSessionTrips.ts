@@ -1,8 +1,33 @@
-import { useEffect, useMemo, useState, type Dispatch, type FormEvent, type SetStateAction } from "react";
-import { ApiError, getCurrentUser, login, register, type AuthResponse } from "../../api/auth";
-import { createTrip, listMyTrips, updateTrip, deleteTrip, type OwnerTrip } from "../../api/trips";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type Dispatch,
+  type FormEvent,
+  type SetStateAction,
+} from "react";
+import {
+  ApiError,
+  getCurrentUser,
+  login,
+  logout,
+  register,
+  type AuthResponse,
+} from "../../api/auth";
+import {
+  createTrip,
+  listMyTrips,
+  updateTrip,
+  deleteTrip,
+  type OwnerTrip,
+} from "../../api/trips";
 import { navigateToManageTripEditor } from "../../shared/manageRoute";
-import { isOnline, getLocalCache, setLocalCache, OFFLINE_CACHE_KEYS } from "../../utils/offlineCache";
+import {
+  isOnline,
+  getLocalCache,
+  setLocalCache,
+  OFFLINE_CACHE_KEYS,
+} from "../../utils/offlineCache";
 import {
   handleManageApiError,
   isEndDateBeforeStartDate,
@@ -10,7 +35,7 @@ import {
   parseTravelers,
 } from "./manageFormUtils";
 import type { AuthMode } from "./manageTypes";
-import { getSavedOwnerAuth, ownerAuthStorageKey } from "./ownerAuthStorage";
+import { clearLegacyOwnerAuthStorage } from "./ownerAuthStorage";
 
 type TripCreateFormState = {
   newTripEndDate: string;
@@ -51,7 +76,7 @@ export function useTripManageSessionTrips({
   tripCreateForm,
   tripEditForm,
 }: UseTripManageSessionTripsParams) {
-  const [ownerAuth, setOwnerAuth] = useState<AuthResponse | null>(getSavedOwnerAuth);
+  const [ownerAuth, setOwnerAuth] = useState<AuthResponse | null>(null);
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
@@ -61,18 +86,29 @@ export function useTripManageSessionTrips({
   const [ownerTrips, setOwnerTrips] = useState<OwnerTrip[]>([]);
   const [ownerTripsError, setOwnerTripsError] = useState("");
   const [ownerTripsLoading, setOwnerTripsLoading] = useState(false);
-  const [selectedOwnerTripID, setSelectedOwnerTripID] = useState<string | null>(null);
+  const [selectedOwnerTripID, setSelectedOwnerTripID] = useState<string | null>(
+    null,
+  );
   const selectedOwnerTrip = useMemo(
-    () => ownerTrips.find((ownerTrip) => ownerTrip.id === selectedOwnerTripID) ?? null,
-    [ownerTrips, selectedOwnerTripID]
+    () =>
+      ownerTrips.find((ownerTrip) => ownerTrip.id === selectedOwnerTripID) ??
+      null,
+    [ownerTrips, selectedOwnerTripID],
   );
 
   // 인증이 만료되었거나 로그아웃할 때 계정과 여행 선택 상태를 비운다.
   function clearOwnerSessionBase() {
-    window.localStorage.removeItem(ownerAuthStorageKey);
+    clearLegacyOwnerAuthStorage();
+    void logout().catch(() => {
+      // 로컬 상태는 이미 비웠으므로 네트워크 실패가 로그아웃 UI를 막지 않게 한다.
+    });
     setOwnerAuth(null);
     setOwnerTrips([]);
     setSelectedOwnerTripID(null);
+  }
+
+  function replaceOwnerAuth(nextAuth: AuthResponse) {
+    setOwnerAuth(nextAuth);
   }
 
   // 로그아웃 시 사용자가 보던 인증/목록 메시지도 함께 정리한다.
@@ -92,37 +128,36 @@ export function useTripManageSessionTrips({
     if (!isLegacyOwnerRoute) return;
 
     const nextPath = currentPath.replace(/^\/owner/, "/manage");
-    window.history.replaceState(null, "", `${nextPath}${window.location.search}${window.location.hash}`);
+    window.history.replaceState(
+      null,
+      "",
+      `${nextPath}${window.location.search}${window.location.hash}`,
+    );
   }, [currentPath, isLegacyOwnerRoute]);
 
-  // 저장된 토큰은 앱 시작 시 한 번 검증한다. 실패하면 오래된 localStorage 세션을 폐기한다.
+  // HttpOnly 쿠키 세션을 앱 시작 시 복원하고, 이전 버전이 저장한 JWT는 제거한다.
   useEffect(() => {
     if (!isManageRoute) return;
 
-    const savedAuth = getSavedOwnerAuth();
-    if (!savedAuth) {
-      setAuthChecked(true);
-      return;
-    }
+    clearLegacyOwnerAuthStorage();
 
     let cancelled = false;
-    getCurrentUser(savedAuth.accessToken)
+    getCurrentUser()
       .then((session) => {
         if (cancelled) return;
-        const nextAuth = { ...savedAuth, user: session.user };
-        setOwnerAuth(nextAuth);
-        window.localStorage.setItem(ownerAuthStorageKey, JSON.stringify(nextAuth));
+        setOwnerAuth({ accessToken: "", user: session.user });
       })
       .catch((error) => {
         if (cancelled) return;
         if (error instanceof ApiError && error.status === 401) {
-          window.localStorage.removeItem(ownerAuthStorageKey);
           setOwnerAuth(null);
           return;
         }
-        // 401(진짜 만료/무효 토큰)이 아니면 네트워크/프록시 오류로 보고 세션을 그대로 둔다.
-        setOwnerAuth(savedAuth);
-        setAuthError(error instanceof Error ? error.message : "세션 확인에 실패했습니다. 잠시 후 다시 시도해주세요.");
+        setAuthError(
+          error instanceof Error
+            ? error.message
+            : "세션 확인에 실패했습니다. 잠시 후 다시 시도해주세요.",
+        );
       })
       .finally(() => {
         if (!cancelled) setAuthChecked(true);
@@ -133,8 +168,6 @@ export function useTripManageSessionTrips({
     };
   }, [isManageRoute]);
 
-
-
   // 인증된 관리자만 본인이 만든 여행 목록을 가져온다. (오프라인 지원)
   useEffect(() => {
     if (!isManageRoute || !ownerAuth) return;
@@ -144,12 +177,16 @@ export function useTripManageSessionTrips({
     setOwnerTripsError("");
 
     if (!isOnline()) {
-      const cachedTrips = getLocalCache<OwnerTrip[]>(OFFLINE_CACHE_KEYS.MY_TRIPS);
+      const cachedTrips = getLocalCache<OwnerTrip[]>(
+        OFFLINE_CACHE_KEYS.MY_TRIPS,
+      );
       if (!cancelled) {
         if (cachedTrips) {
           setOwnerTrips(cachedTrips);
         } else {
-          setOwnerTripsError("오프라인 상태입니다. 저장된 여행 목록이 없습니다.");
+          setOwnerTripsError(
+            "오프라인 상태입니다. 저장된 여행 목록이 없습니다.",
+          );
         }
         setOwnerTripsLoading(false);
       }
@@ -165,7 +202,9 @@ export function useTripManageSessionTrips({
       })
       .catch((error) => {
         if (cancelled) return;
-        const cachedTrips = getLocalCache<OwnerTrip[]>(OFFLINE_CACHE_KEYS.MY_TRIPS);
+        const cachedTrips = getLocalCache<OwnerTrip[]>(
+          OFFLINE_CACHE_KEYS.MY_TRIPS,
+        );
         if (cachedTrips) {
           setOwnerTrips(cachedTrips);
           return;
@@ -188,7 +227,10 @@ export function useTripManageSessionTrips({
   // 목록 갱신 후 선택했던 여행이 사라졌으면 상세 화면을 닫는다.
   useEffect(() => {
     if (!selectedOwnerTripID) return;
-    if (ownerTrips.length > 0 && ownerTrips.every((ownerTrip) => ownerTrip.id !== selectedOwnerTripID)) {
+    if (
+      ownerTrips.length > 0 &&
+      ownerTrips.every((ownerTrip) => ownerTrip.id !== selectedOwnerTripID)
+    ) {
       setSelectedOwnerTripID(null);
     }
   }, [ownerTrips, selectedOwnerTripID]);
@@ -201,18 +243,24 @@ export function useTripManageSessionTrips({
     try {
       const email = authEmail.trim();
       const formData = new FormData(event.currentTarget);
-      const code = (formData.get("code") as string) || (formData.get("verificationCode") as string) || "";
+      const code =
+        (formData.get("code") as string) ||
+        (formData.get("verificationCode") as string) ||
+        "";
 
       const response =
         authMode === "login"
           ? await login(email, authPassword)
           : await register(email, authPassword, code);
-      setOwnerAuth(response);
+      replaceOwnerAuth(response);
       setAuthPassword("");
-      window.localStorage.setItem(ownerAuthStorageKey, JSON.stringify(response));
       setOwnerTripsError("");
     } catch (error) {
-      setAuthError(error instanceof Error ? error.message : "로그인 요청을 처리하지 못했습니다.");
+      setAuthError(
+        error instanceof Error
+          ? error.message
+          : "로그인 요청을 처리하지 못했습니다.",
+      );
     } finally {
       setAuthSubmitting(false);
     }
@@ -224,22 +272,34 @@ export function useTripManageSessionTrips({
     if (!ownerAuth) return;
 
     if (!isOnline()) {
-      tripCreateForm.setTripCreateError("네트워크 연결이 끊겼습니다. 오프라인 상태에서는 여행을 생성할 수 없습니다.");
+      tripCreateForm.setTripCreateError(
+        "네트워크 연결이 끊겼습니다. 오프라인 상태에서는 여행을 생성할 수 없습니다.",
+      );
       return;
     }
 
     const title = tripCreateForm.newTripTitle.trim();
     const startDate = tripCreateForm.newTripStartDate;
-    const endDate = tripCreateForm.newTripEndDate || tripCreateForm.newTripStartDate;
+    const endDate =
+      tripCreateForm.newTripEndDate || tripCreateForm.newTripStartDate;
     const travelers = parseTravelers(tripCreateForm.newTripTravelers);
     const memo = optionalTrimmedText(tripCreateForm.newTripMemo);
 
-    if (!title || !tripCreateForm.newTripDestinationCountry || !startDate || !endDate) {
-      tripCreateForm.setTripCreateError("여행명, 목적지 국가와 여행 날짜를 모두 입력해주세요.");
+    if (
+      !title ||
+      !tripCreateForm.newTripDestinationCountry ||
+      !startDate ||
+      !endDate
+    ) {
+      tripCreateForm.setTripCreateError(
+        "여행명, 목적지 국가와 여행 날짜를 모두 입력해주세요.",
+      );
       return;
     }
     if (isEndDateBeforeStartDate(startDate, endDate)) {
-      tripCreateForm.setTripCreateError("종료일은 시작일보다 빠를 수 없습니다.");
+      tripCreateForm.setTripCreateError(
+        "종료일은 시작일보다 빠를 수 없습니다.",
+      );
       return;
     }
 
@@ -254,7 +314,10 @@ export function useTripManageSessionTrips({
         destinationCountry: tripCreateForm.newTripDestinationCountry,
         memo,
       });
-      setOwnerTrips((currentTrips) => [createdTrip, ...currentTrips.filter((item) => item.id !== createdTrip.id)]);
+      setOwnerTrips((currentTrips) => [
+        createdTrip,
+        ...currentTrips.filter((item) => item.id !== createdTrip.id),
+      ]);
       setSelectedOwnerTripID(createdTrip.id);
       tripCreateForm.resetTripCreateForm();
       setOwnerTripsError("");
@@ -276,13 +339,16 @@ export function useTripManageSessionTrips({
     if (!ownerAuth || !selectedOwnerTrip) return;
 
     if (!isOnline()) {
-      tripEditForm.setTripEditError("네트워크 연결이 끊겼습니다. 오프라인 상태에서는 여행 정보를 수정할 수 없습니다.");
+      tripEditForm.setTripEditError(
+        "네트워크 연결이 끊겼습니다. 오프라인 상태에서는 여행 정보를 수정할 수 없습니다.",
+      );
       return;
     }
 
     const title = tripEditForm.tripEditTitle.trim();
     const startDate = tripEditForm.tripEditStartDate;
-    const endDate = tripEditForm.tripEditEndDate || tripEditForm.tripEditStartDate;
+    const endDate =
+      tripEditForm.tripEditEndDate || tripEditForm.tripEditStartDate;
     const travelers = parseTravelers(tripEditForm.tripEditTravelers);
     const memo = tripEditForm.tripEditMemo.trim();
 
@@ -298,16 +364,22 @@ export function useTripManageSessionTrips({
     tripEditForm.setTripEditError("");
     tripEditForm.setTripEditSubmitting(true);
     try {
-      const updatedTrip = await updateTrip(ownerAuth.accessToken, selectedOwnerTrip.id, {
-        title,
-        startDate,
-        endDate,
-        travelers,
-        destinationCountry: tripEditForm.tripEditDestinationCountry,
-        memo,
-      });
+      const updatedTrip = await updateTrip(
+        ownerAuth.accessToken,
+        selectedOwnerTrip.id,
+        {
+          title,
+          startDate,
+          endDate,
+          travelers,
+          destinationCountry: tripEditForm.tripEditDestinationCountry,
+          memo,
+        },
+      );
       setOwnerTrips((currentTrips) =>
-        currentTrips.map((ownerTrip) => (ownerTrip.id === updatedTrip.id ? updatedTrip : ownerTrip))
+        currentTrips.map((ownerTrip) =>
+          ownerTrip.id === updatedTrip.id ? updatedTrip : ownerTrip,
+        ),
       );
       tripEditForm.setTripEditError("");
       setOwnerTripsError("");
@@ -327,7 +399,9 @@ export function useTripManageSessionTrips({
   async function deleteOwnerTrip(tripID: string) {
     if (!ownerAuth) return;
     if (!isOnline()) {
-      setOwnerTripsError("네트워크 연결이 끊겼습니다. 오프라인 상태에서는 여행을 삭제할 수 없습니다.");
+      setOwnerTripsError(
+        "네트워크 연결이 끊겼습니다. 오프라인 상태에서는 여행을 삭제할 수 없습니다.",
+      );
       return;
     }
     setDeletingTripID(tripID);
@@ -336,7 +410,11 @@ export function useTripManageSessionTrips({
       await deleteTrip(ownerAuth.accessToken, tripID);
       setOwnerTrips((prev) => prev.filter((t) => t.id !== tripID));
     } catch (error) {
-      setOwnerTripsError(error instanceof Error ? error.message : "여행 일정을 삭제하지 못했습니다.");
+      setOwnerTripsError(
+        error instanceof Error
+          ? error.message
+          : "여행 일정을 삭제하지 못했습니다.",
+      );
     } finally {
       setDeletingTripID("");
     }
@@ -356,6 +434,7 @@ export function useTripManageSessionTrips({
     ownerTripsError,
     ownerTripsLoading,
     resetSessionMessagesForLogout,
+    replaceOwnerAuth,
     selectedOwnerTrip,
     setAuthEmail,
     setAuthPassword,

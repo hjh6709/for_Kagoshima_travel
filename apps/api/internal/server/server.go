@@ -2,12 +2,17 @@ package server
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/time/rate"
 
+	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/auth"
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/db"
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/handler"
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/middleware"
@@ -20,13 +25,27 @@ type Server struct {
 	tripHandler      *handler.TripHandler
 	authHandler      *handler.AuthHandler
 	checklistHandler *handler.ChecklistHandler
+	userRepository   repository.UserRepository
 	rateLimiter      *middleware.RateLimiter
+	pool             *pgxpool.Pool
 }
 
-func New() *Server {
+func New() (*Server, error) {
 	jwtSecret := os.Getenv("JWT_SECRET")
+	production := isProduction()
+	secretLower := strings.ToLower(jwtSecret)
+	if production && (len(jwtSecret) < 32 || strings.Contains(secretLower, "replace") || strings.Contains(secretLower, "change-me")) {
+		return nil, errors.New("production JWT_SECRET must be at least 32 characters and must not be a placeholder")
+	}
+	if production && os.Getenv("AUTH_TEST_BYPASS") != "" {
+		return nil, errors.New("AUTH_TEST_BYPASS must not be set in production")
+	}
 	if jwtSecret == "" {
 		jwtSecret = "dev-secret-replace-in-production"
+	}
+	dbURL := os.Getenv("DATABASE_URL")
+	if production && strings.TrimSpace(dbURL) == "" {
+		return nil, errors.New("production DATABASE_URL is required")
 	}
 
 	var tripRepository repository.TripRepository
@@ -34,16 +53,19 @@ func New() *Server {
 	var checklistRepository repository.ChecklistRepository
 	var verificationRepository repository.VerificationRepository
 
-	if dbURL := os.Getenv("DATABASE_URL"); dbURL != "" {
+	var pool *pgxpool.Pool
+	if dbURL != "" {
 		pool, err := db.NewPool(dbURL)
 		if err != nil {
-			log.Fatalf("DB 연결 실패: %v", err)
+			return nil, fmt.Errorf("DB 연결 실패: %w", err)
 		}
 		if err := pool.Ping(context.Background()); err != nil {
-			log.Fatalf("DB ping 실패: %v", err)
+			pool.Close()
+			return nil, fmt.Errorf("DB ping 실패: %w", err)
 		}
 		if err := db.RunMigrations(context.Background(), pool); err != nil {
-			log.Fatalf("DB migration 실패: %v", err)
+			pool.Close()
+			return nil, fmt.Errorf("DB migration 실패: %w", err)
 		}
 		log.Println("PostgreSQL 연결됨")
 		tripRepository = repository.NewPostgresTripRepository(pool)
@@ -65,12 +87,30 @@ func New() *Server {
 	s := &Server{
 		mux:              http.NewServeMux(),
 		tripHandler:      handler.NewTripHandler(tripService),
-		authHandler:      handler.NewAuthHandler(authService),
+		authHandler:      handler.NewAuthHandler(authService, production),
 		checklistHandler: handler.NewChecklistHandler(checklistService),
+		userRepository:   userRepository,
 		rateLimiter:      middleware.NewRateLimiter(rate.Limit(5), 20),
+		pool:             pool,
 	}
 	s.registerRoutes(jwtSecret)
-	return s
+	return s, nil
+}
+
+func (s *Server) Close() {
+	s.rateLimiter.Close()
+	if s.pool != nil {
+		s.pool.Close()
+	}
+}
+
+func isProduction() bool {
+	env := strings.TrimSpace(os.Getenv("APP_ENV"))
+	if env == "" {
+		env = strings.TrimSpace(os.Getenv("ENV"))
+	}
+	env = strings.ToLower(env)
+	return env == "production" || env == "prod"
 }
 
 func (s *Server) Routes() http.Handler {
@@ -78,7 +118,10 @@ func (s *Server) Routes() http.Handler {
 }
 
 func (s *Server) registerRoutes(jwtSecret string) {
-	requireAuth := middleware.RequireAuth(jwtSecret)
+	requireAuth := middleware.RequireAuth(jwtSecret, func(ctx context.Context, claims *auth.Claims) bool {
+		user, err := repository.WithUserRepositoryContext(s.userRepository, ctx).FindByID(claims.UserID)
+		return err == nil && user.Email == claims.Email && user.TokenVersion == claims.TokenVersion
+	})
 
 	// 공개 엔드포인트
 	s.mux.HandleFunc("GET /healthz", handler.Health)
@@ -86,6 +129,7 @@ func (s *Server) registerRoutes(jwtSecret string) {
 	s.mux.HandleFunc("GET /openapi.json", handler.OpenAPISpec)
 	s.mux.HandleFunc("POST /api/auth/register", s.authHandler.Register)
 	s.mux.HandleFunc("POST /api/auth/login", s.authHandler.Login)
+	s.mux.HandleFunc("POST /api/auth/logout", s.authHandler.Logout)
 	s.mux.HandleFunc("POST /api/auth/forgot-password", s.authHandler.ForgotPassword)
 	s.mux.HandleFunc("POST /api/auth/send-verification-code", s.authHandler.SendVerificationCode)
 	s.mux.HandleFunc("POST /api/auth/verify-code", s.authHandler.VerifyCode)
@@ -94,6 +138,7 @@ func (s *Server) registerRoutes(jwtSecret string) {
 	// 인증 필요 엔드포인트
 	s.mux.Handle("GET /api/auth/me", requireAuth(http.HandlerFunc(s.authHandler.Me)))
 	s.mux.Handle("POST /api/auth/change-password", requireAuth(http.HandlerFunc(s.authHandler.ChangePassword)))
+	s.mux.Handle("DELETE /api/auth/account", requireAuth(http.HandlerFunc(s.authHandler.DeleteAccount)))
 	s.mux.Handle("GET /api/trips", requireAuth(http.HandlerFunc(s.tripHandler.ListMyTrips)))
 	s.mux.Handle("POST /api/trips", requireAuth(http.HandlerFunc(s.tripHandler.CreateTrip)))
 	s.mux.Handle("GET /api/trips/{tripID}", requireAuth(http.HandlerFunc(s.tripHandler.GetTrip)))
@@ -123,13 +168,24 @@ func (s *Server) registerRoutes(jwtSecret string) {
 }
 
 func withCORS(next http.Handler) http.Handler {
-	allowedOrigins := os.Getenv("ALLOWED_ORIGINS")
-	if allowedOrigins == "" {
-		allowedOrigins = "http://localhost:5173"
+	configuredOrigins := os.Getenv("ALLOWED_ORIGINS")
+	if configuredOrigins == "" {
+		configuredOrigins = "http://localhost:5173"
+	}
+	allowedOrigins := make(map[string]struct{})
+	for _, origin := range strings.Split(configuredOrigins, ",") {
+		if origin = strings.TrimSpace(origin); origin != "" {
+			allowedOrigins[origin] = struct{}{}
+		}
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", allowedOrigins)
+		origin := r.Header.Get("Origin")
+		if _, allowed := allowedOrigins[origin]; allowed {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
+			w.Header().Add("Vary", "Origin")
+		}
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 

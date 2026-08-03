@@ -27,4 +27,21 @@ describe("apiRequest mutation tracking", () => {
 
     expect(hasPendingApiMutation()).toBe(false);
   });
+
+  it("브라우저 인증은 쿠키를 포함하고 빈 Bearer 헤더는 보내지 않는다", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ user: { id: "user-1", email: "user@example.com" } }), {
+        status: 200,
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await apiRequest("/api/auth/me", {
+      headers: { Authorization: "Bearer " },
+    });
+
+    const [, options] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(options.credentials).toBe("include");
+    expect(new Headers(options.headers).has("Authorization")).toBe(false);
+  });
 });

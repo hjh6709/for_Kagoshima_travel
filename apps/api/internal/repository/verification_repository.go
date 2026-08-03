@@ -1,10 +1,22 @@
 package repository
 
 import (
+	"context"
 	"errors"
 	"sync"
 	"time"
 )
+
+type VerificationRepositoryContextProvider interface {
+	WithContext(context.Context) VerificationRepository
+}
+
+func WithVerificationRepositoryContext(repo VerificationRepository, ctx context.Context) VerificationRepository {
+	if contextual, ok := repo.(VerificationRepositoryContextProvider); ok {
+		return contextual.WithContext(ctx)
+	}
+	return repo
+}
 
 var ErrVerificationRateLimit = errors.New("verification send rate limit exceeded")
 

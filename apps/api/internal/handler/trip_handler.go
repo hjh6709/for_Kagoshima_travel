@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -15,13 +14,17 @@ type TripHandler struct {
 	tripService *service.TripService
 }
 
+func (h *TripHandler) service(r *http.Request) *service.TripService {
+	return h.tripService.WithContext(r.Context())
+}
+
 func NewTripHandler(tripService *service.TripService) *TripHandler {
 	return &TripHandler{tripService: tripService}
 }
 
 func (h *TripHandler) GetTrip(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
-	trip, err := h.tripService.GetOwnedTrip(r.PathValue("tripID"), claims.UserID)
+	trip, err := h.service(r).GetOwnedTrip(r.PathValue("tripID"), claims.UserID)
 	if err != nil {
 		writeServiceError(w, err)
 		return
@@ -31,7 +34,7 @@ func (h *TripHandler) GetTrip(w http.ResponseWriter, r *http.Request) {
 
 func (h *TripHandler) ListMyTrips(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
-	trips, err := h.tripService.ListMyTrips(claims.UserID)
+	trips, err := h.service(r).ListMyTrips(claims.UserID)
 	if err != nil {
 		writeServiceError(w, err)
 		return
@@ -42,11 +45,10 @@ func (h *TripHandler) ListMyTrips(w http.ResponseWriter, r *http.Request) {
 func (h *TripHandler) CreateTrip(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
 	var req dto.CreateTripRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httpjson.WriteError(w, http.StatusBadRequest, "요청 형식이 올바르지 않습니다.")
+	if !httpjson.DecodeRequest(w, r, &req) {
 		return
 	}
-	trip, err := h.tripService.CreateTrip(claims.UserID, req)
+	trip, err := h.service(r).CreateTrip(claims.UserID, req)
 	if err != nil {
 		writeServiceError(w, err)
 		return
@@ -56,7 +58,7 @@ func (h *TripHandler) CreateTrip(w http.ResponseWriter, r *http.Request) {
 
 func (h *TripHandler) CreateShareLink(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
-	link, err := h.tripService.CreateShareLink(r.PathValue("tripID"), claims.UserID)
+	link, err := h.service(r).CreateShareLink(r.PathValue("tripID"), claims.UserID)
 	if err != nil {
 		writeServiceError(w, err)
 		return
@@ -65,7 +67,7 @@ func (h *TripHandler) CreateShareLink(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TripHandler) GetSharedTrip(w http.ResponseWriter, r *http.Request) {
-	sharedTrip, err := h.tripService.GetSharedTrip(r.PathValue("token"))
+	sharedTrip, err := h.service(r).GetSharedTrip(r.PathValue("token"))
 	if err != nil {
 		writeServiceError(w, err)
 		return
@@ -76,11 +78,10 @@ func (h *TripHandler) GetSharedTrip(w http.ResponseWriter, r *http.Request) {
 func (h *TripHandler) UpdateTrip(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
 	var req dto.UpdateTripRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httpjson.WriteError(w, http.StatusBadRequest, "요청 형식이 올바르지 않습니다.")
+	if !httpjson.DecodeRequest(w, r, &req) {
 		return
 	}
-	trip, err := h.tripService.UpdateTrip(r.PathValue("tripID"), claims.UserID, req)
+	trip, err := h.service(r).UpdateTrip(r.PathValue("tripID"), claims.UserID, req)
 	if err != nil {
 		writeServiceError(w, err)
 		return
@@ -90,7 +91,7 @@ func (h *TripHandler) UpdateTrip(w http.ResponseWriter, r *http.Request) {
 
 func (h *TripHandler) DeleteTrip(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
-	if err := h.tripService.DeleteTrip(r.PathValue("tripID"), claims.UserID); err != nil {
+	if err := h.service(r).DeleteTrip(r.PathValue("tripID"), claims.UserID); err != nil {
 		writeServiceError(w, err)
 		return
 	}
@@ -99,7 +100,7 @@ func (h *TripHandler) DeleteTrip(w http.ResponseWriter, r *http.Request) {
 
 func (h *TripHandler) ListSchedules(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
-	schedules, err := h.tripService.ListSchedulesForOwner(r.PathValue("tripID"), claims.UserID)
+	schedules, err := h.service(r).ListSchedulesForOwner(r.PathValue("tripID"), claims.UserID)
 	if err != nil {
 		writeServiceError(w, err)
 		return
@@ -110,11 +111,10 @@ func (h *TripHandler) ListSchedules(w http.ResponseWriter, r *http.Request) {
 func (h *TripHandler) CreateSchedule(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
 	var req dto.CreateScheduleRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httpjson.WriteError(w, http.StatusBadRequest, "요청 형식이 올바르지 않습니다.")
+	if !httpjson.DecodeRequest(w, r, &req) {
 		return
 	}
-	schedule, err := h.tripService.CreateSchedule(r.PathValue("tripID"), claims.UserID, req)
+	schedule, err := h.service(r).CreateSchedule(r.PathValue("tripID"), claims.UserID, req)
 	if err != nil {
 		writeServiceError(w, err)
 		return
@@ -126,11 +126,10 @@ func (h *TripHandler) CreateSchedule(w http.ResponseWriter, r *http.Request) {
 func (h *TripHandler) UpdateSchedule(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
 	var req dto.UpdateScheduleRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httpjson.WriteError(w, http.StatusBadRequest, "요청 형식이 올바르지 않습니다.")
+	if !httpjson.DecodeRequest(w, r, &req) {
 		return
 	}
-	schedule, err := h.tripService.UpdateSchedule(r.PathValue("tripID"), r.PathValue("scheduleID"), claims.UserID, req)
+	schedule, err := h.service(r).UpdateSchedule(r.PathValue("tripID"), r.PathValue("scheduleID"), claims.UserID, req)
 	if err != nil {
 		writeServiceError(w, err)
 		return
@@ -140,7 +139,7 @@ func (h *TripHandler) UpdateSchedule(w http.ResponseWriter, r *http.Request) {
 
 func (h *TripHandler) DeleteSchedule(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
-	if err := h.tripService.DeleteSchedule(r.PathValue("tripID"), r.PathValue("scheduleID"), claims.UserID); err != nil {
+	if err := h.service(r).DeleteSchedule(r.PathValue("tripID"), r.PathValue("scheduleID"), claims.UserID); err != nil {
 		writeServiceError(w, err)
 		return
 	}
@@ -149,7 +148,7 @@ func (h *TripHandler) DeleteSchedule(w http.ResponseWriter, r *http.Request) {
 
 func (h *TripHandler) ListPlaces(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
-	places, err := h.tripService.ListPlacesForOwner(r.PathValue("tripID"), claims.UserID)
+	places, err := h.service(r).ListPlacesForOwner(r.PathValue("tripID"), claims.UserID)
 	if err != nil {
 		writeServiceError(w, err)
 		return
@@ -160,11 +159,10 @@ func (h *TripHandler) ListPlaces(w http.ResponseWriter, r *http.Request) {
 func (h *TripHandler) CreatePlace(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
 	var req dto.CreatePlaceRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httpjson.WriteError(w, http.StatusBadRequest, "요청 형식이 올바르지 않습니다.")
+	if !httpjson.DecodeRequest(w, r, &req) {
 		return
 	}
-	place, err := h.tripService.CreatePlace(r.PathValue("tripID"), claims.UserID, req)
+	place, err := h.service(r).CreatePlace(r.PathValue("tripID"), claims.UserID, req)
 	if err != nil {
 		writeServiceError(w, err)
 		return
@@ -176,11 +174,10 @@ func (h *TripHandler) CreatePlace(w http.ResponseWriter, r *http.Request) {
 func (h *TripHandler) UpdatePlace(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
 	var req dto.UpdatePlaceRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httpjson.WriteError(w, http.StatusBadRequest, "요청 형식이 올바르지 않습니다.")
+	if !httpjson.DecodeRequest(w, r, &req) {
 		return
 	}
-	place, err := h.tripService.UpdatePlace(r.PathValue("tripID"), r.PathValue("placeID"), claims.UserID, req)
+	place, err := h.service(r).UpdatePlace(r.PathValue("tripID"), r.PathValue("placeID"), claims.UserID, req)
 	if err != nil {
 		writeServiceError(w, err)
 		return
@@ -190,7 +187,7 @@ func (h *TripHandler) UpdatePlace(w http.ResponseWriter, r *http.Request) {
 
 func (h *TripHandler) DeletePlace(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
-	if err := h.tripService.DeletePlace(r.PathValue("tripID"), r.PathValue("placeID"), claims.UserID); err != nil {
+	if err := h.service(r).DeletePlace(r.PathValue("tripID"), r.PathValue("placeID"), claims.UserID); err != nil {
 		writeServiceError(w, err)
 		return
 	}
@@ -199,7 +196,7 @@ func (h *TripHandler) DeletePlace(w http.ResponseWriter, r *http.Request) {
 
 func (h *TripHandler) ListFlights(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
-	flights, err := h.tripService.ListFlightsForOwner(r.PathValue("tripID"), claims.UserID)
+	flights, err := h.service(r).ListFlightsForOwner(r.PathValue("tripID"), claims.UserID)
 	if err != nil {
 		writeServiceError(w, err)
 		return
@@ -210,11 +207,10 @@ func (h *TripHandler) ListFlights(w http.ResponseWriter, r *http.Request) {
 func (h *TripHandler) CreateFlight(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
 	var req dto.CreateFlightRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httpjson.WriteError(w, http.StatusBadRequest, "요청 형식이 올바르지 않습니다.")
+	if !httpjson.DecodeRequest(w, r, &req) {
 		return
 	}
-	flight, err := h.tripService.CreateFlight(r.PathValue("tripID"), claims.UserID, req)
+	flight, err := h.service(r).CreateFlight(r.PathValue("tripID"), claims.UserID, req)
 	if err != nil {
 		writeServiceError(w, err)
 		return
@@ -226,11 +222,10 @@ func (h *TripHandler) CreateFlight(w http.ResponseWriter, r *http.Request) {
 func (h *TripHandler) UpdateFlight(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
 	var req dto.UpdateFlightRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httpjson.WriteError(w, http.StatusBadRequest, "요청 형식이 올바르지 않습니다.")
+	if !httpjson.DecodeRequest(w, r, &req) {
 		return
 	}
-	flight, err := h.tripService.UpdateFlight(r.PathValue("tripID"), r.PathValue("flightID"), claims.UserID, req)
+	flight, err := h.service(r).UpdateFlight(r.PathValue("tripID"), r.PathValue("flightID"), claims.UserID, req)
 	if err != nil {
 		writeServiceError(w, err)
 		return
@@ -241,7 +236,7 @@ func (h *TripHandler) UpdateFlight(w http.ResponseWriter, r *http.Request) {
 func (h *TripHandler) DeleteFlight(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
 	// DeleteFlight는 여행 상세 화면에서 사용자가 직접 항공편을 제거할 때 호출된다.
-	if err := h.tripService.DeleteFlight(r.PathValue("tripID"), r.PathValue("flightID"), claims.UserID); err != nil {
+	if err := h.service(r).DeleteFlight(r.PathValue("tripID"), r.PathValue("flightID"), claims.UserID); err != nil {
 		writeServiceError(w, err)
 		return
 	}
@@ -250,7 +245,7 @@ func (h *TripHandler) DeleteFlight(w http.ResponseWriter, r *http.Request) {
 
 func (h *TripHandler) ListRoutes(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
-	routes, err := h.tripService.ListRoutesForOwner(r.PathValue("tripID"), claims.UserID)
+	routes, err := h.service(r).ListRoutesForOwner(r.PathValue("tripID"), claims.UserID)
 	if err != nil {
 		writeServiceError(w, err)
 		return
@@ -263,7 +258,7 @@ func (h *TripHandler) SearchPlaces(w http.ResponseWriter, r *http.Request) {
 	tripID := r.PathValue("tripID")
 	query := r.URL.Query().Get("q")
 
-	results, err := h.tripService.SearchPlaces(tripID, claims.UserID, query)
+	results, err := h.service(r).SearchPlaces(tripID, claims.UserID, query)
 	if err != nil {
 		writeServiceError(w, err)
 		return
@@ -281,6 +276,8 @@ func writeServiceError(w http.ResponseWriter, err error) {
 		httpjson.WriteError(w, http.StatusForbidden, "권한이 없습니다.")
 	case errors.Is(err, service.ErrInvalidTrip):
 		httpjson.WriteError(w, http.StatusBadRequest, "필수 항목이 누락됐습니다.")
+	case errors.Is(err, service.ErrTripDateConflict):
+		httpjson.WriteError(w, http.StatusConflict, "여행 기간 밖에 일정이나 날짜별 준비물이 있어 날짜를 변경할 수 없습니다.")
 	case errors.Is(err, service.ErrInvalidChecklist):
 		httpjson.WriteError(w, http.StatusBadRequest, "준비물 이름과 구분을 확인해 주세요.")
 	case errors.Is(err, service.ErrPlaceSearchUnavailable):

@@ -2,7 +2,6 @@ package service
 
 import (
 	"errors"
-	"flag"
 	"testing"
 
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/dto"
@@ -11,11 +10,7 @@ import (
 
 func useRuntimeAuthValidation(t *testing.T) {
 	t.Helper()
-	originalFlags := flag.CommandLine
-	flag.CommandLine = flag.NewFlagSet("auth-runtime-test", flag.ContinueOnError)
-	t.Cleanup(func() {
-		flag.CommandLine = originalFlags
-	})
+	t.Setenv("AUTH_TEST_BYPASS", "")
 }
 
 func TestVerifiedSignupCodeRemainsValidUntilRegistration(t *testing.T) {

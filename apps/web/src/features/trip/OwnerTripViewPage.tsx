@@ -17,6 +17,7 @@ export function OwnerTripViewPage({ tripId }: OwnerTripViewPageProps) {
   const {
     auth,
     authChecked,
+    onAuthChanged,
     ownerTrips,
     ownerTripsLoading,
     selectedOwnerTrip,
@@ -147,6 +148,8 @@ export function OwnerTripViewPage({ tripId }: OwnerTripViewPageProps) {
       newChecklistCategory={newChecklistCategory}
       newChecklistDate={newChecklistDate}
       newChecklistTitle={newChecklistTitle}
+      auth={auth}
+      onAuthChanged={onAuthChanged}
       onAddChecklistItem={onAddChecklistItem}
       onDeleteChecklistItem={onDeleteChecklistItem}
       onLogout={onLogout}
@@ -163,12 +166,27 @@ export function OwnerTripViewPage({ tripId }: OwnerTripViewPageProps) {
 }
 
 type OwnerTripViewContentProps = Parameters<typeof useOwnerTripPageAdapter>[0] & {
+  auth: NonNullable<ReturnType<typeof useTripManageController>["auth"]>;
+  onAuthChanged: ReturnType<typeof useTripManageController>["onAuthChanged"];
   onLogout: () => void;
 };
 
 // useOwnerTripPageAdapter는 훅이라 이른 return 뒤에서 호출할 수 없으므로,
 // "데이터 준비 완료" 상태만 들어오는 별도 컴포넌트로 분리해 훅 순서 규칙을 지킨다.
-function OwnerTripViewContent({ onLogout, ...adapterParams }: OwnerTripViewContentProps) {
+function OwnerTripViewContent({
+  auth,
+  onAuthChanged,
+  onLogout,
+  ...adapterParams
+}: OwnerTripViewContentProps) {
   const tripPageProps = useOwnerTripPageAdapter(adapterParams);
-  return <TripPage {...tripPageProps} onLogout={onLogout} isDemo={false} />;
+  return (
+    <TripPage
+      {...tripPageProps}
+      auth={auth}
+      onAuthChanged={onAuthChanged}
+      onLogout={onLogout}
+      isDemo={false}
+    />
+  );
 }

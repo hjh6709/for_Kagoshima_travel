@@ -9,7 +9,7 @@ import (
 func TestPlaceCreateBoundaries(t *testing.T) {
 	setServerTestEnv(t)
 
-	srv := New()
+	srv := newTestServer(t)
 	httpServer := httptest.NewServer(srv.Routes())
 	defer httpServer.Close()
 

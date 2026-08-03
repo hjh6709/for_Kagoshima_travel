@@ -112,7 +112,7 @@ func checklistRequestJSON(t *testing.T, method, url, token string, payload any) 
 func TestChecklistLifecycleAndBoundaries(t *testing.T) {
 	setServerTestEnv(t)
 
-	srv := New()
+	srv := newTestServer(t)
 	httpServer := httptest.NewServer(srv.Routes())
 	defer httpServer.Close()
 
@@ -207,6 +207,13 @@ func TestChecklistLifecycleAndBoundaries(t *testing.T) {
 	})
 	if updateDateRes.status != http.StatusOK {
 		t.Fatalf("update checklist date status = %d, want 200, body = %#v", updateDateRes.status, updateDateRes.body)
+	}
+
+	dateConflictRes := checklistRequestJSON(t, http.MethodPatch, httpServer.URL+"/api/trips/"+tripID, ownerToken, map[string]any{
+		"startDate": "2026-07-23",
+	})
+	if dateConflictRes.status != http.StatusConflict {
+		t.Fatalf("trip date conflict status = %d, want 409, body = %#v", dateConflictRes.status, dateConflictRes.body)
 	}
 
 	// 5. 비소유자 수정 권한 차단 검증 (다른 유저의 토큰으로 시도 ➡️ 403 Forbidden)
