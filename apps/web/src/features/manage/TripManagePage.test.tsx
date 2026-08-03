@@ -51,8 +51,12 @@ describe("TripManagePage creation flow", () => {
 
     const disclosure = screen.getByLabelText("새 여행 만들기 열기").closest("details");
     expect(disclosure).not.toHaveAttribute("open");
-    expect(screen.getByRole("heading", { name: "상하이 여행" })).toBeVisible();
+    const existingTripHeading = screen.getByRole("heading", { name: "상하이 여행" });
+    expect(existingTripHeading).toBeVisible();
     expect(screen.getByRole("link", { name: "여행 열기" })).toBeVisible();
+    expect(
+      existingTripHeading.compareDocumentPosition(disclosure as Node) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
 
     await userEvent.click(screen.getByLabelText("새 여행 만들기 열기"));
 

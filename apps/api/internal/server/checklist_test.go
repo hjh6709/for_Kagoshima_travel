@@ -139,6 +139,15 @@ func TestChecklistLifecycleAndBoundaries(t *testing.T) {
 		t.Fatalf("checklist count = %d, want at least 12 items", len(listRes.arrayBody))
 	}
 
+	// 잘못된 입력은 서버 오류가 아니라 사용자가 수정할 수 있는 400 응답이어야 한다.
+	invalidCreateRes := checklistRequestJSON(t, http.MethodPost, httpServer.URL+"/api/trips/"+tripID+"/checklists", ownerToken, map[string]any{
+		"category": "before",
+		"title":    "   ",
+	})
+	if invalidCreateRes.status != http.StatusBadRequest {
+		t.Fatalf("invalid checklist item status = %d, want 400, body = %#v", invalidCreateRes.status, invalidCreateRes.body)
+	}
+
 	// 3. 커스텀 체크리스트 항목 추가
 	createPayload := map[string]any{
 		"category": "before",

@@ -7,6 +7,7 @@ import {
   type ChecklistItemResponse,
 } from "../../api/checklist";
 import { handleManageApiError } from "./manageFormUtils";
+import { isOnline } from "../../utils/offlineCache";
 
 type UseTripManageChecklistActionsParams = {
   tripID: string | null;           // 선택된 여행 ID
@@ -65,7 +66,12 @@ export function useTripManageChecklistActions({
   async function handleAddChecklistItem(e: React.FormEvent) {
     e.preventDefault();
     if (!tripID || !accessToken) return;
+    if (checklistSubmitting) return;
     if (!newChecklistTitle.trim()) return;
+    if (!isOnline()) {
+      setChecklistError("네트워크 연결이 끊겼습니다. 오프라인 상태에서는 준비물을 추가할 수 없습니다.");
+      return;
+    }
 
     setChecklistSubmitting(true);
     setChecklistError("");
@@ -79,6 +85,7 @@ export function useTripManageChecklistActions({
       );
       setChecklistItems((prev) => [...prev, newItem]);
       setNewChecklistTitle("");
+      setChecklistError("");
     } catch (error) {
       handleManageApiError(error, {
         clearOwnerSession,
@@ -93,12 +100,17 @@ export function useTripManageChecklistActions({
   // 준비물 완료/미완료 토글 처리(isCompleted)를 처리하고 상태를 즉각 동기화합니다.
   async function handleToggleChecklistItem(itemID: string, isCompleted: boolean) {
     if (!accessToken) return;
+    if (!isOnline()) {
+      setChecklistError("네트워크 연결이 끊겼습니다. 오프라인 상태에서는 준비 상태를 변경할 수 없습니다.");
+      return;
+    }
 
     try {
       const updated = await updateChecklistItem(itemID, accessToken, { isCompleted });
       setChecklistItems((prev) =>
         prev.map((item) => (item.id === itemID ? updated : item))
       );
+      setChecklistError("");
     } catch (error) {
       handleManageApiError(error, {
         clearOwnerSession,
@@ -111,10 +123,15 @@ export function useTripManageChecklistActions({
   // 준비물 항목을 리포지토리에서 삭제하고 UI 리스트에서도 필터링합니다.
   async function handleDeleteChecklistItem(itemID: string) {
     if (!accessToken) return;
+    if (!isOnline()) {
+      setChecklistError("네트워크 연결이 끊겼습니다. 오프라인 상태에서는 준비물을 삭제할 수 없습니다.");
+      return;
+    }
 
     try {
       await deleteChecklistItem(itemID, accessToken);
       setChecklistItems((prev) => prev.filter((item) => item.id !== itemID));
+      setChecklistError("");
     } catch (error) {
       handleManageApiError(error, {
         clearOwnerSession,

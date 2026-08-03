@@ -9,6 +9,7 @@ type NextScheduleCardProps = {
   focusDate: string;
   getDisplayDate: (dateStr: string) => string;
   getPlace: (placeId?: string) => Place | undefined;
+  hasSchedules: boolean;
   isReadOnly?: boolean;
   nextSchedule: ScheduleItem | null;
   onOpenSchedule: () => void;
@@ -22,6 +23,7 @@ export function NextScheduleCard({
   focusDate,
   getDisplayDate,
   getPlace,
+  hasSchedules,
   isReadOnly,
   nextSchedule,
   onOpenSchedule,
@@ -30,22 +32,32 @@ export function NextScheduleCard({
   if (travelPhase === "after") return null;
 
   if (!nextSchedule) {
+    const isBeforeTrip = travelPhase === "before";
+    const emptyTitle = isBeforeTrip
+      ? "첫 일정을 준비해 주세요"
+      : hasSchedules
+        ? "남은 일정이 없습니다"
+        : "아직 일정이 없습니다";
+    const emptyDescription = isBeforeTrip
+      ? isReadOnly
+        ? "출발일에 공유된 일정이 아직 없습니다."
+        : "일정을 추가하면 출발일의 첫 장소와 길찾기가 여기에 표시됩니다."
+      : hasSchedules
+        ? "오늘 할 일을 모두 마쳤다면 여유롭게 다음 계획을 확인해 보세요."
+        : isReadOnly
+          ? "공유된 일정이 아직 없습니다."
+          : "일정을 추가하면 오늘 계획과 다음 이동을 바로 확인할 수 있습니다.";
+
     return (
       <article className="hero-card next-schedule-empty">
         <CalendarPlus aria-hidden="true" size={22} />
         <div>
-          <h2>{travelPhase === "before" ? "첫 일정을 준비해 주세요" : "남은 일정이 없습니다"}</h2>
-          <p>
-            {travelPhase === "before"
-              ? isReadOnly
-                ? "출발일에 공유된 일정이 아직 없습니다."
-                : "일정을 추가하면 출발일의 첫 장소와 길찾기가 여기에 표시됩니다."
-              : "오늘 할 일을 모두 마쳤다면 여유롭게 다음 계획을 확인해 보세요."}
-          </p>
+          <h2>{emptyTitle}</h2>
+          <p>{emptyDescription}</p>
         </div>
         {editSchedulesHref && !isReadOnly ? (
           <a className="primary-button compact-button" href={editSchedulesHref}>
-            {travelPhase === "before" ? "첫 일정 추가" : "일정 추가"}
+            {isBeforeTrip ? "첫 일정 추가" : "일정 추가"}
           </a>
         ) : (
           <button className="secondary-button compact-button" onClick={onOpenSchedule} type="button">

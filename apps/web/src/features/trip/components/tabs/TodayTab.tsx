@@ -8,6 +8,7 @@ import { TodayHeaderSection } from "../sections/TodayHeaderSection";
 export function TodayTab(props: TripPageProps) {
   const {
     checkedItems,
+    dates,
     editSchedulesHref,
     focusDate,
     focusCompletedScheduleCount,
@@ -43,6 +44,7 @@ export function TodayTab(props: TripPageProps) {
         focusDate={focusDate}
         getDisplayDate={getDisplayDate}
         getPlace={getPlace}
+        hasSchedules={dates.length > 0}
         isReadOnly={isReadOnly}
         nextSchedule={nextSchedule}
         onOpenSchedule={() => {
