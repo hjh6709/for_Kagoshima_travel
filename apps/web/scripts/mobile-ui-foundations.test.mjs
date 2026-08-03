@@ -81,7 +81,11 @@ test("Pretendard는 앱과 함께 배포되어 오프라인에서도 같은 위�
     existsSync(new URL("../public/fonts/PretendardVariable.woff2", import.meta.url)),
     "로컬 Pretendard Variable 파일이 필요합니다.",
   );
-  assert.doesNotMatch(indexHtml, /cdn\.jsdelivr\.net\/gh\/orioncactus\/pretendard/);
+  assert.equal(
+    indexHtml.includes('rel="stylesheet"'),
+    false,
+    "웹 폰트 등 화면 필수 스타일을 외부 stylesheet에 의존하면 안 됩니다.",
+  );
   assert.match(viteConfig, /woff2/);
   assert.match(tokens, /@font-face/);
   assert.match(tokens, /font-display:\s*swap/);
