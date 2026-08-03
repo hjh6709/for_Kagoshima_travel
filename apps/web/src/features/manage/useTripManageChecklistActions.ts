@@ -37,7 +37,7 @@ export function useTripManageChecklistActions({
 
   // 여행 정보 또는 토큰 세션이 변경되면, 연결된 체크리스트 리스트를 백엔드 서버로부터 가져옵니다.
   useEffect(() => {
-    if (!tripID || !accessToken) {
+    if (!tripID || accessToken === null) {
       setChecklistItems([]);
       return;
     }
@@ -71,7 +71,7 @@ export function useTripManageChecklistActions({
   // 새로운 커스텀 준비물 항목을 추가 등록합니다.
   async function handleAddChecklistItem(e: React.FormEvent) {
     e.preventDefault();
-    if (!tripID || !accessToken) return;
+    if (!tripID || accessToken === null) return;
     if (checklistSubmitting) return;
     if (!newChecklistTitle.trim()) return;
     if (!isOnline()) {
@@ -106,7 +106,7 @@ export function useTripManageChecklistActions({
 
   // 준비물 완료/미완료 토글 처리(isCompleted)를 처리하고 상태를 즉각 동기화합니다.
   async function handleToggleChecklistItem(itemID: string, isCompleted: boolean) {
-    if (!accessToken) return;
+    if (accessToken === null) return;
     if (!isOnline()) {
       setChecklistError("네트워크 연결이 끊겼습니다. 오프라인 상태에서는 준비 상태를 변경할 수 없습니다.");
       return;
@@ -129,7 +129,7 @@ export function useTripManageChecklistActions({
 
   // 준비물 항목을 리포지토리에서 삭제하고 UI 리스트에서도 필터링합니다.
   async function handleDeleteChecklistItem(itemID: string) {
-    if (!accessToken) return;
+    if (accessToken === null) return;
     if (!isOnline()) {
       setChecklistError("네트워크 연결이 끊겼습니다. 오프라인 상태에서는 준비물을 삭제할 수 없습니다.");
       return;

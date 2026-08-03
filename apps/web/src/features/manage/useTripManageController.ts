@@ -75,6 +75,7 @@ export function useTripManageController({
     authSubmitting,
     changeAuthMode,
     clearOwnerSessionBase,
+    logoutOwnerSession,
     ownerAuth,
     ownerTrips,
     ownerTripsError,
@@ -473,8 +474,9 @@ export function useTripManageController({
   });
 
   // 로그아웃은 인증뿐 아니라 현재 화면의 pending/submitting 상태까지 초기화해야 재로그인 시 잔상이 남지 않는다.
-  function logoutOwner() {
-    clearOwnerSession();
+  async function logoutOwner() {
+    await logoutOwnerSession();
+    clearOwnerDetailData();
     resetShareLinkState();
     setScheduleCreateSubmitting(false);
     resetScheduleManageForm();

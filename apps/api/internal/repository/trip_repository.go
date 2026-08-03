@@ -24,8 +24,9 @@ func WithTripRepositoryContext(repo TripRepository, ctx context.Context) TripRep
 }
 
 var (
-	ErrNotFound       = errors.New("not found")
-	ErrDuplicateEmail = errors.New("email already exists")
+	ErrNotFound         = errors.New("not found")
+	ErrDuplicateEmail   = errors.New("email already exists")
+	ErrTripDateConflict = errors.New("trip date conflicts with dated item")
 )
 
 type TripRepository interface {

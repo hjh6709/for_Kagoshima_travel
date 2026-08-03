@@ -98,7 +98,7 @@ func (s *ChecklistService) CreateChecklistCustomItem(ctx context.Context, tripID
 	}
 
 	if err := s.checklistRepository.Save(ctx, item); err != nil {
-		return dto.ChecklistItemResponse{}, err
+		return dto.ChecklistItemResponse{}, mapChecklistRepositoryError(err)
 	}
 	return mapChecklistItemResponse(item), nil
 }
@@ -135,7 +135,7 @@ func (s *ChecklistService) UpdateChecklistItem(ctx context.Context, checklistID,
 	}
 
 	if err := s.checklistRepository.Update(ctx, item); err != nil {
-		return dto.ChecklistItemResponse{}, err
+		return dto.ChecklistItemResponse{}, mapChecklistRepositoryError(err)
 	}
 	return mapChecklistItemResponse(item), nil
 }
@@ -181,4 +181,11 @@ func isChecklistDateInTrip(scheduledDate, startDate, endDate string) bool {
 		return false
 	}
 	return !date.Before(start) && !date.After(end)
+}
+
+func mapChecklistRepositoryError(err error) error {
+	if errors.Is(err, repository.ErrTripDateConflict) {
+		return ErrTripDateConflict
+	}
+	return err
 }

@@ -38,7 +38,7 @@ func (r *PostgresChecklistRepository) Save(ctx context.Context, item model.Check
 		`INSERT INTO checklists (id, trip_id, category, title, is_completed, custom, destination_country, scheduled_date, created_at)
 		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
 		item.ID, item.TripID, item.Category, item.Title, item.IsCompleted, item.Custom, destCountry, scheduledDate, item.CreatedAt)
-	return err
+	return mapPostgresWriteError(err)
 }
 
 // SaveAll은 트랜잭션을 구동하여 제공된 여러 준비물 리스트를 벌크로 빠르게 삽입합니다. (여행 첫 생성 시 프리셋 인서트에 사용)
@@ -57,7 +57,7 @@ func (r *PostgresChecklistRepository) SaveAll(ctx context.Context, items []model
 			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
 			item.ID, item.TripID, item.Category, item.Title, item.IsCompleted, item.Custom, destCountry, scheduledDate, item.CreatedAt)
 		if err != nil {
-			return err
+			return mapPostgresWriteError(err)
 		}
 	}
 
@@ -112,7 +112,7 @@ func (r *PostgresChecklistRepository) Update(ctx context.Context, item model.Che
 		`UPDATE checklists SET category = $1, title = $2, is_completed = $3, custom = $4, destination_country = $5, scheduled_date = $6
 		 WHERE id = $7`,
 		item.Category, item.Title, item.IsCompleted, item.Custom, destCountry, scheduledDate, item.ID)
-	return err
+	return mapPostgresWriteError(err)
 }
 
 // Delete는 지정한 준비물 항목 ID의 레코드를 완전히 물리 삭제합니다.

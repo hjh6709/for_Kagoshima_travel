@@ -5,11 +5,15 @@ on:
     branches: [main]
     paths:
       - 'apps/api/**'
+      - 'scripts/deploy-api-on-vm.sh'
+      - 'scripts/travel-api.service'
       - '.github/workflows/api-release-build.yml'
   push:
     branches: [main]
     paths:
       - 'apps/api/**'
+      - 'scripts/deploy-api-on-vm.sh'
+      - 'scripts/travel-api.service'
       - '.github/workflows/api-release-build.yml'
   workflow_dispatch:
 
@@ -59,7 +63,7 @@ jobs:
           if-no-files-found: error
 
   deploy:
-    name: OCI VM 무중단 자동 배포 (CD)
+    name: OCI VM 검증·롤백 자동 배포 (CD)
     needs: build
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -75,19 +79,10 @@ jobs:
       - name: Prepare deployment artifacts
         run: |
           # 다운로드한 바이너리명 표준화 및 실행 권한 복구
-          mv deploy-dist/travel-api-linux-arm64 deploy-dist/travel-api
+          mv deploy-dist/travel-api-linux-arm64 deploy-dist/travel-api.next
           # systemd 서비스 설정 파일도 배포 묶음에 복사
           cp scripts/travel-api.service deploy-dist/
-
-      - name: Rename active binary on VM (Unlock Text file busy)
-        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
-        with:
-          host: ${{ secrets.OCI_VM_IP }}
-          username: ${{ secrets.OCI_VM_USER }}
-          key: ${{ secrets.OCI_SSH_KEY }}
-          script: |
-            mkdir -p /home/opc/travel-api
-            [ ! -f /home/opc/travel-api/travel-api ] || mv /home/opc/travel-api/travel-api /home/opc/travel-api/travel-api.old
+          cp scripts/deploy-api-on-vm.sh deploy-dist/
 
       - name: Copy new binary and service to VM via SCP
         uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1.0.0
@@ -99,7 +94,7 @@ jobs:
           target: "/home/opc/travel-api"
           strip_components: 1
 
-      - name: Launch systemd service and cleanup backup on VM
+      - name: Validate, launch, health check and rollback on VM
         uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
         env:
           GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
@@ -111,18 +106,9 @@ jobs:
           script: |
             ENV_FILE=/home/opc/travel-api/.env
             [ -f "$ENV_FILE" ] || { echo "missing $ENV_FILE" >&2; exit 1; }
-            grep -Eq '^APP_ENV=(production|prod)$' "$ENV_FILE" || { echo 'APP_ENV must be production' >&2; exit 1; }
-            grep -Eq '^DATABASE_URL=.+$' "$ENV_FILE" || { echo 'DATABASE_URL is required' >&2; exit 1; }
-            JWT_VALUE=$(sed -n 's/^JWT_SECRET=//p' "$ENV_FILE" | tail -n 1)
-            [ "${#JWT_VALUE}" -ge 32 ] || { echo 'JWT_SECRET must be at least 32 characters' >&2; exit 1; }
-            case "$JWT_VALUE" in *replace*|*REPLACE*|*change-me*|*CHANGE-ME*) echo 'JWT_SECRET must not be a placeholder' >&2; exit 1;; esac
             if [ -n "$GOOGLE_MAPS_API_KEY" ]; then
               sed -i '/^GOOGLE_MAPS_API_KEY=/d' /home/opc/travel-api/.env
               printf 'GOOGLE_MAPS_API_KEY=%s\n' "$GOOGLE_MAPS_API_KEY" >> /home/opc/travel-api/.env
             fi
-            chmod +x /home/opc/travel-api/travel-api
-            sudo cp /home/opc/travel-api/travel-api.service /etc/systemd/system/travel-api.service
-            sudo systemctl daemon-reload
-            sudo systemctl enable travel-api
-            sudo systemctl restart travel-api
-            rm -f /home/opc/travel-api/travel-api.old
+            chmod 750 /home/opc/travel-api/deploy-api-on-vm.sh
+            /home/opc/travel-api/deploy-api-on-vm.sh /home/opc/travel-api

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 
@@ -39,6 +40,11 @@ func New() (*Server, error) {
 	}
 	if production && os.Getenv("AUTH_TEST_BYPASS") != "" {
 		return nil, errors.New("AUTH_TEST_BYPASS must not be set in production")
+	}
+	if production {
+		if err := validateProductionOrigins(os.Getenv("ALLOWED_ORIGINS")); err != nil {
+			return nil, err
+		}
 	}
 	if jwtSecret == "" {
 		jwtSecret = "dev-secret-replace-in-production"
@@ -113,6 +119,20 @@ func isProduction() bool {
 	return env == "production" || env == "prod"
 }
 
+func validateProductionOrigins(configuredOrigins string) error {
+	if strings.TrimSpace(configuredOrigins) == "" {
+		return errors.New("production ALLOWED_ORIGINS is required")
+	}
+	for _, origin := range strings.Split(configuredOrigins, ",") {
+		origin = strings.TrimSpace(origin)
+		parsed, err := url.Parse(origin)
+		if err != nil || parsed.Scheme != "https" || parsed.Host == "" || parsed.User != nil || parsed.Path != "" || parsed.RawQuery != "" || parsed.Fragment != "" {
+			return fmt.Errorf("production ALLOWED_ORIGINS contains invalid HTTPS origin %q", origin)
+		}
+	}
+	return nil
+}
+
 func (s *Server) Routes() http.Handler {
 	return withCORS(s.rateLimiter.Limit(middleware.DiscordAlert(s.mux)))
 }
@@ -180,8 +200,10 @@ func withCORS(next http.Handler) http.Handler {
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		origin := r.Header.Get("Origin")
-		if _, allowed := allowedOrigins[origin]; allowed {
+		origin := strings.TrimSpace(r.Header.Get("Origin"))
+		_, allowed := allowedOrigins[origin]
+		trustedOrigin := allowed || isSameHostOrigin(origin, r.Host)
+		if allowed {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
 			w.Header().Add("Vary", "Origin")
@@ -190,10 +212,54 @@ func withCORS(next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
 		if r.Method == http.MethodOptions {
+			if origin != "" && !trustedOrigin {
+				http.Error(w, "origin is not allowed", http.StatusForbidden)
+				return
+			}
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 
+		// 브라우저 mutation은 로그인처럼 아직 쿠키가 없는 요청도 포함해 Origin을
+		// 검증한다. Origin이 없는 앱/CLI는 계속 허용하지만, 쿠키 인증을 쓰는 요청은
+		// 반드시 신뢰할 수 있는 브라우저 Origin 또는 명시적인 Bearer가 필요하다.
+		if isUnsafeMethod(r.Method) {
+			untrustedBrowser := origin != "" && !trustedOrigin
+			originlessCookie := origin == "" && hasSessionCookie(r) && !hasBearerAuthorization(r)
+			if untrustedBrowser || originlessCookie {
+				http.Error(w, "origin is not allowed", http.StatusForbidden)
+				return
+			}
+		}
+
 		next.ServeHTTP(w, r)
 	})
+}
+
+func isUnsafeMethod(method string) bool {
+	switch method {
+	case http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete:
+		return true
+	default:
+		return false
+	}
+}
+
+func hasSessionCookie(r *http.Request) bool {
+	cookie, err := r.Cookie(middleware.SessionCookieName)
+	return err == nil && strings.TrimSpace(cookie.Value) != ""
+}
+
+func hasBearerAuthorization(r *http.Request) bool {
+	authorization := strings.TrimSpace(r.Header.Get("Authorization"))
+	parts := strings.Fields(authorization)
+	return len(parts) == 2 && strings.EqualFold(parts[0], "Bearer") && parts[1] != ""
+}
+
+func isSameHostOrigin(origin, requestHost string) bool {
+	if origin == "" || requestHost == "" {
+		return false
+	}
+	parsed, err := url.Parse(origin)
+	return err == nil && parsed.Scheme != "" && strings.EqualFold(parsed.Host, requestHost)
 }

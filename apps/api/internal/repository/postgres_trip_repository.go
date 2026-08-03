@@ -113,7 +113,7 @@ func (r *PostgresTripRepository) SaveTripWithChecklist(ctx context.Context, trip
 			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
 			item.ID, item.TripID, item.Category, item.Title, item.IsCompleted, item.Custom, destinationCountry, scheduledDate, item.CreatedAt,
 		); err != nil {
-			return err
+			return mapPostgresWriteError(err)
 		}
 	}
 	return tx.Commit(ctx)
@@ -150,7 +150,7 @@ func (r *PostgresTripRepository) SaveSchedule(schedule model.Schedule) error {
 		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
 		schedule.ID, schedule.TripID, placeID, schedule.Date, schedule.Time, schedule.Type, schedule.Title,
 		schedule.TransportMemo, schedule.GuideMemo)
-	return err
+	return mapPostgresWriteError(err)
 }
 
 // FindSchedule은 PATCH 전에 기존 일정 값을 보존하기 위해 단건을 조회한다.
@@ -185,7 +185,7 @@ func (r *PostgresTripRepository) UpdateSchedule(schedule model.Schedule) error {
 		placeID, schedule.Date, schedule.Time, schedule.Type, schedule.Title,
 		schedule.TransportMemo, schedule.GuideMemo, schedule.TripID, schedule.ID)
 	if err != nil {
-		return err
+		return mapPostgresWriteError(err)
 	}
 	if tag.RowsAffected() == 0 {
 		return ErrNotFound
@@ -364,7 +364,7 @@ func (r *PostgresTripRepository) Update(trip model.Trip) error {
 		`UPDATE trips SET title=$1, start_date=$2, end_date=$3, travelers=$4, destination_country=$5, memo=$6, updated_at=NOW() WHERE id=$7`,
 		trip.Title, trip.StartDate, trip.EndDate, trip.Travelers, trip.DestinationCountry, trip.Memo, trip.ID)
 	if err != nil {
-		return err
+		return mapPostgresWriteError(err)
 	}
 	if tag.RowsAffected() == 0 {
 		return ErrNotFound
