@@ -1,13 +1,21 @@
+@font-face {
+  font-family: "Pretendard Variable";
+  font-style: normal;
+  font-weight: 45 920;
+  font-display: swap;
+  src: url("/fonts/PretendardVariable.woff2") format("woff2-variations");
+}
+
 :root {
   /* Pocket Atlas palette: route, destination, ink, and map paper. */
   --c-route: #0b6f6a;
   --c-route-deep: #075a57;
   --c-route-soft: #e1f0ee;
-  --c-destination: #c94f3d;
+  --c-destination: #c84e3c;
   --c-destination-deep: #ad3e2f;
   --c-destination-soft: #faeae6;
   --c-danger: #b33a3a;
-  --c-warning: #9a6500;
+  --c-warning: #925c00;
   --c-orange: var(--c-warning);
   --c-success: #25734b;
   --c-bg: #f5f8f7;
@@ -28,6 +36,23 @@
   --shadow-overlay: 0 16px 40px rgba(23, 51, 61, 0.18);
   --ease-route: cubic-bezier(0.22, 1, 0.36, 1);
 
+  /* Six roles keep the mobile hierarchy predictable across every trip screen. */
+  --type-display-size: 2rem;
+  --type-screen-size: 1.625rem;
+  --type-title-size: 1.25rem;
+  --type-body-size: 1rem;
+  --type-supporting-size: 0.875rem;
+  --type-label-size: 0.75rem;
+  --type-presentation-size: clamp(2rem, 9vw, 2.75rem);
+  --type-display-line: 1.18;
+  --type-heading-line: 1.3;
+  --type-body-line: 1.6;
+  --type-supporting-line: 1.5;
+  --type-label-line: 1.35;
+  --font-weight-body: 500;
+  --font-weight-strong: 700;
+  --font-weight-display: 800;
+
   color: var(--c-text);
   background: var(--c-page);
   font-family:
@@ -38,6 +63,8 @@
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
   color-scheme: light;
-  line-height: 1.55;
-  letter-spacing: -0.012em;
+  font-size: var(--type-body-size);
+  font-weight: var(--font-weight-body);
+  line-height: var(--type-body-line);
+  letter-spacing: 0;
 }

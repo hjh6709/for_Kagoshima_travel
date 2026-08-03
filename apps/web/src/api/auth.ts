@@ -60,8 +60,15 @@ export async function apiRequest<T>(
           : "요청을 처리하지 못했습니다.";
       throw new ApiError(message, response.status);
     }
-
     return body as T;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new ApiError("요청 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.");
+    }
+    throw new ApiError(
+      "서버에 연결할 수 없습니다. 네트워크 연결을 확인하고 다시 시도해주세요.",
+    );
   } finally {
     if (isMutation) pendingMutationCount -= 1;
   }

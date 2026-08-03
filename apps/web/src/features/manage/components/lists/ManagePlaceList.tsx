@@ -330,7 +330,7 @@ export function ManagePlaceList({
               <span className="zoom-korean">{zoomedPlace.name}</span>
               <span className="zoom-foreign">{zoomedPlace.chineseName || zoomedPlace.name}</span>
               {(zoomedPlace.chineseAddress || zoomedPlace.address) && (
-                <span className="zoom-pronun" style={{ fontSize: "16px", marginTop: "12px", color: "var(--c-muted)", wordBreak: "break-all" }}>
+                <span className="zoom-pronun" style={{ fontSize: "var(--type-body-size)", marginTop: "12px", color: "var(--c-muted)", wordBreak: "break-all" }}>
                   {zoomedPlace.chineseAddress || zoomedPlace.address}
                 </span>
               )}

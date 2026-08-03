@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { apiRequest, hasPendingApiMutation } from "./auth";
+import { ApiError, apiRequest, hasPendingApiMutation } from "./auth";
 
 describe("apiRequest mutation tracking", () => {
   afterEach(() => {
@@ -43,5 +43,16 @@ describe("apiRequest mutation tracking", () => {
     const [, options] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(options.credentials).toBe("include");
     expect(new Headers(options.headers).has("Authorization")).toBe(false);
+  });
+
+  it("연결 실패의 브라우저 원문 대신 사용자가 이해할 수 있는 안내를 제공한다", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("Failed to fetch")));
+
+    await expect(apiRequest("/api/auth/me")).rejects.toEqual(
+      expect.objectContaining<Partial<ApiError>>({
+        name: "ApiError",
+        message: "서버에 연결할 수 없습니다. 네트워크 연결을 확인하고 다시 시도해주세요.",
+      }),
+    );
   });
 });

@@ -5,13 +5,13 @@ colors:
   atlas-ink: "#17333D"
   route-teal: "#0B6F6A"
   route-teal-deep: "#075A57"
-  destination-coral: "#C94F3D"
+  destination-coral: "#C84E3C"
   canvas-mist: "#EDF3F2"
   surface-white: "#FFFFFF"
   surface-cool: "#F5F8F7"
   border-map: "#CAD8D7"
   text-muted: "#4C626A"
-  warning-amber: "#9A6500"
+  warning-amber: "#925C00"
   danger-red: "#B33A3A"
   success-green: "#25734B"
 typography:
@@ -104,7 +104,7 @@ Map Planner는 여행 중 한 손에 들고 보는 접이식 도시 지도와 �
 
 ### Secondary
 
-- **Destination Coral** (`#C94F3D`): 목적지 표식, 다음 핵심 행동과 여행 중 활성 상태에만 사용합니다.
+- **Destination Coral** (`#C84E3C`): 목적지 표식, 다음 핵심 행동과 여행 중 활성 상태에만 사용합니다.
 
 ### Neutral
 
@@ -132,10 +132,11 @@ Map Planner는 여행 중 한 손에 들고 보는 접이식 도시 지도와 �
 ### Hierarchy
 
 - **Display** (800, 32px, 1.18): 여행명과 화면의 단 하나뿐인 최상위 제목
-- **Headline** (800, 26px, 1.25): 주요 화면 제목
-- **Title** (750, 20px, 1.35): 일정과 장소 이름
-- **Body** (500, 15px, 1.6): 설명과 안내
-- **Label** (700, 12px, 1.3): 시간, 범주, 상태, 짧은 메타데이터
+- **Headline** (800, 26px, 1.3): 주요 화면 제목
+- **Title** (700, 20px, 1.3): 일정과 장소 이름
+- **Body** (500, 16px, 1.6): 설명과 안내
+- **Supporting** (500, 14px, 1.5): 부연 설명과 보조 행동
+- **Label** (700, 12px, 1.35): 시간, 범주, 상태, 짧은 메타데이터
 
 ### Named Rules
 

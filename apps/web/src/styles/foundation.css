@@ -14,7 +14,7 @@ body {
 }
 
 body {
-  min-width: 320px;
+  min-width: 0;
   background: var(--c-page);
 }
 
@@ -29,6 +29,19 @@ button {
   touch-action: manipulation;
 }
 
+button,
+a,
+input,
+select,
+textarea {
+  transition:
+    color 0.16s var(--ease-route),
+    background-color 0.16s var(--ease-route),
+    border-color 0.16s var(--ease-route),
+    opacity 0.16s var(--ease-route),
+    transform 0.16s var(--ease-route);
+}
+
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
@@ -41,6 +54,13 @@ textarea:focus-visible {
 button:disabled {
   cursor: not-allowed;
   opacity: 0.65;
+}
+
+input[aria-invalid="true"],
+select[aria-invalid="true"],
+textarea[aria-invalid="true"] {
+  border-color: var(--c-danger);
+  background: var(--c-danger-light);
 }
 
 .app-shell {
@@ -72,6 +92,7 @@ button:disabled {
 }
 
 .phone-frame {
+  min-width: 0;
   width: min(100%, 430px);
   height: min(860px, calc(100dvh - 48px));
   background: var(--c-bg);
@@ -84,6 +105,7 @@ button:disabled {
 }
 
 .content {
+  min-width: 0;
   overflow-y: auto;
   overflow-x: hidden;
   padding-bottom: 24px;
@@ -100,6 +122,31 @@ button:disabled {
 
 .screen {
   padding: calc(24px + env(safe-area-inset-top)) 20px calc(32px + env(safe-area-inset-bottom));
+  overflow-wrap: break-word;
+  word-break: keep-all;
+}
+
+/*
+ * 브라우저 200% 확대에서는 320px 화면이 약 160 CSS px처럼 동작한다.
+ * 콘텐츠 폭을 억지로 유지하지 않고 여백을 줄여 읽을 수 있는 한 열로 재배치한다.
+ */
+@media (max-width: 240px) {
+  .screen {
+    padding: calc(16px + env(safe-area-inset-top)) 12px calc(24px + env(safe-area-inset-bottom));
+  }
+
+  .status-card {
+    padding: 44px 12px 14px;
+  }
+
+  .status-card::before {
+    top: 18px;
+    left: 18px;
+  }
+
+  .date-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .trip-header {
@@ -109,7 +156,7 @@ button:disabled {
 .trip-dates {
   margin-bottom: 0;
   color: var(--c-muted);
-  font-weight: 700;
+  font-weight: var(--font-weight-strong);
 }
 
 .status-card {
@@ -144,16 +191,16 @@ button:disabled {
 }
 
 .status-card span {
-  font-size: 20px;
-  font-weight: 700;
+  font-size: var(--type-title-size);
+  font-weight: var(--font-weight-strong);
   letter-spacing: -0.02em;
 }
 
 .status-card p {
   margin-bottom: 0;
   color: var(--c-muted);
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-body);
 }
 
 .date-form {
@@ -167,20 +214,20 @@ button:disabled {
   display: grid;
   gap: 6px;
   color: var(--c-muted);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
 }
 
 .date-form input {
   width: 100%;
-  min-height: 42px;
+  min-height: 48px;
   border: 1px solid rgba(23, 51, 61, 0.12);
   border-radius: 10px;
   background: var(--c-surface);
   color: var(--c-text);
   font: inherit;
-  font-size: 14px;
-  font-weight: 700;
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-strong);
   padding: 8px 10px;
 }
 
@@ -194,8 +241,8 @@ button:disabled {
   display: grid;
   gap: 6px;
   color: var(--c-muted);
-  font-size: 13px;
-  font-weight: 800;
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-display);
   letter-spacing: -0.01em;
 }
 
@@ -209,8 +256,8 @@ button:disabled {
   background: #ffffff;
   color: var(--c-text);
   font: inherit;
-  font-size: 15px;
-  font-weight: 700;
+  font-size: var(--type-body-size);
+  font-weight: var(--font-weight-strong);
   padding: 10px 14px;
   box-shadow: none;
   transition: border-color 0.18s var(--ease-route), box-shadow 0.18s var(--ease-route);
@@ -274,12 +321,12 @@ button:disabled {
 .auth-help {
   margin: 14px 0 0;
   color: var(--c-muted);
-  font-size: 13px;
+  font-size: var(--type-supporting-size);
 }
 
 .auth-help code {
   color: var(--c-route);
-  font-weight: 700;
+  font-weight: var(--font-weight-strong);
 }
 
 .form-error {
@@ -287,8 +334,8 @@ button:disabled {
   border-radius: 8px;
   background: var(--c-danger-light);
   color: var(--c-danger);
-  font-size: 14px;
-  font-weight: 700;
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-strong);
   padding: 10px 12px;
 }
 
@@ -297,8 +344,8 @@ button:disabled {
   border-radius: 8px;
   background: var(--c-route-soft);
   color: var(--c-route);
-  font-size: 14px;
-  font-weight: 700;
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-strong);
   padding: 10px 12px;
 }
 /* 마우스 클릭 시 생기는 브라우저 기본 포커스 아웃라인은 세련되게 소거 */

@@ -2,7 +2,7 @@
   max-width: 28rem;
   margin: 5px 0 0;
   color: var(--c-muted);
-  font-size: 13px;
+  font-size: var(--type-supporting-size);
   line-height: 1.5;
 }
 
@@ -11,8 +11,8 @@
   align-items: center;
   min-height: 44px;
   color: var(--c-route);
-  font-size: 13px;
-  font-weight: 800;
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-display);
   text-decoration: underline;
   text-decoration-color: rgba(11, 111, 106, 0.35);
   text-underline-offset: 3px;
@@ -47,7 +47,7 @@
 .emergency-contact h3 {
   margin: 0;
   color: var(--c-text);
-  font-size: 16px;
+  font-size: var(--type-body-size);
   line-height: 1.35;
   overflow-wrap: anywhere;
 }
@@ -55,7 +55,7 @@
 .emergency-contact p {
   margin: 4px 0 0;
   color: var(--c-muted);
-  font-size: 12px;
+  font-size: var(--type-label-size);
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
@@ -66,8 +66,8 @@
   gap: 5px;
   margin-top: 8px;
   color: var(--c-muted);
-  font-size: 12px;
-  font-weight: 650;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
   overflow-wrap: anywhere;
 }
 
@@ -86,8 +86,8 @@
   border-radius: var(--radius-control);
   background: var(--c-danger-light);
   color: var(--c-danger);
-  font-size: 12px;
-  font-weight: 800;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-display);
   text-decoration: none;
 }
 
@@ -98,8 +98,8 @@
 
 .emergency-unregistered {
   color: var(--c-muted);
-  font-size: 12px;
-  font-weight: 750;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
   text-align: right;
 }
 
@@ -120,13 +120,13 @@
 .concierge-empty-state strong {
   display: block;
   color: var(--c-text);
-  font-size: 14px;
+  font-size: var(--type-supporting-size);
 }
 
 .concierge-empty-state p {
   margin: 4px 0 0;
   color: var(--c-muted);
-  font-size: 12px;
+  font-size: var(--type-label-size);
   line-height: 1.5;
 }
 
@@ -152,14 +152,14 @@
 .accommodation-summary header span {
   display: block;
   color: var(--c-muted);
-  font-size: 11px;
-  font-weight: 800;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-display);
 }
 
 .accommodation-summary h3 {
   margin: 2px 0 0;
   color: var(--c-text);
-  font-size: 19px;
+  font-size: var(--type-title-size);
   line-height: 1.4;
   overflow-wrap: anywhere;
 }
@@ -179,15 +179,15 @@
 
 .accommodation-summary dt {
   color: var(--c-muted);
-  font-size: 11px;
-  font-weight: 700;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
 }
 
 .accommodation-summary dd {
   margin: 3px 0 0;
   color: var(--c-text);
-  font-size: 13px;
-  font-weight: 800;
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-display);
   overflow-wrap: anywhere;
 }
 
@@ -198,8 +198,8 @@
   gap: 7px;
   margin: 9px 0 0;
   color: var(--c-muted);
-  font-size: 13px;
-  font-weight: 650;
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-strong);
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
@@ -223,7 +223,7 @@
   border-radius: 9px;
   background: var(--c-route-soft);
   color: var(--c-muted);
-  font-size: 12px;
+  font-size: var(--type-label-size);
   line-height: 1.55;
   overflow-wrap: anywhere;
 }
@@ -254,13 +254,13 @@
 
 .travel-tools-fallback h2 {
   margin: 0;
-  font-size: 17px;
+  font-size: var(--type-title-size);
 }
 
 .travel-tools-fallback p {
   margin: 4px 0 0;
   color: var(--c-muted);
-  font-size: 13px;
+  font-size: var(--type-supporting-size);
 }
 
 .travel-tools-links {
@@ -273,7 +273,7 @@
 .travel-tools-links .secondary-button {
   min-width: 0;
   padding-inline: 10px;
-  font-size: 12px;
+  font-size: var(--type-label-size);
 }
 
 .exchange-widget,
@@ -311,14 +311,14 @@
 .travel-tool-title-row h2 {
   margin: 0;
   color: var(--c-text);
-  font-size: 16px;
+  font-size: var(--type-body-size);
   line-height: 1.4;
 }
 
 .travel-tool-title-row p {
   margin: 2px 0 0;
   color: var(--c-muted);
-  font-size: 11px;
+  font-size: var(--type-label-size);
   line-height: 1.45;
 }
 
@@ -333,8 +333,8 @@
   border-radius: 8px;
   background: transparent;
   color: var(--c-route);
-  font-size: 11px;
-  font-weight: 800;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-display);
 }
 
 .tool-refresh-button:disabled {
@@ -352,8 +352,8 @@
 
 .exchange-rate-status > span {
   color: var(--c-route-deep);
-  font-size: 11px;
-  font-weight: 800;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-display);
 }
 
 .exchange-rate-status label {
@@ -362,8 +362,8 @@
   align-items: center;
   gap: 6px;
   color: var(--c-text);
-  font-size: 12px;
-  font-weight: 750;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
 }
 
 .exchange-rate-status input {
@@ -389,8 +389,8 @@
 .exchange-error-help {
   margin: -8px 0 0;
   color: var(--c-danger);
-  font-size: 11px;
-  font-weight: 700;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
 }
 
 .exchange-fields {
@@ -402,8 +402,8 @@
   display: block;
   margin-bottom: 5px;
   color: var(--c-muted);
-  font-size: 12px;
-  font-weight: 750;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
 }
 
 .exchange-field > input {
@@ -414,8 +414,8 @@
   border-radius: var(--radius-control);
   background: var(--c-surface);
   color: var(--c-text);
-  font-size: 17px;
-  font-weight: 750;
+  font-size: var(--type-title-size);
+  font-weight: var(--font-weight-strong);
 }
 
 .exchange-field input:focus,
@@ -439,8 +439,8 @@
   border-radius: 8px;
   background: var(--c-surface-cool);
   color: var(--c-text);
-  font-size: 10px;
-  font-weight: 750;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
   overflow-wrap: anywhere;
 }
 
@@ -455,8 +455,8 @@
   border-radius: 999px;
   background: var(--c-route-soft);
   color: var(--c-route);
-  font-size: 11px;
-  font-weight: 800;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-display);
 }
 
 .phrase-grid {
@@ -485,21 +485,21 @@
 
 .korean-text {
   color: var(--c-muted);
-  font-size: 11px;
-  font-weight: 700;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
 }
 
 .foreign-text {
   color: var(--c-text);
-  font-size: 15px;
-  font-weight: 800;
+  font-size: var(--type-body-size);
+  font-weight: var(--font-weight-display);
   overflow-wrap: anywhere;
 }
 
 .pronun-text {
   color: var(--c-destination);
-  font-size: 12px;
-  font-weight: 750;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
   overflow-wrap: anywhere;
 }
 
@@ -560,22 +560,22 @@
 
 .zoom-korean {
   color: var(--c-muted);
-  font-size: 16px;
-  font-weight: 700;
+  font-size: var(--type-body-size);
+  font-weight: var(--font-weight-strong);
 }
 
 .zoom-foreign {
   color: var(--c-text);
-  font-size: clamp(30px, 9vw, 40px);
-  font-weight: 800;
+  font-size: var(--type-presentation-size);
+  font-weight: var(--font-weight-display);
   line-height: 1.25;
   overflow-wrap: anywhere;
 }
 
 .zoom-pronun {
   color: var(--c-destination);
-  font-size: 19px;
-  font-weight: 800;
+  font-size: var(--type-title-size);
+  font-weight: var(--font-weight-display);
   overflow-wrap: anywhere;
 }
 
@@ -584,8 +584,8 @@
   padding-top: 14px;
   border-top: 1px solid var(--border-color);
   color: var(--c-muted);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
 }
 
 .visually-hidden {
@@ -646,8 +646,8 @@
 .place-local-name {
   margin: 4px 0 0;
   color: var(--c-route);
-  font-size: 20px;
-  font-weight: 800;
+  font-size: var(--type-title-size);
+  font-weight: var(--font-weight-display);
   line-height: 1.35;
 }
 
@@ -655,8 +655,8 @@
 .place-subway-exit {
   margin: 4px 0 0;
   color: var(--c-muted);
-  font-size: 13px;
-  font-weight: 700;
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-strong);
 }
 
 .zoom-taxi-phrase {
@@ -666,16 +666,16 @@
   border-radius: 10px;
   background: var(--c-destination-soft);
   color: var(--c-text);
-  font-size: 20px;
-  font-weight: 800;
+  font-size: var(--type-title-size);
+  font-weight: var(--font-weight-display);
   line-height: 1.45;
 }
 
 .field-help {
   margin: -4px 0 0;
   color: var(--c-muted);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
 }
 
 .local-place-fieldset {
@@ -692,8 +692,8 @@
 .local-place-fieldset legend {
   padding: 0 6px;
   color: var(--c-destination);
-  font-size: 13px;
-  font-weight: 800;
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-display);
 }
 
 .shared-place-card .primary-button.compact-button {

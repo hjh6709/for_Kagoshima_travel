@@ -196,7 +196,7 @@ export function ManageAuthSection({
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <label htmlFor="manage-auth-email">이메일 주소</label>
             {isCodeVerified && (
-              <span aria-live="polite" style={{ fontSize: "11px", color: "var(--c-route)", fontWeight: 600, display: "flex", alignItems: "center", gap: "2px" }}>
+              <span aria-live="polite" style={{ fontSize: "var(--type-label-size)", color: "var(--c-route)", fontWeight: "var(--font-weight-strong)", display: "flex", alignItems: "center", gap: "2px" }}>
                 <CheckCircle2 size={12} /> 이메일 인증 완료
               </span>
             )}
@@ -240,11 +240,12 @@ export function ManageAuthSection({
               />
               {!codeSent ? (
                 <button
+                  aria-busy={sendSubmitting}
                   className="secondary-button"
                   disabled={sendSubmitting}
                   onClick={handleSendCode}
                   type="button"
-                  style={{ marginTop: 0, padding: "0 12px", whiteSpace: "nowrap", height: "44px", fontSize: "13px" }}
+                  style={{ marginTop: 0, padding: "0 12px", minHeight: "44px", fontSize: "var(--type-supporting-size)" }}
                 >
                   {sendSubmitting ? "전송 중" : "인증코드 전송"}
                 </button>
@@ -256,9 +257,8 @@ export function ManageAuthSection({
                   style={{
                     marginTop: 0,
                     padding: "0 12px",
-                    whiteSpace: "nowrap",
-                    height: "44px",
-                    fontSize: "13px",
+                    minHeight: "44px",
+                    fontSize: "var(--type-supporting-size)",
                     backgroundColor: "var(--c-route-soft)",
                     color: "var(--c-route)",
                     borderColor: "var(--c-route)",
@@ -269,21 +269,23 @@ export function ManageAuthSection({
               ) : (
                 <div className="auth-code-actions">
                   <button
+                    aria-busy={verifyingSubmitting}
                     className="primary-button"
                     disabled={verifyingSubmitting || inputCode.length < 6}
                     onClick={handleVerifyCodeSubmit}
                     type="button"
-                    style={{ marginTop: 0, padding: "0 12px", whiteSpace: "nowrap", height: "44px", fontSize: "13px" }}
+                    style={{ marginTop: 0, padding: "0 12px", minHeight: "44px", fontSize: "var(--type-supporting-size)" }}
                   >
                     {verifyingSubmitting ? "검증 중" : "코드 확인"}
                   </button>
                   <button
+                    aria-busy={sendSubmitting}
                     className="secondary-button"
                     disabled={sendSubmitting}
                     onClick={handleSendCode}
                     type="button"
                     title="인증코드 재전송"
-                    style={{ marginTop: 0, padding: "0 10px", whiteSpace: "nowrap", height: "44px", fontSize: "12px" }}
+                    style={{ marginTop: 0, padding: "0 10px", minHeight: "44px", fontSize: "var(--type-label-size)" }}
                   >
                     재전송
                   </button>
@@ -304,6 +306,10 @@ export function ManageAuthSection({
             <Key size={16} className="field-icon" />
             <input
               id="manage-auth-password"
+              aria-invalid={
+                authMode === "register" && authPassword.length > 0 &&
+                !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/.test(authPassword)
+              }
               autoComplete={authMode === "login" ? "current-password" : "new-password"}
               className="with-password-toggle"
               minLength={8}
@@ -325,7 +331,7 @@ export function ManageAuthSection({
         </div>
 
         {authMode === "register" && authPassword && !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/.test(authPassword) && (
-          <p className="form-error" style={{ fontSize: "11px", marginTop: "4px", color: "var(--c-muted)" }}>
+          <p className="form-error" role="alert" style={{ fontSize: "var(--type-label-size)", marginTop: "4px" }}>
             ⚠️ 영문 대/소문자, 숫자, 특수문자를 각각 최소 1개 이상 포함해야 합니다.
           </p>
         )}
@@ -333,6 +339,7 @@ export function ManageAuthSection({
         {authError && <p className="form-error" role="alert">{authError}</p>}
 
         <button
+          aria-busy={authSubmitting}
           className="primary-button"
           disabled={authSubmitting || (authMode === "register" && !isCodeVerified)}
           type="submit"
@@ -348,7 +355,7 @@ export function ManageAuthSection({
           className="secondary-button auth-switch-button"
           onClick={() => onAuthModeChange(authMode === "login" ? "register" : "login")}
           type="button"
-          style={{ marginTop: 0, flex: 1, fontSize: "12px" }}
+          style={{ marginTop: 0, flex: 1, fontSize: "var(--type-label-size)" }}
         >
           {authMode === "login" ? "회원가입" : "로그인"}
         </button>
@@ -357,7 +364,7 @@ export function ManageAuthSection({
             className="secondary-button auth-switch-button"
             onClick={() => setIsForgotMode(true)}
             type="button"
-            style={{ marginTop: 0, flex: 1, fontSize: "12px", color: "var(--c-muted)" }}
+            style={{ marginTop: 0, flex: 1, fontSize: "var(--type-label-size)", color: "var(--c-muted)" }}
           >
             비밀번호 분실
           </button>
