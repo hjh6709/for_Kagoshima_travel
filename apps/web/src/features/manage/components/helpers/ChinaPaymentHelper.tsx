@@ -33,13 +33,13 @@ export function ChinaPaymentHelper() {
     >
       {/* 제목 영역 및 중국 국기 이모지 */}
       <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "0.75rem" }}>
-        <span style={{ fontSize: "1.25rem" }}>🇨🇳</span>
-        <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: "600", color: "#f9fafb" }}>
+        <span style={{ fontSize: "var(--type-title-size)" }}>🇨🇳</span>
+        <h4 style={{ margin: 0, fontSize: "var(--type-body-size)", fontWeight: "var(--font-weight-body)", color: "#f9fafb" }}>
           중국 상하이 현지 결제 도우미
         </h4>
       </div>
 
-      <p style={{ margin: "0 0 1rem 0", fontSize: "0.85rem", color: "#9ca3af", lineHeight: "1.4" }}>
+      <p style={{ margin: "0 0 1rem 0", fontSize: "var(--type-supporting-size)", color: "#9ca3af", lineHeight: "1.4" }}>
         중국은 현금/카드 결제가 어렵고 모바일 페이가 필수입니다. 아래 버튼을 터치하여 현지 결제 앱을 신속하게 기동하세요.
       </p>
 
@@ -59,8 +59,8 @@ export function ChinaPaymentHelper() {
             background: "#1677ff",
             color: "#ffffff",
             border: "none",
-            fontSize: "0.9rem",
-            fontWeight: "600",
+            fontSize: "var(--type-supporting-size)",
+            fontWeight: "var(--font-weight-body)",
             cursor: "pointer",
             transition: "opacity 0.2s",
           }}
@@ -85,8 +85,8 @@ export function ChinaPaymentHelper() {
             background: "#07c160",
             color: "#ffffff",
             border: "none",
-            fontSize: "0.9rem",
-            fontWeight: "600",
+            fontSize: "var(--type-supporting-size)",
+            fontWeight: "var(--font-weight-body)",
             cursor: "pointer",
             transition: "opacity 0.2s",
           }}
@@ -106,13 +106,13 @@ export function ChinaPaymentHelper() {
             background: "none",
             border: "none",
             color: "#93c5fd",
-            fontSize: "0.8rem",
+            fontSize: "var(--type-label-size)",
             cursor: "pointer",
             padding: 0,
             display: "flex",
             alignItems: "center",
             gap: "4px",
-            fontWeight: "500",
+            fontWeight: "var(--font-weight-body)",
           }}
           type="button"
         >
@@ -126,7 +126,7 @@ export function ChinaPaymentHelper() {
               padding: "0.75rem",
               borderRadius: "6px",
               background: "rgba(0, 0, 0, 0.2)",
-              fontSize: "0.8rem",
+              fontSize: "var(--type-label-size)",
               color: "#d1d5db",
               lineHeight: "1.5",
             }}

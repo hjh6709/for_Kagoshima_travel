@@ -16,7 +16,7 @@ export function StartPage() {
                 <strong>Map Planner</strong>
               </div>
               <span className="screen-kicker">YOUR POCKET ATLAS</span>
-              <h1>여행의 장소와 시간을<br />하나의 동선으로</h1>
+              <h1>여행의 장소와 시간을 하나의 동선으로</h1>
               <p>
                 카페와 식당부터 항공편까지 저장하고, 일정에 연결한 뒤 여행지에 맞는 지도로 길을 찾으세요.
               </p>

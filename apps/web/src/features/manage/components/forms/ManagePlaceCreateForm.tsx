@@ -176,11 +176,11 @@ export function ManagePlaceCreateForm({
 
       {/* 지도 데이터 기반 통합 검색 컴포넌트 추가 */}
       <div style={{ background: "var(--c-route-soft)", border: "1px solid var(--border-color)", borderRadius: "12px", padding: "16px", marginBottom: "20px" }}>
-        <h4 style={{ fontSize: "14px", fontWeight: 700, color: "var(--c-text)", marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
+        <h4 style={{ fontSize: "var(--type-supporting-size)", fontWeight: "var(--font-weight-strong)", color: "var(--c-text)", marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
           <Compass size={16} style={{ color: "var(--c-route)" }} />
           Google Maps 장소 검색
         </h4>
-        <p style={{ fontSize: "12px", color: "var(--c-muted)", marginBottom: "12px" }}>
+        <p style={{ fontSize: "var(--type-label-size)", color: "var(--c-muted)", marginBottom: "12px" }}>
           장소 후보를 선택하면 주소와 위치가 자동으로 채워집니다. 저장 후 고덕지도나 Google 지도를 선택해 길찾기할 수 있습니다.
         </p>
         
@@ -194,7 +194,7 @@ export function ManagePlaceCreateForm({
               }
             }}
             placeholder={isChinaTrip ? "장소·종류 예: 신천지, 카페, 식당" : "장소·종류 예: 센간엔, 카페, 식당"}
-            style={{ flex: 1, padding: "8px 12px", fontSize: "14px", borderRadius: "8px", border: "1px solid var(--border-color)", background: "var(--c-surface)", color: "var(--c-text)" }}
+            style={{ flex: 1, padding: "8px 12px", fontSize: "var(--type-supporting-size)", borderRadius: "8px", border: "1px solid var(--border-color)", background: "var(--c-surface)", color: "var(--c-text)" }}
             type="text"
             value={searchQuery}
           />
@@ -214,13 +214,13 @@ export function ManagePlaceCreateForm({
         {searchResults.length > 0 && (
           <div style={{ marginTop: "14px", display: "grid", gap: "8px", maxHeight: "200px", overflowY: "auto", paddingRight: "4px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
-              <span style={{ fontSize: "12px", color: "var(--c-muted)", fontWeight: 700 }}>
+              <span style={{ fontSize: "var(--type-label-size)", color: "var(--c-muted)", fontWeight: "var(--font-weight-strong)" }}>
                 {selectedIdx === null ? `검색된 후보 (${searchResults.length}개)` : "선택한 장소"}
               </span>
               <a
                 href="https://maps.google.com"
                 rel="noreferrer"
-                style={{ color: "#5f6368", fontFamily: "Roboto, Arial, sans-serif", fontSize: "12px", fontWeight: 500, textDecoration: "none", whiteSpace: "nowrap" }}
+                style={{ color: "#5f6368", fontFamily: "Roboto, Arial, sans-serif", fontSize: "var(--type-label-size)", fontWeight: "var(--font-weight-body)", textDecoration: "none", whiteSpace: "nowrap" }}
                 target="_blank"
               >
                 Google Maps 제공
@@ -248,22 +248,22 @@ export function ManagePlaceCreateForm({
                   }}
                 >
                   <div style={{ flex: 1, paddingRight: "8px" }}>
-                    <div style={{ fontSize: "14px", fontWeight: 700, color: isSelected ? "var(--c-route)" : "var(--c-text)" }}>
+                    <div style={{ fontSize: "var(--type-supporting-size)", fontWeight: "var(--font-weight-strong)", color: isSelected ? "var(--c-route)" : "var(--c-text)" }}>
                       {result.name}
                     </div>
                     {result.address && (
-                      <div style={{ fontSize: "12px", color: "var(--c-muted)", marginTop: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <div style={{ fontSize: "var(--type-label-size)", color: "var(--c-muted)", marginTop: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {result.address}
                       </div>
                     )}
                   </div>
                   {isSelected ? (
-                    <span style={{ color: "var(--c-route)", display: "flex", alignItems: "center", gap: "4px", fontSize: "12px", fontWeight: 500 }}>
+                    <span style={{ color: "var(--c-route)", display: "flex", alignItems: "center", gap: "4px", fontSize: "var(--type-label-size)", fontWeight: "var(--font-weight-body)" }}>
                       <Check size={14} />
                       선택됨
                     </span>
                   ) : (
-                    <span style={{ fontSize: "12px", color: "var(--c-route)", border: "1px solid var(--c-route)", borderRadius: "4px", padding: "2px 6px" }}>
+                    <span style={{ fontSize: "var(--type-label-size)", color: "var(--c-route)", border: "1px solid var(--c-route)", borderRadius: "4px", padding: "2px 6px" }}>
                       선택
                     </span>
                   )}
@@ -274,7 +274,7 @@ export function ManagePlaceCreateForm({
         )}
 
         {searchErrorMsg && (
-          <div style={{ display: "flex", gap: "6px", alignItems: "center", marginTop: "12px", color: "var(--c-danger)", fontSize: "12px" }}>
+          <div style={{ display: "flex", gap: "6px", alignItems: "center", marginTop: "12px", color: "var(--c-danger)", fontSize: "var(--type-label-size)" }}>
             <AlertCircle size={14} />
             <span>{searchErrorMsg}</span>
           </div>

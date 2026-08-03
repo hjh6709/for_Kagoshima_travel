@@ -1,7 +1,7 @@
 .map-screen-intro {
   margin: 4px 0 0;
   color: var(--c-muted);
-  font-size: 13px;
+  font-size: var(--type-supporting-size);
   line-height: 1.5;
 }
 
@@ -23,8 +23,8 @@
   border-radius: 8px;
   background: transparent;
   color: var(--c-muted);
-  font-size: 13px;
-  font-weight: 700;
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-strong);
   cursor: pointer;
   transition: background-color 0.18s var(--ease-route), color 0.18s var(--ease-route);
 }
@@ -43,7 +43,7 @@
   border-radius: 999px;
   background: var(--c-surface-cool);
   color: var(--c-muted);
-  font-size: 11px;
+  font-size: var(--type-label-size);
 }
 
 .map-segment-control button.active span {
@@ -67,7 +67,7 @@
 
 .map-destination-heading h2 {
   margin: 4px 0 0;
-  font-size: 24px;
+  font-size: var(--type-screen-size);
   overflow-wrap: anywhere;
 }
 
@@ -77,8 +77,8 @@
   align-items: center;
   gap: 5px;
   color: var(--c-destination);
-  font-size: 12px;
-  font-weight: 800;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-display);
 }
 
 .map-destination-time {
@@ -87,14 +87,14 @@
   border-radius: 999px;
   background: var(--c-route-soft);
   color: var(--c-route);
-  font-size: 12px;
-  font-weight: 800;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-display);
 }
 
 .map-local-name {
   margin: 3px 0 0;
   color: var(--c-muted);
-  font-size: 14px;
+  font-size: var(--type-supporting-size);
   overflow-wrap: anywhere;
 }
 
@@ -110,7 +110,7 @@
   gap: 8px;
   margin: 0;
   color: var(--c-muted);
-  font-size: 13px;
+  font-size: var(--type-supporting-size);
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
@@ -131,8 +131,8 @@
   border-radius: 8px;
   background: var(--c-warning-light);
   color: var(--c-warning);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
   line-height: 1.4;
 }
 
@@ -157,7 +157,7 @@
 
 .map-place-utilities .secondary-button {
   min-height: 44px;
-  font-size: 12px;
+  font-size: var(--type-label-size);
 }
 
 .map-route-overview {
@@ -179,19 +179,19 @@
 
 .map-route-heading h2 {
   margin: 0;
-  font-size: 20px;
+  font-size: var(--type-title-size);
 }
 
 .map-route-heading p {
   margin: 3px 0 0;
   color: var(--c-muted);
-  font-size: 12px;
-  font-weight: 650;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
 }
 
 .map-route-heading .secondary-button {
   flex: 0 0 auto;
-  font-size: 12px;
+  font-size: var(--type-label-size);
 }
 
 .map-stop-list {
@@ -243,8 +243,8 @@
   border-radius: 50%;
   background: var(--c-surface);
   color: var(--c-route);
-  font-size: 12px;
-  font-weight: 800;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-display);
 }
 
 .map-stop-button.selected .map-stop-index {
@@ -279,7 +279,7 @@
 
 .travel-map-toolbar strong {
   color: var(--c-text);
-  font-size: 15px;
+  font-size: var(--type-body-size);
 }
 
 .travel-map-kicker {
@@ -287,8 +287,8 @@
   align-items: center;
   gap: 5px;
   color: var(--c-route);
-  font-size: 12px;
-  font-weight: 800;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-display);
 }
 
 .travel-map-location-button {
@@ -326,13 +326,13 @@
 
 .travel-map-state strong {
   color: var(--c-text);
-  font-size: 15px;
+  font-size: var(--type-body-size);
 }
 
 .travel-map-state p {
   max-width: 28ch;
   margin: 0;
-  font-size: 13px;
+  font-size: var(--type-supporting-size);
   line-height: 1.55;
 }
 
@@ -359,8 +359,8 @@
   margin: 0;
   padding-inline: 2px;
   color: var(--c-muted);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
   line-height: 1.5;
 }
 
@@ -410,19 +410,19 @@
 .map-stop-copy small {
   margin-bottom: 2px;
   color: var(--c-muted);
-  font-size: 11px;
-  font-weight: 700;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
 }
 
 .map-stop-copy strong {
-  font-size: 15px;
+  font-size: var(--type-body-size);
   overflow-wrap: anywhere;
 }
 
 .map-stop-selected-label {
   color: var(--c-destination);
-  font-size: 11px;
-  font-weight: 800;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-display);
 }
 
 .map-route-leg {
@@ -443,7 +443,7 @@
 .map-route-leg small {
   align-self: center;
   color: var(--c-muted);
-  font-size: 11px;
+  font-size: var(--type-label-size);
   line-height: 1.4;
 }
 
@@ -453,13 +453,13 @@
 
 .map-saved-heading h2 {
   margin: 0;
-  font-size: 20px;
+  font-size: var(--type-title-size);
 }
 
 .map-saved-heading p {
   margin: 4px 0 0;
   color: var(--c-muted);
-  font-size: 13px;
+  font-size: var(--type-supporting-size);
 }
 
 .map-saved-list {
@@ -510,20 +510,20 @@
 
 .map-saved-copy small {
   color: var(--c-route);
-  font-size: 11px;
-  font-weight: 800;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-display);
 }
 
 .map-saved-copy strong {
   margin-top: 1px;
-  font-size: 15px;
+  font-size: var(--type-body-size);
   overflow-wrap: anywhere;
 }
 
 .map-saved-copy span {
   margin-top: 2px;
   color: var(--c-muted);
-  font-size: 11px;
+  font-size: var(--type-label-size);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -554,7 +554,7 @@
 .map-saved-reason {
   margin: 0;
   color: var(--c-muted);
-  font-size: 13px;
+  font-size: var(--type-supporting-size);
   line-height: 1.5;
 }
 
@@ -579,7 +579,7 @@
 .map-empty-state p {
   margin: 0 0 12px;
   color: var(--c-muted);
-  font-size: 13px;
+  font-size: var(--type-supporting-size);
 }
 
 .map-copy-error {
@@ -588,8 +588,8 @@
   border-radius: 8px;
   background: var(--c-danger-light);
   color: var(--c-danger);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
   line-height: 1.45;
 }
 
@@ -623,8 +623,8 @@
 
 .directions-options > span {
   color: var(--c-muted);
-  font-size: 11px;
-  font-weight: 700;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
 }
 
 .directions-grid {
@@ -683,7 +683,7 @@
 .taxi-phrase-label {
   margin-bottom: 16px;
   color: #d6e3e1;
-  font-size: 14px;
+  font-size: var(--type-supporting-size);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -691,8 +691,8 @@
 .taxi-phrase-title {
   margin-bottom: 32px;
   color: #ffffff;
-  font-size: clamp(32px, 9vw, 44px);
-  font-weight: 800;
+  font-size: var(--type-presentation-size);
+  font-weight: var(--font-weight-display);
   line-height: 1.2;
   overflow-wrap: anywhere;
 }
@@ -703,7 +703,7 @@
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.05);
   color: #9ca3af;
-  font-size: clamp(20px, 5.5vw, 26px);
+  font-size: var(--type-screen-size);
   line-height: 1.4;
   overflow-wrap: anywhere;
 }
@@ -714,7 +714,7 @@
 
 @media (max-width: 360px) {
   .map-destination-heading h2 {
-    font-size: 21px;
+    font-size: var(--type-title-size);
   }
 
   .map-route-heading {

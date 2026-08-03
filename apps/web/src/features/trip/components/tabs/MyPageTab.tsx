@@ -43,7 +43,7 @@ export function MyPageTab({
         >
           <h2
             style={{
-              fontSize: "17px",
+              fontSize: "var(--type-title-size)",
               color: "var(--c-route)",
               marginBottom: "8px",
             }}
@@ -55,7 +55,7 @@ export function MyPageTab({
             style={{
               lineHeight: 1.5,
               margin: "8px 0 16px",
-              fontSize: "13.5px",
+              fontSize: "var(--type-supporting-size)",
             }}
           >
             회원가입 후 로그인하시면 아래의 풍부한 개인화 기능을 평생 무료로
@@ -68,7 +68,7 @@ export function MyPageTab({
               display: "grid",
               gap: "10px",
               color: "var(--c-text)",
-              fontSize: "13px",
+              fontSize: "var(--type-supporting-size)",
               listStyleType: "disc",
             }}
           >
@@ -96,8 +96,8 @@ export function MyPageTab({
             href="/manage"
             style={{
               padding: "12px",
-              fontSize: "14px",
-              fontWeight: 700,
+              fontSize: "var(--type-supporting-size)",
+              fontWeight: "var(--font-weight-strong)",
               display: "block",
               textAlign: "center",
               textDecoration: "none",

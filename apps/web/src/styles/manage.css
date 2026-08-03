@@ -39,8 +39,8 @@
 .owner-account-email {
   margin: 0;
   color: var(--c-muted);
-  font-size: 13px;
-  font-weight: 600;
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-body);
   overflow-wrap: anywhere;
 }
 
@@ -96,15 +96,15 @@
 
 .trip-create-summary-copy strong {
   color: var(--c-text);
-  font-size: 15px;
-  font-weight: 800;
+  font-size: var(--type-body-size);
+  font-weight: var(--font-weight-display);
 }
 
 .trip-create-summary-copy > span {
   margin-top: 2px;
   color: var(--c-muted);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-body);
   line-height: 1.45;
 }
 
@@ -134,8 +134,8 @@
   gap: 8px;
   color: var(--c-text);
   cursor: pointer;
-  font-size: 13px;
-  font-weight: 800;
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-display);
   list-style: none;
 }
 
@@ -147,7 +147,7 @@
   margin-left: auto;
   color: var(--c-muted);
   content: "+";
-  font-size: 18px;
+  font-size: var(--type-title-size);
 }
 
 .trip-create-optional-fields[open] > summary::after {
@@ -156,8 +156,8 @@
 
 .trip-create-optional-fields > summary span {
   color: var(--c-muted);
-  font-size: 11px;
-  font-weight: 700;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
 }
 
 .trip-create-optional-fields > div {
@@ -209,8 +209,8 @@
   gap: 7px;
   margin: 6px 0 0;
   color: var(--c-muted);
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-body);
 }
 
 .owner-trip-meta svg {
@@ -238,8 +238,8 @@
   gap: 6px;
   color: var(--c-muted);
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 700;
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-strong);
   list-style: none;
 }
 
@@ -264,8 +264,8 @@
 .owner-trip-manage-panel p {
   margin: 0;
   color: var(--c-muted);
-  font-size: 12px;
-  font-weight: 400;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-body);
   line-height: 1.5;
 }
 
@@ -308,8 +308,8 @@
   padding: 11px 14px;
   color: var(--c-text);
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 700;
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-strong);
   list-style: none;
 }
 
@@ -323,8 +323,8 @@
   margin-left: auto;
   color: var(--c-muted);
   content: "+";
-  font-size: 20px;
-  font-weight: 500;
+  font-size: var(--type-title-size);
+  font-weight: var(--font-weight-body);
 }
 
 .place-advanced-fields[open] > summary::after,
@@ -348,8 +348,8 @@
 
 .schedule-recommendations > summary small {
   color: var(--c-muted);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-body);
 }
 
 .schedule-recommendations .shanghai-starter-planner {
@@ -370,15 +370,16 @@
 
 .start-hero h1 {
   margin-bottom: 0;
-  font-size: 32px;
+  font-size: var(--type-display-size);
   line-height: 1.18;
+  text-wrap: balance;
 }
 
 .start-hero > p {
   max-width: 36ch;
   margin-bottom: 0;
   color: var(--c-muted);
-  font-size: 15px;
+  font-size: var(--type-body-size);
   line-height: 1.65;
 }
 
@@ -401,7 +402,7 @@
 }
 
 .start-brand strong {
-  font-size: 16px;
+  font-size: var(--type-body-size);
   letter-spacing: -0.02em;
 }
 
@@ -457,14 +458,14 @@
 
 .start-route-stop strong {
   color: var(--c-text);
-  font-size: 15px;
+  font-size: var(--type-body-size);
 }
 
 .start-route-stop small {
   margin-top: 3px;
   color: var(--c-muted);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-body);
 }
 
 .start-action-stack {
@@ -517,14 +518,14 @@
 }
 
 .start-guide-list strong {
-  font-size: 14px;
+  font-size: var(--type-supporting-size);
 }
 
 .start-guide-list span {
   margin-top: 2px;
   color: var(--c-muted);
-  font-size: 13px;
-  font-weight: 700;
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-strong);
   line-height: 1.45;
 }
 
@@ -560,8 +561,8 @@
   border-radius: 12px;
   background: var(--c-route-soft);
   color: var(--c-route);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
   text-align: center;
 }
 
@@ -596,7 +597,7 @@
 .detail-step-guide h3 {
   margin-bottom: 0;
   color: var(--c-text);
-  font-size: 17px;
+  font-size: var(--type-title-size);
   letter-spacing: -0.01em;
 }
 
@@ -617,15 +618,15 @@
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.62);
   color: var(--c-route);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
 }
 
 .muted-label {
   color: var(--c-muted);
   display: block;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
   margin-bottom: 4px;
 }
 
@@ -662,7 +663,7 @@
 .shanghai-planner-heading h4 {
   margin: 8px 0 0;
   color: var(--c-text);
-  font-size: 17px;
+  font-size: var(--type-title-size);
 }
 
 .shanghai-plan-list {
@@ -685,7 +686,7 @@
   display: grid;
   gap: 2px;
   color: var(--c-text);
-  font-size: 12px;
+  font-size: var(--type-label-size);
 }
 
 .shanghai-plan-time span {
@@ -699,7 +700,7 @@
 .shanghai-plan-copy h5 {
   margin: 0 0 5px;
   color: var(--c-text);
-  font-size: 15px;
+  font-size: var(--type-body-size);
 }
 
 .planner-place-status {
@@ -707,12 +708,12 @@
   align-items: center;
   gap: 4px;
   color: var(--c-muted);
-  font-size: 12px;
+  font-size: var(--type-label-size);
 }
 
 .planner-place-status.connected {
   color: var(--c-route);
-  font-weight: 700;
+  font-weight: var(--font-weight-strong);
 }
 
 @media (max-width: 560px) {
@@ -742,7 +743,7 @@
 
 .owner-linked-card h2 {
   margin-bottom: 0;
-  font-size: 17px;
+  font-size: var(--type-title-size);
 }
 
 .share-link-panel {
@@ -757,8 +758,8 @@
   display: grid;
   gap: 6px;
   color: var(--c-muted);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
 }
 
 .share-link-panel input {
@@ -769,8 +770,8 @@
   background: var(--c-surface);
   color: var(--c-text);
   font: inherit;
-  font-size: 13px;
-  font-weight: 700;
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-strong);
   padding: 8px 10px;
 }
 
@@ -806,7 +807,7 @@
 
 .auth-card-premium h1 {
   max-width: 100%;
-  font-size: clamp(26px, 8vw, 30px);
+  font-size: var(--type-display-size);
   text-wrap: balance;
 }
 
@@ -844,8 +845,8 @@
 .auth-form .auth-field-label {
   display: grid;
   gap: 8px;
-  font-size: 13px;
-  font-weight: 700;
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-strong);
   color: var(--c-muted);
 }
 
@@ -872,13 +873,13 @@
 .auth-field-hint {
   margin: 0;
   color: var(--c-muted);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-body);
   line-height: 1.5;
 }
 
 .auth-field-label span {
-  font-size: 13px;
+  font-size: var(--type-supporting-size);
   color: var(--c-text);
   margin-left: 2px;
 }
@@ -937,14 +938,14 @@
 
 .forgot-password-header span {
   color: var(--c-route);
-  font-size: 12px;
-  font-weight: 800;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-display);
 }
 
 .forgot-password-header h2 {
   margin: 3px 0 0;
   color: var(--c-text);
-  font-size: 22px;
+  font-size: var(--type-title-size);
   line-height: 1.3;
   letter-spacing: -0.025em;
 }
@@ -971,7 +972,7 @@
 .forgot-password-description {
   margin: 0;
   color: var(--c-muted);
-  font-size: 13px;
+  font-size: var(--type-supporting-size);
   line-height: 1.6;
 }
 
@@ -997,8 +998,8 @@
   margin: 0;
   padding: 10px 12px;
   border-radius: var(--radius-control);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
   line-height: 1.5;
 }
 
@@ -1020,7 +1021,7 @@
 
 .forgot-password-error {
   margin: 0;
-  font-size: 12px;
+  font-size: var(--type-label-size);
 }
 
 .forgot-password-actions {
@@ -1058,14 +1059,14 @@
 
 .forgot-password-password span {
   color: var(--c-muted);
-  font-size: 12px;
+  font-size: var(--type-label-size);
 }
 
 .forgot-password-password strong {
   margin-top: 4px;
   overflow-wrap: anywhere;
   color: var(--c-route);
-  font-size: 24px;
+  font-size: var(--type-screen-size);
   letter-spacing: 0.08em;
 }
 

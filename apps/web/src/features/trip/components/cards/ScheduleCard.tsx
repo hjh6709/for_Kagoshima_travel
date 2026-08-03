@@ -59,7 +59,7 @@ export function ScheduleCard({
               {item.guideMemo}
             </p>
           ) : (
-            <div className="muted" style={{ marginTop: "4px", fontSize: "12px" }}>
+            <div className="muted" style={{ marginTop: "4px", fontSize: "var(--type-label-size)" }}>
               <MaskedText text={item.guideMemo} label="안내:" />
             </div>
           )

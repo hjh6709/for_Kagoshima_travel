@@ -19,8 +19,8 @@
   padding-top: 12px;
   border-top: 1px solid rgba(23, 51, 61, 0.08);
   color: var(--c-muted);
-  font-size: 13px;
-  font-weight: 700;
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-strong);
 }
 
 .compact-button {
@@ -104,7 +104,7 @@
   gap: 10px;
   padding: 10px 12px;
   text-align: left;
-  font-weight: 700;
+  font-weight: var(--font-weight-strong);
 }
 
 .home-check-item.completed {
@@ -126,7 +126,7 @@
 .date-details summary {
   cursor: pointer;
   color: var(--c-muted);
-  font-weight: 700;
+  font-weight: var(--font-weight-strong);
 }
 
 .info-card,
@@ -169,14 +169,14 @@
 .flight-details dt {
   margin-bottom: 4px;
   color: var(--c-muted);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
 }
 
 .flight-details dd {
   margin: 0;
   color: var(--c-text);
-  font-weight: 700;
+  font-weight: var(--font-weight-strong);
 }
 
 .check-row {
@@ -190,7 +190,7 @@
   gap: 8px;
   padding: 8px;
   text-align: left;
-  font-weight: 700;
+  font-weight: var(--font-weight-strong);
 }
 
 .check-row.completed {
@@ -214,7 +214,7 @@
   gap: 12px;
   padding: 8px;
   text-align: left;
-  font-weight: 700;
+  font-weight: var(--font-weight-strong);
 }
 
 .icon-button {
@@ -256,8 +256,8 @@
   border-radius: 999px;
   background: var(--c-route);
   color: #ffffff;
-  font-size: 13px;
-  font-weight: 700;
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-strong);
   padding: 6px 10px;
   text-align: center;
 }
@@ -276,8 +276,8 @@
   display: grid;
   gap: 6px;
   color: var(--c-muted);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
 }
 
 .check-add-form input,
@@ -289,8 +289,8 @@
   background: var(--c-bg);
   color: var(--c-text);
   font: inherit;
-  font-size: 15px;
-  font-weight: 700;
+  font-size: var(--type-body-size);
+  font-weight: var(--font-weight-strong);
   padding: 10px 12px;
 }
 
@@ -326,8 +326,8 @@
   background: var(--c-surface);
   color: var(--c-muted);
   font: inherit;
-  font-size: 13px;
-  font-weight: 750;
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-strong);
   white-space: nowrap;
 }
 
@@ -347,8 +347,8 @@
 .check-item-copy small,
 .checklist-category-label {
   color: var(--c-muted);
-  font-size: 11px;
-  font-weight: 700;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
   line-height: 1.4;
   text-decoration: none;
 }
@@ -372,14 +372,14 @@
 
 .check-scope-guide strong {
   color: var(--c-text);
-  font-size: 14px;
+  font-size: var(--type-supporting-size);
 }
 
 .check-scope-guide span {
   margin-top: 2px;
   color: var(--c-muted);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-body);
 }
 
 .manage-check-add-form {
@@ -408,14 +408,14 @@
 
 .checklist-scope-heading h3 {
   color: var(--c-text);
-  font-size: 16px;
+  font-size: var(--type-body-size);
 }
 
 .checklist-scope-heading p {
   margin-top: 3px;
   color: var(--c-muted);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-body);
 }
 
 .checklist-item-list {
@@ -467,7 +467,7 @@
 .item-title {
   overflow-wrap: anywhere;
   color: var(--c-text);
-  font-weight: 750;
+  font-weight: var(--font-weight-strong);
 }
 
 .delete-item-button {
@@ -509,8 +509,8 @@
   justify-content: center;
   gap: 4px;
   padding: 6px 2px;
-  font-size: 11px;
-  font-weight: 600;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-body);
   cursor: pointer;
   border-radius: 10px;
   transition: color 0.18s var(--ease-route), box-shadow 0.18s var(--ease-route);
@@ -531,7 +531,7 @@
 }
 
 .bottom-tabs button.active span {
-  font-weight: 750;
+  font-weight: var(--font-weight-strong);
   color: var(--c-route);
   letter-spacing: -0.01em;
 }
@@ -590,16 +590,16 @@
 }
 
 .airport-code {
-  font-size: 26px;
-  font-weight: 700;
+  font-size: var(--type-screen-size);
+  font-weight: var(--font-weight-strong);
   color: var(--c-text);
   letter-spacing: -0.02em;
 }
 
 .airport-name {
-  font-size: 11px;
+  font-size: var(--type-label-size);
   color: var(--c-muted);
-  font-weight: 700;
+  font-weight: var(--font-weight-strong);
 }
 
 .ticket-plane-divider {
@@ -631,9 +631,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 13px;
+  font-size: var(--type-supporting-size);
   color: var(--c-text);
-  font-weight: 700;
+  font-weight: var(--font-weight-strong);
   border-top: 1px solid rgba(23, 51, 61, 0.05);
   padding-top: 12px;
   margin-top: 4px;
@@ -643,8 +643,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
   color: var(--c-muted);
   padding-top: 4px;
 }
@@ -652,7 +652,7 @@
 .flight-screen-intro {
   margin: 4px 0 0;
   color: var(--c-muted);
-  font-size: 13px;
+  font-size: var(--type-supporting-size);
   line-height: 1.5;
 }
 
@@ -669,15 +669,15 @@
 
 .flight-manage-row span {
   color: var(--c-muted);
-  font-size: 12px;
-  font-weight: 650;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
   line-height: 1.45;
 }
 
 .flight-manage-row .secondary-button {
   flex: 0 0 auto;
   background: var(--c-surface);
-  font-size: 12px;
+  font-size: var(--type-label-size);
 }
 
 .flight-journey-list {
@@ -710,15 +710,15 @@
 
 .flight-identity h2 {
   margin: 0;
-  font-size: 21px;
+  font-size: var(--type-title-size);
   overflow-wrap: anywhere;
 }
 
 .flight-identity p {
   margin: 2px 0 0;
   color: var(--c-muted);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
   overflow-wrap: anywhere;
 }
 
@@ -750,14 +750,14 @@
 .flight-route-point span {
   margin-bottom: 3px;
   color: var(--c-route);
-  font-size: 11px;
-  font-weight: 800;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-display);
 }
 
 .flight-route-point strong {
   min-height: 42px;
   color: var(--c-text);
-  font-size: 15px;
+  font-size: var(--type-body-size);
   line-height: 1.4;
   overflow-wrap: anywhere;
 }
@@ -765,15 +765,15 @@
 .flight-route-point small {
   margin-top: 7px;
   color: var(--c-muted);
-  font-size: 11px;
-  font-weight: 650;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
   line-height: 1.4;
 }
 
 .flight-route-point b {
   margin-top: 2px;
   color: var(--c-text);
-  font-size: 13px;
+  font-size: var(--type-supporting-size);
   line-height: 1.4;
   overflow-wrap: anywhere;
 }
@@ -811,8 +811,8 @@
   min-height: 44px;
   padding: 11px 2px;
   color: var(--c-muted);
-  font-size: 12px;
-  font-weight: 750;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
   cursor: pointer;
 }
 
@@ -827,7 +827,7 @@
   border-radius: 8px;
   background: var(--c-surface-cool);
   color: var(--c-muted);
-  font-size: 12px;
+  font-size: var(--type-label-size);
 }
 
 .flight-checklist-section {
@@ -840,8 +840,8 @@
   border-radius: 999px;
   background: var(--c-route);
   color: #ffffff;
-  font-size: 12px;
-  font-weight: 800;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-display);
   text-align: center;
 }
 
@@ -851,7 +851,7 @@
   border-radius: 10px;
   background: var(--c-surface-cool);
   color: var(--c-muted);
-  font-size: 13px;
+  font-size: var(--type-supporting-size);
 }
 
 .flight-empty-state {
@@ -875,7 +875,7 @@
 .flight-empty-state p {
   margin: 0 0 12px;
   color: var(--c-muted);
-  font-size: 13px;
+  font-size: var(--type-supporting-size);
 }
 
 @media (max-width: 360px) {
@@ -890,7 +890,29 @@
   }
 
   .flight-route-point strong {
-    font-size: 14px;
+    font-size: var(--type-supporting-size);
+  }
+}
+
+@media (max-width: 240px) {
+  .home-check-item {
+    align-items: flex-start;
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+
+  .home-check-item > svg {
+    flex: 0 0 auto;
+  }
+
+  .bottom-tabs {
+    padding-right: 2px;
+    padding-left: 2px;
+  }
+
+  .bottom-tabs button {
+    padding-right: 0;
+    padding-left: 0;
   }
 }
 
@@ -931,7 +953,7 @@
 
 .masked-text-label {
   color: var(--c-muted);
-  font-size: 11px;
+  font-size: var(--type-label-size);
   font-family: sans-serif;
   margin-right: 2px;
 }
