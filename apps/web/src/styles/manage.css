@@ -175,12 +175,32 @@
   padding: 18px;
 }
 
+.owner-trip-card.is-deleting {
+  opacity: 0.6;
+}
+
 .owner-trip-summary {
   min-width: 0;
 }
 
 .owner-trip-summary h2 {
   margin: 10px 0 12px;
+}
+
+.owner-trip-status.status-during {
+  background: var(--c-route-soft);
+  color: var(--c-route);
+}
+
+.owner-trip-status.status-before {
+  background: var(--c-warning-light);
+  color: var(--c-warning);
+}
+
+.owner-trip-status.status-after {
+  border: 1px solid var(--border-color);
+  background: var(--c-surface-cool);
+  color: var(--c-muted);
 }
 
 .owner-trip-meta {
@@ -199,20 +219,60 @@
 }
 
 .owner-trip-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  display: grid;
 }
 
 .owner-trip-actions .primary-button {
-  width: auto;
-  flex: 1;
+  width: 100%;
 }
 
-.owner-trip-actions .danger-button {
-  width: 44px;
-  min-width: 44px;
-  padding: 8px;
+.owner-trip-manage {
+  border-top: 1px solid var(--border-color);
+}
+
+.owner-trip-manage > summary {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  color: var(--c-muted);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  list-style: none;
+}
+
+.owner-trip-manage > summary::-webkit-details-marker {
+  display: none;
+}
+
+.owner-trip-manage > summary svg {
+  transition: transform 0.2s var(--ease-route);
+}
+
+.owner-trip-manage[open] > summary svg {
+  transform: rotate(180deg);
+}
+
+.owner-trip-manage-panel {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-radius: var(--radius-control);
+  background: var(--c-surface-cool);
+}
+
+.owner-trip-manage-panel p {
+  margin: 0;
+  color: var(--c-muted);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.owner-trip-manage-panel .danger-button {
+  width: 100%;
 }
 
 .place-advanced-fields,
