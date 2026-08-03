@@ -1099,6 +1099,25 @@
   }
 }
 
+@media (max-width: 240px) {
+  .auth-card-premium {
+    padding: 20px 12px;
+  }
+
+  .auth-brand-row {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .input-with-icon .field-icon {
+    display: none;
+  }
+
+  .input-with-icon input {
+    padding-left: 12px;
+  }
+}
+
 /* 비밀번호 보기/숨기기 토글 관련 스타일 */
 .password-toggle-btn {
   position: absolute;

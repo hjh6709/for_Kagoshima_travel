@@ -10,6 +10,11 @@ const styles = styleFiles.join("\n");
 const tokens = readFileSync(new URL("../src/styles/tokens.css", import.meta.url), "utf8");
 const indexHtml = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const viteConfig = readFileSync(new URL("../vite.config.ts", import.meta.url), "utf8");
+const tripStyles = readFileSync(new URL("../src/styles/trip.css", import.meta.url), "utf8");
+const travelToolStyles = readFileSync(
+  new URL("../src/styles/travel-tools.css", import.meta.url),
+  "utf8",
+);
 
 const requiredTypeTokens = [
   "--type-display-size",
@@ -89,4 +94,19 @@ test("Pretendard는 앱과 함께 배포되어 오프라인에서도 같은 위�
   assert.match(viteConfig, /woff2/);
   assert.match(tokens, /@font-face/);
   assert.match(tokens, /font-display:\s*swap/);
+});
+
+test("200% 확대에서도 일정과 현지 도구는 한 열로 재배치된다", () => {
+  assert.match(
+    tripStyles,
+    /@media \(max-width: 240px\)[\s\S]*?\.schedule-card\s*{[\s\S]*?grid-template-columns:\s*minmax\(0, 1fr\)/,
+  );
+  assert.match(
+    tripStyles,
+    /@media \(max-width: 240px\)[\s\S]*?\.schedule-actions\s*{[\s\S]*?flex-direction:\s*column/,
+  );
+  assert.match(
+    travelToolStyles,
+    /@media \(max-width: 240px\)[\s\S]*?\.china-payment-apps\s*{[\s\S]*?grid-template-columns:\s*minmax\(0, 1fr\)/,
+  );
 });

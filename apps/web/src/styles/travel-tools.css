@@ -6,6 +6,132 @@
   line-height: 1.5;
 }
 
+.china-payment-helper {
+  display: grid;
+  gap: 16px;
+  margin: 24px 0;
+  padding: 20px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  background: var(--c-surface);
+  color: var(--c-text);
+}
+
+.china-payment-heading {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+
+.china-payment-icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--c-route-soft);
+  color: var(--c-route);
+}
+
+.china-payment-heading span:not(.china-payment-icon) {
+  display: block;
+  color: var(--c-muted);
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
+}
+
+.china-payment-heading h2 {
+  margin: 2px 0 0;
+  font-size: var(--type-title-size);
+}
+
+.china-payment-description {
+  margin: 0;
+  color: var(--c-muted);
+  font-size: var(--type-supporting-size);
+  line-height: var(--type-supporting-line);
+}
+
+.china-payment-apps {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.payment-app-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 48px;
+  gap: 7px;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-strong);
+}
+
+.payment-app-button svg {
+  flex: 0 0 auto;
+}
+
+.payment-app-button.alipay {
+  background: var(--c-route);
+  color: #ffffff;
+}
+
+.payment-app-button.wechat {
+  border-color: var(--border-color);
+  background: var(--c-surface-cool);
+  color: var(--c-text);
+}
+
+.china-payment-tip {
+  padding-top: 4px;
+  border-top: 1px solid var(--border-color);
+}
+
+.china-payment-tip-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 44px;
+  gap: 8px;
+  padding: 8px 0 0;
+  border: 0;
+  background: transparent;
+  color: var(--c-route);
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-strong);
+  text-align: left;
+}
+
+.china-payment-tip-toggle svg {
+  flex: 0 0 auto;
+}
+
+.china-payment-tip-content {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 12px;
+  border-radius: var(--radius-control);
+  background: var(--c-surface-cool);
+  color: var(--c-muted);
+  font-size: var(--type-label-size);
+}
+
+.china-payment-tip-content p {
+  margin: 0;
+}
+
+.china-payment-tip-content strong {
+  color: var(--c-text);
+}
+
 .text-link {
   display: inline-flex;
   align-items: center;
@@ -640,6 +766,21 @@
 
   .phrase-actions .icon-button {
     flex: 1;
+  }
+}
+
+@media (max-width: 240px) {
+  .china-payment-helper {
+    gap: 14px;
+    padding: 16px 12px;
+  }
+
+  .china-payment-heading {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .china-payment-apps {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
