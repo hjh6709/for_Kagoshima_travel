@@ -19,6 +19,8 @@ export type TripPageProps = {
   addressCopied: boolean;
   allChecklist: ChecklistItem[];
   checkedItems: Record<string, boolean>;
+  checklistError?: string;
+  checklistSubmitting?: boolean;
   completedCount: number;
   completedScheduleCount: number;
   completedSchedules: Record<string, boolean>;

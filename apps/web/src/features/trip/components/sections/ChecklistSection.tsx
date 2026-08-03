@@ -8,6 +8,8 @@ type ChecklistSectionProps = Pick<
   | "addChecklistItem"
   | "allChecklist"
   | "checkedItems"
+  | "checklistError"
+  | "checklistSubmitting"
   | "completedCount"
   | "groupedChecklist"
   | "hiddenChecklistIDs"
@@ -28,6 +30,8 @@ export function ChecklistSection({
   addChecklistItem,
   allChecklist,
   checkedItems,
+  checklistError = "",
+  checklistSubmitting = false,
   completedCount,
   groupedChecklist,
   hiddenChecklistIDs,
@@ -68,6 +72,12 @@ export function ChecklistSection({
         </button>
       )}
 
+      {checklistError && (
+        <p className="form-error" role="alert">
+          {checklistError}
+        </p>
+      )}
+
       {isChecklistEditing && (
         <form className="check-add-form" onSubmit={addChecklistItem}>
           <label>
@@ -87,14 +97,19 @@ export function ChecklistSection({
             추가할 항목
             <input
               placeholder="예: 여권 사본 챙기기"
+              maxLength={120}
               type="text"
               value={newChecklistTitle}
               onChange={(event) => setNewChecklistTitle(event.target.value)}
             />
           </label>
-          <button className="primary-button" type="submit">
-            <PlusCircle size={18} />
-            추가
+          <button
+            className="primary-button"
+            disabled={checklistSubmitting || !newChecklistTitle.trim()}
+            type="submit"
+          >
+            <PlusCircle aria-hidden="true" size={18} />
+            {checklistSubmitting ? "추가 중" : "추가"}
           </button>
         </form>
       )}

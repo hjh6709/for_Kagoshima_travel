@@ -37,6 +37,8 @@ type UseOwnerTripPageAdapterParams = {
   ownerPlaces: SharedPlace[];
   ownerFlights: SharedFlight[];
   checklistItems: ChecklistItemResponse[];
+  checklistError: string;
+  checklistSubmitting: boolean;
   newChecklistTitle: string;
   newChecklistCategory: ChecklistCategory;
   onNewChecklistTitleChange: (value: string) => void;
@@ -58,6 +60,8 @@ export function useOwnerTripPageAdapter({
   ownerPlaces,
   ownerFlights,
   checklistItems,
+  checklistError,
+  checklistSubmitting,
   newChecklistTitle,
   newChecklistCategory,
   onNewChecklistTitleChange,
@@ -221,6 +225,8 @@ export function useOwnerTripPageAdapter({
     addressCopied,
     allChecklist,
     checkedItems,
+    checklistError,
+    checklistSubmitting,
     completedCount,
     completedScheduleCount,
     completedSchedules,

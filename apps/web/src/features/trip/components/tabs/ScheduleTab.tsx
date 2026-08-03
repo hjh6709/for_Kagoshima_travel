@@ -10,6 +10,8 @@ export function ScheduleTab({
   addChecklistItem,
   allChecklist,
   checkedItems,
+  checklistError,
+  checklistSubmitting,
   completedCount,
   completedScheduleCount,
   completedSchedules,
@@ -139,6 +141,8 @@ export function ScheduleTab({
             addChecklistItem={addChecklistItem}
             allChecklist={allChecklist}
             checkedItems={checkedItems}
+            checklistError={checklistError}
+            checklistSubmitting={checklistSubmitting}
             completedCount={completedCount}
             groupedChecklist={groupedChecklist}
             hiddenChecklistIDs={hiddenChecklistIDs}

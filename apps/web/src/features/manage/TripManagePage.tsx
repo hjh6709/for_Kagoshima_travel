@@ -24,14 +24,14 @@ export function TripManagePage(props: TripManagePageProps) {
             {authChecked && auth && (
               <>
                 <ManageHeader auth={auth} />
+                {(ownerTripsLoading || ownerTripsError || ownerTrips.length > 0) && (
+                  <TripListSection {...props} />
+                )}
                 <TripCreateSection
                   {...props}
                   isOpen={isTripCreateOpen}
                   onOpenChange={setIsTripCreateOpen}
                 />
-                {(ownerTripsLoading || ownerTripsError || ownerTrips.length > 0) && (
-                  <TripListSection {...props} />
-                )}
               </>
             )}
           </section>

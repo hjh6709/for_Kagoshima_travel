@@ -27,7 +27,9 @@ export function OwnerTripViewPage({ tripId }: OwnerTripViewPageProps) {
     ownerPlaces,
     ownerFlights,
     checklistItems,
+    checklistError,
     checklistLoading,
+    checklistSubmitting,
     newChecklistTitle,
     newChecklistCategory,
     onNewChecklistTitleChange,
@@ -111,12 +113,19 @@ export function OwnerTripViewPage({ tripId }: OwnerTripViewPageProps) {
       <main className="app-shell">
         <section className="phone-frame owner-frame">
           <div className="content">
-            <section className="screen">
+            <section className="screen owner-detail-error-state">
               <h1>여행 정보를 불러오지 못했습니다</h1>
-              <p className="form-error">{ownerDetailDataError}</p>
-              <a className="primary-button" href="/manage" style={{ marginTop: "16px" }}>
-                여행 목록으로
-              </a>
+              <p className="form-error" role="alert">
+                {ownerDetailDataError}
+              </p>
+              <div className="owner-detail-error-actions">
+                <a className="primary-button compact-button" href={currentPath}>
+                  다시 시도
+                </a>
+                <a className="secondary-button compact-button" href="/manage">
+                  여행 목록으로
+                </a>
+              </div>
             </section>
           </div>
         </section>
@@ -127,6 +136,8 @@ export function OwnerTripViewPage({ tripId }: OwnerTripViewPageProps) {
   return (
     <OwnerTripViewContent
       checklistItems={checklistItems}
+      checklistError={checklistError}
+      checklistSubmitting={checklistSubmitting}
       editFlightsHref={`/manage/trips/${selectedOwnerTrip.id}/edit/flights`}
       editPlacesHref={`/manage/trips/${selectedOwnerTrip.id}/edit/places`}
       editSchedulesHref={`/manage/trips/${selectedOwnerTrip.id}/edit/schedules`}

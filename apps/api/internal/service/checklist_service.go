@@ -3,12 +3,16 @@ package service
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/dto"
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/model"
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/repository"
 )
+
+var ErrInvalidChecklist = errors.New("invalid checklist item input")
 
 // ChecklistService는 준비물(Checklist) 관련 비즈니스 로직을 처리하는 서비스 구조체입니다.
 // 여행 소유자 인가(ensureTripOwner) 가드를 사용하여 비인가 접근을 원격 제어합니다.
@@ -61,9 +65,10 @@ func (s *ChecklistService) CreateChecklistCustomItem(ctx context.Context, tripID
 	if err := s.ensureTripOwner(ctx, tripID, userID); err != nil {
 		return dto.ChecklistItemResponse{}, err
 	}
-	// 카테고리 유효성 및 타이틀 공백 검증
-	if req.Title == "" || (req.Category != "before" && req.Category != "airport" && req.Category != "daily" && req.Category != "return") {
-		return dto.ChecklistItemResponse{}, errors.New("invalid checklist item input")
+	// 카테고리 유효성 및 타이틀 공백/길이 검증
+	title := strings.TrimSpace(req.Title)
+	if title == "" || utf8.RuneCountInString(title) > 120 || (req.Category != "before" && req.Category != "airport" && req.Category != "daily" && req.Category != "return") {
+		return dto.ChecklistItemResponse{}, ErrInvalidChecklist
 	}
 
 	id, err := newID()
@@ -75,7 +80,7 @@ func (s *ChecklistService) CreateChecklistCustomItem(ctx context.Context, tripID
 		ID:          id,
 		TripID:      tripID,
 		Category:    req.Category,
-		Title:       req.Title,
+		Title:       title,
 		IsCompleted: false,
 		Custom:      true,
 		CreatedAt:   time.Now(),

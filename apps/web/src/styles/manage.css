@@ -238,7 +238,7 @@
   gap: 6px;
   color: var(--c-muted);
   cursor: pointer;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   list-style: none;
 }
@@ -258,21 +258,38 @@
 .owner-trip-manage-panel {
   display: grid;
   gap: 10px;
-  padding: 12px;
-  border-radius: var(--radius-control);
-  background: var(--c-surface-cool);
+  padding-top: 10px;
 }
 
 .owner-trip-manage-panel p {
   margin: 0;
   color: var(--c-muted);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 400;
   line-height: 1.5;
 }
 
 .owner-trip-manage-panel .danger-button {
   width: 100%;
+}
+
+.owner-detail-error-state {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  padding-top: 48px;
+}
+
+.owner-detail-error-state h1,
+.owner-detail-error-state p {
+  margin-bottom: 0;
+}
+
+.owner-detail-error-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 .place-advanced-fields,

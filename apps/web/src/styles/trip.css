@@ -206,6 +206,7 @@ p {
   line-height: 1.5;
 }
 
+.next-schedule-empty .primary-button,
 .next-schedule-empty .secondary-button {
   grid-column: 2;
   justify-self: start;
