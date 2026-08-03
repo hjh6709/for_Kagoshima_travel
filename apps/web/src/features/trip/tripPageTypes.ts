@@ -21,7 +21,7 @@ export type TripPageProps = {
   checkedItems: Record<string, boolean>;
   checklistError?: string;
   checklistSubmitting?: boolean;
-  completedCount: number;
+  checklistDateFilter: string;
   completedScheduleCount: number;
   completedSchedules: Record<string, boolean>;
   contentRef: RefObject<HTMLDivElement | null>;
@@ -37,12 +37,13 @@ export type TripPageProps = {
   focusSchedules: ScheduleItem[];
   getDisplayDate: (dateStr: string) => string;
   getPlace: (placeId?: string) => Place | undefined;
-  groupedChecklist: Array<{ category: ChecklistCategory; label: string; items: ChecklistItem[] }>;
   hiddenChecklistIDs: string[];
   homeChecklistCompletedCount: number;
   homeChecklistItems: ChecklistItem[];
+  homeChecklistTotalCount: number;
   isChecklistEditing: boolean;
   newChecklistCategory: ChecklistCategory;
+  newChecklistDate: string;
   newChecklistTitle: string;
   nextSchedule: ScheduleItem | null;
   phrases: UsefulPhrase[];
@@ -61,7 +62,9 @@ export type TripPageProps = {
   restoreDefaultChecklistItems: () => void;
   setActiveTab: (tab: Tab) => void;
   setIsChecklistEditing: (value: boolean) => void;
+  setChecklistDateFilter: (value: string) => void;
   setNewChecklistCategory: (category: ChecklistCategory) => void;
+  setNewChecklistDate: (date: string) => void;
   setNewChecklistTitle: (title: string) => void;
   setScheduleView: (view: "itinerary" | "checklist") => void;
   setSelectedDate: (date: string) => void;

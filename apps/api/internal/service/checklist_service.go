@@ -32,14 +32,19 @@ func NewChecklistService(checklistRepository repository.ChecklistRepository, tri
 // ensureTripOwner는 특정 여행 ID의 소유자(Owner)가 로그인한 사용자(userID)인지 검증하는 내부 도우미 메서드입니다.
 // 일치하지 않으면 ErrForbidden(403) 또는 ErrTripNotFound(404) 에러를 반환합니다.
 func (s *ChecklistService) ensureTripOwner(ctx context.Context, tripID, userID string) error {
+	_, err := s.findOwnedTrip(ctx, tripID, userID)
+	return err
+}
+
+func (s *ChecklistService) findOwnedTrip(ctx context.Context, tripID, userID string) (model.Trip, error) {
 	trip, err := s.tripRepository.FindTrip(tripID)
 	if err != nil {
-		return ErrTripNotFound
+		return model.Trip{}, ErrTripNotFound
 	}
 	if trip.OwnerID != userID {
-		return ErrForbidden
+		return model.Trip{}, ErrForbidden
 	}
-	return nil
+	return trip, nil
 }
 
 // ListChecklist는 특정 여행 ID에 등록된 준비물 목록을 조회하여 DTO 배열 규격으로 가공한 뒤 반환합니다.
@@ -62,12 +67,17 @@ func (s *ChecklistService) ListChecklist(ctx context.Context, tripID, userID str
 
 // CreateChecklistCustomItem은 여행 소유자가 수동으로 입력한 커스텀 준비물 항목을 유효성 검증 후 DB에 생성 및 저장합니다.
 func (s *ChecklistService) CreateChecklistCustomItem(ctx context.Context, tripID, userID string, req dto.CreateChecklistItemRequest) (dto.ChecklistItemResponse, error) {
-	if err := s.ensureTripOwner(ctx, tripID, userID); err != nil {
+	trip, err := s.findOwnedTrip(ctx, tripID, userID)
+	if err != nil {
 		return dto.ChecklistItemResponse{}, err
 	}
 	// 카테고리 유효성 및 타이틀 공백/길이 검증
 	title := strings.TrimSpace(req.Title)
 	if title == "" || utf8.RuneCountInString(title) > 120 || (req.Category != "before" && req.Category != "airport" && req.Category != "daily" && req.Category != "return") {
+		return dto.ChecklistItemResponse{}, ErrInvalidChecklist
+	}
+	scheduledDate := strings.TrimSpace(req.ScheduledDate)
+	if !isChecklistDateInTrip(scheduledDate, trip.StartDate, trip.EndDate) {
 		return dto.ChecklistItemResponse{}, ErrInvalidChecklist
 	}
 
@@ -77,13 +87,14 @@ func (s *ChecklistService) CreateChecklistCustomItem(ctx context.Context, tripID
 	}
 
 	item := model.ChecklistItem{
-		ID:          id,
-		TripID:      tripID,
-		Category:    req.Category,
-		Title:       title,
-		IsCompleted: false,
-		Custom:      true,
-		CreatedAt:   time.Now(),
+		ID:            id,
+		TripID:        tripID,
+		Category:      req.Category,
+		Title:         title,
+		IsCompleted:   false,
+		Custom:        true,
+		ScheduledDate: scheduledDate,
+		CreatedAt:     time.Now(),
 	}
 
 	if err := s.checklistRepository.Save(ctx, item); err != nil {
@@ -99,16 +110,28 @@ func (s *ChecklistService) UpdateChecklistItem(ctx context.Context, checklistID,
 		return dto.ChecklistItemResponse{}, err
 	}
 
-	if err := s.ensureTripOwner(ctx, item.TripID, userID); err != nil {
+	trip, err := s.findOwnedTrip(ctx, item.TripID, userID)
+	if err != nil {
 		return dto.ChecklistItemResponse{}, err
 	}
 
 	// PATCH 스펙을 고려하여 전달된 선택 항목만 부분 변경 적용
 	if req.Title != nil {
-		item.Title = *req.Title
+		title := strings.TrimSpace(*req.Title)
+		if title == "" || utf8.RuneCountInString(title) > 120 {
+			return dto.ChecklistItemResponse{}, ErrInvalidChecklist
+		}
+		item.Title = title
 	}
 	if req.IsCompleted != nil {
 		item.IsCompleted = *req.IsCompleted
+	}
+	if req.ScheduledDate != nil {
+		scheduledDate := strings.TrimSpace(*req.ScheduledDate)
+		if !isChecklistDateInTrip(scheduledDate, trip.StartDate, trip.EndDate) {
+			return dto.ChecklistItemResponse{}, ErrInvalidChecklist
+		}
+		item.ScheduledDate = scheduledDate
 	}
 
 	if err := s.checklistRepository.Update(ctx, item); err != nil {
@@ -140,5 +163,22 @@ func mapChecklistItemResponse(item model.ChecklistItem) dto.ChecklistItemRespons
 		IsCompleted:        item.IsCompleted,
 		Custom:             item.Custom,
 		DestinationCountry: item.DestinationCountry,
+		ScheduledDate:      item.ScheduledDate,
 	}
+}
+
+func isChecklistDateInTrip(scheduledDate, startDate, endDate string) bool {
+	if scheduledDate == "" {
+		return true
+	}
+	date, err := time.Parse("2006-01-02", scheduledDate)
+	if err != nil || date.Format("2006-01-02") != scheduledDate {
+		return false
+	}
+	start, startErr := time.Parse("2006-01-02", startDate)
+	end, endErr := time.Parse("2006-01-02", endDate)
+	if startErr != nil || endErr != nil {
+		return false
+	}
+	return !date.Before(start) && !date.After(end)
 }

@@ -8,6 +8,7 @@ export type ChecklistItemResponse = {
   isCompleted: boolean;                                // 체크박스 완료 완료 여부
   custom: boolean;                                     // 사용자가 추가한 커스텀 준비물 유무
   destinationCountry?: string;                         // 타겟팅 목적지 국가 코드 (JP, CN 등)
+  scheduledDate?: string;                              // 특정 날짜 항목의 날짜 (없으면 여행 전체)
 };
 
 // listChecklist는 특정 여행 ID의 전체 준비물 목록을 백엔드로부터 실시간으로 가져옵니다.
@@ -24,14 +25,15 @@ export function createChecklistItem(
   tripID: string,
   accessToken: string,
   category: string,
-  title: string
+  title: string,
+  scheduledDate = ""
 ) {
   return apiRequest<ChecklistItemResponse>(`/api/trips/${tripID}/checklists`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
-    body: JSON.stringify({ category, title }),
+    body: JSON.stringify({ category, title, scheduledDate }),
   });
 }
 
@@ -39,7 +41,7 @@ export function createChecklistItem(
 export function updateChecklistItem(
   checklistID: string,
   accessToken: string,
-  updates: { title?: string; isCompleted?: boolean }
+  updates: { title?: string; isCompleted?: boolean; scheduledDate?: string }
 ) {
   return apiRequest<ChecklistItemResponse>(`/api/trips/checklists/${checklistID}`, {
     method: "PATCH",

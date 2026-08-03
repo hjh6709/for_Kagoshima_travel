@@ -5,15 +5,16 @@ import {
   clampDate,
   getDateOffset,
   getTodayDateString,
+  getTripDateRange,
   getTravelStatus,
   shiftDate,
   type TripDates,
 } from "../../shared/date";
-import { checklistCategories } from "../../shared/travelOptions";
 import { phrases } from "../../data/sampleTrip";
 import type { ChecklistItem } from "../../types/travel";
 import {
   deriveAccommodation,
+  deriveHomeChecklist,
   deriveEmergencies,
   getOwnerPlaceById,
   getOwnerSchedulesForDate,
@@ -41,8 +42,10 @@ type UseOwnerTripPageAdapterParams = {
   checklistSubmitting: boolean;
   newChecklistTitle: string;
   newChecklistCategory: ChecklistCategory;
+  newChecklistDate: string;
   onNewChecklistTitleChange: (value: string) => void;
   onNewChecklistCategoryChange: (value: ChecklistCategory) => void;
+  onNewChecklistDateChange: (value: string) => void;
   onAddChecklistItem: (event: FormEvent<HTMLFormElement>) => void;
   onToggleChecklistItem: (itemID: string, isCompleted: boolean) => void;
   onDeleteChecklistItem: (itemID: string) => void;
@@ -64,8 +67,10 @@ export function useOwnerTripPageAdapter({
   checklistSubmitting,
   newChecklistTitle,
   newChecklistCategory,
+  newChecklistDate,
   onNewChecklistTitleChange,
   onNewChecklistCategoryChange,
+  onNewChecklistDateChange,
   onAddChecklistItem,
   onToggleChecklistItem,
   onDeleteChecklistItem,
@@ -82,6 +87,7 @@ export function useOwnerTripPageAdapter({
   const [scheduleView, setScheduleView] = useState<"itinerary" | "checklist">(initialView.scheduleView);
   const [addressCopied, setAddressCopied] = useState(false);
   const [isChecklistEditing, setIsChecklistEditing] = useState(false);
+  const [checklistDateFilter, setChecklistDateFilter] = useState("all");
   const [tripDates, setTripDatesState] = useState<TripDates>(() =>
     getSavedOwnerTripDates(tripId, { startDate: selectedOwnerTrip.startDate, endDate: selectedOwnerTrip.endDate })
   );
@@ -115,13 +121,12 @@ export function useOwnerTripPageAdapter({
   );
   const accommodation = useMemo(() => deriveAccommodation(places), [places]);
 
-  const dates = useMemo(() => Array.from(new Set(schedules.map((item) => item.date))), [schedules]);
+  const dates = useMemo(() => getTripDateRange(trip.startDate, trip.endDate), [trip.startDate, trip.endDate]);
   const selectedSchedules = useMemo(
     () => getOwnerSchedulesForDate(selectedDate, schedules, scheduleOrderByDate),
     [selectedDate, schedules, scheduleOrderByDate]
   );
   const completedScheduleCount = selectedSchedules.filter((item) => completedSchedules[item.id]).length;
-  const completedCount = allChecklist.filter((item) => checkedItems[item.id]).length;
 
   const today = getTodayDateString();
   const travelStatus = getTravelStatus(today, tripDates);
@@ -142,22 +147,14 @@ export function useOwnerTripPageAdapter({
 
   const homeChecklistCategories: ChecklistCategory[] =
     travelStatus.phase === "before" ? ["before", "airport"] : travelStatus.phase === "during" ? ["daily"] : ["return"];
-  const homeChecklistItems = allChecklist.filter((item) => homeChecklistCategories.includes(item.category)).slice(0, 4);
-  const homeChecklistCompletedCount = homeChecklistItems.filter((item) => checkedItems[item.id]).length;
+  const homeChecklist = deriveHomeChecklist(
+    allChecklist,
+    checkedItems,
+    homeChecklistCategories,
+    travelStatus.phase === "during" ? focusScheduleDate : undefined,
+  );
 
   const emergencies = useMemo(() => deriveEmergencies(places), [places]);
-
-  const groupedChecklist = useMemo(
-    () =>
-      checklistCategories
-        .map(([category, label]) => ({
-          category,
-          label,
-          items: allChecklist.filter((item) => item.category === category),
-        }))
-        .filter((group) => group.items.length > 0),
-    [allChecklist]
-  );
 
   function getDisplayDate(dateStr: string) {
     return shiftDate(tripDates.startDate, getDateOffset(trip.startDate, dateStr));
@@ -227,7 +224,7 @@ export function useOwnerTripPageAdapter({
     checkedItems,
     checklistError,
     checklistSubmitting,
-    completedCount,
+    checklistDateFilter,
     completedScheduleCount,
     completedSchedules,
     contentRef,
@@ -243,12 +240,13 @@ export function useOwnerTripPageAdapter({
     focusSchedules,
     getDisplayDate,
     getPlace,
-    groupedChecklist,
     hiddenChecklistIDs: [],
-    homeChecklistCompletedCount,
-    homeChecklistItems,
+    homeChecklistCompletedCount: homeChecklist.completedCount,
+    homeChecklistItems: homeChecklist.items,
+    homeChecklistTotalCount: homeChecklist.totalCount,
     isChecklistEditing,
     newChecklistCategory,
+    newChecklistDate,
     newChecklistTitle,
     nextSchedule,
     phrases,
@@ -266,8 +264,10 @@ export function useOwnerTripPageAdapter({
     removeChecklistItem,
     restoreDefaultChecklistItems,
     setActiveTab,
+    setChecklistDateFilter,
     setIsChecklistEditing,
     setNewChecklistCategory: onNewChecklistCategoryChange,
+    setNewChecklistDate: onNewChecklistDateChange,
     setNewChecklistTitle: onNewChecklistTitleChange,
     setScheduleView,
     setSelectedDate,

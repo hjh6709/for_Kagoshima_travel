@@ -17,6 +17,7 @@ export function TodayTab(props: TripPageProps) {
     getPlace,
     homeChecklistCompletedCount,
     homeChecklistItems,
+    homeChecklistTotalCount,
     isDemo,
     isReadOnly,
     nextSchedule,
@@ -59,6 +60,7 @@ export function TodayTab(props: TripPageProps) {
         focusScheduleCount={focusSchedules.length}
         homeChecklistCompletedCount={homeChecklistCompletedCount}
         homeChecklistItems={homeChecklistItems}
+        homeChecklistTotalCount={homeChecklistTotalCount}
         onOpenChecklist={() => {
           setScheduleView("checklist");
           setActiveTab("schedule");

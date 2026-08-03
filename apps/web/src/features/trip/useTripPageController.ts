@@ -14,13 +14,14 @@ import {
   clampDate,
   getDateOffset,
   getTodayDateString,
+  getTripDateRange,
   getTravelStatus,
   shiftDate,
   type TripDates,
 } from "../../shared/date";
-import { checklistCategories } from "../../shared/travelOptions";
 import type { ChecklistItem } from "../../types/travel";
 import type { TripPageProps } from "./tripPageTypes";
+import { deriveHomeChecklist } from "./ownerTripAdapter";
 import {
   getOrderedSchedulesForDate,
   getPlace,
@@ -54,13 +55,15 @@ export function useTripPageController(): TripPageProps {
   const [customChecklistItems, setCustomChecklistItems] = useState<CustomChecklistItem[]>(getSavedCustomChecklist);
   const [hiddenChecklistIDs, setHiddenChecklistIDs] = useState<string[]>(getSavedHiddenChecklistIDs);
   const [isChecklistEditing, setIsChecklistEditing] = useState(false);
+  const [checklistDateFilter, setChecklistDateFilter] = useState("all");
   const [newChecklistTitle, setNewChecklistTitle] = useState("");
   const [newChecklistCategory, setNewChecklistCategory] = useState<ChecklistCategory>("before");
+  const [newChecklistDate, setNewChecklistDate] = useState("");
   const [completedSchedules, setCompletedSchedules] = useState<Record<string, boolean>>(getSavedScheduleCompletions);
   const [scheduleOrderByDate, setScheduleOrderByDate] = useState<ScheduleOrderByDate>(getSavedScheduleOrder);
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>(getSavedChecklistCompletions);
 
-  const dates = useMemo(() => Array.from(new Set(schedules.map((item) => item.date))), []);
+  const dates = useMemo(() => getTripDateRange(trip.startDate, trip.endDate), []);
   const selectedSchedules = useMemo(
     () => getOrderedSchedulesForDate(selectedDate, scheduleOrderByDate),
     [selectedDate, scheduleOrderByDate]
@@ -75,7 +78,6 @@ export function useTripPageController(): TripPageProps {
     ],
     [customChecklistItems, hiddenChecklistIDs]
   );
-  const completedCount = allChecklist.filter((item) => checkedItems[item.id]).length;
   const today = getTodayDateString();
   const travelStatus = getTravelStatus(today, tripDates);
   const displayFocusDate = clampDate(today, tripDates.startDate, tripDates.endDate);
@@ -94,18 +96,11 @@ export function useTripPageController(): TripPageProps {
   const focusCompletedScheduleCount = focusSchedules.filter((item) => completedSchedules[item.id]).length;
   const homeChecklistCategories: ChecklistCategory[] =
     travelStatus.phase === "before" ? ["before", "airport"] : travelStatus.phase === "during" ? ["daily"] : ["return"];
-  const homeChecklistItems = allChecklist.filter((item) => homeChecklistCategories.includes(item.category)).slice(0, 4);
-  const homeChecklistCompletedCount = homeChecklistItems.filter((item) => checkedItems[item.id]).length;
-  const groupedChecklist = useMemo(
-    () =>
-      checklistCategories
-        .map(([category, label]) => ({
-          category,
-          label,
-          items: allChecklist.filter((item) => item.category === category),
-        }))
-        .filter((group) => group.items.length > 0),
-    [allChecklist]
+  const homeChecklist = deriveHomeChecklist(
+    allChecklist,
+    checkedItems,
+    homeChecklistCategories,
+    travelStatus.phase === "during" ? focusScheduleDate : undefined,
   );
 
   function getDisplayDate(dateStr: string) {
@@ -152,6 +147,7 @@ export function useTripPageController(): TripPageProps {
       category: newChecklistCategory,
       title,
       custom: true,
+      scheduledDate: newChecklistDate || undefined,
     };
     saveCustomChecklist([...customChecklistItems, nextItem]);
     setNewChecklistTitle("");
@@ -220,7 +216,7 @@ export function useTripPageController(): TripPageProps {
     addressCopied,
     allChecklist,
     checkedItems,
-    completedCount,
+    checklistDateFilter,
     completedScheduleCount,
     completedSchedules,
     contentRef,
@@ -232,12 +228,13 @@ export function useTripPageController(): TripPageProps {
     focusSchedules,
     getDisplayDate,
     getPlace,
-    groupedChecklist,
     hiddenChecklistIDs,
-    homeChecklistCompletedCount,
-    homeChecklistItems,
+    homeChecklistCompletedCount: homeChecklist.completedCount,
+    homeChecklistItems: homeChecklist.items,
+    homeChecklistTotalCount: homeChecklist.totalCount,
     isChecklistEditing,
     newChecklistCategory,
+    newChecklistDate,
     newChecklistTitle,
     nextSchedule,
     phrases,
@@ -255,8 +252,10 @@ export function useTripPageController(): TripPageProps {
     removeChecklistItem,
     restoreDefaultChecklistItems,
     setActiveTab,
+    setChecklistDateFilter,
     setIsChecklistEditing,
     setNewChecklistCategory,
+    setNewChecklistDate,
     setNewChecklistTitle,
     setScheduleView,
     setSelectedDate,

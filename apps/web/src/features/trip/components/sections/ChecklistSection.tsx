@@ -1,4 +1,5 @@
 import { CheckCircle2, ListChecks, PlusCircle, Trash2 } from "lucide-react";
+import { formatShortDate } from "../../../../shared/date";
 import { checklistCategories } from "../../../../shared/travelOptions";
 import type { TripPageProps } from "../../tripPageTypes";
 import type { ChecklistCategory } from "../../tripViewState";
@@ -10,17 +11,21 @@ type ChecklistSectionProps = Pick<
   | "checkedItems"
   | "checklistError"
   | "checklistSubmitting"
-  | "completedCount"
-  | "groupedChecklist"
+  | "checklistDateFilter"
+  | "dates"
+  | "getDisplayDate"
   | "hiddenChecklistIDs"
   | "isChecklistEditing"
   | "isReadOnly"
   | "newChecklistCategory"
+  | "newChecklistDate"
   | "newChecklistTitle"
   | "removeChecklistItem"
   | "restoreDefaultChecklistItems"
   | "setIsChecklistEditing"
+  | "setChecklistDateFilter"
   | "setNewChecklistCategory"
+  | "setNewChecklistDate"
   | "setNewChecklistTitle"
   | "toggleCheck"
 >;
@@ -32,20 +37,49 @@ export function ChecklistSection({
   checkedItems,
   checklistError = "",
   checklistSubmitting = false,
-  completedCount,
-  groupedChecklist,
+  checklistDateFilter,
+  dates,
+  getDisplayDate,
   hiddenChecklistIDs,
   isChecklistEditing,
   isReadOnly,
   newChecklistCategory,
+  newChecklistDate,
   newChecklistTitle,
   removeChecklistItem,
   restoreDefaultChecklistItems,
   setIsChecklistEditing,
+  setChecklistDateFilter,
   setNewChecklistCategory,
+  setNewChecklistDate,
   setNewChecklistTitle,
   toggleCheck,
 }: ChecklistSectionProps) {
+  const visibleChecklist = allChecklist.filter((item) => {
+    if (checklistDateFilter === "all") return true;
+    if (checklistDateFilter === "") return !item.scheduledDate;
+    return item.scheduledDate === checklistDateFilter;
+  });
+  const visibleCompletedCount = visibleChecklist.filter((item) => checkedItems[item.id]).length;
+  const visibleGroups = checklistCategories
+    .map(([category, label]) => ({
+      category,
+      label,
+      items: visibleChecklist.filter((item) => item.category === category),
+    }))
+    .filter((group) => group.items.length > 0);
+  const filterLabel =
+    checklistDateFilter === "all"
+      ? "전체"
+      : checklistDateFilter === ""
+        ? "여행 전체"
+        : formatShortDate(getDisplayDate(checklistDateFilter));
+
+  function selectChecklistDate(value: string) {
+    setChecklistDateFilter(value);
+    if (!isReadOnly) setNewChecklistDate(value === "all" ? "" : value);
+  }
+
   return (
     <section className="section-block">
       <div className="section-title-row">
@@ -62,9 +96,38 @@ export function ChecklistSection({
       </div>
       <div className="check-summary">
         <p className="muted">
-          {allChecklist.length}개 중 {completedCount}개 완료
+          {filterLabel} · {visibleChecklist.length}개 중 {visibleCompletedCount}개 완료
         </p>
-        <span>{Math.round((completedCount / Math.max(allChecklist.length, 1)) * 100)}%</span>
+        <span>{Math.round((visibleCompletedCount / Math.max(visibleChecklist.length, 1)) * 100)}%</span>
+      </div>
+      <div className="checklist-date-filter" aria-label="체크리스트 표시 날짜" role="group">
+        <button
+          aria-pressed={checklistDateFilter === "all"}
+          className={checklistDateFilter === "all" ? "active" : ""}
+          onClick={() => selectChecklistDate("all")}
+          type="button"
+        >
+          전체
+        </button>
+        <button
+          aria-pressed={checklistDateFilter === ""}
+          className={checklistDateFilter === "" ? "active" : ""}
+          onClick={() => selectChecklistDate("")}
+          type="button"
+        >
+          여행 전체
+        </button>
+        {dates.map((date) => (
+          <button
+            aria-pressed={checklistDateFilter === date}
+            className={checklistDateFilter === date ? "active" : ""}
+            key={date}
+            onClick={() => selectChecklistDate(date)}
+            type="button"
+          >
+            {formatShortDate(getDisplayDate(date))}
+          </button>
+        ))}
       </div>
       {isChecklistEditing && hiddenChecklistIDs.length > 0 && (
         <button className="secondary-button restore-button" onClick={restoreDefaultChecklistItems} type="button">
@@ -80,6 +143,15 @@ export function ChecklistSection({
 
       {isChecklistEditing && (
         <form className="check-add-form" onSubmit={addChecklistItem}>
+          <label>
+            확인 시점
+            <select value={newChecklistDate} onChange={(event) => setNewChecklistDate(event.target.value)}>
+              <option value="">여행 전체</option>
+              {dates.map((date) => (
+                <option key={date} value={date}>{formatShortDate(getDisplayDate(date))}</option>
+              ))}
+            </select>
+          </label>
           <label>
             구분
             <select
@@ -109,14 +181,14 @@ export function ChecklistSection({
             type="submit"
           >
             <PlusCircle aria-hidden="true" size={18} />
-            {checklistSubmitting ? "추가 중" : "추가"}
+            {checklistSubmitting ? "추가 중" : newChecklistDate ? "이 날짜에 추가" : "여행 전체에 추가"}
           </button>
         </form>
       )}
 
       <div className="check-groups">
-        {groupedChecklist.length > 0 ? (
-          groupedChecklist.map((group) => (
+        {visibleGroups.length > 0 ? (
+          visibleGroups.map((group) => (
             <section className="check-group" key={group.category}>
               <h3>{group.label}</h3>
               <div className="card-stack">
@@ -125,7 +197,12 @@ export function ChecklistSection({
                     {isReadOnly ? (
                       <div className="check-toggle">
                         <CheckCircle2 className={checkedItems[item.id] ? "checked" : ""} size={24} />
-                        <span>{item.title}</span>
+                        <span className="check-item-copy">
+                          <span>{item.title}</span>
+                          {checklistDateFilter === "all" && (
+                            <small>{item.scheduledDate ? formatShortDate(getDisplayDate(item.scheduledDate)) : "여행 전체"}</small>
+                          )}
+                        </span>
                         <span className="visually-hidden">{checkedItems[item.id] ? "완료" : "미완료"}</span>
                       </div>
                     ) : (
@@ -136,7 +213,12 @@ export function ChecklistSection({
                         type="button"
                       >
                         <CheckCircle2 className={checkedItems[item.id] ? "checked" : ""} size={24} />
-                        <span>{item.title}</span>
+                        <span className="check-item-copy">
+                          <span>{item.title}</span>
+                          {checklistDateFilter === "all" && (
+                            <small>{item.scheduledDate ? formatShortDate(getDisplayDate(item.scheduledDate)) : "여행 전체"}</small>
+                          )}
+                        </span>
                       </button>
                     )}
                     {isChecklistEditing && (
@@ -146,7 +228,7 @@ export function ChecklistSection({
                         onClick={() => removeChecklistItem(item)}
                         type="button"
                       >
-                        <Trash2 size={18} />
+                        <Trash2 aria-hidden="true" size={18} />
                       </button>
                     )}
                   </div>
@@ -159,7 +241,11 @@ export function ChecklistSection({
             <ListChecks aria-hidden="true" size={22} />
             <div>
               <strong>준비 항목이 없습니다</strong>
-              <p>{isReadOnly ? "공유된 준비 항목이 없습니다." : "편집을 눌러 여행에 필요한 항목을 추가해 보세요."}</p>
+              <p>
+                {isReadOnly
+                  ? `${filterLabel}에 공유된 준비 항목이 없습니다.`
+                  : `${filterLabel}에 필요한 항목을 편집에서 추가해 보세요.`}
+              </p>
             </div>
           </article>
         )}

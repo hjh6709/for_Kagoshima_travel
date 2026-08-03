@@ -27,7 +27,13 @@ export function useTripManageChecklistActions({
   const [checklistError, setChecklistError] = useState("");
   const [newChecklistTitle, setNewChecklistTitle] = useState("");
   const [newChecklistCategory, setNewChecklistCategory] = useState<"before" | "airport" | "daily" | "return">("before");
+  const [newChecklistDate, setNewChecklistDate] = useState("");
   const [checklistSubmitting, setChecklistSubmitting] = useState(false);
+
+  useEffect(() => {
+    setNewChecklistTitle("");
+    setNewChecklistDate("");
+  }, [tripID]);
 
   // 여행 정보 또는 토큰 세션이 변경되면, 연결된 체크리스트 리스트를 백엔드 서버로부터 가져옵니다.
   useEffect(() => {
@@ -81,7 +87,8 @@ export function useTripManageChecklistActions({
         tripID,
         accessToken,
         newChecklistCategory,
-        newChecklistTitle.trim()
+        newChecklistTitle.trim(),
+        newChecklistDate
       );
       setChecklistItems((prev) => [...prev, newItem]);
       setNewChecklistTitle("");
@@ -149,6 +156,8 @@ export function useTripManageChecklistActions({
     setNewChecklistTitle,
     newChecklistCategory,
     setNewChecklistCategory,
+    newChecklistDate,
+    setNewChecklistDate,
     checklistSubmitting,
     handleAddChecklistItem,
     handleToggleChecklistItem,

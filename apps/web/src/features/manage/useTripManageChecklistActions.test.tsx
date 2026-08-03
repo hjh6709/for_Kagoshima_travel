@@ -27,6 +27,7 @@ const createdItem = {
   title: "여권 사본",
   isCompleted: false,
   custom: true,
+  scheduledDate: "2026-08-17",
 };
 
 describe("useTripManageChecklistActions", () => {
@@ -52,12 +53,19 @@ describe("useTripManageChecklistActions", () => {
     await waitFor(() => expect(result.current.checklistLoading).toBe(false));
 
     act(() => result.current.setNewChecklistTitle("  여권 사본  "));
+    act(() => result.current.setNewChecklistDate("2026-08-17"));
     await act(async () => {
       await result.current.handleAddChecklistItem({
         preventDefault: vi.fn(),
       } as unknown as FormEvent);
     });
-    expect(createChecklistItem).toHaveBeenCalledWith("trip-1", "owner-token", "before", "여권 사본");
+    expect(createChecklistItem).toHaveBeenCalledWith(
+      "trip-1",
+      "owner-token",
+      "before",
+      "여권 사본",
+      "2026-08-17",
+    );
     expect(result.current.checklistItems).toEqual([createdItem]);
 
     await act(async () => {

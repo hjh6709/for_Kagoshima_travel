@@ -66,6 +66,7 @@ export function getSavedCustomChecklist(): CustomChecklistItem[] {
         isChecklistCategory(item.category) &&
         typeof item.title === "string" &&
         item.title.trim().length > 0 &&
+        (item.scheduledDate === undefined || isDateValue(item.scheduledDate)) &&
         item.custom === true
       );
     });

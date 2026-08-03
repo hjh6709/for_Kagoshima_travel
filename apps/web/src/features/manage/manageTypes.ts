@@ -246,6 +246,8 @@ export type SelectedTripDetailSectionProps = {
 	onNewChecklistTitleChange: (value: string) => void;
 	newChecklistCategory: "before" | "airport" | "daily" | "return";
 	onNewChecklistCategoryChange: (value: "before" | "airport" | "daily" | "return") => void;
+	newChecklistDate: string;
+	onNewChecklistDateChange: (value: string) => void;
 	checklistSubmitting: boolean;
 	onAddChecklistItem: (e: React.FormEvent) => void;
 	onToggleChecklistItem: (itemID: string, isCompleted: boolean) => void;

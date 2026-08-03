@@ -58,6 +58,9 @@ func TestRunMigrationsAppliesCurrentSchemaIdempotently(t *testing.T) {
 	if !strings.Contains(joined, "CREATE TABLE IF NOT EXISTS checklists") {
 		t.Error("migration SQL does not create checklists for existing databases")
 	}
+	if !strings.Contains(joined, "ADD COLUMN IF NOT EXISTS scheduled_date") {
+		t.Error("migration SQL does not add checklists.scheduled_date for existing databases")
+	}
 }
 
 func TestRunMigrationsReportsFailingMigration(t *testing.T) {
@@ -145,5 +148,17 @@ func TestRunMigrationsUpgradesLegacyPlacesSchema(t *testing.T) {
 	}
 	if checklistTableCount != 1 {
 		t.Fatalf("checklists table count = %d, want 1", checklistTableCount)
+	}
+
+	var scheduledDateColumnCount int
+	if err := tx.QueryRow(ctx, `
+		SELECT COUNT(*)
+		FROM information_schema.columns
+		WHERE table_schema = $1 AND table_name = 'checklists' AND column_name = 'scheduled_date'
+	`, schemaName).Scan(&scheduledDateColumnCount); err != nil {
+		t.Fatalf("query checklists scheduled_date column: %v", err)
+	}
+	if scheduledDateColumnCount != 1 {
+		t.Fatalf("checklists scheduled_date column count = %d, want 1", scheduledDateColumnCount)
 	}
 }

@@ -294,8 +294,8 @@ export const checklist: ChecklistItem[] = [
   { id: "check-battery", category: "before", title: "보조배터리와 충전 케이블" },
   { id: "check-ticket", category: "airport", title: "항공권과 여권" },
   { id: "check-terminal", category: "airport", title: "터미널과 체크인 카운터" },
-  { id: "check-payment-daily", category: "daily", title: "결제 앱과 데이터 연결" },
-  { id: "check-weather", category: "daily", title: "오늘 날씨와 우산" },
+  { id: "check-payment-daily", category: "daily", title: "결제 앱과 데이터 연결", scheduledDate: tripDates[0] },
+  { id: "check-weather", category: "daily", title: "오늘 날씨와 우산", scheduledDate: tripDates[1] },
   { id: "check-return", category: "return", title: "여권·지갑·휴대폰·충전기" },
   { id: "check-luggage", category: "return", title: "수하물과 기내 반입 제한" },
 ];

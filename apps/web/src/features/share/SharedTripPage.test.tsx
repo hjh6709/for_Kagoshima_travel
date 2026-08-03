@@ -73,6 +73,14 @@ const sharedTrip: SharedTripResponse = {
       title: "보조배터리",
       isCompleted: false,
       custom: false,
+      scheduledDate: "2026-07-29",
+    },
+    {
+      id: "check-2",
+      category: "before",
+      title: "여권 사본",
+      isCompleted: false,
+      custom: false,
     },
   ],
 };
@@ -135,6 +143,26 @@ describe("SharedTripPage", () => {
     expect(screen.queryByRole("button", { name: "완료" })).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "7/30(목)" }));
     expect(screen.getByText("내일 점심")).toBeVisible();
+  });
+
+  it("공유 화면에서도 여행 전체와 날짜별 체크리스트를 구분한다", async () => {
+    render(
+      <SharedTripPage
+        error=""
+        loading={false}
+        sharedTrip={sharedTrip}
+        warning=""
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "일정" }));
+    await userEvent.click(screen.getByRole("button", { name: "여행 준비" }));
+    expect(screen.getByText("보조배터리")).toBeVisible();
+    expect(screen.getByText("여권 사본")).toBeVisible();
+
+    await userEvent.click(screen.getByRole("button", { name: "7/29(수)" }));
+    expect(screen.getByText("보조배터리")).toBeVisible();
+    expect(screen.queryByText("여권 사본")).not.toBeInTheDocument();
   });
 
   it("항공편은 보여주되 공개 화면에 예약 메모는 노출하지 않는다", async () => {
