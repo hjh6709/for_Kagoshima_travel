@@ -1162,6 +1162,44 @@ p {
     justify-self: stretch;
   }
 
+  .timeline-stack {
+    padding-left: 0;
+  }
+
+  .timeline-stack::before {
+    left: 12px;
+  }
+
+  .schedule-card {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    margin-left: 28px;
+    padding: 16px 12px;
+  }
+
+  .schedule-card::before {
+    top: 22px;
+    left: -23px;
+  }
+
+  .schedule-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .schedule-actions > .compact-button {
+    width: 100%;
+  }
+
+  .schedule-move-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .schedule-move-actions .icon-button {
+    width: 100%;
+  }
+
   .screen-title-actions,
   .section-actions,
   .owner-linked-actions {

@@ -895,6 +895,21 @@
 }
 
 @media (max-width: 240px) {
+  .info-card,
+  .emergency-card {
+    padding: 16px 12px;
+  }
+
+  .auth-card-premium {
+    padding: 20px 12px;
+  }
+
+  .flight-empty-state {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    padding: 18px 12px;
+  }
+
   .home-check-item {
     align-items: flex-start;
     padding-right: 10px;
