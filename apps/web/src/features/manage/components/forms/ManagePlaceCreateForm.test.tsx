@@ -58,12 +58,14 @@ describe("ManagePlaceCreateForm", () => {
     const user = userEvent.setup();
     render(<ManagePlaceCreateForm {...placeFormProps()} />);
 
+    expect(screen.getByRole("region", { name: "장소 검색" })).toBeVisible();
     await user.type(screen.getByPlaceholderText("장소·종류 예: 신천지, 카페, 식당"), "카페");
     await user.click(screen.getByRole("button", { name: "검색" }));
     await user.click(await screen.findByRole("button", { name: /Cafe One.*선택/ }));
 
     expect(screen.getByText("Cafe One")).toBeInTheDocument();
     expect(screen.queryByText("Cafe Two")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Cafe One.*선택됨/ })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("button", { name: "선택한 장소 저장" })).toBeInTheDocument();
   });
 

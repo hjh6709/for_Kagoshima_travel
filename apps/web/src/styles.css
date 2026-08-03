@@ -5,6 +5,7 @@
 @import "./styles/tokens.css";
 @import "./styles/foundation.css";
 @import "./styles/manage.css";
+@import "./styles/place-search.css";
 @import "./styles/share.css";
 @import "./styles/trip.css";
 @import "./styles/map.css";

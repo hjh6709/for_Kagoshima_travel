@@ -10,6 +10,14 @@ const styles = styleFiles.join("\n");
 const tokens = readFileSync(new URL("../src/styles/tokens.css", import.meta.url), "utf8");
 const indexHtml = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const viteConfig = readFileSync(new URL("../vite.config.ts", import.meta.url), "utf8");
+const foundationStyles = readFileSync(
+  new URL("../src/styles/foundation.css", import.meta.url),
+  "utf8",
+);
+const placeSearchStyles = readFileSync(
+  new URL("../src/styles/place-search.css", import.meta.url),
+  "utf8",
+);
 const tripStyles = readFileSync(new URL("../src/styles/trip.css", import.meta.url), "utf8");
 const travelToolStyles = readFileSync(
   new URL("../src/styles/travel-tools.css", import.meta.url),
@@ -108,5 +116,16 @@ test("200% 확대에서도 일정과 현지 도구는 한 열로 재배치된다
   assert.match(
     travelToolStyles,
     /@media \(max-width: 240px\)[\s\S]*?\.china-payment-apps\s*{[\s\S]*?grid-template-columns:\s*minmax\(0, 1fr\)/,
+  );
+});
+
+test("좁은 모바일에서 관리 폼과 장소 검색은 한 열 입력 흐름을 사용한다", () => {
+  assert.match(
+    foundationStyles,
+    /@media \(max-width: 360px\)[\s\S]*?\.form-grid-two\s*{[\s\S]*?grid-template-columns:\s*minmax\(0, 1fr\)/,
+  );
+  assert.match(
+    placeSearchStyles,
+    /@media \(max-width: 280px\)[\s\S]*?\.place-search-controls\s*{[\s\S]*?grid-template-columns:\s*minmax\(0, 1fr\)/,
   );
 });

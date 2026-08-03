@@ -804,6 +804,89 @@ p {
   font-weight: var(--font-weight-body);
 }
 
+.mypage-demo-card {
+  display: grid;
+  gap: 20px;
+  padding: 20px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  background: var(--c-surface);
+}
+
+.mypage-demo-heading span {
+  color: var(--c-route);
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-display);
+}
+
+.mypage-demo-heading h2 {
+  margin: 5px 0 8px;
+  color: var(--c-text);
+  font-size: var(--type-title-size);
+  line-height: 1.35;
+  text-wrap: balance;
+}
+
+.mypage-demo-heading p {
+  margin: 0;
+  color: var(--c-muted);
+  font-size: var(--type-supporting-size);
+  line-height: 1.55;
+}
+
+.mypage-demo-feature-list {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mypage-demo-feature-list li {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  padding: 14px 0;
+  border-top: 1px solid var(--border-color);
+}
+
+.mypage-demo-feature-icon {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--c-route-soft);
+  color: var(--c-route);
+}
+
+.mypage-demo-feature-list strong,
+.mypage-demo-feature-list div > span {
+  display: block;
+}
+
+.mypage-demo-feature-list strong {
+  color: var(--c-text);
+  font-size: var(--type-supporting-size);
+  line-height: 1.45;
+}
+
+.mypage-demo-feature-list div > span {
+  margin-top: 3px;
+  color: var(--c-muted);
+  font-size: var(--type-label-size);
+  line-height: 1.5;
+}
+
+.mypage-demo-action {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
 .mypage-account-card,
 .mypage-trip-card,
 .mypage-security-card {
@@ -1123,6 +1206,21 @@ p {
   .back-to-list-link {
     align-self: flex-start;
     white-space: nowrap;
+  }
+
+  .mypage-demo-card {
+    gap: 16px;
+    padding: 16px 12px;
+  }
+
+  .mypage-demo-feature-list li {
+    grid-template-columns: 28px minmax(0, 1fr);
+    gap: 9px;
+  }
+
+  .mypage-demo-feature-icon {
+    width: 28px;
+    height: 28px;
   }
 
   .hero-card,
