@@ -70,6 +70,34 @@ export function mapOwnerChecklistItem(item: ChecklistItemResponse): ChecklistIte
     category: item.category,
     title: item.title,
     destinationCountry: item.destinationCountry,
+    scheduledDate: item.scheduledDate,
+  };
+}
+
+export function deriveHomeChecklist(
+  allChecklist: ChecklistItem[],
+  checkedItems: Record<string, boolean>,
+  categories: ChecklistItem["category"][],
+  focusDate?: string,
+) {
+  const datedItems = focusDate
+    ? allChecklist.filter((item) => item.scheduledDate === focusDate)
+    : [];
+  const tripWideItems = allChecklist.filter(
+    (item) => !item.scheduledDate && categories.includes(item.category),
+  );
+  const relevantItems = [...datedItems, ...tripWideItems].filter(
+    (item, index, items) => items.findIndex((candidate) => candidate.id === item.id) === index,
+  );
+  const visibleItems = [
+    ...relevantItems.filter((item) => !checkedItems[item.id]),
+    ...relevantItems.filter((item) => checkedItems[item.id]),
+  ].slice(0, 4);
+
+  return {
+    completedCount: relevantItems.filter((item) => checkedItems[item.id]).length,
+    items: visibleItems,
+    totalCount: relevantItems.length,
   };
 }
 

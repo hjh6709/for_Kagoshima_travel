@@ -1,134 +1,168 @@
-import { Trash2 } from "lucide-react";
+import { CalendarDays, ListChecks, Trash2 } from "lucide-react";
 import type { ChecklistItemResponse } from "../../../../api/checklist";
-import { checklistCategories } from "../../../../shared/travelOptions";
+import { formatKoreanDate, getTripDateRange } from "../../../../shared/date";
+import { checklistCategories, checklistCategoryLabels } from "../../../../shared/travelOptions";
 
-// ManageChecklistSectionProps는 체크리스트 관리 컴포넌트가 부모로부터 주입받는 속성 규격입니다.
 type ManageChecklistSectionProps = {
-	checklistItems: ChecklistItemResponse[];                                            // 준비물 리스트
-	checklistLoading: boolean;                                                           // 준비물 데이터 로딩 상태
-	checklistError: string;                                                              // 발생 에러 메시지
-	newChecklistTitle: string;                                                           // 추가할 신규 준비물 타이틀 인풋값
-	setNewChecklistTitle: (val: string) => void;                                         // 신규 타이틀 세터
-	newChecklistCategory: "before" | "airport" | "daily" | "return";                     // 추가할 신규 준비물 카테고리값
-	setNewChecklistCategory: (val: "before" | "airport" | "daily" | "return") => void;   // 신규 카테고리 세터
-	checklistSubmitting: boolean;                                                        // 저장 전송 중(pending) 유무
-	handleAddChecklistItem: (e: React.FormEvent) => void;                                // 등록 이벤트 핸들러
-	handleToggleChecklistItem: (itemID: string, isCompleted: boolean) => void;           // 체크박스 토글 이벤트 핸들러
-	handleDeleteChecklistItem: (itemID: string) => void;                                 // 항목 삭제 이벤트 핸들러
+  checklistItems: ChecklistItemResponse[];
+  checklistLoading: boolean;
+  checklistError: string;
+  newChecklistTitle: string;
+  setNewChecklistTitle: (value: string) => void;
+  newChecklistCategory: ChecklistItemResponse["category"];
+  setNewChecklistCategory: (value: ChecklistItemResponse["category"]) => void;
+  newChecklistDate: string;
+  setNewChecklistDate: (value: string) => void;
+  checklistSubmitting: boolean;
+  tripStartDate: string;
+  tripEndDate: string;
+  handleAddChecklistItem: (event: React.FormEvent) => void;
+  handleToggleChecklistItem: (itemID: string, isCompleted: boolean) => void;
+  handleDeleteChecklistItem: (itemID: string) => void;
 };
 
-// ManageChecklistSection 컴포넌트는 여행 소유자용 체크리스트 관리 카드 UI입니다.
-// 일본/중국 등의 목적지에 최적화되어 자동 생성된 프리셋 준비물과 사용자의 커스텀 준비물을 통합 관리합니다.
 export function ManageChecklistSection({
-	checklistItems,
-	checklistLoading,
-	checklistError,
-	newChecklistTitle,
-	setNewChecklistTitle,
-	newChecklistCategory,
-	setNewChecklistCategory,
-	checklistSubmitting,
-	handleAddChecklistItem,
-	handleToggleChecklistItem,
-	handleDeleteChecklistItem,
+  checklistItems,
+  checklistLoading,
+  checklistError,
+  newChecklistTitle,
+  setNewChecklistTitle,
+  newChecklistCategory,
+  setNewChecklistCategory,
+  newChecklistDate,
+  setNewChecklistDate,
+  checklistSubmitting,
+  tripStartDate,
+  tripEndDate,
+  handleAddChecklistItem,
+  handleToggleChecklistItem,
+  handleDeleteChecklistItem,
 }: ManageChecklistSectionProps) {
-	// 사용자가 한눈에 보기 편하도록 준비물 항목들을 카테고리별(출발 전, 공항에서 등)로 그룹핑합니다.
-	const groupedItems = checklistCategories.map(([category, label]) => {
-		return {
-			category,
-			label,
-			items: checklistItems.filter((item) => item.category === category),
-		};
-	}).filter((group) => group.items.length > 0); // 등록된 준비물이 존재하는 카테고리만 화면에 렌더링
+  const tripDates = getTripDateRange(tripStartDate, tripEndDate);
+  const scopeDates = Array.from(
+    new Set([...tripDates, ...checklistItems.flatMap((item) => item.scheduledDate ? [item.scheduledDate] : [])]),
+  ).sort();
+  const completedCount = checklistItems.filter((item) => item.isCompleted).length;
+  const scopeGroups = [
+    {
+      key: "trip",
+      label: "여행 전체",
+      description: "날짜와 관계없이 여행에서 한 번만 확인합니다.",
+      items: checklistItems.filter((item) => !item.scheduledDate),
+    },
+    ...scopeDates.map((date) => ({
+      key: date,
+      label: formatKoreanDate(date),
+      description: tripDates.includes(date)
+        ? "이 날짜의 오늘 화면과 체크리스트에 표시됩니다."
+        : "현재 여행 기간 밖의 항목입니다. 삭제하거나 여행 기간을 확인해 주세요.",
+      items: checklistItems.filter((item) => item.scheduledDate === date),
+    })),
+  ].filter((group) => group.items.length > 0);
 
-	const completedCount = checklistItems.filter((item) => item.isCompleted).length;
+  return (
+    <section className="section-block manage-checklist-section">
+      <div className="section-title-row">
+        <div>
+          <h2>준비 체크리스트</h2>
+          <p className="section-caption">
+            공통 준비물은 여행 전체에, 예약 확인이나 당일 할 일은 날짜를 지정해 추가하세요.
+          </p>
+        </div>
+        <span className="pill subtle">
+          {checklistItems.length}개 중 {completedCount}개 완료
+        </span>
+      </div>
 
-	return (
-		<section className="section-block manage-checklist-section">
-			{/* 헤더 타이틀 및 준비 진척도(완료율) 노출 */}
-			<div className="section-title-row">
-				<div>
-					<h2>준비물 체크리스트</h2>
-					<p className="section-caption">
-						여행 국가별 필수 준비물이 자동으로 주입되었습니다. 체크박스를 눌러 준비 상태를 관리하세요.
-					</p>
-				</div>
-				<span className="pill subtle">
-					{checklistItems.length}개 중 {completedCount}개 완료
-				</span>
-			</div>
+      {checklistError && <p className="form-error" role="alert">{checklistError}</p>}
 
-			{checklistError && <p className="form-error">{checklistError}</p>}
+      <form className="check-add-form manage-check-add-form" onSubmit={handleAddChecklistItem}>
+        <div className="check-scope-guide">
+          {newChecklistDate ? <CalendarDays aria-hidden="true" size={20} /> : <ListChecks aria-hidden="true" size={20} />}
+          <div>
+            <strong>{newChecklistDate ? formatKoreanDate(newChecklistDate) : "여행 전체"}</strong>
+            <span>{newChecklistDate ? "선택한 날짜에만 표시합니다." : "여행에서 한 번만 확인합니다."}</span>
+          </div>
+        </div>
+        <label>
+          확인 시점
+          <select value={newChecklistDate} onChange={(event) => setNewChecklistDate(event.target.value)}>
+            <option value="">여행 전체</option>
+            {tripDates.map((date) => (
+              <option key={date} value={date}>{formatKoreanDate(date)}</option>
+            ))}
+          </select>
+        </label>
+        <label>
+          구분
+          <select
+            value={newChecklistCategory}
+            onChange={(event) => setNewChecklistCategory(event.target.value as ChecklistItemResponse["category"])}
+          >
+            {checklistCategories.map(([category, label]) => (
+              <option key={category} value={category}>{label}</option>
+            ))}
+          </select>
+        </label>
+        <label>
+          추가할 항목
+          <input
+            maxLength={120}
+            placeholder={newChecklistDate ? "예: 디즈니랜드 입장권 확인" : "예: 여권 사본 챙기기"}
+            type="text"
+            value={newChecklistTitle}
+            onChange={(event) => setNewChecklistTitle(event.target.value)}
+          />
+        </label>
+        <button className="primary-button" disabled={checklistSubmitting || !newChecklistTitle.trim()} type="submit">
+          {checklistSubmitting ? "추가 중" : newChecklistDate ? "이 날짜에 추가" : "여행 전체에 추가"}
+        </button>
+      </form>
 
-			{/* 데이터 렌더링 본문 */}
-			{checklistLoading ? (
-				<p className="muted text-center">준비물을 불러오는 중...</p>
-			) : checklistItems.length === 0 ? (
-				<article className="empty-state-card list-card">
-					<p className="muted">등록된 준비물 항목이 없습니다.</p>
-				</article>
-			) : (
-				<div className="checklist-group-stack">
-					{groupedItems.map((group) => (
-						<div className="checklist-group-card" key={group.category}>
-							<h3>{group.label}</h3>
-							<div className="checklist-item-list">
-								{group.items.map((item) => (
-									<div
-										className={`checklist-item-row ${item.isCompleted ? "completed" : ""}`}
-										key={item.id}
-									>
-										{/* 체크 완료/미완료 토글 제어 영역 */}
-										<label className="checkbox-container">
-											<input
-												checked={item.isCompleted}
-												onChange={(e) => handleToggleChecklistItem(item.id, e.target.checked)}
-												type="checkbox"
-											/>
-											<span className="checkmark"></span>
-											<span className="item-title">{item.title}</span>
-										</label>
-										{/* 개별 항목 삭제 버튼 */}
-										<button
-											className="delete-item-button"
-											onClick={() => handleDeleteChecklistItem(item.id)}
-											title="준비물 삭제"
-											type="button"
-										>
-											<Trash2 size={16} />
-										</button>
-									</div>
-								))}
-							</div>
-						</div>
-					))}
-				</div>
-			)}
-
-			{/* 커스텀 준비물 수동 입력 추가 폼 */}
-			<form className="check-add-form inline-add-form" onSubmit={handleAddChecklistItem}>
-				<div className="input-group row-group">
-					<select
-						value={newChecklistCategory}
-						onChange={(e) => setNewChecklistCategory(e.target.value as any)}
-					>
-						{checklistCategories.map(([category, label]) => (
-							<option key={category} value={category}>
-								{label}
-							</option>
-						))}
-					</select>
-					<input
-						placeholder="새 준비물 입력..."
-						type="text"
-						value={newChecklistTitle}
-						onChange={(e) => setNewChecklistTitle(e.target.value)}
-					/>
-					<button className="primary-button" disabled={checklistSubmitting || !newChecklistTitle.trim()} type="submit">
-						{checklistSubmitting ? "추가 중" : "추가"}
-					</button>
-				</div>
-			</form>
-		</section>
-	);
+      {checklistLoading ? (
+        <p className="muted text-center">준비물을 불러오는 중...</p>
+      ) : checklistItems.length === 0 ? (
+        <article className="empty-state-card list-card">
+          <p className="muted">등록된 준비물 항목이 없습니다. 위에서 첫 항목을 추가해 보세요.</p>
+        </article>
+      ) : (
+        <div className="checklist-scope-stack">
+          {scopeGroups.map((group) => (
+            <section className="checklist-scope-section" key={group.key}>
+              <div className="checklist-scope-heading">
+                <h3>{group.label}</h3>
+                <p>{group.description}</p>
+              </div>
+              <div className="checklist-item-list">
+                {group.items.map((item) => (
+                  <div className={`checklist-item-row${item.isCompleted ? " completed" : ""}`} key={item.id}>
+                    <label className="checkbox-container">
+                      <input
+                        checked={item.isCompleted}
+                        onChange={(event) => handleToggleChecklistItem(item.id, event.target.checked)}
+                        type="checkbox"
+                      />
+                      <span className="checkmark" />
+                      <span className="checklist-item-copy">
+                        <span className="item-title">{item.title}</span>
+                        <span className="checklist-category-label">{checklistCategoryLabels[item.category]}</span>
+                      </span>
+                    </label>
+                    <button
+                      aria-label={`${item.title} 삭제`}
+                      className="delete-item-button"
+                      onClick={() => handleDeleteChecklistItem(item.id)}
+                      type="button"
+                    >
+                      <Trash2 aria-hidden="true" size={18} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      )}
+    </section>
+  );
 }

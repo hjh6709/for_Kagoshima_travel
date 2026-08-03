@@ -32,11 +32,12 @@ func toNullableString(val string) *string {
 // Save는 하나의 신규 준비물 레코드를 PostgreSQL에 삽입합니다.
 func (r *PostgresChecklistRepository) Save(ctx context.Context, item model.ChecklistItem) error {
 	destCountry := toNullableString(item.DestinationCountry)
+	scheduledDate := toNullableString(item.ScheduledDate)
 
 	_, err := r.pool.Exec(ctx,
-		`INSERT INTO checklists (id, trip_id, category, title, is_completed, custom, destination_country, created_at) 
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-		item.ID, item.TripID, item.Category, item.Title, item.IsCompleted, item.Custom, destCountry, item.CreatedAt)
+		`INSERT INTO checklists (id, trip_id, category, title, is_completed, custom, destination_country, scheduled_date, created_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+		item.ID, item.TripID, item.Category, item.Title, item.IsCompleted, item.Custom, destCountry, scheduledDate, item.CreatedAt)
 	return err
 }
 
@@ -50,10 +51,11 @@ func (r *PostgresChecklistRepository) SaveAll(ctx context.Context, items []model
 
 	for _, item := range items {
 		destCountry := toNullableString(item.DestinationCountry)
+		scheduledDate := toNullableString(item.ScheduledDate)
 		_, err := tx.Exec(ctx,
-			`INSERT INTO checklists (id, trip_id, category, title, is_completed, custom, destination_country, created_at) 
-			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-			item.ID, item.TripID, item.Category, item.Title, item.IsCompleted, item.Custom, destCountry, item.CreatedAt)
+			`INSERT INTO checklists (id, trip_id, category, title, is_completed, custom, destination_country, scheduled_date, created_at)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+			item.ID, item.TripID, item.Category, item.Title, item.IsCompleted, item.Custom, destCountry, scheduledDate, item.CreatedAt)
 		if err != nil {
 			return err
 		}
@@ -65,11 +67,11 @@ func (r *PostgresChecklistRepository) SaveAll(ctx context.Context, items []model
 // FindChecklist는 단일 준비물 ID로 checklists 레코드를 조회하여 model.ChecklistItem으로 반환합니다.
 func (r *PostgresChecklistRepository) FindChecklist(ctx context.Context, id string) (model.ChecklistItem, error) {
 	row := r.pool.QueryRow(ctx,
-		`SELECT id::text, trip_id::text, category, title, is_completed, custom, COALESCE(destination_country, ''), created_at 
+		`SELECT id::text, trip_id::text, category, title, is_completed, custom, COALESCE(destination_country, ''), COALESCE(scheduled_date::text, ''), created_at
 		 FROM checklists WHERE id = $1`, id)
 
 	var item model.ChecklistItem
-	err := row.Scan(&item.ID, &item.TripID, &item.Category, &item.Title, &item.IsCompleted, &item.Custom, &item.DestinationCountry, &item.CreatedAt)
+	err := row.Scan(&item.ID, &item.TripID, &item.Category, &item.Title, &item.IsCompleted, &item.Custom, &item.DestinationCountry, &item.ScheduledDate, &item.CreatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return model.ChecklistItem{}, ErrNotFound
@@ -82,7 +84,7 @@ func (r *PostgresChecklistRepository) FindChecklist(ctx context.Context, id stri
 // FindByTrip은 한 여행(trip_id)에 연결된 전체 준비물 항목 목록을 가져옵니다. 생성 시간 순서로 정렬하여 반환합니다.
 func (r *PostgresChecklistRepository) FindByTrip(ctx context.Context, tripID string) ([]model.ChecklistItem, error) {
 	rows, err := r.pool.Query(ctx,
-		`SELECT id::text, trip_id::text, category, title, is_completed, custom, COALESCE(destination_country, ''), created_at 
+		`SELECT id::text, trip_id::text, category, title, is_completed, custom, COALESCE(destination_country, ''), COALESCE(scheduled_date::text, ''), created_at
 		 FROM checklists WHERE trip_id = $1 ORDER BY created_at ASC`, tripID)
 	if err != nil {
 		return nil, err
@@ -92,7 +94,7 @@ func (r *PostgresChecklistRepository) FindByTrip(ctx context.Context, tripID str
 	var items []model.ChecklistItem
 	for rows.Next() {
 		var item model.ChecklistItem
-		err := rows.Scan(&item.ID, &item.TripID, &item.Category, &item.Title, &item.IsCompleted, &item.Custom, &item.DestinationCountry, &item.CreatedAt)
+		err := rows.Scan(&item.ID, &item.TripID, &item.Category, &item.Title, &item.IsCompleted, &item.Custom, &item.DestinationCountry, &item.ScheduledDate, &item.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -104,11 +106,12 @@ func (r *PostgresChecklistRepository) FindByTrip(ctx context.Context, tripID str
 // Update는 기존 준비물 레코드의 내용(완료 여부, 타이틀 등)을 갱신합니다.
 func (r *PostgresChecklistRepository) Update(ctx context.Context, item model.ChecklistItem) error {
 	destCountry := toNullableString(item.DestinationCountry)
+	scheduledDate := toNullableString(item.ScheduledDate)
 
 	_, err := r.pool.Exec(ctx,
-		`UPDATE checklists SET category = $1, title = $2, is_completed = $3, custom = $4, destination_country = $5 
-		 WHERE id = $6`,
-		item.Category, item.Title, item.IsCompleted, item.Custom, destCountry, item.ID)
+		`UPDATE checklists SET category = $1, title = $2, is_completed = $3, custom = $4, destination_country = $5, scheduled_date = $6
+		 WHERE id = $7`,
+		item.Category, item.Title, item.IsCompleted, item.Custom, destCountry, scheduledDate, item.ID)
 	return err
 }
 

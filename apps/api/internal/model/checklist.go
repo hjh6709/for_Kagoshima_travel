@@ -12,5 +12,6 @@ type ChecklistItem struct {
 	IsCompleted        bool      `db:"is_completed"`        // 준비 완료 여부 (체크박스 체크 상태)
 	Custom             bool      `db:"custom"`              // 사용자가 직접 추가한 커스텀 항목인지 여부
 	DestinationCountry string    `db:"destination_country"` // 프리셋의 경우 타겟 목적지 국가 코드 (JP, CN 등. 공통 항목은 빈 문자열)
+	ScheduledDate      string    `db:"scheduled_date"`      // 특정 여행 날짜에만 표시할 항목의 날짜 (빈 문자열이면 여행 전체)
 	CreatedAt          time.Time `db:"created_at"`          // 항목 생성 시각
 }

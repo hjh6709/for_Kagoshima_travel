@@ -148,10 +148,20 @@ func TestChecklistLifecycleAndBoundaries(t *testing.T) {
 		t.Fatalf("invalid checklist item status = %d, want 400, body = %#v", invalidCreateRes.status, invalidCreateRes.body)
 	}
 
+	invalidDateRes := checklistRequestJSON(t, http.MethodPost, httpServer.URL+"/api/trips/"+tripID+"/checklists", ownerToken, map[string]any{
+		"category":      "daily",
+		"title":         "여행 밖 날짜",
+		"scheduledDate": "2026-07-25",
+	})
+	if invalidDateRes.status != http.StatusBadRequest {
+		t.Fatalf("out-of-range checklist date status = %d, want 400, body = %#v", invalidDateRes.status, invalidDateRes.body)
+	}
+
 	// 3. 커스텀 체크리스트 항목 추가
 	createPayload := map[string]any{
-		"category": "before",
-		"title":    "돼지코 2개 멀티탭 포함 준비",
+		"category":      "daily",
+		"title":         "돼지코 2개 멀티탭 포함 준비",
+		"scheduledDate": "2026-07-21",
 	}
 	createRes := checklistRequestJSON(t, http.MethodPost, httpServer.URL+"/api/trips/"+tripID+"/checklists", ownerToken, createPayload)
 	if createRes.status != http.StatusCreated {
@@ -161,6 +171,9 @@ func TestChecklistLifecycleAndBoundaries(t *testing.T) {
 	itemID, ok := createRes.body["id"].(string)
 	if !ok || itemID == "" {
 		t.Fatalf("invalid checklist item id returned: %#v", createRes.body)
+	}
+	if createRes.body["scheduledDate"] != "2026-07-21" {
+		t.Fatalf("created checklist scheduledDate = %v, want 2026-07-21", createRes.body["scheduledDate"])
 	}
 
 	// 4. 완료 상태 업데이트 (PATCH)
@@ -175,6 +188,25 @@ func TestChecklistLifecycleAndBoundaries(t *testing.T) {
 
 	if updateRes.body["isCompleted"] != true {
 		t.Fatalf("updated checklist item isCompleted = %v, want true", updateRes.body["isCompleted"])
+	}
+
+	// 날짜를 비우면 다시 여행 전체 항목으로 이동한다.
+	updateScopeRes := checklistRequestJSON(t, http.MethodPatch, httpServer.URL+"/api/trips/checklists/"+itemID, ownerToken, map[string]any{
+		"scheduledDate": "",
+	})
+	if updateScopeRes.status != http.StatusOK {
+		t.Fatalf("update checklist scope status = %d, want 200, body = %#v", updateScopeRes.status, updateScopeRes.body)
+	}
+	if _, exists := updateScopeRes.body["scheduledDate"]; exists {
+		t.Fatalf("trip-wide checklist should omit scheduledDate: %#v", updateScopeRes.body)
+	}
+
+	// 공유 응답에서도 특정 날짜 정보가 유지된다.
+	updateDateRes := checklistRequestJSON(t, http.MethodPatch, httpServer.URL+"/api/trips/checklists/"+itemID, ownerToken, map[string]any{
+		"scheduledDate": "2026-07-22",
+	})
+	if updateDateRes.status != http.StatusOK {
+		t.Fatalf("update checklist date status = %d, want 200, body = %#v", updateDateRes.status, updateDateRes.body)
 	}
 
 	// 5. 비소유자 수정 권한 차단 검증 (다른 유저의 토큰으로 시도 ➡️ 403 Forbidden)
@@ -198,6 +230,17 @@ func TestChecklistLifecycleAndBoundaries(t *testing.T) {
 	sharedChecklist, ok := sharedTripRes.body["checklist"].([]any)
 	if !ok || len(sharedChecklist) == 0 {
 		t.Fatalf("shared trip response does not contain checklist items: %#v", sharedTripRes.body)
+	}
+	var sharedScheduledDate any
+	for _, rawItem := range sharedChecklist {
+		item, itemOK := rawItem.(map[string]any)
+		if itemOK && item["id"] == itemID {
+			sharedScheduledDate = item["scheduledDate"]
+			break
+		}
+	}
+	if sharedScheduledDate != "2026-07-22" {
+		t.Fatalf("shared checklist scheduledDate = %v, want 2026-07-22", sharedScheduledDate)
 	}
 
 	// 7. 소유자에 의한 체크리스트 항목 삭제

@@ -12,20 +12,20 @@ export function ScheduleTab({
   checkedItems,
   checklistError,
   checklistSubmitting,
-  completedCount,
+  checklistDateFilter,
   completedScheduleCount,
   completedSchedules,
   dates,
   editSchedulesHref,
   getDisplayDate,
   getPlace,
-  groupedChecklist,
   hiddenChecklistIDs,
   isDemo,
   isReadOnly,
   isChecklistEditing,
   moveSchedule,
   newChecklistCategory,
+  newChecklistDate,
   newChecklistTitle,
   removeChecklistItem,
   restoreDefaultChecklistItems,
@@ -33,7 +33,9 @@ export function ScheduleTab({
   selectedDate,
   selectedSchedules,
   setIsChecklistEditing,
+  setChecklistDateFilter,
   setNewChecklistCategory,
+  setNewChecklistDate,
   setNewChecklistTitle,
   setScheduleView,
   setSelectedDate,
@@ -136,24 +138,28 @@ export function ScheduleTab({
         </>
       ) : (
         <div className="trip-checklist-view">
-          <p className="trip-checklist-context">여행 전체에서 한 번만 관리하는 준비 목록입니다. 날짜를 바꿔도 반복되지 않아요.</p>
+          <p className="trip-checklist-context">공통 준비물은 여행 전체에서 한 번만, 당일 할 일은 날짜별로 나누어 확인합니다.</p>
           <ChecklistSection
             addChecklistItem={addChecklistItem}
             allChecklist={allChecklist}
             checkedItems={checkedItems}
             checklistError={checklistError}
             checklistSubmitting={checklistSubmitting}
-            completedCount={completedCount}
-            groupedChecklist={groupedChecklist}
+            checklistDateFilter={checklistDateFilter}
+            dates={dates}
+            getDisplayDate={getDisplayDate}
             hiddenChecklistIDs={hiddenChecklistIDs}
             isChecklistEditing={isChecklistEditing}
             isReadOnly={isReadOnly}
             newChecklistCategory={newChecklistCategory}
+            newChecklistDate={newChecklistDate}
             newChecklistTitle={newChecklistTitle}
             removeChecklistItem={removeChecklistItem}
             restoreDefaultChecklistItems={restoreDefaultChecklistItems}
             setIsChecklistEditing={setIsChecklistEditing}
+            setChecklistDateFilter={setChecklistDateFilter}
             setNewChecklistCategory={setNewChecklistCategory}
+            setNewChecklistDate={setNewChecklistDate}
             setNewChecklistTitle={setNewChecklistTitle}
             toggleCheck={toggleCheck}
           />

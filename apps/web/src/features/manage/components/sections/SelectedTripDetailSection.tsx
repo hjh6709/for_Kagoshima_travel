@@ -87,7 +87,11 @@ export function SelectedTripDetailSection(props: SelectedTripDetailSectionProps)
           setNewChecklistTitle={props.onNewChecklistTitleChange}
           newChecklistCategory={props.newChecklistCategory}
           setNewChecklistCategory={props.onNewChecklistCategoryChange}
+          newChecklistDate={props.newChecklistDate}
+          setNewChecklistDate={props.onNewChecklistDateChange}
           checklistSubmitting={props.checklistSubmitting}
+          tripStartDate={selectedOwnerTrip.startDate}
+          tripEndDate={selectedOwnerTrip.endDate}
           handleAddChecklistItem={props.onAddChecklistItem}
           handleToggleChecklistItem={props.onToggleChecklistItem}
           handleDeleteChecklistItem={props.onDeleteChecklistItem}

@@ -132,10 +132,12 @@ CREATE TABLE checklists (
     is_completed        BOOLEAN NOT NULL DEFAULT FALSE,
     custom              BOOLEAN NOT NULL DEFAULT FALSE,
     destination_country TEXT,
+    scheduled_date      DATE,
     created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX ON checklists (trip_id);
+CREATE INDEX checklists_trip_scheduled_date_idx ON checklists (trip_id, scheduled_date, created_at);
 
 CREATE TABLE external_api_monthly_usage (
     provider      TEXT NOT NULL,

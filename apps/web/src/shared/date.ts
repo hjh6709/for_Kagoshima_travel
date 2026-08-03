@@ -30,6 +30,21 @@ export function shiftDate(baseDate: string, offset: number): string {
   return `${year}-${month}-${day}`;
 }
 
+export function getTripDateRange(startDate: string, endDate: string): string[] {
+  const start = new Date(`${startDate}T00:00:00`);
+  const end = new Date(`${endDate}T00:00:00`);
+  if (
+    Number.isNaN(start.getTime()) ||
+    Number.isNaN(end.getTime()) ||
+    shiftDate(startDate, 0) !== startDate ||
+    shiftDate(endDate, 0) !== endDate ||
+    end < start
+  ) return [];
+
+  const dayCount = Math.min(Math.round((end.getTime() - start.getTime()) / 86400000) + 1, 3660);
+  return Array.from({ length: dayCount }, (_, offset) => shiftDate(startDate, offset));
+}
+
 export function getTodayDateString(): string {
   const date = new Date();
   const year = date.getFullYear();

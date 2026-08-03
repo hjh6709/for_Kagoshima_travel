@@ -149,7 +149,11 @@ export function TripEditSectionPage({ tripId, section }: TripEditSectionPageProp
                 setNewChecklistTitle={manage.onNewChecklistTitleChange}
                 newChecklistCategory={manage.newChecklistCategory}
                 setNewChecklistCategory={manage.onNewChecklistCategoryChange}
+                newChecklistDate={manage.newChecklistDate}
+                setNewChecklistDate={manage.onNewChecklistDateChange}
                 checklistSubmitting={manage.checklistSubmitting}
+                tripStartDate={selectedOwnerTrip.startDate}
+                tripEndDate={selectedOwnerTrip.endDate}
                 handleAddChecklistItem={manage.onAddChecklistItem}
                 handleToggleChecklistItem={manage.onToggleChecklistItem}
                 handleDeleteChecklistItem={manage.onDeleteChecklistItem}

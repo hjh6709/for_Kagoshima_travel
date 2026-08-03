@@ -32,8 +32,10 @@ export function OwnerTripViewPage({ tripId }: OwnerTripViewPageProps) {
     checklistSubmitting,
     newChecklistTitle,
     newChecklistCategory,
+    newChecklistDate,
     onNewChecklistTitleChange,
     onNewChecklistCategoryChange,
+    onNewChecklistDateChange,
     onAddChecklistItem,
     onToggleChecklistItem,
     onDeleteChecklistItem,
@@ -143,11 +145,13 @@ export function OwnerTripViewPage({ tripId }: OwnerTripViewPageProps) {
       editSchedulesHref={`/manage/trips/${selectedOwnerTrip.id}/edit/schedules`}
       editTripHref={`/manage/trips/${selectedOwnerTrip.id}/edit`}
       newChecklistCategory={newChecklistCategory}
+      newChecklistDate={newChecklistDate}
       newChecklistTitle={newChecklistTitle}
       onAddChecklistItem={onAddChecklistItem}
       onDeleteChecklistItem={onDeleteChecklistItem}
       onLogout={onLogout}
       onNewChecklistCategoryChange={onNewChecklistCategoryChange}
+      onNewChecklistDateChange={onNewChecklistDateChange}
       onNewChecklistTitleChange={onNewChecklistTitleChange}
       onToggleChecklistItem={onToggleChecklistItem}
       ownerFlights={ownerFlights}

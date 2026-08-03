@@ -3,14 +3,15 @@ import type { SharedTripResponse } from "../../api/trips";
 import {
   clampDate,
   getTodayDateString,
+  getTripDateRange,
   getTravelStatus,
   type TripDates,
 } from "../../shared/date";
-import { checklistCategories } from "../../shared/travelOptions";
 import { phrases } from "../../data/sampleTrip";
 import {
   deriveAccommodation,
   deriveEmergencies,
+  deriveHomeChecklist,
   mapOwnerChecklistItem,
   mapOwnerFlight,
   mapOwnerPlace,
@@ -27,6 +28,7 @@ export function useSharedTripPageAdapter(sharedTrip: SharedTripResponse): TripPa
   const contentRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<Tab>("today");
   const [scheduleView, setScheduleView] = useState<"itinerary" | "checklist">("itinerary");
+  const [checklistDateFilter, setChecklistDateFilter] = useState("all");
   const [selectedDate, setSelectedDate] = useState(sharedTrip.schedules[0]?.date ?? sharedTrip.trip.startDate);
   const [addressCopied, setAddressCopied] = useState(false);
 
@@ -65,7 +67,10 @@ export function useSharedTripPageAdapter(sharedTrip: SharedTripResponse): TripPa
   const accommodation = useMemo(() => deriveAccommodation(places), [places]);
   const emergencies = useMemo(() => deriveEmergencies(places), [places]);
 
-  const dates = useMemo(() => Array.from(new Set(schedules.map((item) => item.date))), [schedules]);
+  const dates = useMemo(
+    () => getTripDateRange(sharedTrip.trip.startDate, sharedTrip.trip.endDate),
+    [sharedTrip.trip.startDate, sharedTrip.trip.endDate],
+  );
   const schedulesForDate = (date: string) => schedules.filter((item) => item.date === date);
   const selectedSchedules = schedulesForDate(selectedDate);
   const today = getTodayDateString();
@@ -79,16 +84,12 @@ export function useSharedTripPageAdapter(sharedTrip: SharedTripResponse): TripPa
 
   const homeChecklistCategories: ChecklistCategory[] =
     travelStatus.phase === "before" ? ["before", "airport"] : travelStatus.phase === "during" ? ["daily"] : ["return"];
-  const homeChecklistItems = allChecklist.filter((item) => homeChecklistCategories.includes(item.category)).slice(0, 4);
-  const homeChecklistCompletedCount = homeChecklistItems.filter((item) => checkedItems[item.id]).length;
-  const completedCount = allChecklist.filter((item) => checkedItems[item.id]).length;
-  const groupedChecklist = checklistCategories
-    .map(([category, label]) => ({
-      category,
-      label,
-      items: allChecklist.filter((item) => item.category === category),
-    }))
-    .filter((group) => group.items.length > 0);
+  const homeChecklist = deriveHomeChecklist(
+    allChecklist,
+    checkedItems,
+    homeChecklistCategories,
+    travelStatus.phase === "during" ? focusDate : undefined,
+  );
 
   function copyAccommodationAddress() {
     if (!accommodation.address || !navigator.clipboard) return;
@@ -107,7 +108,7 @@ export function useSharedTripPageAdapter(sharedTrip: SharedTripResponse): TripPa
     addressCopied,
     allChecklist,
     checkedItems,
-    completedCount,
+    checklistDateFilter,
     completedScheduleCount: 0,
     completedSchedules,
     contentRef,
@@ -119,13 +120,14 @@ export function useSharedTripPageAdapter(sharedTrip: SharedTripResponse): TripPa
     focusSchedules,
     getDisplayDate: (date) => date,
     getPlace: (placeID) => places.find((place) => place.id === placeID),
-    groupedChecklist,
     hiddenChecklistIDs: [],
-    homeChecklistCompletedCount,
-    homeChecklistItems,
+    homeChecklistCompletedCount: homeChecklist.completedCount,
+    homeChecklistItems: homeChecklist.items,
+    homeChecklistTotalCount: homeChecklist.totalCount,
     isChecklistEditing: false,
     isReadOnly: true,
     newChecklistCategory: "before",
+    newChecklistDate: "",
     newChecklistTitle: "",
     nextSchedule,
     phrases,
@@ -143,8 +145,10 @@ export function useSharedTripPageAdapter(sharedTrip: SharedTripResponse): TripPa
     removeChecklistItem: noOp,
     restoreDefaultChecklistItems: noOp,
     setActiveTab,
+    setChecklistDateFilter,
     setIsChecklistEditing: noOp,
     setNewChecklistCategory: noOp,
+    setNewChecklistDate: noOp,
     setNewChecklistTitle: noOp,
     setScheduleView,
     setSelectedDate,

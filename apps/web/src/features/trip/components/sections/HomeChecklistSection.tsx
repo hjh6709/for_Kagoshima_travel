@@ -8,6 +8,7 @@ type HomeChecklistSectionProps = {
   focusScheduleCount: number;
   homeChecklistCompletedCount: number;
   homeChecklistItems: ChecklistItem[];
+  homeChecklistTotalCount: number;
   isReadOnly?: boolean;
   onOpenChecklist: () => void;
   toggleCheck: (id: string) => void;
@@ -21,13 +22,14 @@ export function HomeChecklistSection({
   focusScheduleCount,
   homeChecklistCompletedCount,
   homeChecklistItems,
+  homeChecklistTotalCount,
   isReadOnly,
   onOpenChecklist,
   toggleCheck,
   travelPhase,
 }: HomeChecklistSectionProps) {
   const percentage =
-    homeChecklistItems.length > 0 ? Math.round((homeChecklistCompletedCount / homeChecklistItems.length) * 100) : 0;
+    homeChecklistTotalCount > 0 ? Math.round((homeChecklistCompletedCount / homeChecklistTotalCount) * 100) : 0;
   const heading =
     travelPhase === "before" ? "출발 전 준비" : travelPhase === "during" ? "오늘 할 일" : "귀가 후 확인";
   const scheduleSummary =
@@ -49,18 +51,18 @@ export function HomeChecklistSection({
         </button>
       </div>
 
-      {(scheduleSummary || homeChecklistItems.length > 0) && (
+      {(scheduleSummary || homeChecklistTotalCount > 0) && (
         <div className="home-task-summary" aria-label="현재 할 일 요약">
           {scheduleSummary && <span>{scheduleSummary}</span>}
-          {homeChecklistItems.length > 0 && (
+          {homeChecklistTotalCount > 0 && (
             <span>
-              확인 항목 {homeChecklistCompletedCount}/{homeChecklistItems.length}
+              확인 항목 {homeChecklistCompletedCount}/{homeChecklistTotalCount}
             </span>
           )}
         </div>
       )}
 
-      {homeChecklistItems.length > 0 && (
+      {homeChecklistTotalCount > 0 && (
         <div className="progress-container">
           <div
             aria-label={`${heading} 달성률`}
