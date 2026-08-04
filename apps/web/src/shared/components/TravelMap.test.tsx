@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { loadGoogleMaps } from "../map/googleMapsLoader";
@@ -277,10 +277,10 @@ describe("TravelMap", () => {
     );
 
     await screen.findByRole("button", { name: "현재 위치 표시" });
+    await waitFor(() => expect(advancedMarkerInstances).toHaveLength(1));
 
     expect(mapInstances[0]?.options.mapId).toBe("travel-map-id");
     expect(markerInstances).toHaveLength(0);
-    expect(advancedMarkerInstances).toHaveLength(1);
     expect(advancedMarkerInstances[0]?.options).toMatchObject({
       gmpClickable: true,
       position: { lat: 31.2304, lng: 121.4737 },

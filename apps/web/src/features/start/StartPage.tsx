@@ -1,4 +1,4 @@
-import { ArrowRight, CalendarDays, Compass, LogIn, MapPin, Navigation, Route } from "lucide-react";
+import { ArrowRight, CalendarDays, Compass, MapPin, Navigation, Route } from "lucide-react";
 
 // 서비스 루트(`/`)에서 보여주는 시작 화면이다.
 // 실제 여행 편집은 /manage, 공유 확인은 /share/{token}, 기존 샘플 화면은 /demo로 분리한다.
@@ -15,10 +15,9 @@ export function StartPage() {
                 </span>
                 <strong>Map Planner</strong>
               </div>
-              <span className="screen-kicker">YOUR POCKET ATLAS</span>
               <h1>여행의 장소와 시간을 하나의 동선으로</h1>
               <p>
-                카페와 식당부터 항공편까지 저장하고, 일정에 연결한 뒤 여행지에 맞는 지도로 길을 찾으세요.
+                장소를 찾고 일정에 연결한 뒤, 여행지에 맞는 지도로 바로 길을 찾으세요.
               </p>
             </header>
 
@@ -26,21 +25,21 @@ export function StartPage() {
               <div className="start-route-stop">
                 <span><MapPin aria-hidden="true" size={16} /></span>
                 <div>
-                  <strong>장소 찾기</strong>
-                  <small>이름으로 검색하고 저장</small>
+                  <strong>장소 저장</strong>
+                  <small>카페와 식당까지 이름으로 검색</small>
                 </div>
               </div>
               <div className="start-route-stop">
                 <span><CalendarDays aria-hidden="true" size={16} /></span>
                 <div>
-                  <strong>일정에 연결</strong>
-                  <small>날짜와 시간 순서로 구성</small>
+                  <strong>일정 구성</strong>
+                  <small>날짜와 시간 순서로 연결</small>
                 </div>
               </div>
               <div className="start-route-stop destination">
                 <span><Navigation aria-hidden="true" size={16} /></span>
                 <div>
-                  <strong>바로 길찾기</strong>
+                  <strong>길찾기 연결</strong>
                   <small>Google 지도 또는 현지 지도 선택</small>
                 </div>
               </div>
@@ -48,13 +47,12 @@ export function StartPage() {
 
             <div className="start-action-stack">
               <a className="primary-button start-primary-action" href="/manage">
-                <LogIn aria-hidden="true" size={18} />
-                로그인하고 여행 만들기
+                로그인하고 시작하기
                 <ArrowRight aria-hidden="true" className="trailing-icon" size={17} />
               </a>
               <a className="secondary-button start-secondary-action" href="/demo">
                 <Route aria-hidden="true" size={18} />
-                샘플 여행 동선 보기
+                샘플 여행 보기
               </a>
             </div>
           </section>
