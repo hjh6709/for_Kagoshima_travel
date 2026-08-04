@@ -92,6 +92,27 @@ describe("OwnerTripViewPage management flow", () => {
     );
   });
 
+  it("여행 중 일정 탭을 열면 여행 첫날이 아니라 오늘 날짜를 선택한다", async () => {
+    vi.mocked(useTripManageController).mockReturnValue(
+      createManageResult({
+        selectedOwnerTrip: {
+          id: "trip-1",
+          title: "상하이 여행",
+          startDate: "2026-07-30",
+          endDate: "2026-08-03",
+          travelers: ["나"],
+          destinationCountry: "CN",
+        },
+      }),
+    );
+
+    render(<OwnerTripViewPage tripId="trip-1" />);
+    await userEvent.click(screen.getByRole("button", { name: "일정" }));
+
+    expect(screen.getByRole("button", { name: "8/1(토)" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "7/30(목)" })).toHaveAttribute("aria-pressed", "false");
+  });
+
   it("장소 관리 후에는 지도 탭으로 바로 돌아온다", () => {
     window.history.replaceState(null, "", "/manage/trips/trip-1#map");
 

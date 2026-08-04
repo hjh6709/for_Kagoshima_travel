@@ -1,6 +1,6 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { SharedTripResponse } from "../../api/trips";
 import { loadGoogleMaps } from "../../shared/map/googleMapsLoader";
 import { SharedTripPage } from "./SharedTripPage";
@@ -13,6 +13,39 @@ vi.mock("../../shared/date", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../../shared/date")>()),
   getTodayDateString: () => "2026-07-29",
 }));
+
+const mapInstances: FakeMap[] = [];
+
+class FakeMap {
+  fitBounds = vi.fn();
+  setCenter = vi.fn();
+  setZoom = vi.fn();
+
+  constructor() {
+    mapInstances.push(this);
+  }
+}
+
+class FakeMarker {
+  addListener = vi.fn();
+  setMap = vi.fn();
+}
+
+class FakeLatLngBounds {
+  extend = vi.fn();
+}
+
+function installLoadedMapRuntime() {
+  vi.mocked(loadGoogleMaps).mockResolvedValue({
+    AdvancedMarkerElement: class {},
+    Map: FakeMap,
+    LegacyMarker: FakeMarker,
+    LatLngBounds: FakeLatLngBounds,
+    PinElement: class {},
+    circleSymbolPath: 0,
+    mapID: "",
+  } as never);
+}
 
 const sharedTrip: SharedTripResponse = {
   trip: {
@@ -86,6 +119,11 @@ const sharedTrip: SharedTripResponse = {
 };
 
 describe("SharedTripPage", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mapInstances.length = 0;
+  });
+
   it("실제 여행 보기와 같은 다섯 개 메뉴를 읽기 전용으로 제공한다", () => {
     render(
       <SharedTripPage
@@ -143,6 +181,51 @@ describe("SharedTripPage", () => {
     expect(screen.queryByRole("button", { name: "완료" })).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "7/30(목)" }));
     expect(screen.getByText("내일 점심")).toBeVisible();
+  });
+
+  it("공유 일정도 여행 중에는 첫 일정 날짜가 아니라 오늘 날짜를 선택한다", async () => {
+    render(
+      <SharedTripPage
+        error=""
+        loading={false}
+        sharedTrip={{
+          ...sharedTrip,
+          trip: { ...sharedTrip.trip, startDate: "2026-07-28" },
+          schedules: [
+            {
+              id: "schedule-first-day",
+              date: "2026-07-28",
+              time: "09:00",
+              type: "sightseeing",
+              title: "첫날 일정",
+            },
+            ...sharedTrip.schedules,
+          ],
+        }}
+        warning=""
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "일정" }));
+
+    expect(screen.getByRole("button", { name: "7/29(수)" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "7/28(화)" })).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByText("인민광장 산책")).toBeVisible();
+    expect(screen.queryByText("첫날 일정")).not.toBeInTheDocument();
+  });
+
+  it("지도 탭을 다시 열어도 Google 지도 객체를 중복 생성하지 않는다", async () => {
+    installLoadedMapRuntime();
+    render(<SharedTripPage error="" loading={false} sharedTrip={sharedTrip} warning="" />);
+
+    await userEvent.click(screen.getByRole("button", { name: "지도" }));
+    await waitFor(() => expect(mapInstances).toHaveLength(1));
+
+    await userEvent.click(screen.getByRole("button", { name: "일정" }));
+    await userEvent.click(screen.getByRole("button", { name: "지도" }));
+
+    await waitFor(() => expect(mapInstances).toHaveLength(1));
+    expect(screen.getByLabelText("저장 장소 지도")).toBeVisible();
   });
 
   it("4일 이하는 날짜를 모두 맞추고 긴 여행은 가로 탐색 상태로 제공한다", async () => {

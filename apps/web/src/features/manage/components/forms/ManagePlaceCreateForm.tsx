@@ -72,6 +72,7 @@ export function ManagePlaceCreateForm({
   selectedOwnerTrip,
   destinationCountry,
 }: ManagePlaceCreateFormProps) {
+  const successfulSearchDeduplicationMs = 30_000;
   const isChinaTrip = destinationCountry === "CN";
   const tripID = selectedOwnerTrip?.id;
 
@@ -82,6 +83,25 @@ export function ManagePlaceCreateForm({
   const [searchErrorMsg, setSearchErrorMsg] = useState("");
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const wasCreateSubmitting = useRef(placeCreateSubmitting);
+  const [lastSuccessfulSearch, setLastSuccessfulSearch] = useState<{
+    expiresAt: number;
+    query: string;
+  } | null>(null);
+  const searchInFlight = useRef(false);
+  const hasCurrentSearchResults =
+    searchResults.length > 0 &&
+    lastSuccessfulSearch?.query === searchQuery.trim() &&
+    lastSuccessfulSearch.expiresAt > Date.now();
+
+  useEffect(() => {
+    if (!lastSuccessfulSearch) return;
+
+    const timeoutID = window.setTimeout(
+      () => setLastSuccessfulSearch((current) => (current === lastSuccessfulSearch ? null : current)),
+      Math.max(0, lastSuccessfulSearch.expiresAt - Date.now()),
+    );
+    return () => window.clearTimeout(timeoutID);
+  }, [lastSuccessfulSearch]);
 
   useEffect(() => {
     const createFinished = wasCreateSubmitting.current && !placeCreateSubmitting;
@@ -92,17 +112,25 @@ export function ManagePlaceCreateForm({
     setSearchResults([]);
     setSearchErrorMsg("");
     setSelectedIdx(null);
+    setLastSuccessfulSearch(null);
   }, [newPlaceName, placeCreateError, placeCreateSubmitting]);
 
   // 통합 검색 트리거
   const handleSearch = async () => {
     const query = searchQuery.trim();
     if (!tripID || !query) return;
+    if (
+      lastSuccessfulSearch?.query === query &&
+      lastSuccessfulSearch.expiresAt > Date.now() &&
+      searchResults.length > 0
+    ) return;
     if (!auth) {
       setSearchErrorMsg("로그인 정보를 확인한 뒤 다시 검색해 주세요.");
       return;
     }
+    if (searchInFlight.current) return;
 
+    searchInFlight.current = true;
     setSearchLoading(true);
     setSearchErrorMsg("");
     setSearchResults([]);
@@ -112,11 +140,19 @@ export function ManagePlaceCreateForm({
       const data = await searchTripPlaces(auth.accessToken, tripID, query);
       setSearchResults(data);
       if (data.length === 0) {
+        setLastSuccessfulSearch(null);
         setSearchErrorMsg("검색 결과가 없습니다. 오타를 확인하거나 직접 입력해 주세요.");
+      } else {
+        setLastSuccessfulSearch({
+          expiresAt: Date.now() + successfulSearchDeduplicationMs,
+          query,
+        });
       }
     } catch (error) {
+      setLastSuccessfulSearch(null);
       setSearchErrorMsg(error instanceof Error ? error.message : "검색 중 네트워크 오류가 발생했습니다.");
     } finally {
+      searchInFlight.current = false;
       setSearchLoading(false);
     }
   };
@@ -208,7 +244,7 @@ export function ManagePlaceCreateForm({
           />
           <button
             className="secondary-button compact-button"
-            disabled={searchLoading}
+            disabled={searchLoading || hasCurrentSearchResults}
             onClick={() => void handleSearch()}
             type="button"
           >
@@ -216,6 +252,11 @@ export function ManagePlaceCreateForm({
               <>
                 <Loader2 aria-hidden="true" className="animate-spin" size={16} />
                 검색 중
+              </>
+            ) : hasCurrentSearchResults ? (
+              <>
+                <Check aria-hidden="true" size={16} />
+                검색됨
               </>
             ) : (
               <>

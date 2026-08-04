@@ -20,11 +20,13 @@ go run ./cmd/api
 | `DATABASE_URL` | PostgreSQL 연결 문자열, production 필수 |
 | `JWT_SECRET` | 세션 JWT 서명, production에서 32자 이상 |
 | `ALLOWED_ORIGINS` | 허용할 HTTPS 웹 Origin 목록 |
-| `GOOGLE_MAPS_API_KEY` | Places API (New) 서버 키 |
+| `GOOGLE_MAPS_API_KEY` | Places API (New) 서버 키, OCI 출발 IP와 Places API로 제한 |
 | SMTP 관련 변수 | 회원가입·비밀번호 복구 인증 메일 |
 | `DISCORD_WEBHOOK_URL` | 선택적인 서버 오류 알림 |
 
 실제 값은 `.env` 또는 배포 Secret에만 저장합니다. production에서는 `AUTH_TEST_BYPASS`가 설정되어 있으면 서버가 시작되지 않습니다.
+
+Places Text Search는 전체 서비스 기준 월 4,500회에서 DB가 추가 호출을 차단합니다. 공급자 장애나 한도 초과를 고정 추천 데이터로 검색 성공처럼 바꾸지 않으며, API는 명확한 `503` 또는 `429`를 반환해 웹에서 재시도·직접 입력을 안내합니다.
 
 ## API 문서
 

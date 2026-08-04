@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { AuthResponse } from "../../api/auth";
 import {
   BottomTabs,
@@ -32,6 +32,15 @@ export function TripPage(props: TripPageComponentProps) {
   const navigateToMyPage = props.isReadOnly
     ? undefined
     : () => setActiveTab("mypage");
+  const [hasVisitedMap, setHasVisitedMap] = useState(activeTab === "map");
+
+  useEffect(() => {
+    if (activeTab === "map") setHasVisitedMap(true);
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab === "schedule") props.setSelectedDate(props.focusDate);
+  }, [activeTab, props.focusDate, props.setSelectedDate]);
 
   useEffect(() => {
     const content = contentRef.current;
@@ -61,8 +70,10 @@ export function TripPage(props: TripPageComponentProps) {
           {activeTab === "flight" && (
             <FlightTab {...props} onNavigateToMyPage={navigateToMyPage} />
           )}
-          {activeTab === "map" && (
-            <MapTab {...props} onNavigateToMyPage={navigateToMyPage} />
+          {hasVisitedMap && (
+            <div hidden={activeTab !== "map"}>
+              <MapTab {...props} onNavigateToMyPage={navigateToMyPage} />
+            </div>
           )}
           {activeTab === "concierge" && (
             <ConciergeTab {...props} onNavigateToMyPage={navigateToMyPage} />

@@ -20,7 +20,7 @@ npm run dev
 | `VITE_GOOGLE_MAPS_BROWSER_KEY` | Maps JavaScript API 브라우저 키 |
 | `VITE_GOOGLE_MAPS_MAP_ID` | 선택적인 운영 Map ID |
 
-브라우저 키는 Google Cloud에서 운영 웹사이트, Maps JavaScript API와 사용량으로 제한합니다. Places 검색용 서버 키는 웹 환경변수에 넣지 않습니다.
+브라우저 키는 Google Cloud에서 운영 웹사이트, Maps JavaScript API와 사용량으로 제한합니다. Places 검색용 서버 키는 웹 환경변수에 넣지 않습니다. Maps JavaScript API 사용량은 Places 검색 월 4,500회 보호와 별개이므로 Google Cloud에서 별도 할당량·예산 알림을 설정합니다. 앱 내부 지도는 사용자가 지도 탭을 처음 열 때만 만들고 같은 여행 화면의 탭 왕복에서는 재사용합니다.
 
 ## 검증
 

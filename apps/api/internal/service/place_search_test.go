@@ -18,24 +18,6 @@ func (f placeSearchRoundTripFunc) RoundTrip(request *http.Request) (*http.Respon
 	return f(request)
 }
 
-func TestShanghaiFallbackContainsTenUsablePlaces(t *testing.T) {
-	service := NewTripService(repository.NewMemoryTripRepository(), repository.NewMemoryChecklistRepository())
-
-	places := service.getMockPlaces("CN", "")
-	if len(places) != 10 {
-		t.Fatalf("Shanghai fallback place count = %d, want 10", len(places))
-	}
-
-	for _, place := range places {
-		if place.Name == "" || place.ChineseName == "" || place.ChineseAddress == "" {
-			t.Errorf("fallback place lacks local display data: %#v", place)
-		}
-		if place.Latitude == nil || place.Longitude == nil {
-			t.Errorf("fallback place lacks coordinates: %#v", place)
-		}
-	}
-}
-
 func TestSearchPlacesChecksOwnershipBeforeReturningBlankQuery(t *testing.T) {
 	tripRepo := repository.NewMemoryTripRepository()
 	service := NewTripService(tripRepo, repository.NewMemoryChecklistRepository())
@@ -101,6 +83,24 @@ func TestSearchPlacesReturnsUnavailableInsteadOfEmptyFallback(t *testing.T) {
 	}
 
 	results, err := NewTripService(tripRepo, repository.NewMemoryChecklistRepository()).SearchPlaces(tripID, ownerID, "카페")
+	if !errors.Is(err, ErrPlaceSearchUnavailable) {
+		t.Fatalf("SearchPlaces error = %v, want ErrPlaceSearchUnavailable", err)
+	}
+	if results != nil {
+		t.Fatalf("SearchPlaces results = %#v, want nil", results)
+	}
+}
+
+func TestSearchPlacesDoesNotPresentCuratedPlaceAsLiveSearchResult(t *testing.T) {
+	t.Setenv("GOOGLE_MAPS_API_KEY", "")
+	tripRepo := repository.NewMemoryTripRepository()
+	const tripID = "cn-known-place-search"
+	const ownerID = "owner-a"
+	if err := tripRepo.Save(model.Trip{ID: tripID, OwnerID: ownerID, DestinationCountry: "CN"}); err != nil {
+		t.Fatalf("save trip: %v", err)
+	}
+
+	results, err := NewTripService(tripRepo, repository.NewMemoryChecklistRepository()).SearchPlaces(tripID, ownerID, "동방명주")
 	if !errors.Is(err, ErrPlaceSearchUnavailable) {
 		t.Fatalf("SearchPlaces error = %v, want ErrPlaceSearchUnavailable", err)
 	}
