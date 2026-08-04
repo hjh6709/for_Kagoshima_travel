@@ -35,7 +35,7 @@ it("여행 생성 성공 후 새 여행의 편집 허브로 이동한다", async
     id: "trip-created",
     title: "상하이 여행",
     startDate: "2026-08-03",
-    endDate: "2026-08-06",
+    endDate: "2026-08-03",
     travelers: ["나", "친구"],
     destinationCountry: "CN",
     memo: "",
@@ -47,7 +47,7 @@ it("여행 생성 성공 후 새 여행의 편집 허브로 이동한다", async
       isLegacyOwnerRoute: false,
       isManageRoute: true,
       tripCreateForm: {
-        newTripEndDate: "2026-08-06",
+        newTripEndDate: "",
         newTripMemo: "",
         newTripStartDate: "2026-08-03",
         newTripTitle: "상하이 여행",
@@ -76,6 +76,12 @@ it("여행 생성 성공 후 새 여행의 편집 허브로 이동한다", async
     await result.current.submitNewTrip({ preventDefault: vi.fn() } as unknown as FormEvent<HTMLFormElement>);
   });
 
+  expect(vi.mocked(createTrip).mock.calls[0]?.[1]).toEqual(
+    expect.objectContaining({
+      startDate: "2026-08-03",
+      endDate: "2026-08-03",
+    }),
+  );
   expect(navigateToManageTripEditor).toHaveBeenCalledWith("trip-created");
 });
 

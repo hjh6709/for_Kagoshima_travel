@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ManageAuthSection, ManageHeader, TripCreateSection, TripListSection } from "./components";
 import type { TripManagePageProps } from "./manageTypes";
 
@@ -7,12 +7,7 @@ import type { TripManagePageProps } from "./manageTypes";
 export function TripManagePage(props: TripManagePageProps) {
   const { auth, authChecked, ownerTrips, ownerTripsError, ownerTripsLoading } = props;
   const [isTripCreateOpen, setIsTripCreateOpen] = useState(false);
-
-  useEffect(() => {
-    if (!ownerTripsLoading && !ownerTripsError && ownerTrips.length === 0) {
-      setIsTripCreateOpen(true);
-    }
-  }, [ownerTrips.length, ownerTripsError, ownerTripsLoading]);
+  const isFirstTrip = !ownerTripsLoading && !ownerTripsError && ownerTrips.length === 0;
 
   return (
     <main className="app-shell">
@@ -27,11 +22,14 @@ export function TripManagePage(props: TripManagePageProps) {
                 {(ownerTripsLoading || ownerTripsError || ownerTrips.length > 0) && (
                   <TripListSection {...props} />
                 )}
-                <TripCreateSection
-                  {...props}
-                  isOpen={isTripCreateOpen}
-                  onOpenChange={setIsTripCreateOpen}
-                />
+                {!ownerTripsLoading && !ownerTripsError && (
+                  <TripCreateSection
+                    {...props}
+                    isFirstTrip={isFirstTrip}
+                    isOpen={isTripCreateOpen}
+                    onOpenChange={setIsTripCreateOpen}
+                  />
+                )}
               </>
             )}
           </section>

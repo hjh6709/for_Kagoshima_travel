@@ -297,7 +297,7 @@ export function useTripManageSessionTrips({
       !endDate
     ) {
       tripCreateForm.setTripCreateError(
-        "여행명, 목적지 국가와 여행 날짜를 모두 입력해주세요.",
+        "여행명, 목적지 국가와 시작일을 입력해 주세요.",
       );
       return;
     }
