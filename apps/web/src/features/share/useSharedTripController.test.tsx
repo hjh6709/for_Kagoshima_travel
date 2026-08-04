@@ -70,4 +70,41 @@ describe("useSharedTripController", () => {
     expect(result.current.sharedTripWarning).toBe("");
     expect(setLocalCache).toHaveBeenCalledWith("shared-trip-share-token", latestTrip);
   });
+
+  it("API 일시 장애로 캐시를 표시한 뒤 화면에 돌아오면 최신 공유 여행을 다시 확인한다", async () => {
+    const cachedTrip = createSharedTrip("서버 장애 중인 상하이 여행");
+    const latestTrip = createSharedTrip("복구된 상하이 여행");
+    vi.mocked(isOnline).mockReturnValue(true);
+    vi.mocked(getLocalCache).mockReturnValue(cachedTrip);
+    vi.mocked(getSharedTrip)
+      .mockRejectedValueOnce(new Error("temporary gateway failure"))
+      .mockResolvedValueOnce(latestTrip);
+
+    const { result } = renderHook(() => useSharedTripController({ shareToken: "share-token" }));
+
+    await waitFor(() => expect(result.current.sharedTrip).toEqual(cachedTrip));
+    expect(result.current.sharedTripWarning).toContain("API 서버");
+    expect(getSharedTrip).toHaveBeenCalledTimes(1);
+
+    act(() => window.dispatchEvent(new Event("focus")));
+
+    await waitFor(() => expect(result.current.sharedTrip).toEqual(latestTrip));
+    expect(result.current.sharedTripWarning).toBe("");
+    expect(getSharedTrip).toHaveBeenCalledTimes(2);
+  });
+
+  it("정상적으로 불러온 공유 여행은 화면에 돌아올 때 중복 조회하지 않는다", async () => {
+    const sharedTrip = createSharedTrip("정상 상하이 여행");
+    vi.mocked(isOnline).mockReturnValue(true);
+    vi.mocked(getSharedTrip).mockResolvedValue(sharedTrip);
+
+    const { result } = renderHook(() => useSharedTripController({ shareToken: "share-token" }));
+
+    await waitFor(() => expect(result.current.sharedTrip).toEqual(sharedTrip));
+    expect(getSharedTrip).toHaveBeenCalledTimes(1);
+
+    act(() => window.dispatchEvent(new Event("focus")));
+
+    expect(getSharedTrip).toHaveBeenCalledTimes(1);
+  });
 });
