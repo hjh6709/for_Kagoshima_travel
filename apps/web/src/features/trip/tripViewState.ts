@@ -9,12 +9,22 @@ export type CustomChecklistItem = ChecklistItem & { custom: true };
 export type ScheduleOrderByDate = Record<string, string[]>;
 
 export function getInitialTripView(hash: string): { activeTab: Tab; scheduleView: "itinerary" | "checklist" } {
+  if (hash === "#today") return { activeTab: "today", scheduleView: "itinerary" };
   if (hash === "#map") return { activeTab: "map", scheduleView: "itinerary" };
   if (hash === "#flight") return { activeTab: "flight", scheduleView: "itinerary" };
+  if (hash === "#concierge") return { activeTab: "concierge", scheduleView: "itinerary" };
   if (hash === "#schedule") return { activeTab: "schedule", scheduleView: "itinerary" };
   if (hash === "#schedule-checklist") return { activeTab: "schedule", scheduleView: "checklist" };
   if (hash === "#mypage") return { activeTab: "mypage", scheduleView: "itinerary" };
   return { activeTab: "today", scheduleView: "itinerary" };
+}
+
+export function getTripViewHash(activeTab: Tab, scheduleView: "itinerary" | "checklist") {
+  if (activeTab === "today") return "";
+  if (activeTab === "schedule") {
+    return scheduleView === "checklist" ? "#schedule-checklist" : "#schedule";
+  }
+  return `#${activeTab}`;
 }
 
 const demoStoragePrefix = "map-planner-shanghai-demo-v1";

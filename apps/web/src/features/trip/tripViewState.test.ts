@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { trip } from "../../data/sampleTrip";
-import { getInitialTripView, getSavedTripDates } from "./tripViewState";
+import { getInitialTripView, getSavedTripDates, getTripViewHash } from "./tripViewState";
 
 describe("demo tripViewState", () => {
   beforeEach(() => {
@@ -30,6 +30,17 @@ describe("demo tripViewState", () => {
     expect(getInitialTripView("#schedule")).toEqual({ activeTab: "schedule", scheduleView: "itinerary" });
     expect(getInitialTripView("#schedule-checklist")).toEqual({ activeTab: "schedule", scheduleView: "checklist" });
     expect(getInitialTripView("#map")).toEqual({ activeTab: "map", scheduleView: "itinerary" });
+    expect(getInitialTripView("#flight")).toEqual({ activeTab: "flight", scheduleView: "itinerary" });
+    expect(getInitialTripView("#concierge")).toEqual({ activeTab: "concierge", scheduleView: "itinerary" });
+    expect(getInitialTripView("#mypage")).toEqual({ activeTab: "mypage", scheduleView: "itinerary" });
     expect(getInitialTripView("#unknown")).toEqual({ activeTab: "today", scheduleView: "itinerary" });
+  });
+
+  it("현재 탭과 일정 보기 방식을 새로고침 가능한 해시로 변환한다", () => {
+    expect(getTripViewHash("today", "itinerary")).toBe("");
+    expect(getTripViewHash("schedule", "itinerary")).toBe("#schedule");
+    expect(getTripViewHash("schedule", "checklist")).toBe("#schedule-checklist");
+    expect(getTripViewHash("map", "itinerary")).toBe("#map");
+    expect(getTripViewHash("concierge", "itinerary")).toBe("#concierge");
   });
 });

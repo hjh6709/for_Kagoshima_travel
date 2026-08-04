@@ -30,7 +30,8 @@ import {
   saveOwnerTripDates,
 } from "./ownerTripAdapter";
 import type { TripPageProps } from "./tripPageTypes";
-import { getInitialTripView, type ChecklistCategory, type ScheduleOrderByDate, type Tab } from "./tripViewState";
+import { type ChecklistCategory, type ScheduleOrderByDate } from "./tripViewState";
+import { useTripViewNavigation } from "./useTripViewNavigation";
 
 type UseOwnerTripPageAdapterParams = {
   selectedOwnerTrip: OwnerTrip;
@@ -81,10 +82,7 @@ export function useOwnerTripPageAdapter({
 }: UseOwnerTripPageAdapterParams): TripPageProps {
   const contentRef = useRef<HTMLDivElement>(null);
   const tripId = selectedOwnerTrip.id;
-  const initialView = getInitialTripView(window.location.hash);
-
-  const [activeTab, setActiveTab] = useState<Tab>(initialView.activeTab);
-  const [scheduleView, setScheduleView] = useState<"itinerary" | "checklist">(initialView.scheduleView);
+  const { activeTab, scheduleView, setActiveTab, setScheduleView } = useTripViewNavigation();
   const [addressCopied, setAddressCopied] = useState(false);
   const [isChecklistEditing, setIsChecklistEditing] = useState(false);
   const [checklistDateFilter, setChecklistDateFilter] = useState("all");

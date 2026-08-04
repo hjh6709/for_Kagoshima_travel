@@ -22,6 +22,7 @@ export function TodayTab(props: TripPageProps) {
     isReadOnly,
     nextSchedule,
     setActiveTab,
+    setSelectedDate,
     setScheduleView,
     toggleCheck,
     trip,
@@ -49,6 +50,7 @@ export function TodayTab(props: TripPageProps) {
         isReadOnly={isReadOnly}
         nextSchedule={nextSchedule}
         onOpenSchedule={() => {
+          setSelectedDate(focusDate);
           setScheduleView("itinerary");
           setActiveTab("schedule");
         }}

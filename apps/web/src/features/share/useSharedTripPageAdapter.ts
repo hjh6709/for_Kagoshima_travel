@@ -18,7 +18,8 @@ import {
   mapOwnerSchedule,
 } from "../trip/ownerTripAdapter";
 import type { TripPageProps } from "../trip/tripPageTypes";
-import type { ChecklistCategory, Tab } from "../trip/tripViewState";
+import type { ChecklistCategory } from "../trip/tripViewState";
+import { useTripViewNavigation } from "../trip/useTripViewNavigation";
 
 function noOp() {}
 
@@ -26,8 +27,7 @@ function noOp() {}
 // 계정 정보와 편집 URL은 만들지 않으며, 공개 화면에서 서버 상태를 변경하는 핸들러도 제공하지 않는다.
 export function useSharedTripPageAdapter(sharedTrip: SharedTripResponse): TripPageProps {
   const contentRef = useRef<HTMLDivElement>(null);
-  const [activeTab, setActiveTab] = useState<Tab>("today");
-  const [scheduleView, setScheduleView] = useState<"itinerary" | "checklist">("itinerary");
+  const { activeTab, scheduleView, setActiveTab, setScheduleView } = useTripViewNavigation();
   const [checklistDateFilter, setChecklistDateFilter] = useState("all");
   const [selectedDate, setSelectedDate] = useState(sharedTrip.schedules[0]?.date ?? sharedTrip.trip.startDate);
   const [addressCopied, setAddressCopied] = useState(false);

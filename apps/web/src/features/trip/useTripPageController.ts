@@ -21,6 +21,7 @@ import {
 } from "../../shared/date";
 import type { ChecklistItem } from "../../types/travel";
 import type { TripPageProps } from "./tripPageTypes";
+import { useTripViewNavigation } from "./useTripViewNavigation";
 import { deriveHomeChecklist } from "./ownerTripAdapter";
 import {
   getOrderedSchedulesForDate,
@@ -41,14 +42,12 @@ import {
   type ChecklistCategory,
   type CustomChecklistItem,
   type ScheduleOrderByDate,
-  type Tab,
 } from "./tripViewState";
 
 // 일반 여행 화면의 탭, 체크리스트, 일정 완료/정렬, 로컬 저장 상태를 모아 TripPage props로 변환한다.
 export function useTripPageController(): TripPageProps {
   const contentRef = useRef<HTMLDivElement>(null);
-  const [activeTab, setActiveTab] = useState<Tab>("today");
-  const [scheduleView, setScheduleView] = useState<"itinerary" | "checklist">("itinerary");
+  const { activeTab, scheduleView, setActiveTab, setScheduleView } = useTripViewNavigation();
   const [tripDates, setTripDates] = useState<TripDates>(getSavedTripDates);
   const [selectedDate, setSelectedDate] = useState(schedules[0]?.date ?? trip.startDate);
   const [addressCopied, setAddressCopied] = useState(false);
