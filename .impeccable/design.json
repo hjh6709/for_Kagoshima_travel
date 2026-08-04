@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-07-26T00:00:00+09:00",
+  "generatedAt": "2026-08-04T14:40:00+09:00",
   "title": "Design System: Map Planner",
   "extensions": {
     "colorMeta": {
@@ -16,17 +16,65 @@
         "canonical": "#0B6F6A",
         "tonalRamp": ["#04221F", "#06403C", "#0B6F6A", "#2A8983", "#59A59F", "#8DC4C0", "#C0E1DE", "#EAF5F4"]
       },
+      "route-teal-deep": {
+        "role": "primary",
+        "displayName": "Route Teal Deep",
+        "canonical": "#075A57",
+        "tonalRamp": ["#031C1B", "#053533", "#075A57", "#277772", "#569792", "#89BAB6", "#BDDCD9", "#E9F4F3"]
+      },
       "destination-coral": {
         "role": "secondary",
         "displayName": "Destination Coral",
-        "canonical": "#C94F3D",
-        "tonalRamp": ["#39130E", "#70261C", "#A93E2E", "#C94F3D", "#DB7869", "#E9A69B", "#F4D1CA", "#FCEDEA"]
+        "canonical": "#C84E3C",
+        "tonalRamp": ["#39130E", "#70261C", "#A83D2D", "#C84E3C", "#DA7768", "#E8A59A", "#F3D0C9", "#FCEDEA"]
       },
       "canvas-mist": {
         "role": "neutral",
         "displayName": "Canvas Mist",
         "canonical": "#EDF3F2",
         "tonalRamp": ["#152321", "#2B3C39", "#50635F", "#768A86", "#9DADA9", "#C1CDCA", "#DFE7E5", "#EDF3F2"]
+      },
+      "surface-white": {
+        "role": "neutral",
+        "displayName": "Surface White",
+        "canonical": "#FFFFFF",
+        "tonalRamp": ["#1A1A1A", "#363636", "#555555", "#777777", "#9B9B9B", "#BFBFBF", "#E3E3E3", "#FFFFFF"]
+      },
+      "surface-cool": {
+        "role": "neutral",
+        "displayName": "Surface Cool",
+        "canonical": "#F5F8F7",
+        "tonalRamp": ["#17211F", "#303B38", "#53605D", "#788581", "#9EAAA7", "#C3CDCA", "#E2E9E7", "#F5F8F7"]
+      },
+      "border-map": {
+        "role": "neutral",
+        "displayName": "Map Border",
+        "canonical": "#CAD8D7",
+        "tonalRamp": ["#17201F", "#34403F", "#53615F", "#72817F", "#92A19F", "#B1C0BE", "#CAD8D7", "#F0F4F3"]
+      },
+      "text-muted": {
+        "role": "neutral",
+        "displayName": "Text Muted",
+        "canonical": "#4C626A",
+        "tonalRamp": ["#11191C", "#27343A", "#4C626A", "#687C83", "#87989E", "#A8B5B9", "#CBD3D5", "#F0F3F4"]
+      },
+      "warning-amber": {
+        "role": "tertiary",
+        "displayName": "Warning Amber",
+        "canonical": "#925C00",
+        "tonalRamp": ["#261700", "#4D3000", "#754900", "#925C00", "#B47C26", "#D39F59", "#EAC795", "#F8EDD6"]
+      },
+      "danger-red": {
+        "role": "secondary",
+        "displayName": "Danger Red",
+        "canonical": "#B33A3A",
+        "tonalRamp": ["#301010", "#5C2020", "#893030", "#B33A3A", "#CA6666", "#DE9696", "#EFC6C6", "#FAECEC"]
+      },
+      "success-green": {
+        "role": "tertiary",
+        "displayName": "Success Green",
+        "canonical": "#25734B",
+        "tonalRamp": ["#0A1F14", "#123D27", "#1C5B3B", "#25734B", "#4B906C", "#79AF90", "#ADD0BA", "#E5F2E9"]
       }
     },
     "typographyMeta": {
@@ -60,6 +108,11 @@
         "name": "route-ease",
         "value": "cubic-bezier(0.22, 1, 0.36, 1)",
         "purpose": "탭과 선택 상태가 빠르게 자리를 잡는 전환"
+      },
+      {
+        "name": "state-duration",
+        "value": "160ms",
+        "purpose": "버튼과 입력의 색상·테두리·불투명도 상태 전환"
       }
     ],
     "breakpoints": [
@@ -80,7 +133,7 @@
       "refersTo": "button-primary",
       "description": "현재 경로에서 다음 행동을 수행하는 기본 버튼",
       "html": "<button class=\"ds-route-button\">일정에 추가</button>",
-      "css": ".ds-route-button { min-height: 48px; border: 0; border-radius: 10px; padding: 12px 16px; background: var(--c-route, #0B6F6A); color: #fff; font: 700 15px/1.3 system-ui, sans-serif; } .ds-route-button:hover { background: #075A57; } .ds-route-button:focus-visible { outline: 3px solid rgba(11, 111, 106, 0.28); outline-offset: 3px; }"
+      "css": ".ds-route-button { min-height: 48px; border: 0; border-radius: 10px; padding: 12px 16px; background: var(--c-route, #0B6F6A); color: #fff; font: 700 15px/1.3 \"Pretendard Variable\", Pretendard, system-ui, sans-serif; transition: background-color 160ms cubic-bezier(0.22, 1, 0.36, 1); } .ds-route-button:hover { background: #075A57; } .ds-route-button:focus-visible { outline: 3px solid rgba(11, 111, 106, 0.28); outline-offset: 3px; }"
     },
     {
       "name": "Destination Button",
@@ -88,21 +141,21 @@
       "refersTo": "button-destination",
       "description": "길찾기처럼 화면의 가장 중요한 목적지 행동",
       "html": "<button class=\"ds-destination-button\">길찾기</button>",
-      "css": ".ds-destination-button { min-height: 48px; border: 0; border-radius: 10px; padding: 12px 16px; background: var(--c-destination, #C94F3D); color: #fff; font: 700 15px/1.3 system-ui, sans-serif; } .ds-destination-button:hover { background: #AD3E2F; } .ds-destination-button:focus-visible { outline: 3px solid rgba(201, 79, 61, 0.26); outline-offset: 3px; }"
+      "css": ".ds-destination-button { min-height: 48px; border: 0; border-radius: 10px; padding: 12px 16px; background: var(--c-destination, #C84E3C); color: #fff; font: 700 15px/1.3 \"Pretendard Variable\", Pretendard, system-ui, sans-serif; transition: background-color 160ms cubic-bezier(0.22, 1, 0.36, 1); } .ds-destination-button:hover { background: #AD3E2F; } .ds-destination-button:focus-visible { outline: 3px solid rgba(200, 78, 60, 0.26); outline-offset: 3px; }"
     },
     {
       "name": "Map Field",
       "kind": "input",
       "description": "장소와 여행 정보를 입력하는 필드",
       "html": "<label class=\"ds-field\"><span>장소 검색</span><input placeholder=\"카페, 식당, 관광지 검색\" /></label>",
-      "css": ".ds-field { display: grid; gap: 6px; color: #4C626A; font: 700 12px/1.3 system-ui, sans-serif; } .ds-field input { min-height: 48px; border: 1px solid #CAD8D7; border-radius: 10px; padding: 0 14px; background: #fff; color: #17333D; font: 500 15px/1.5 system-ui, sans-serif; } .ds-field input:focus-visible { outline: 3px solid rgba(11, 111, 106, 0.2); border-color: #0B6F6A; }"
+      "css": ".ds-field { display: grid; gap: 6px; color: #4C626A; font: 700 12px/1.3 \"Pretendard Variable\", Pretendard, system-ui, sans-serif; } .ds-field input { min-height: 48px; border: 1px solid #CAD8D7; border-radius: 10px; padding: 0 14px; background: #fff; color: #17333D; font: 500 16px/1.6 \"Pretendard Variable\", Pretendard, system-ui, sans-serif; } .ds-field input:focus-visible { outline: 3px solid rgba(11, 111, 106, 0.2); border-color: #0B6F6A; }"
     },
     {
       "name": "Route Chip",
       "kind": "chip",
       "description": "선택된 날짜와 지도 필터",
-      "html": "<button class=\"ds-route-chip\" aria-pressed=\"true\">7월 28일</button>",
-      "css": ".ds-route-chip { min-height: 36px; border: 0; border-radius: 999px; padding: 8px 12px; background: #0B6F6A; color: #fff; font: 700 12px/1.3 system-ui, sans-serif; } .ds-route-chip:focus-visible { outline: 3px solid rgba(11, 111, 106, 0.24); outline-offset: 2px; }"
+      "html": "<button class=\"ds-route-chip\" aria-pressed=\"true\">8월 18일</button>",
+      "css": ".ds-route-chip { min-height: 36px; border: 0; border-radius: 999px; padding: 8px 12px; background: #0B6F6A; color: #fff; font: 700 12px/1.35 \"Pretendard Variable\", Pretendard, system-ui, sans-serif; } .ds-route-chip:focus-visible { outline: 3px solid rgba(11, 111, 106, 0.24); outline-offset: 2px; }"
     },
     {
       "name": "Atlas Card",
@@ -110,14 +163,14 @@
       "refersTo": "card",
       "description": "장소와 일정 정보를 담는 평면 지도 표면",
       "html": "<article class=\"ds-atlas-card\"><span>14:30</span><strong>다음 장소</strong><p>도보 8분</p></article>",
-      "css": ".ds-atlas-card { display: grid; gap: 6px; border: 1px solid #CAD8D7; border-radius: 14px; padding: 18px; background: #fff; color: #17333D; font: 500 15px/1.5 system-ui, sans-serif; } .ds-atlas-card span { color: #0B6F6A; font-weight: 700; } .ds-atlas-card strong { font-size: 20px; } .ds-atlas-card p { margin: 0; color: #4C626A; }"
+      "css": ".ds-atlas-card { display: grid; gap: 6px; border: 1px solid #CAD8D7; border-radius: 14px; padding: 18px; background: #fff; color: #17333D; font: 500 16px/1.6 \"Pretendard Variable\", Pretendard, system-ui, sans-serif; } .ds-atlas-card span { color: #0B6F6A; font-weight: 700; } .ds-atlas-card strong { font-size: 20px; line-height: 1.3; } .ds-atlas-card p { margin: 0; color: #4C626A; }"
     },
     {
       "name": "Bottom Route Navigation",
       "kind": "nav",
       "description": "여행 중 사용하는 다섯 개 핵심 화면",
       "html": "<nav class=\"ds-bottom-nav\"><button>오늘</button><button class=\"active\" aria-current=\"page\">지도</button><button>긴급</button></nav>",
-      "css": ".ds-bottom-nav { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid #CAD8D7; background: #fff; } .ds-bottom-nav button { min-height: 56px; border: 0; background: transparent; color: #4C626A; font: 700 12px/1.3 system-ui, sans-serif; } .ds-bottom-nav button.active { color: #0B6F6A; box-shadow: inset 0 3px #0B6F6A; } .ds-bottom-nav button:focus-visible { outline: 3px solid rgba(11, 111, 106, 0.24); outline-offset: -4px; }"
+      "css": ".ds-bottom-nav { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid #CAD8D7; background: #fff; } .ds-bottom-nav button { min-height: 56px; border: 0; background: transparent; color: #4C626A; font: 700 12px/1.35 \"Pretendard Variable\", Pretendard, system-ui, sans-serif; } .ds-bottom-nav button.active { color: #0B6F6A; box-shadow: inset 0 3px #0B6F6A; } .ds-bottom-nav button:focus-visible { outline: 3px solid rgba(11, 111, 106, 0.24); outline-offset: -4px; }"
     }
   ],
   "narrative": {

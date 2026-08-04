@@ -1,34 +1,34 @@
-# 여행 도우미 앱 제품 기획 & 개발자 문서 단일 진입점
+# Map Planner 문서
 
-사용자가 직접 여행 일정, 준비물, 환율, 현지 회화를 관리하고 오프라인 환경에서도 빠르게 확인하는 모바일 여행 도우미 플랫폼의 종합 문서 단일 진입점(Entry Point)입니다.
+현재 제품과 운영 상태를 설명하는 문서의 단일 진입점입니다. 구현이 바뀌면 같은 PR에서 관련 문서를 함께 갱신합니다.
 
----
+## 제품과 사용자 경험
 
-## 📚 문서 맵 (Documentation Sitemap)
+1. [`../PRODUCT.md`](../PRODUCT.md) — 사용자, 제품 목적, 범위와 변하지 않는 원칙
+2. [`PRD.md`](./PRD.md) — 해결하려는 문제, 대상 사용자와 출시 기준
+3. [`FEATURES.md`](./FEATURES.md) — 현재 제공 기능과 다음 개선 범위
+4. [`USER_FLOW.md`](./USER_FLOW.md) — 비로그인·소유자·공유 사용자의 실제 이동 흐름
+5. [`../DESIGN.md`](../DESIGN.md) — Pocket Atlas 디자인 토큰과 UI 규칙
 
-### 1. 개발자 종합 가이드 (Developer & Architecture)
-1. [개발자 종합 가이드 (DEVELOPER_GUIDE.md)](./DEVELOPER_GUIDE.md) - **(필독)** 계층화된 폴더 구조, 안티패턴 금지 규칙, 60fps 애니메이션 및 번들 구성
-2. [기술 설계서 (Tech Design)](./TECH_DESIGN.md) - 시스템 구성도, 데이터베이스 ERD, API 설계
-3. [시스템 운용 가이드 (System Guide)](./SYSTEM_GUIDE.md) - 보안, 캡차, 인증 및 오프라인 캐싱 흐름
+## 기술
 
-### 2. 기획 & 요구사항 (PRD & Specifications)
-4. [프로덕트 요구사항 문서 (PRD)](./PRD.md)
-5. [기능명세서 (Features)](./FEATURES.md)
-6. [유저 플로우 (User Flow)](./USER_FLOW.md)
-7. [와이어프레임 (Wireframe)](./WIREFRAME.md)
+1. [`TECH_DESIGN.md`](./TECH_DESIGN.md) — 웹·API·DB 경계, 데이터 모델, 보안 원칙
+2. [`../apps/api/README.md`](../apps/api/README.md) — Go API 실행, 환경변수와 검증
+3. [`../apps/web/README.md`](../apps/web/README.md) — React PWA 실행과 브라우저 환경변수
 
-### 3. 배포 & 런북 (Deployment & Runbooks)
-8. [로컬 개발 런북](./LOCAL_DEVELOPMENT_RUNBOOK.md)
-9. [Oracle VM API 배포 런북](./ORACLE_VM_DEPLOYMENT_RUNBOOK.md)
-10. [배포 가이드](./DEPLOYMENT.md)
-11. [디자인 가이드라인](./DESIGN_GUIDELINES.md)
-12. [프로젝트 트러블슈팅 가이드](./TROUBLESHOOTING.md)
+OpenAPI의 실행 기준은 `apps/api/internal/handler/openapi.json`이며, API 실행 중 `/docs`와 `/openapi.json`에서도 확인할 수 있습니다.
 
----
+## 개발과 운영
 
-## 💡 개발 및 코드 작성 시 핵심 참고 규칙
+1. [`LOCAL_DEVELOPMENT_RUNBOOK.md`](./LOCAL_DEVELOPMENT_RUNBOOK.md) — 로컬 웹·API·PostgreSQL 실행
+2. [`DEPLOYMENT.md`](./DEPLOYMENT.md) — Vercel·OCI·Supabase 운영 구성
+3. [`ORACLE_VM_DEPLOYMENT_RUNBOOK.md`](./ORACLE_VM_DEPLOYMENT_RUNBOOK.md) — GitHub Actions 기반 API 배포와 롤백
+4. [`../infra/oracle/README.md`](../infra/oracle/README.md) — 수동 서버 초기화·복구용 인프라 스크립트
+5. [`TROUBLESHOOTING.md`](./TROUBLESHOOTING.md) — 실제 장애 사례와 재발 방지 조치
 
-- **단일 책임 서브 모듈화 (Single Responsibility)**: 300줄 이상의 거대 비대 파일(God Object)은 단일 책임 컴포넌트 및 유틸로 분리합니다.
-- **계층화된 컴포넌트 폴더 구조**: UI 컴포넌트는 `tabs/`, `sections/`, `cards/`, `forms/`, `lists/`, `helpers/` 서브 폴더에 작성하고 `index.ts` Barrel Export로 노출합니다.
-- **오프라인 회복력 (Offline Resilience)**: 네트워크 오프라인 상태에서도 최근 방문 데이터 및 오프라인 캐시가 부드럽게 복원되도록 유지합니다.
-- **60fps Transform 애니메이션**: Layout Reflow를 일으키는 width/left 대신 GPU 가속 transform과 opacity 속성만을 사용합니다.
+## 문서 유지 원칙
+
+- 현재 동작은 소스·테스트·OpenAPI를 우선 근거로 삼습니다.
+- 완료된 일회성 구현 계획과 화면별 임시 설계서는 PR 설명 HTML에 남기고 저장소에는 중복 보관하지 않습니다.
+- 디자인 규칙은 `DESIGN.md`, 제품 범위는 `PRODUCT.md`, 운영 절차는 런북 한 곳에만 기록합니다.
+- 예시에는 실제 API 키, 비밀번호, JWT, DB URL, 이메일이나 공유 토큰을 넣지 않습니다.

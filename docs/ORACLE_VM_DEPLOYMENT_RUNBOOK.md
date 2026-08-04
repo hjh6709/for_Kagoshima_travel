@@ -1,514 +1,163 @@
-# Oracle VM API 배포 런북
+# Oracle VM API 자동 배포·복구 런북
 
-이 문서는 여행 공유 앱의 Go API와 PostgreSQL을 Oracle Cloud Infrastructure Always Free VM에 배포하기 위한 운영 기준과 절차를 정리합니다.
+현재 production API는 GitHub Actions가 OCI VM의 `/home/opc/travel-api`에 ARM64 바이너리를 배포합니다. `infra/oracle`의 `/opt/travel-api` 구성은 새 VM을 수동으로 초기화하거나 복구할 때 사용할 수 있는 별도 도구입니다.
 
-프론트엔드는 기존처럼 Vercel에 두고, API와 DB만 Oracle VM에서 운영합니다.
+## 1. 현재 자동 배포 경로
 
-## 목표 구조
+```mermaid
+flowchart LR
+  Merge["main API 변경"] --> Build["Go test · ARM64 build"]
+  Build --> Upload["travel-api.next 전송"]
+  Upload --> Validate["production 환경 검증"]
+  Validate --> Swap["기존 binary 백업 · next 활성화"]
+  Swap --> Restart["systemd restart"]
+  Restart --> Health{"/healthz 성공?"}
+  Health -->|예| Done["이전 binary 제거"]
+  Health -->|아니오| Rollback["이전 binary 복구 · 재시작"]
+```
+
+관련 파일:
+
+- 워크플로: `.github/workflows/api-release-build.yml`
+- VM 배포 로직: `scripts/deploy-api-on-vm.sh`
+- production 서비스: `scripts/travel-api.service`
+- 배포 회귀 테스트: `scripts/deploy-api-on-vm.test.sh`
+
+## 2. GitHub Secrets
+
+| 이름 | 역할 |
+| --- | --- |
+| `OCI_VM_IP` | VM 공인 IP 또는 호스트 |
+| `OCI_VM_USER` | SSH 사용자, 현재 `opc` |
+| `OCI_SSH_KEY` | 배포용 SSH 개인키 |
+| `GOOGLE_MAPS_API_KEY` | 서버 Places 검색 키 |
+
+키 값은 워크플로 YAML, 문서, 로그에 직접 쓰지 않습니다. SSH 공개키는 VM의 배포 사용자에게만 등록하고 개인키는 GitHub Actions Secret으로 관리합니다.
+
+## 3. VM 디렉터리
 
 ```text
-사용자 브라우저
-  -> https://kagoshima.hjh-dev.site
-  -> Vercel 정적 PWA
-  -> https://api.hjh-dev.site
-  -> Cloudflare DNS
-  -> Oracle VM 443
-  -> Caddy reverse proxy
-  -> Go API localhost:8080
-  -> PostgreSQL localhost:5432
+/home/opc/travel-api/
+  .env
+  travel-api
+  travel-api.next
+  travel-api.service
+  deploy-api-on-vm.sh
 ```
 
-## 운영 책임 구분
+- `.env`: `0600`
+- 실행 바이너리와 배포 스크립트: `0750`
+- systemd unit: `/etc/systemd/system/travel-api.service`
 
-Oracle VM은 Render/Cloud Run 같은 PaaS보다 자유도가 높지만, 서버 운영 책임도 직접 가져갑니다.
+배포 중에만 `travel-api.rollback-<UTC timestamp>`와 실패 바이너리가 생길 수 있습니다. 정상 배포 뒤 롤백 바이너리는 제거됩니다.
 
-| 항목 | Oracle이 제공 | 우리가 관리 |
-| --- | --- | --- |
-| 물리 서버/클라우드 인프라 | 예 | 아니오 |
-| VM 생성/공인 IP | 예 | 설정 필요 |
-| OS 패키지 보안 업데이트 | 아니오 | 예 |
-| 방화벽 정책 | 기능 제공 | 정책 설정 필요 |
-| Go API 프로세스 | 아니오 | systemd로 관리 |
-| HTTPS | 아니오 | Caddy로 관리 |
-| PostgreSQL 설치/백업 | 아니오 | 예 |
-| 앱 인증/인가/CORS | 아니오 | 예 |
-| 장애 로그 확인/복구 | 아니오 | 예 |
+## 4. production 환경변수
 
-## 도메인과 포트
-
-운영 도메인:
-
-```text
-Frontend: https://kagoshima.hjh-dev.site
-API:      https://api.hjh-dev.site
-```
-
-외부에 열 포트:
-
-```text
-22   SSH
-80   HTTP -> HTTPS 인증서 발급/리다이렉트
-443  HTTPS API
-```
-
-외부에 열지 않을 포트:
-
-```text
-5432 PostgreSQL
-8080 Go API
-```
-
-Go API와 PostgreSQL은 VM 내부에서만 접근합니다. 브라우저는 항상 Caddy가 제공하는 HTTPS API 도메인으로 접근합니다.
-
-## Oracle Cloud 준비
-
-Oracle Cloud Console에서 다음을 준비합니다.
-
-1. Always Free 가능한 리전을 선택합니다.
-2. Compute VM을 생성합니다.
-   - OS: Oracle Linux 9 권장
-   - Shape: Always Free 범위의 Ampere A1 권장
-   - A1 생성이 `Out of host capacity`로 계속 실패하면 AMD `VM.Standard.E2.1.Micro`로 먼저 API 배포 연습을 진행할 수 있음
-   - 공인 IPv4: 필요
-   - SSH key: 로컬에서 관리하는 공개키 등록
-3. VCN/Subnet Security List 또는 Network Security Group에서 ingress rule을 설정합니다.
-   - TCP 22
-   - TCP 80
-   - TCP 443
-4. 서버에 SSH 접속합니다.
-
-```bash
-ssh -i ~/.ssh/oracle_travel_api opc@<ORACLE_VM_PUBLIC_IP>
-```
-
-서버 IP, SSH key, Oracle 계정 정보는 레포에 커밋하지 않습니다.
-
-### Shape 선택 기준
-
-권장 운영 목표는 Ampere A1입니다. A1은 메모리를 더 넉넉하게 잡을 수 있어 Go API와 PostgreSQL을 같은 VM에 올리는 MVP 운영에 더 적합합니다.
-
-다만 A1은 Always Free 용량 부족으로 생성이 오래 실패할 수 있습니다. 이 경우 아래처럼 분리해서 접근합니다.
-
-| Shape | 용도 | 판단 |
-| --- | --- | --- |
-| `VM.Standard.A1.Flex` | 목표 운영 VM | 1 OCPU / 6GB RAM 기준으로 계속 재시도 |
-| `VM.Standard.E2.1.Micro` | 임시 배포 연습 VM | 생성 성공률 확인, Caddy/API/systemd/DNS 연결 검증용 |
-
-`E2.1.Micro`는 메모리가 작기 때문에 API와 PostgreSQL을 모두 안정적으로 운영하는 최종 구성이 되기는 어렵습니다. 먼저 서버 접속, Caddy HTTPS, API systemd 배포, Cloudflare DNS 연결을 검증하는 용도로 사용하고, A1이 생성되면 같은 절차를 A1로 옮기는 방향을 기본으로 합니다.
-
-## 서버 초기 설정
-
-Oracle Linux 9 기준으로 패키지를 갱신합니다.
-
-레포에 포함된 초기 설정 스크립트를 사용할 수 있습니다.
-
-```bash
-sudo bash infra/oracle/setup-server.sh
-```
-
-스크립트는 OS를 감지해서 Oracle Linux/RHEL 계열은 `dnf`와 `firewalld`, Ubuntu/Debian 계열은 `apt`와 UFW를 사용합니다. 공통으로 PostgreSQL, Caddy, API 실행용 시스템 유저 `travel-api`, `/opt/travel-api`, `/etc/travel-api`를 준비합니다. DB 비밀번호, API 환경변수, Oracle Cloud 리소스는 생성하지 않습니다.
-
-수동으로 진행한다면 아래 명령을 기준으로 실행합니다.
-
-```bash
-sudo dnf upgrade -y
-sudo dnf install -y curl git firewalld postgresql-server postgresql-contrib ca-certificates dnf-plugins-core
-sudo postgresql-setup --initdb
-sudo systemctl enable --now postgresql
-```
-
-방화벽을 설정합니다.
-
-```bash
-sudo systemctl enable --now firewalld
-sudo firewall-cmd --permanent --add-service=ssh
-sudo firewall-cmd --permanent --add-service=http
-sudo firewall-cmd --permanent --add-service=https
-sudo firewall-cmd --reload
-sudo firewall-cmd --list-all
-```
-
-Caddy를 설치합니다.
-
-```bash
-sudo dnf copr enable -y @caddy/caddy
-sudo dnf install -y caddy
-sudo systemctl enable --now caddy
-```
-
-Go 런타임은 서버에 설치하지 않는 방향을 기본으로 합니다. 로컬 또는 GitHub Actions에서 Linux 바이너리를 빌드해 VM에 업로드하면 서버에는 Go toolchain이 없어도 됩니다.
-
-Ubuntu VM을 사용하는 경우에는 같은 스크립트를 그대로 실행하면 `apt`, UFW, Debian 계열 Caddy 저장소를 사용합니다.
-
-## PostgreSQL 설정
-
-운영 DB와 사용자를 생성합니다.
-
-```bash
-sudo -u postgres psql
-```
-
-```sql
-CREATE USER travel_app WITH PASSWORD '<STRONG_DB_PASSWORD>';
-CREATE DATABASE travel_app OWNER travel_app;
-\q
-```
-
-DB는 외부에 공개하지 않고 `localhost:5432`로만 사용합니다.
-
-스키마 적용:
-
-```bash
-psql "postgres://travel_app:<STRONG_DB_PASSWORD>@localhost:5432/travel_app?sslmode=disable" < apps/api/schema.sql
-```
-
-실제 비밀번호는 쉘 히스토리에 남지 않도록 `.env` 파일이나 일회성 안전 입력 방식을 사용합니다.
-
-## API 환경변수
-
-서버에는 `/etc/travel-api/travel-api.env` 형태로 환경변수를 둡니다.
+`/home/opc/travel-api/.env`에 아래 이름을 설정합니다.
 
 ```env
 APP_ENV=production
 PORT=8080
-DATABASE_URL=postgres://travel_app:<STRONG_DB_PASSWORD>@localhost:5432/travel_app?sslmode=disable
-JWT_SECRET=<LONG_RANDOM_SECRET>
+DATABASE_URL=<Supabase PostgreSQL TLS URL>
+JWT_SECRET=<32자 이상의 무작위 값>
 ALLOWED_ORIGINS=https://kagoshima.hjh-dev.site
+GOOGLE_MAPS_API_KEY=<Places API 서버 키>
 ```
 
-파일 권한:
+메일 발송을 사용하는 production에서는 저장소의 `apps/api/.env.example`에 선언된 SMTP 환경변수도 설정합니다.
+
+금지 사항:
+
+- `AUTH_TEST_BYPASS`를 production에 설정하지 않습니다.
+- `JWT_SECRET`에 `replace`, `change-me` 같은 placeholder를 사용하지 않습니다.
+- `ALLOWED_ORIGINS`에 HTTP, 경로, 쿼리 또는 와일드카드를 넣지 않습니다.
+
+환경 파일을 직접 보정할 때 같은 키가 중복되지 않게 기존 줄을 먼저 제거합니다.
 
 ```bash
-sudo mkdir -p /etc/travel-api
-sudo chown root:root /etc/travel-api
-sudo chmod 755 /etc/travel-api
-sudo chmod 600 /etc/travel-api/travel-api.env
+sed -i '/^APP_ENV=/d' /home/opc/travel-api/.env
+printf 'APP_ENV=production\n' >> /home/opc/travel-api/.env
+chmod 600 /home/opc/travel-api/.env
 ```
 
-`JWT_SECRET`, DB 비밀번호, 서버 IP, SSH key는 GitHub Secrets 또는 서버 전용 파일로만 관리합니다.
-
-레포에는 예시 파일만 둡니다.
+## 5. 수동 상태 확인
 
 ```bash
-sudo cp infra/oracle/env/travel-api.env.example /etc/travel-api/travel-api.env
-sudo chmod 600 /etc/travel-api/travel-api.env
-sudo nano /etc/travel-api/travel-api.env
+sudo systemctl status travel-api --no-pager
+curl --fail --silent http://127.0.0.1:8080/healthz
+curl --fail --silent https://api.hjh-dev.site/healthz
+sudo journalctl -u travel-api -n 100 --no-pager
 ```
 
-## Go API 배포 위치
+환경 파일 값 자체를 출력하는 명령은 화면 공유나 CI 로그에서 실행하지 않습니다.
 
-권장 경로:
+## 6. 실패 원인별 대응
 
-```text
-/opt/travel-api/
-  app
-```
+### production 환경 검증 실패
 
-초기 수동 배포 예시입니다.
+`scripts/deploy-api-on-vm.sh`가 새 바이너리를 바꾸기 전에 중단합니다. `.env`의 필수 키, JWT 길이, `AUTH_TEST_BYPASS`, Origin 형식을 확인한 뒤 workflow를 다시 실행합니다.
 
-로컬 Mac 또는 GitHub Actions에서 Linux 바이너리를 빌드합니다.
+### `Text file busy`
 
-Oracle VM을 Arm-based Ampere A1로 만들었다면:
+실행 중인 바이너리에 덮어쓰지 않습니다. 워크플로는 항상 `travel-api.next`로 전송하고, 기존 활성 바이너리를 timestamp가 붙은 롤백 파일로 `mv`한 뒤 next를 활성화합니다. 예전 방식의 `travel-api.old`가 남아 있으면 첫 롤백 후보로 흡수합니다.
+
+### systemd 시작 실패
 
 ```bash
-cd apps/api
-GOOS=linux GOARCH=arm64 go build -o /tmp/travel-api ./cmd/api
-```
-
-Oracle VM을 AMD x86_64 shape로 만들었다면:
-
-```bash
-cd apps/api
-GOOS=linux GOARCH=amd64 go build -o /tmp/travel-api ./cmd/api
-```
-
-바이너리를 서버에 업로드합니다.
-
-```bash
-scp -i ~/.ssh/oracle_travel_api /tmp/travel-api opc@<ORACLE_VM_PUBLIC_IP>:/tmp/travel-api
-```
-
-서버에서 배포 경로로 이동합니다.
-
-```bash
-sudo bash infra/oracle/deploy-api.sh /tmp/travel-api
-```
-
-## systemd 서비스
-
-Go API는 systemd로 관리합니다.
-
-```ini
-[Unit]
-Description=Travel Share API
-After=network.target postgresql.service
-Wants=postgresql.service
-
-[Service]
-Type=simple
-User=travel-api
-Group=travel-api
-WorkingDirectory=/opt/travel-api
-EnvironmentFile=/etc/travel-api/travel-api.env
-ExecStart=/opt/travel-api/app
-Restart=always
-RestartSec=5
-NoNewPrivileges=true
-PrivateTmp=true
-ProtectSystem=full
-ProtectHome=true
-ReadWritePaths=/opt/travel-api
-
-[Install]
-WantedBy=multi-user.target
-```
-
-서비스 파일 위치:
-
-```text
-/etc/systemd/system/travel-api.service
-```
-
-적용:
-
-```bash
-sudo cp infra/oracle/systemd/travel-api.service /etc/systemd/system/travel-api.service
 sudo systemctl daemon-reload
-sudo systemctl enable travel-api
-sudo systemctl start travel-api
-sudo systemctl status travel-api
-```
-
-로그 확인:
-
-```bash
-journalctl -u travel-api -f
-```
-
-## Caddy reverse proxy
-
-Caddy는 `api.hjh-dev.site`를 `localhost:8080`으로 프록시하고 HTTPS 인증서를 자동 관리합니다.
-
-레포의 설정 스크립트를 사용하면 Caddyfile 작성, 검증, reload까지 한 번에 처리할 수 있습니다.
-
-```bash
-sudo TRAVEL_API_DOMAIN=api.hjh-dev.site \
-  TRAVEL_API_UPSTREAM=127.0.0.1:8080 \
-  bash infra/oracle/configure-caddy.sh
-```
-
-스크립트는 `/etc/caddy/Caddyfile`에 `conf.d` import를 보장하고, API site 설정은 `/etc/caddy/conf.d/travel-api.caddy`에 씁니다. 기존 Caddyfile이나 API snippet이 있으면 timestamp가 붙은 `.bak` 파일로 백업합니다.
-
-직접 작성할 경우 Caddyfile 예시는 다음과 같습니다.
-
-```text
-api.hjh-dev.site {
-	encode zstd gzip
-	reverse_proxy 127.0.0.1:8080
-
-	header {
-		-Server
-	}
-}
-```
-
-파일 위치:
-
-```text
-/etc/caddy/Caddyfile
-```
-
-적용:
-
-```bash
-sudo caddy validate --config /etc/caddy/Caddyfile
-sudo systemctl reload caddy
-sudo systemctl status caddy
-```
-
-Caddy가 자동 HTTPS를 발급하려면 다음 조건이 필요합니다.
-
-- `api.hjh-dev.site`의 DNS A 레코드가 Oracle VM 공인 IP를 가리킴
-- Oracle Cloud ingress rule에서 80/443 열림
-- 서버 내부 방화벽에서 80/443 열림
-- Caddy가 80/443에 bind 가능
-
-## Cloudflare DNS
-
-Cloudflare에서 DNS 레코드를 추가합니다.
-
-```text
-Type: A
-Name: api
-Content: <ORACLE_VM_PUBLIC_IP>
-Proxy status: DNS only 또는 Proxied
-TTL: Auto
-```
-
-초기 인증서 발급 문제를 줄이려면 먼저 `DNS only`로 연결한 뒤, HTTPS 동작 확인 후 Cloudflare proxy 사용 여부를 결정합니다.
-
-## Vercel 프론트 환경변수
-
-Vercel Web 프로젝트에 다음 환경변수를 설정합니다.
-
-```env
-VITE_API_BASE_URL=https://api.hjh-dev.site
-VITE_GOOGLE_MAPS_BROWSER_KEY=<GOOGLE_MAPS_BROWSER_KEY>
-VITE_GOOGLE_MAPS_MAP_ID=<GOOGLE_MAPS_JAVASCRIPT_MAP_ID>
-```
-
-`VITE_GOOGLE_MAPS_BROWSER_KEY`는 Google Maps JavaScript API 전용 브라우저 키입니다. Google Cloud에서 웹사이트 제한을 `https://kagoshima.hjh-dev.site/*`로, API 제한을 Maps JavaScript API로 설정합니다. 서버용 `GOOGLE_MAPS_API_KEY`와 재사용하지 않으며 실제 키 값은 저장소에 커밋하지 않습니다.
-
-`VITE_GOOGLE_MAPS_MAP_ID`는 Google Cloud Console에서 플랫폼을 JavaScript로 지정해 만든 운영용 Map ID입니다. 값이 없으면 기존 마커로 안전하게 동작하고, 등록하면 Advanced Marker가 활성화됩니다. 테스트용 `DEMO_MAP_ID`는 운영 환경에 등록하지 않습니다.
-
-변경 후 프론트 재배포가 필요합니다.
-
-## 배포 후 점검
-
-API 서버 내부 점검:
-
-```bash
-curl http://localhost:8080/healthz
-```
-
-외부 HTTPS 점검:
-
-```bash
-curl https://api.hjh-dev.site/healthz
-```
-
-브라우저 CORS 점검:
-
-1. `https://kagoshima.hjh-dev.site/manage` 접속
-2. 회원가입 또는 로그인 시도
-3. Network 탭에서 API 요청이 `https://api.hjh-dev.site`로 나가는지 확인
-4. CORS 에러가 있으면 `ALLOWED_ORIGINS`와 API 재시작 여부 확인
-
-## 배포 바이너리 빌드 검증
-
-`.github/workflows/api-release-build.yml`은 Oracle VM 배포 전에 Go API가 Linux 바이너리로 빌드 가능한지 확인합니다.
-
-검증 대상:
-
-```text
-linux/amd64
-linux/arm64
-```
-
-Oracle VM을 AMD x86_64 shape로 만들면 `linux/amd64` 산출물을 사용하고, Ampere A1 Arm shape로 만들면 `linux/arm64` 산출물을 사용합니다.
-
-이 workflow는 빌드 산출물을 artifact로 업로드하지만, 서버에 SSH 접속하거나 서비스를 재시작하지 않습니다. 실제 서버 배포는 GitHub Secrets와 Oracle VM 준비가 끝난 뒤 별도 workflow로 추가합니다.
-
-## PostgreSQL 통합 테스트 CI
-
-`.github/workflows/ci.yml`의 `backend postgres test` job은 GitHub Actions에서 PostgreSQL service container를 띄운 뒤 `apps/api/schema.sql`을 적용하고 Go 테스트를 실행합니다.
-
-이 job은 다음을 검증합니다.
-
-- `schema.sql`이 새 PostgreSQL DB에 적용되는지
-- 서버 테스트가 in-memory repository뿐 아니라 PostgreSQL repository로도 통과하는지
-- 인증, 여행 생성, 공유 링크 생성, 공개 공유 조회 흐름이 실제 DB 연결에서 깨지지 않는지
-
-테스트 코드는 `TEST_DATABASE_URL`이 있을 때만 PostgreSQL을 사용합니다. 일반 로컬 테스트와 기본 `backend test` job은 계속 in-memory repository를 사용합니다.
-
-## 시크릿 스캔 CI
-
-`.github/workflows/secrets.yml`은 Gitleaks로 커밋된 시크릿을 검사합니다.
-
-주요 검사 대상:
-
-- `.env` 파일 실수 커밋
-- DB URL
-- JWT secret
-- Oracle VM SSH key
-- API token
-
-이 workflow는 PR, main push, 주간 schedule에서 실행됩니다. PR comment와 artifact 업로드는 비활성화하고, job 실패 여부로만 시크릿 유출을 막습니다.
-
-## 백업 기준
-
-초기 백업은 `pg_dump` 기반으로 시작합니다.
-
-```bash
-DATABASE_URL="postgres://travel_app:<STRONG_DB_PASSWORD>@localhost:5432/travel_app?sslmode=disable" \
-  bash infra/oracle/scripts/backup-postgres.sh
-```
-
-최소 운영 기준:
-
-- 하루 1회 백업
-- 7~14일 보관
-- 같은 VM에만 두지 않고 외부 위치에도 복사
-- 복구 테스트 절차를 별도 문서화
-
-cron 예시는 `infra/oracle/cron/travel-api-backup.cron`에 있습니다. 실제 서버 경로를 수정한 뒤 root crontab으로 등록합니다. DB 접속 정보는 `/etc/travel-api/travel-api.env`에서 읽습니다.
-
-```bash
-sudo crontab infra/oracle/cron/travel-api-backup.cron
-```
-
-cron 예시는 기본 백업 경로를 `/var/backups/travel-api`로 둡니다.
-
-주의: 같은 VM에만 백업을 보관하면 VM 디스크 장애 시 함께 손실될 수 있습니다. 주기적으로 로컬 Mac 또는 Object Storage 같은 외부 위치로 복사해야 합니다.
-
-## 장애 대응 기본 명령
-
-API 상태:
-
-```bash
-systemctl status travel-api
-journalctl -u travel-api -n 100 --no-pager
-```
-
-API 재시작:
-
-```bash
 sudo systemctl restart travel-api
+sudo journalctl -u travel-api -n 150 --no-pager
 ```
 
-Caddy 상태:
+서비스 unit의 `WorkingDirectory`, `ExecStart`, `EnvironmentFile`이 모두 `/home/opc/travel-api`를 가리키는지 확인합니다.
+
+### health check 실패
+
+배포 스크립트가 이전 바이너리를 복구합니다. 복구도 실패했다면 다음 순서로 확인합니다.
+
+1. `systemctl status`와 `journalctl`
+2. `.env` 권한과 필수 환경변수 이름
+3. Supabase 연결과 TLS
+4. 8080 포트 점유
+5. Caddy upstream과 인증서
+
+실패한 새 바이너리는 `travel-api.failed-<timestamp>`로 남을 수 있으므로 원인 분석 뒤 명시적인 파일만 제거합니다.
+
+## 7. 수동 재배포
+
+GitHub Actions를 사용할 수 없을 때 로컬에서 ARM64 바이너리를 빌드해 `travel-api.next`로 전송한 후 동일 스크립트를 실행합니다.
 
 ```bash
-systemctl status caddy
-journalctl -u caddy -n 100 --no-pager
+cd apps/api
+CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath -ldflags="-s -w" -o /tmp/travel-api.next ./cmd/api
+scp -i <SSH_KEY> /tmp/travel-api.next opc@<OCI_VM_IP>:/home/opc/travel-api/travel-api.next
+ssh -i <SSH_KEY> opc@<OCI_VM_IP> '/home/opc/travel-api/deploy-api-on-vm.sh /home/opc/travel-api'
 ```
 
-DB 상태:
+실제 키 경로나 IP를 문서 또는 셸 기록에 고정하지 않습니다.
 
-```bash
-systemctl status postgresql
-sudo -u postgres psql -c '\l'
-```
+## 8. 새 VM 복구
 
-디스크/메모리:
+새 VM을 처음 구성할 때는 [`../infra/oracle/README.md`](../infra/oracle/README.md)의 수동 초기화 도구를 사용할 수 있습니다. 다만 자동 배포 표준 경로와 실행 사용자가 다르므로, production 복구에서는 다음 중 하나를 선택해 끝까지 통일합니다.
 
-```bash
-df -h
-free -m
-```
+- 현재 표준: `opc`, `/home/opc/travel-api`, `scripts/travel-api.service`
+- 수동 강화 구성: `travel-api` 시스템 사용자, `/opt/travel-api`, `infra/oracle/systemd/travel-api.service`
 
-## 이후 자동화 PR 계획
+두 unit과 두 배포 스크립트를 한 서비스에 섞지 않습니다.
 
-1. `chore(infra): Oracle VM 서버 설정 스크립트 추가`
-   - 패키지 설치, 방화벽, 디렉터리 생성, Caddy 설치 절차 스크립트화
+## 9. 배포 전후 체크리스트
 
-2. `chore(infra): API systemd 배포 설정 추가`
-   - systemd unit, env 예시, 수동 배포 스크립트 추가
+### 배포 전
 
-3. `chore(infra): PostgreSQL 백업 스크립트 추가`
-   - `pg_dump`, 보관 기간 정리, cron 등록 절차 추가
+- API 테스트와 `scripts/deploy-api-on-vm.test.sh` 통과
+- 스키마 변경의 기존 데이터 호환성 확인
+- GitHub Secrets 이름과 VM SSH 접근 확인
+- `.env`의 production 가드 확인
 
-4. `ci(deploy): API SSH 배포 워크플로우 추가`
-   - main merge 후 GitHub Actions에서 Linux binary build
-   - SSH/SCP로 VM에 업로드
-   - systemd restart
+### 배포 후
 
-5. `docs(deploy): 운영 점검 체크리스트 추가`
-   - 배포 전/후 체크리스트, 장애 시 확인 순서, 복구 절차 정리
-
-## 참고 문서
-
-- [Oracle Cloud Infrastructure Free Tier](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier.htm)
-- [Oracle Cloud Free Tier](https://www.oracle.com/cloud/free/)
-- [Caddy Automatic HTTPS](https://caddyserver.com/docs/automatic-https)
-- [Caddy reverse_proxy](https://caddyserver.com/docs/caddyfile/directives/reverse_proxy)
+- 내부·외부 `/healthz` 확인
+- 로그인 세션 복구 확인
+- 변경된 대표 API 흐름 확인
+- 새 migration 적용 오류가 없는지 로그 확인
+- 롤백 임시 파일이 정상 정리됐는지 확인

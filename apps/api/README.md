@@ -1,118 +1,54 @@
-# Go Backend
+# Map Planner Go API
 
-여행 공유 앱의 API 서버입니다.
+사용자 인증과 여행·장소·일정·항공편·체크리스트·공유 데이터를 관리하는 REST API입니다. production은 Supabase PostgreSQL을 사용하고 Oracle Cloud VM에서 systemd로 실행됩니다.
 
-현재는 사용자 입력형 Beta를 위한 2차 확장 준비물이며, 1차 Vercel 정적 PWA 배포에는 사용하지 않습니다.
-
-목표 구조:
-
-```text
-여행 준비자
-  -> 이메일/비밀번호 로그인
-  -> 여행, 일정, 숙소, 골프장, 긴급 정보 입력
-  -> 부모님/가족용 공유 링크 생성
-
-부모님/가족
-  -> 공유 링크로 읽기 전용 조회
-  -> 로그인 없음
-```
-
-## 실행
-
-PostgreSQL을 함께 실행하려면 루트 디렉터리에서 먼저 DB를 띄웁니다.
+## 로컬 실행
 
 ```bash
-docker compose up -d postgres
-```
-
-그다음 API 서버를 실행합니다.
-
-```bash
-cd apps/api
+cp .env.example .env
 go run ./cmd/api
 ```
 
-기본 포트는 `8080`입니다.
+`DATABASE_URL`이 없으면 인메모리 저장소를 사용합니다. PostgreSQL 저장소와 migration까지 확인하려면 루트의 `docker-compose.yml`을 사용하고 [`../../docs/LOCAL_DEVELOPMENT_RUNBOOK.md`](../../docs/LOCAL_DEVELOPMENT_RUNBOOK.md)를 따릅니다.
 
-## 환경변수
+## 주요 환경변수
+
+| 이름 | 역할 |
+| --- | --- |
+| `APP_ENV` | `production`이면 필수 보안 설정을 강제 |
+| `PORT` | 기본 `8080` |
+| `DATABASE_URL` | PostgreSQL 연결 문자열, production 필수 |
+| `JWT_SECRET` | 세션 JWT 서명, production에서 32자 이상 |
+| `ALLOWED_ORIGINS` | 허용할 HTTPS 웹 Origin 목록 |
+| `GOOGLE_MAPS_API_KEY` | Places API (New) 서버 키 |
+| SMTP 관련 변수 | 회원가입·비밀번호 복구 인증 메일 |
+| `DISCORD_WEBHOOK_URL` | 선택적인 서버 오류 알림 |
+
+실제 값은 `.env` 또는 배포 Secret에만 저장합니다. production에서는 `AUTH_TEST_BYPASS`가 설정되어 있으면 서버가 시작되지 않습니다.
+
+## API 문서
+
+- 실행 중 Swagger UI: `GET /docs`
+- OpenAPI JSON: `GET /openapi.json`
+- 저장소 원본: `internal/handler/openapi.json`
+
+공개 엔드포인트는 인증 시작과 `GET /api/share/{token}`에 제한됩니다. 여행 변경·장소 검색·체크리스트 변경은 인증과 여행 소유권 검사가 필요합니다.
+
+## 데이터베이스
+
+- 새 DB 초기화: `schema.sql`
+- 운영 DB 증분 변경: `internal/db/migrations/*.sql`
+- API 시작 시 migration을 파일명 순서로 반복 적용
+
+새 migration은 재실행 가능해야 하며 기존 데이터가 있는 production에서도 안전해야 합니다.
+
+## 검증
 
 ```bash
-cd apps/api
-cp .env.example .env
+go test ./... -count=1
+go test -race ./... -count=1
+go vet ./...
+test -z "$(gofmt -l .)"
 ```
 
-주요 값:
-
-- `APP_ENV`: `development`, `test`, `production`
-- `PORT`: API 서버 포트
-- `DATABASE_URL`: PostgreSQL 연결 문자열. 루트 `docker-compose.yml`의 PostgreSQL을 사용할 때는 `localhost:5433`을 사용
-- `JWT_SECRET`: JWT 서명 비밀키
-- `GOOGLE_MAPS_API_KEY`: 여행지 후보를 찾는 Google Places 검색 키
-- `ALLOWED_ORIGINS`: 자격 증명 요청을 허용할 CORS origin. 여러 개면 쉼표로 구분
-
-실제 `.env` 파일은 커밋하지 않습니다.
-
-## 빌드
-
-```bash
-cd apps/api
-go build -o bin/api ./cmd/api
-```
-
-Go 백엔드는 Spring Boot의 executable jar처럼 단독 실행 바이너리로 배포합니다. 별도 WAS는 사용하지 않습니다.
-
-## 현재 엔드포인트
-
-- `GET /healthz`
-- `GET /docs`
-- `GET /openapi.json`
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- `POST /api/auth/logout`
-- `GET /api/auth/me`
-- `POST /api/auth/change-password`
-- `DELETE /api/auth/account`
-- `GET /api/share/{token}`
-- `GET /api/trips`
-- `POST /api/trips`
-- `GET /api/trips/{tripID}`
-- `PATCH /api/trips/{tripID}`
-- `DELETE /api/trips/{tripID}`
-- `POST /api/trips/{tripID}/share`
-- `GET /api/trips/{tripID}/schedules`
-- `POST /api/trips/{tripID}/schedules`
-- `DELETE /api/trips/{tripID}/schedules/{scheduleID}`
-- `GET /api/trips/{tripID}/places`
-- `POST /api/trips/{tripID}/places`
-- `DELETE /api/trips/{tripID}/places/{placeID}`
-- `GET /api/trips/{tripID}/flights`
-- `POST /api/trips/{tripID}/flights`
-- `GET /api/trips/{tripID}/routes`
-
-브라우저 로그인은 `HttpOnly`, `SameSite=Lax` 세션 쿠키를 사용합니다. 네이티브 또는 API 클라이언트는
-`Authorization: Bearer <token>` 헤더도 사용할 수 있습니다. 운영 환경의 쿠키에는 `Secure` 속성이 추가됩니다.
-`/api/share/{token}`은 부모님/가족용 읽기 전용 공개 조회 엔드포인트이며 로그인 없이 접근합니다.
-`DATABASE_URL`이 설정되면 PostgreSQL을 사용하고, 설정하지 않으면 개발용 in-memory 저장소를 사용합니다.
-
-## 구조
-
-스프링 부트의 전형적인 계층 구조를 Go 방식으로 옮겼습니다.
-
-```text
-handler     표현 계층: HTTP 요청/응답 처리
-service     서비스 계층: 비즈니스 로직과 DTO 변환
-repository  영속성 계층: 데이터 조회/저장
-model       DB 저장 기준 도메인 모델
-dto         API 요청/응답 모델
-```
-
-## 인증/인가 방향
-
-스프링 시큐리티의 인증/인가 개념을 Go에서는 middleware로 구현합니다.
-
-- 인증: 이메일/비밀번호 로그인 후 브라우저에는 HttpOnly 쿠키, API 클라이언트에는 JWT 발급
-- 비밀번호: bcrypt 해시 저장
-- 인가: JWT 사용자와 현재 DB 사용자의 이메일·토큰 버전을 middleware에서 매 요청 확인
-- 세션 폐기: 비밀번호 변경·재설정 및 계정 삭제 시 기존 JWT 무효화
-- 가족 공유: 로그인 대신 공유 토큰 기반 읽기 전용 접근
-- 소셜 로그인: 초기 Beta에서는 제외하고, 상용 서비스 검증 이후 Google/Kakao/Apple 로그인을 검토
+공유 DTO나 필드를 변경하면 `internal/server/share_security_test.go`를 포함한 공개 데이터 경계 테스트를 반드시 확인합니다.
