@@ -174,18 +174,27 @@ export function ManagePlaceCreateForm({
         </div>
       </div>
 
-      {/* 지도 데이터 기반 통합 검색 컴포넌트 추가 */}
-      <div style={{ background: "var(--c-route-soft)", border: "1px solid var(--border-color)", borderRadius: "12px", padding: "16px", marginBottom: "20px" }}>
-        <h4 style={{ fontSize: "var(--type-supporting-size)", fontWeight: "var(--font-weight-strong)", color: "var(--c-text)", marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
-          <Compass size={16} style={{ color: "var(--c-route)" }} />
-          Google Maps 장소 검색
-        </h4>
-        <p style={{ fontSize: "var(--type-label-size)", color: "var(--c-muted)", marginBottom: "12px" }}>
-          장소 후보를 선택하면 주소와 위치가 자동으로 채워집니다. 저장 후 고덕지도나 Google 지도를 선택해 길찾기할 수 있습니다.
-        </p>
-        
-        <div style={{ display: "flex", gap: "8px" }}>
+      <section
+        aria-busy={searchLoading}
+        aria-labelledby="place-search-title"
+        className="place-search-panel"
+      >
+        <div className="place-search-heading">
+          <span className="place-search-icon" aria-hidden="true">
+            <Compass size={18} />
+          </span>
+          <div>
+            <h4 id="place-search-title">장소 검색</h4>
+            <p>
+              장소를 선택하면 이름·주소·지도 위치를 자동으로 채웁니다. 저장 후
+              목적지에 맞는 지도로 길찾기할 수 있습니다.
+            </p>
+          </div>
+        </div>
+
+        <div className="place-search-controls">
           <input
+            aria-label="장소 검색어"
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
@@ -194,7 +203,6 @@ export function ManagePlaceCreateForm({
               }
             }}
             placeholder={isChinaTrip ? "장소·종류 예: 신천지, 카페, 식당" : "장소·종류 예: 센간엔, 카페, 식당"}
-            style={{ flex: 1, padding: "8px 12px", fontSize: "var(--type-supporting-size)", borderRadius: "8px", border: "1px solid var(--border-color)", background: "var(--c-surface)", color: "var(--c-text)" }}
             type="text"
             value={searchQuery}
           />
@@ -203,24 +211,30 @@ export function ManagePlaceCreateForm({
             disabled={searchLoading}
             onClick={() => void handleSearch()}
             type="button"
-            style={{ display: "flex", alignItems: "center", gap: "4px", padding: "0 14px", minWidth: "80px", justifyContent: "center" }}
           >
-            {searchLoading ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}
-            검색
+            {searchLoading ? (
+              <>
+                <Loader2 aria-hidden="true" className="animate-spin" size={16} />
+                검색 중
+              </>
+            ) : (
+              <>
+                <Search aria-hidden="true" size={16} />
+                검색
+              </>
+            )}
           </button>
         </div>
 
-        {/* 검색 결과 리스트 */}
         {searchResults.length > 0 && (
-          <div style={{ marginTop: "14px", display: "grid", gap: "8px", maxHeight: "200px", overflowY: "auto", paddingRight: "4px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
-              <span style={{ fontSize: "var(--type-label-size)", color: "var(--c-muted)", fontWeight: "var(--font-weight-strong)" }}>
+          <div className="place-search-results">
+            <div className="place-search-results-header">
+              <span>
                 {selectedIdx === null ? `검색된 후보 (${searchResults.length}개)` : "선택한 장소"}
               </span>
               <a
                 href="https://maps.google.com"
                 rel="noreferrer"
-                style={{ color: "#5f6368", fontFamily: "Roboto, Arial, sans-serif", fontSize: "var(--type-label-size)", fontWeight: "var(--font-weight-body)", textDecoration: "none", whiteSpace: "nowrap" }}
                 target="_blank"
               >
                 Google Maps 제공
@@ -230,42 +244,25 @@ export function ManagePlaceCreateForm({
               const isSelected = selectedIdx === idx;
               return (
                 <button
+                  aria-pressed={isSelected}
+                  className={`place-search-result${isSelected ? " selected" : ""}`}
                   key={`${result.googlePlaceId ?? "place"}-${result.latitude ?? "x"}-${result.longitude ?? "y"}-${result.name}`}
                   onClick={() => handleSelectResult(result)}
                   type="button"
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    padding: "10px 12px",
-                    borderRadius: "8px",
-                    border: isSelected ? "1px solid var(--c-route)" : "1px solid var(--border-color)",
-                    background: isSelected ? "var(--c-surface)" : "rgba(255,255,255,0.6)",
-                    textAlign: "left",
-                    width: "100%",
-                    cursor: "pointer",
-                    transition: "all 0.2s"
-                  }}
                 >
-                  <div style={{ flex: 1, paddingRight: "8px" }}>
-                    <div style={{ fontSize: "var(--type-supporting-size)", fontWeight: "var(--font-weight-strong)", color: isSelected ? "var(--c-route)" : "var(--c-text)" }}>
-                      {result.name}
-                    </div>
+                  <div className="place-search-result-copy">
+                    <strong>{result.name}</strong>
                     {result.address && (
-                      <div style={{ fontSize: "var(--type-label-size)", color: "var(--c-muted)", marginTop: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {result.address}
-                      </div>
+                      <span>{result.address}</span>
                     )}
                   </div>
                   {isSelected ? (
-                    <span style={{ color: "var(--c-route)", display: "flex", alignItems: "center", gap: "4px", fontSize: "var(--type-label-size)", fontWeight: "var(--font-weight-body)" }}>
-                      <Check size={14} />
+                    <span className="place-search-result-state selected">
+                      <Check aria-hidden="true" size={15} />
                       선택됨
                     </span>
                   ) : (
-                    <span style={{ fontSize: "var(--type-label-size)", color: "var(--c-route)", border: "1px solid var(--c-route)", borderRadius: "4px", padding: "2px 6px" }}>
-                      선택
-                    </span>
+                    <span className="place-search-result-state">선택</span>
                   )}
                 </button>
               );
@@ -274,12 +271,12 @@ export function ManagePlaceCreateForm({
         )}
 
         {searchErrorMsg && (
-          <div style={{ display: "flex", gap: "6px", alignItems: "center", marginTop: "12px", color: "var(--c-danger)", fontSize: "var(--type-label-size)" }}>
-            <AlertCircle size={14} />
+          <div className="place-search-error" role="alert">
+            <AlertCircle aria-hidden="true" size={16} />
             <span>{searchErrorMsg}</span>
           </div>
         )}
-      </div>
+      </section>
 
       <form className="auth-form compact-owner-form" id="place-create-form" onSubmit={onSubmitNewPlace}>
         <div className="form-grid-two">

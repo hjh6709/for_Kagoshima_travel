@@ -1,4 +1,11 @@
-import { List, Settings2 } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarCheck2,
+  List,
+  MapPinned,
+  Settings2,
+  Share2,
+} from "lucide-react";
 import type { AuthResponse } from "../../../../api/auth";
 import {
   AccountDeletionSection,
@@ -7,7 +14,10 @@ import {
 } from "../../../account/AccountSettings";
 import type { TripPageProps } from "../../tripPageTypes";
 
-type MyPageTabProps = TripPageProps & {
+type MyPageTabProps = Pick<
+  TripPageProps,
+  "editTripHref" | "isDemo" | "trip"
+> & {
   auth?: AuthResponse | null;
   onAuthChanged?: (auth: AuthResponse) => void;
   onLogout?: () => void;
@@ -31,79 +41,55 @@ export function MyPageTab({
 
   if (isDemo) {
     return (
-      <section className="screen">
-        <h1>마이페이지</h1>
-        <p className="muted">
-          체험용 데모 화면입니다. 계정을 만들어 나만의 여행을 보관하세요.
-        </p>
+      <section className="screen mypage-screen">
+        <header className="mypage-header">
+          <h1>마이페이지</h1>
+          <p>지금은 체험 여행을 보고 있습니다.</p>
+        </header>
 
-        <article
-          className="info-card auth-card-premium"
-          style={{ marginBottom: "16px" }}
-        >
-          <h2
-            style={{
-              fontSize: "var(--type-title-size)",
-              color: "var(--c-route)",
-              marginBottom: "8px",
-            }}
-          >
-            나만의 맞춤 여행 만들기 ✈️
-          </h2>
-          <p
-            className="muted"
-            style={{
-              lineHeight: 1.5,
-              margin: "8px 0 16px",
-              fontSize: "var(--type-supporting-size)",
-            }}
-          >
-            회원가입 후 로그인하시면 아래의 풍부한 개인화 기능을 평생 무료로
-            활용하실 수 있습니다.
-          </p>
-          <ul
-            style={{
-              paddingLeft: "18px",
-              margin: "0 0 20px 0",
-              display: "grid",
-              gap: "10px",
-              color: "var(--c-text)",
-              fontSize: "var(--type-supporting-size)",
-              listStyleType: "disc",
-            }}
-          >
+        <article className="mypage-demo-card">
+          <div className="mypage-demo-heading">
+            <span>내 여행으로 시작하기</span>
+            <h2>계정을 만들고 여행 계획을 저장하세요</h2>
+            <p>
+              장소를 찾고 날짜별 일정을 만든 뒤 동행자에게 같은 여행을 공유할
+              수 있습니다.
+            </p>
+          </div>
+
+          <ul className="mypage-demo-feature-list">
             <li>
-              📍 <strong>자유로운 여정 생성 & 구글 지도 실시간 연동</strong>
+              <span className="mypage-demo-feature-icon" aria-hidden="true">
+                <MapPinned size={19} />
+              </span>
+              <div>
+                <strong>장소 검색과 지도 확인</strong>
+                <span>숙소·식당·카페를 찾아 저장하고 길찾기로 연결합니다.</span>
+              </div>
             </li>
             <li>
-              👥 <strong>동반자에게 카카오톡/문자로 공유 링크 전송</strong>
+              <span className="mypage-demo-feature-icon" aria-hidden="true">
+                <CalendarCheck2 size={19} />
+              </span>
+              <div>
+                <strong>날짜별 일정과 준비물</strong>
+                <span>하루 동선과 여행 전 체크리스트를 함께 관리합니다.</span>
+              </div>
             </li>
             <li>
-              💬{" "}
-              <strong>
-                중국·일본 현지 맞춤 환율 계산 및 생존 회화 편의 기능
-              </strong>
-            </li>
-            <li>
-              ✅{" "}
-              <strong>
-                출발 전 체크리스트 및 세부 일정 달성도 다이내믹 프로그레스 바
-              </strong>
+              <span className="mypage-demo-feature-icon" aria-hidden="true">
+                <Share2 size={19} />
+              </span>
+              <div>
+                <strong>읽기 전용 여행 공유</strong>
+                <span>동행자가 로그인 없이 최신 계획을 확인할 수 있습니다.</span>
+              </div>
             </li>
           </ul>
-          <a
-            className="primary-button"
-            href="/manage"
-            style={{
-              padding: "12px",
-              fontSize: "var(--type-supporting-size)",
-              fontWeight: "var(--font-weight-strong)",
-              display: "block",
-              textAlign: "center",
-              textDecoration: "none",
-            }}
-          >
-            로그인 / 회원가입하고 시작하기
+
+          <a className="primary-button mypage-demo-action" href="/manage">
+            내 여행 만들기
+            <ArrowRight aria-hidden="true" size={18} />
           </a>
         </article>
       </section>
