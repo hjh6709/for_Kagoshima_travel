@@ -7,6 +7,7 @@ trap 'rm -rf "$TEST_ROOT"' EXIT
 
 TARGET_DIR="$TEST_ROOT/travel-api"
 FAKE_BIN="$TEST_ROOT/bin"
+CURL_LOG="$TEST_ROOT/curl.log"
 mkdir -p "$TARGET_DIR" "$FAKE_BIN"
 
 printf '%s\n' \
@@ -34,6 +35,7 @@ EOF
 
 cat > "$FAKE_BIN/curl" <<'EOF'
 #!/usr/bin/env bash
+printf '%s\n' "$*" >> "$CURL_LOG_FOR_TEST"
 grep -qx 'old' "$TARGET_DIR_FOR_TEST/travel-api"
 EOF
 
@@ -45,6 +47,7 @@ chmod 750 "$FAKE_BIN/sudo" "$FAKE_BIN/systemctl" "$FAKE_BIN/curl" "$FAKE_BIN/sle
 
 if PATH="$FAKE_BIN:$PATH" \
     TARGET_DIR_FOR_TEST="$TARGET_DIR" \
+    CURL_LOG_FOR_TEST="$CURL_LOG" \
     HEALTH_CHECK_ATTEMPTS=1 \
     bash "$REPO_ROOT/scripts/deploy-api-on-vm.sh" "$TARGET_DIR"; then
     echo "expected the unhealthy new deployment to fail" >&2
@@ -53,6 +56,11 @@ fi
 
 grep -qx 'old' "$TARGET_DIR/travel-api" || {
     echo "legacy travel-api.old was not restored after deployment failure" >&2
+    exit 1
+}
+
+grep -q '/readyz' "$CURL_LOG" || {
+    echo "deployment did not verify the readiness endpoint" >&2
     exit 1
 }
 

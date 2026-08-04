@@ -14,6 +14,8 @@ func TestOpenAPISpecDocumentsCurrentPublicRoutes(t *testing.T) {
 	}
 
 	for _, path := range []string{
+		"/healthz",
+		"/readyz",
 		"/api/auth/forgot-password",
 		"/api/auth/change-password",
 		"/api/auth/account",

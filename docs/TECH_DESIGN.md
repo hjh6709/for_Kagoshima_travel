@@ -58,7 +58,7 @@ Go 표준 `net/http` ServeMux와 pgx 기반 저장소를 사용합니다. `DATAB
 
 ### 공개 엔드포인트
 
-- 상태·문서: `GET /healthz`, `GET /docs`, `GET /openapi.json`
+- 상태·문서: `GET /healthz`(프로세스 생존), `GET /readyz`(DB 포함 준비 상태), `GET /docs`, `GET /openapi.json`
 - 인증 시작: 회원가입, 로그인, 로그아웃, 인증코드, 비밀번호 복구
 - 공유 조회: `GET /api/share/{token}`
 

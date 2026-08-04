@@ -39,9 +39,10 @@ flowchart LR
 - 실행: `/home/opc/travel-api/travel-api`
 - 환경 파일: `/home/opc/travel-api/.env` (`0600`)
 - 서비스: `/etc/systemd/system/travel-api.service`
-- 상태 확인: `GET /healthz`
+- 프로세스 생존 확인: `GET /healthz`
+- DB 포함 서비스 준비 확인: `GET /readyz`
 
-API 변경이 main에 병합되면 `.github/workflows/api-release-build.yml`이 ARM64 바이너리를 빌드하고 VM에 `travel-api.next`로 전송합니다. 서버 배포 스크립트는 production 환경을 검증하고 이전 바이너리를 백업한 뒤 재시작·상태 검사를 수행합니다. 상태 검사가 실패하면 이전 바이너리로 복구합니다.
+API 변경이 main에 병합되면 `.github/workflows/api-release-build.yml`이 ARM64 바이너리를 빌드하고 VM에 `travel-api.next`로 전송합니다. 서버 배포 스크립트는 production 환경을 검증하고 이전 바이너리를 백업한 뒤 재시작·`/readyz` 검사를 수행합니다. API 또는 PostgreSQL이 준비되지 않으면 이전 바이너리로 복구합니다.
 
 운영 환경변수와 GitHub Secrets의 실제 값은 저장소에 기록하지 않습니다. 이름과 등록 위치는 [`ORACLE_VM_DEPLOYMENT_RUNBOOK.md`](./ORACLE_VM_DEPLOYMENT_RUNBOOK.md)를 기준으로 합니다.
 
@@ -57,7 +58,7 @@ VM을 다시 만들더라도 Supabase 데이터는 유지되지만, 별도 백�
 
 ## 배포 후 확인
 
-1. `https://api.hjh-dev.site/healthz`가 성공하는지 확인합니다.
+1. `https://api.hjh-dev.site/healthz`와 `https://api.hjh-dev.site/readyz`가 모두 성공하는지 확인합니다.
 2. 시작 화면과 로그인 세션 복구가 정상인지 확인합니다.
 3. 여행 목록·공유 링크·장소 검색 중 변경과 관련된 대표 흐름을 확인합니다.
 4. Vercel과 API 로그에 새 오류가 없는지 확인합니다.

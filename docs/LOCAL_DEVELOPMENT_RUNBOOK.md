@@ -68,7 +68,10 @@ API 서버 확인:
 
 ```bash
 curl http://localhost:8081/healthz
+curl http://localhost:8081/readyz
 ```
+
+`/healthz`는 API 프로세스, `/readyz`는 현재 저장소까지 요청을 처리할 수 있는지 확인합니다. 로컬 인메모리 저장소에서도 `/readyz`는 정상 응답합니다.
 
 기본 포트 `8080`으로 띄웠다면 `8081` 대신 `8080`을 사용합니다.
 
