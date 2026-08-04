@@ -40,13 +40,14 @@ describe("ManageAuthSection", () => {
     vi.mocked(verifyCode).mockResolvedValue({ verified: true });
   });
 
-  it("숫자 인증코드와 키보드로 조작 가능한 비밀번호 버튼을 제공한다", () => {
+  it("회원가입을 이메일 인증부터 한 단계씩 안내한다", () => {
     render(<AuthHarness />);
 
-    const codeInput = screen.getByLabelText("이메일 인증 코드 (6자리)");
-    expect(codeInput).toHaveAttribute("inputmode", "numeric");
-    expect(codeInput).toHaveAttribute("autocomplete", "one-time-code");
-    expect(screen.getByRole("button", { name: "비밀번호 보기" })).not.toHaveAttribute("tabindex", "-1");
+    expect(screen.getByLabelText("이메일 주소")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "인증코드 받기" })).toBeInTheDocument();
+    expect(screen.queryByLabelText("6자리 인증코드")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("비밀번호")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "계정 만들고 여행 시작" })).not.toBeInTheDocument();
     expect(screen.queryByText("사람 인증 (수학 퀴즈 방지)")).not.toBeInTheDocument();
   });
 
@@ -55,14 +56,21 @@ describe("ManageAuthSection", () => {
     render(<AuthHarness />);
 
     await user.type(screen.getByLabelText("이메일 주소"), "traveler@example.com");
-    await user.click(screen.getByRole("button", { name: "인증코드 전송" }));
-    const codeInput = screen.getByLabelText("이메일 인증 코드 (6자리)");
+    await user.click(screen.getByRole("button", { name: "인증코드 받기" }));
+    const codeInput = screen.getByLabelText("6자리 인증코드");
+    expect(codeInput).toHaveAttribute("inputmode", "numeric");
+    expect(codeInput).toHaveAttribute("autocomplete", "one-time-code");
     await user.type(codeInput, "12a34b56");
     expect(codeInput).toHaveValue("123456");
     await user.click(screen.getByRole("button", { name: "코드 확인" }));
 
     expect(verifyCode).toHaveBeenCalledWith("traveler@example.com", "register", "123456");
     expect(screen.getByText("이메일 인증 완료")).toBeInTheDocument();
+    expect(screen.getByLabelText("비밀번호")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "비밀번호 보기" })).not.toHaveAttribute("tabindex", "-1");
+    const submitButton = screen.getByRole("button", { name: "계정 만들고 여행 시작" });
+    expect(submitButton).toBeInTheDocument();
+    expect(new FormData(submitButton.closest("form")!).get("code")).toBe("123456");
   });
 
   it("로그인으로 전환하면 이전 인증 상태와 코드를 초기화한다", async () => {
@@ -70,8 +78,8 @@ describe("ManageAuthSection", () => {
     render(<AuthHarness />);
 
     await user.type(screen.getByLabelText("이메일 주소"), "traveler@example.com");
-    await user.click(screen.getByRole("button", { name: "인증코드 전송" }));
-    await user.type(screen.getByLabelText("이메일 인증 코드 (6자리)"), "123456");
+    await user.click(screen.getByRole("button", { name: "인증코드 받기" }));
+    await user.type(screen.getByLabelText("6자리 인증코드"), "123456");
     await user.click(screen.getByRole("button", { name: "코드 확인" }));
     expect(screen.getByText("이메일 인증 완료")).toBeInTheDocument();
 
@@ -79,8 +87,8 @@ describe("ManageAuthSection", () => {
     await user.click(screen.getByRole("button", { name: "회원가입" }));
 
     expect(screen.queryByText("이메일 인증 완료")).not.toBeInTheDocument();
-    expect(screen.getByLabelText("이메일 인증 코드 (6자리)")).toHaveValue("");
-    expect(screen.getByRole("button", { name: "인증코드 전송" })).toBeInTheDocument();
+    expect(screen.queryByLabelText("6자리 인증코드")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "인증코드 받기" })).toBeInTheDocument();
   });
 
   it("서버 응답에 인증코드가 포함돼도 화면에 코드를 노출하지 않는다", async () => {
@@ -89,7 +97,7 @@ describe("ManageAuthSection", () => {
     render(<AuthHarness />);
 
     await user.type(screen.getByLabelText("이메일 주소"), "traveler@example.com");
-    await user.click(screen.getByRole("button", { name: "인증코드 전송" }));
+    await user.click(screen.getByRole("button", { name: "인증코드 받기" }));
 
     expect(screen.queryByText("가상 이메일 수신 시뮬레이터")).not.toBeInTheDocument();
     expect(screen.queryByText("123456")).not.toBeInTheDocument();

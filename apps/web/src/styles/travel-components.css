@@ -900,8 +900,8 @@
     padding: 16px 12px;
   }
 
-  .auth-card-premium {
-    padding: 20px 12px;
+  .info-card.auth-card-premium {
+    padding: 0 0 16px;
   }
 
   .flight-empty-state {
