@@ -13,8 +13,16 @@ export type ManageRoute =
   | { view: "editHub"; tripId: string }
   | { view: "editSection"; tripId: string; section: EditSection };
 
+export function getManageTripPath(tripId: string) {
+  return `/manage/trips/${encodeURIComponent(tripId)}`;
+}
+
 export function getManageTripEditorPath(tripId: string) {
-  return `/manage/trips/${encodeURIComponent(tripId)}/edit`;
+  return `${getManageTripPath(tripId)}/edit`;
+}
+
+export function getManageTripEditSectionPath(tripId: string, section: EditSection) {
+  return `${getManageTripEditorPath(tripId)}/${section}`;
 }
 
 const EDIT_SECTION_RETURN_HASH: Record<EditSection, string> = {
@@ -27,7 +35,7 @@ const EDIT_SECTION_RETURN_HASH: Record<EditSection, string> = {
 };
 
 export function getManageTripReturnPath(tripId: string, section: EditSection) {
-  return `/manage/trips/${encodeURIComponent(tripId)}#${EDIT_SECTION_RETURN_HASH[section]}`;
+  return `${getManageTripPath(tripId)}#${EDIT_SECTION_RETURN_HASH[section]}`;
 }
 
 export function navigateToManageTripEditor(tripId: string) {

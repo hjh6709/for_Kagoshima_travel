@@ -147,6 +147,7 @@ export function useTripManageDetailData({
   const [ownerFlights, setOwnerFlights] = useState<SharedFlight[]>([]);
   const [ownerDetailDataError, setOwnerDetailDataError] = useState("");
   const [ownerDetailDataLoading, setOwnerDetailDataLoading] = useState(false);
+  const [ownerDetailDataTripID, setOwnerDetailDataTripID] = useState("");
 
   // 선택 여행이 없거나 인증이 끊겼을 때 상세 화면에 남은 서버 데이터를 정리한다.
   function clearOwnerDetailData() {
@@ -155,6 +156,7 @@ export function useTripManageDetailData({
     setOwnerFlights([]);
     setOwnerDetailDataError("");
     setOwnerDetailDataLoading(false);
+    setOwnerDetailDataTripID("");
   }
 
   useEffect(() => {
@@ -167,6 +169,7 @@ export function useTripManageDetailData({
     let cancelled = false;
     setOwnerDetailDataLoading(true);
     setOwnerDetailDataError("");
+    setOwnerDetailDataTripID("");
     Promise.all([
       listTripSchedules(ownerAuth.accessToken, selectedOwnerTrip.id),
       listTripPlaces(ownerAuth.accessToken, selectedOwnerTrip.id),
@@ -177,6 +180,7 @@ export function useTripManageDetailData({
         setOwnerSchedules(sortSharedSchedules(nextSchedules));
         setOwnerPlaces(sortSharedPlaces(nextPlaces));
         setOwnerFlights(sortSharedFlights(nextFlights));
+        setOwnerDetailDataTripID(selectedOwnerTrip.id);
       })
       .catch((error) => {
         if (cancelled) return;
@@ -231,6 +235,7 @@ export function useTripManageDetailData({
     deleteOwnerSchedule,
     ownerDetailDataError,
     ownerDetailDataLoading,
+    ownerDetailDataTripID,
     ownerFlights,
     ownerPlaces,
     ownerSchedules,
