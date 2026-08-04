@@ -5,6 +5,8 @@ import { sendVerificationCode, verifyCode } from "../../../../api/auth";
 import { ToastNotification, type ToastMessage, type ToastType } from "../../../../shared/components/ToastNotification";
 import { ForgotPasswordModal } from "./ForgotPasswordModal";
 
+const PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+
 // 인증 화면만 분리한다. 로그인/회원가입 요청은 App.tsx가 넘긴 콜백이 처리한다.
 export function ManageAuthSection({
   auth,
@@ -49,6 +51,7 @@ export function ManageAuthSection({
 
   useEffect(() => {
     resetVerification();
+    setShowPassword(false);
   }, [authMode]);
 
   useEffect(() => {
@@ -113,11 +116,9 @@ export function ManageAuthSection({
       showToast("입력한 이메일 주소로 인증코드를 보냈습니다. 메일함을 확인해 주세요.", "success", "인증 메일 발송 완료");
     } catch (err: any) {
       if (err.status === 409) {
-        showToast("이미 등록된 이메일 주소입니다. 다른 이메일로 가입해 주세요.", "error", "가입 불가");
-      } else if (err.status === 404) {
-        showToast("인증코드 발송 엔드포인트를 찾을 수 없습니다. (404 Not Found)", "error", "통신 오류");
-      } else if (err.status === 405) {
-        showToast("허용되지 않은 요청 메서드(Method)입니다. 서버 라우팅 상태를 확인해 주세요. (405 Method Not Allowed)", "error", "라우팅 오류");
+        showToast("이미 가입된 이메일입니다. 로그인으로 전환해 주세요.", "error", "가입된 계정");
+      } else if (err.status === 404 || err.status === 405) {
+        showToast("현재 이메일 인증을 시작할 수 없습니다. 잠시 후 다시 시도해 주세요.", "error", "인증 서비스 오류");
       } else if (err.status === 502 || err.status === 504) {
         showToast("서버 게이트웨이가 응답하지 않습니다. 네트워크 연결을 확인하세요.", "error", "네트워크 오류");
       } else {
@@ -141,8 +142,7 @@ export function ManageAuthSection({
         showToast("이메일 인증 코드 검증을 먼저 진행해 주세요.", "warning", "이메일 인증 필요");
         return;
       }
-      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
-      if (!passwordRegex.test(authPassword)) {
+      if (!PASSWORD_PATTERN.test(authPassword)) {
         e.preventDefault();
         showToast("비밀번호 규칙(영문 대/소문자, 숫자, 특수문자 조합 8자 이상)을 만족해야 합니다.", "warning", "비밀번호 규칙 미충족");
         return;
@@ -157,7 +157,7 @@ export function ManageAuthSection({
 
   if (!authChecked) {
     return (
-      <article className="info-card auth-card auth-card-premium" style={{ display: "grid", placeItems: "center", textAlign: "center" }}>
+      <article className="info-card auth-card auth-card-premium auth-loading">
         <Compass className="auth-hero-icon spin-slow" size={42} />
         <h1 style={{ marginTop: "12px" }}>로그인 확인 중</h1>
         <p className="muted">저장된 로그인 정보를 안전하게 확인하고 있습니다.</p>
@@ -177,33 +177,48 @@ export function ManageAuthSection({
     );
   }
 
+  const isRegister = authMode === "register";
+  const passwordInvalid = isRegister && authPassword.length > 0 && !PASSWORD_PATTERN.test(authPassword);
+
   return (
     <article className="info-card auth-card auth-card-premium">
       <div className="auth-brand-row">
-        <div className="auth-brand-circle">
-          <Compass className="auth-hero-icon" size={24} />
-        </div>
-        <span className="pill subtle">여행 관리 계정</span>
+        <a className="auth-product-link" href="/">
+          <span className="auth-brand-circle">
+            <Compass className="auth-hero-icon" size={21} />
+          </span>
+          <span>Map Planner</span>
+        </a>
+        <span className="pill subtle">{isRegister ? "처음 시작" : "여행 관리"}</span>
       </div>
-      
-      <h1>{authMode === "login" ? "여행 관리 로그인" : "여행 관리 계정 만들기"}</h1>
+
+      <h1>{isRegister ? "첫 여행을 시작해 볼까요?" : "내 여행으로 돌아가기"}</h1>
       <p className="muted">
-        처음 사용하는 경우 계정을 만든 뒤 여행을 생성합니다. 공유 링크를 받은 동반자는 로그인 없이 일정을 읽기 전용으로 바로 확인합니다.
+        {isRegister
+          ? "이메일을 인증하고 비밀번호를 설정하면 바로 여행을 만들 수 있습니다."
+          : "로그인하면 저장한 여행과 일정을 이어서 관리할 수 있습니다."}
       </p>
+
+      {isRegister && (
+        <ol className="auth-progress" aria-label="회원가입 진행 단계">
+          <li className={isCodeVerified ? "is-complete" : "is-current"} aria-current={!isCodeVerified ? "step" : undefined}>
+            <span>{isCodeVerified ? <CheckCircle2 aria-hidden="true" size={14} /> : "1"}</span>
+            이메일 인증
+          </li>
+          <li className={isCodeVerified ? "is-current" : ""} aria-current={isCodeVerified ? "step" : undefined}>
+            <span>2</span>
+            비밀번호 설정
+          </li>
+        </ol>
+      )}
 
       <form className="auth-form" onSubmit={handleSubmitForm}>
         <div className="auth-field-label">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <label htmlFor="manage-auth-email">이메일 주소</label>
-            {isCodeVerified && (
-              <span aria-live="polite" style={{ fontSize: "var(--type-label-size)", color: "var(--c-route)", fontWeight: "var(--font-weight-strong)", display: "flex", alignItems: "center", gap: "2px" }}>
-                <CheckCircle2 size={12} /> 이메일 인증 완료
-              </span>
-            )}
-          </div>
+          <label htmlFor="manage-auth-email">이메일 주소</label>
           <div className="input-with-icon">
             <Mail size={16} className="field-icon" />
             <input
+              className={isCodeVerified ? "is-verified" : undefined}
               id="manage-auth-email"
               autoComplete="email"
               inputMode="email"
@@ -213,160 +228,153 @@ export function ManageAuthSection({
               required
               type="email"
               value={authEmail}
-              style={isCodeVerified ? { backgroundColor: "var(--c-route-soft)", borderColor: "var(--c-route)" } : undefined}
             />
           </div>
         </div>
 
-        {authMode === "register" && (
-          <div className="auth-field-label" style={{ marginTop: "12px" }}>
-            <label htmlFor="manage-auth-code">이메일 인증 코드 (6자리)</label>
+        {isRegister && !codeSent && (
+          <button
+            aria-busy={sendSubmitting}
+            className="secondary-button auth-send-code-button"
+            disabled={sendSubmitting}
+            onClick={handleSendCode}
+            type="button"
+          >
+            <Mail aria-hidden="true" size={17} />
+            {sendSubmitting ? "인증코드 보내는 중" : "인증코드 받기"}
+          </button>
+        )}
+
+        {isRegister && codeSent && !isCodeVerified && (
+          <div className="auth-verification-step">
+            <div className="auth-verification-heading">
+              <label htmlFor="manage-auth-code">6자리 인증코드</label>
+              <button
+                aria-busy={sendSubmitting}
+                className="auth-inline-action"
+                disabled={sendSubmitting}
+                onClick={handleSendCode}
+                type="button"
+              >
+                {sendSubmitting ? "보내는 중" : "다시 보내기"}
+              </button>
+            </div>
+            <p className="auth-field-hint" id="manage-auth-code-hint">
+              {authEmail}로 보냈습니다. 코드는 5분 동안 유효합니다.
+            </p>
             <div className="auth-verification-row">
               <input
+                autoFocus
                 id="manage-auth-code"
-                aria-describedby={codeSent && !isCodeVerified ? "manage-auth-code-hint" : undefined}
+                aria-describedby="manage-auth-code-hint"
                 autoComplete="one-time-code"
                 inputMode="numeric"
                 name="code"
-                readOnly={isCodeVerified}
                 onChange={(event) => setInputCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
                 pattern="[0-9]{6}"
-                placeholder="수신된 6자리 코드를 입력하세요"
+                placeholder="000000"
                 required
                 type="text"
                 maxLength={6}
                 value={inputCode}
-                style={{ flex: 1 }}
               />
-              {!codeSent ? (
-                <button
-                  aria-busy={sendSubmitting}
-                  className="secondary-button"
-                  disabled={sendSubmitting}
-                  onClick={handleSendCode}
-                  type="button"
-                  style={{ marginTop: 0, padding: "0 12px", minHeight: "44px", fontSize: "var(--type-supporting-size)" }}
-                >
-                  {sendSubmitting ? "전송 중" : "인증코드 전송"}
-                </button>
-              ) : isCodeVerified ? (
-                <button
-                  className="secondary-button"
-                  disabled
-                  type="button"
-                  style={{
-                    marginTop: 0,
-                    padding: "0 12px",
-                    minHeight: "44px",
-                    fontSize: "var(--type-supporting-size)",
-                    backgroundColor: "var(--c-route-soft)",
-                    color: "var(--c-route)",
-                    borderColor: "var(--c-route)",
-                  }}
-                >
-                  인증 완료 ✓
-                </button>
-              ) : (
-                <div className="auth-code-actions">
-                  <button
-                    aria-busy={verifyingSubmitting}
-                    className="primary-button"
-                    disabled={verifyingSubmitting || inputCode.length < 6}
-                    onClick={handleVerifyCodeSubmit}
-                    type="button"
-                    style={{ marginTop: 0, padding: "0 12px", minHeight: "44px", fontSize: "var(--type-supporting-size)" }}
-                  >
-                    {verifyingSubmitting ? "검증 중" : "코드 확인"}
-                  </button>
-                  <button
-                    aria-busy={sendSubmitting}
-                    className="secondary-button"
-                    disabled={sendSubmitting}
-                    onClick={handleSendCode}
-                    type="button"
-                    title="인증코드 재전송"
-                    style={{ marginTop: 0, padding: "0 10px", minHeight: "44px", fontSize: "var(--type-label-size)" }}
-                  >
-                    재전송
-                  </button>
-                </div>
-              )}
+              <button
+                aria-busy={verifyingSubmitting}
+                className="primary-button auth-verify-code-button"
+                disabled={verifyingSubmitting || inputCode.length < 6}
+                onClick={handleVerifyCodeSubmit}
+                type="button"
+              >
+                {verifyingSubmitting ? "확인 중" : "코드 확인"}
+              </button>
             </div>
-            {codeSent && !isCodeVerified && (
-              <p className="auth-field-hint" id="manage-auth-code-hint">
-                인증코드는 전송 후 5분 동안 유효합니다.
+          </div>
+        )}
+
+        {isRegister && isCodeVerified && (
+          <>
+            <input name="code" type="hidden" value={inputCode} />
+            <div className="auth-verified-state" role="status">
+              <CheckCircle2 aria-hidden="true" size={18} />
+              <span><strong>이메일 인증 완료</strong><small>{authEmail}</small></span>
+            </div>
+          </>
+        )}
+
+        {(!isRegister || isCodeVerified) && (
+          <div className="auth-field-label">
+            <label htmlFor="manage-auth-password">비밀번호</label>
+            <div className="input-with-icon">
+              <Key size={16} className="field-icon" />
+              <input
+                id="manage-auth-password"
+                aria-describedby={isRegister ? "manage-auth-password-hint" : undefined}
+                aria-invalid={passwordInvalid || undefined}
+                autoComplete={isRegister ? "new-password" : "current-password"}
+                className="with-password-toggle"
+                minLength={8}
+                onChange={(event) => onAuthPasswordChange(event.target.value)}
+                placeholder={isRegister ? "안전한 비밀번호 입력" : "비밀번호 입력"}
+                required
+                type={showPassword ? "text" : "password"}
+                value={authPassword}
+              />
+              <button
+                aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 보기"}
+                className="password-toggle-btn"
+                onClick={() => setShowPassword(!showPassword)}
+                type="button"
+              >
+                {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+              </button>
+            </div>
+            {isRegister && (
+              <p className="auth-field-hint" id="manage-auth-password-hint">
+                영문 대·소문자, 숫자, 특수문자를 포함해 8자 이상 입력하세요.
               </p>
             )}
           </div>
         )}
-        
-        <div className="auth-field-label">
-          <label htmlFor="manage-auth-password">비밀번호</label>
-          <div className="input-with-icon">
-            <Key size={16} className="field-icon" />
-            <input
-              id="manage-auth-password"
-              aria-invalid={
-                authMode === "register" && authPassword.length > 0 &&
-                !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/.test(authPassword)
-              }
-              autoComplete={authMode === "login" ? "current-password" : "new-password"}
-              className="with-password-toggle"
-              minLength={8}
-              onChange={(event) => onAuthPasswordChange(event.target.value)}
-              placeholder="8자 이상 입력"
-              required
-              type={showPassword ? "text" : "password"}
-              value={authPassword}
-            />
-            <button
-              aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 보기"}
-              className="password-toggle-btn"
-              onClick={() => setShowPassword(!showPassword)}
-              type="button"
-            >
-              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          </div>
-        </div>
 
-        {authMode === "register" && authPassword && !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/.test(authPassword) && (
-          <p className="form-error" role="alert" style={{ fontSize: "var(--type-label-size)", marginTop: "4px" }}>
-            ⚠️ 영문 대/소문자, 숫자, 특수문자를 각각 최소 1개 이상 포함해야 합니다.
+        {passwordInvalid && (
+          <p className="form-error" role="alert">
+            비밀번호 구성을 다시 확인해 주세요.
           </p>
         )}
 
         {authError && <p className="form-error" role="alert">{authError}</p>}
 
-        <button
-          aria-busy={authSubmitting}
-          className="primary-button"
-          disabled={authSubmitting || (authMode === "register" && !isCodeVerified)}
-          type="submit"
-          style={{ marginTop: "6px" }}
-        >
-          <LockKeyhole size={18} />
-          {authSubmitting ? "처리 중" : authMode === "login" ? "로그인" : "회원가입 완료"}
-        </button>
+        {(!isRegister || isCodeVerified) && (
+          <button
+            aria-busy={authSubmitting}
+            className="primary-button auth-submit-button"
+            disabled={authSubmitting}
+            type="submit"
+          >
+            <LockKeyhole aria-hidden="true" size={18} />
+            {authSubmitting ? "처리 중" : isRegister ? "계정 만들고 여행 시작" : "로그인"}
+          </button>
+        )}
       </form>
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "12px", gap: "8px" }}>
+      <div className="auth-alternative-actions">
         <button
-          className="secondary-button auth-switch-button"
-          onClick={() => onAuthModeChange(authMode === "login" ? "register" : "login")}
+          aria-label={isRegister ? "로그인" : "회원가입"}
+          className="auth-text-action"
+          onClick={() => onAuthModeChange(isRegister ? "login" : "register")}
           type="button"
-          style={{ marginTop: 0, flex: 1, fontSize: "var(--type-label-size)" }}
         >
-          {authMode === "login" ? "회원가입" : "로그인"}
+          {isRegister ? "이미 계정이 있나요? " : "계정이 없나요? "}
+          <strong>{isRegister ? "로그인" : "회원가입"}</strong>
         </button>
-        {authMode === "login" && (
+        {!isRegister && (
           <button
-            className="secondary-button auth-switch-button"
+            aria-label="비밀번호 분실"
+            className="auth-text-action"
             onClick={() => setIsForgotMode(true)}
             type="button"
-            style={{ marginTop: 0, flex: 1, fontSize: "var(--type-label-size)", color: "var(--c-muted)" }}
           >
-            비밀번호 분실
+            비밀번호를 잊으셨나요?
           </button>
         )}
       </div>
