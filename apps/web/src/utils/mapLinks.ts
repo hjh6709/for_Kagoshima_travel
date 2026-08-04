@@ -48,7 +48,12 @@ export function getAmapDirectionsUrl(place: MappablePlace, mode: TravelMode = "t
 }
 
 export function getAmapSearchUrl(place: MappablePlace) {
-  const keyword = place.chineseName || place.chineseAddress || place.name || place.address;
+  const localName = place.chineseName || place.name;
+  const localAddress = place.chineseAddress || place.address;
+  const keyword =
+    localName && localAddress && localName !== localAddress
+      ? `${localName} ${localAddress}`
+      : localName || localAddress;
   if (!keyword) return undefined;
 
   const params = new URLSearchParams({
@@ -63,12 +68,26 @@ export function getAmapSearchUrl(place: MappablePlace) {
 export function getGoogleDirectionsUrl(place?: MappablePlace, mode: TravelMode = "transit") {
   if (!place) return "https://www.google.com/maps/dir/?api=1";
 
-  const destination = hasPlaceCoordinates(place)
+  const destinationName = place.chineseName || place.name;
+  const destinationAddress = place.chineseAddress || place.address;
+  const descriptiveDestination =
+    destinationName && destinationAddress && destinationName !== destinationAddress
+      ? `${destinationName}, ${destinationAddress}`
+      : undefined;
+  const coordinateDestination = hasPlaceCoordinates(place)
     ? `${place.latitude},${place.longitude}`
-    : place.address || place.name;
+    : undefined;
+  const destination = place.googlePlaceId
+    ? coordinateDestination || descriptiveDestination || destinationAddress || destinationName
+    : descriptiveDestination || coordinateDestination || destinationAddress || destinationName;
   if (!destination) return place.googleMapsUrl || "https://www.google.com/maps/dir/?api=1";
 
-  const params = new URLSearchParams({ api: "1", destination, travelmode: mode });
+  const params = new URLSearchParams({
+    api: "1",
+    destination,
+    travelmode: mode,
+    dir_action: "navigate",
+  });
   if (place.googlePlaceId) params.set("destination_place_id", place.googlePlaceId);
   return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
@@ -95,13 +114,14 @@ export function getDirectionUrl(
 /** 외부 지도에서 장소 위치를 연다. 좌표가 없으면 동일 제공자의 장소 검색으로 대체한다. */
 export function getPlaceMarkerUrl(provider: "amap" | "google" | "apple", params: MapLinkParams): string {
   if (provider === "amap") {
-    if (params.coordinateSystem !== "gcj02" || !hasPlaceCoordinates(params)) {
+    if (!hasPlaceCoordinates(params)) {
       return getAmapSearchUrl(params) || "https://uri.amap.com/search";
     }
     const markerParams = new URLSearchParams({
       position: `${params.longitude},${params.latitude}`,
       name: params.chineseName || params.name,
       src: "map-planner",
+      coordinate: params.coordinateSystem === "gcj02" ? "gaode" : "wgs84",
       callnative: "1",
     });
     return `https://uri.amap.com/marker?${markerParams.toString()}`;

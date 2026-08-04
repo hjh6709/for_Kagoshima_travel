@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Map, Navigation } from "lucide-react";
 import {
   getAmapDirectionsUrl,
-  getAmapSearchUrl,
   getGoogleDirectionsUrl,
+  getPlaceMarkerUrl,
   type MappablePlace,
 } from "../../utils/mapLinks";
 
@@ -16,7 +16,11 @@ type MapDirectionsChoiceProps = {
 export function MapDirectionsChoice({ destinationCountry, place }: MapDirectionsChoiceProps) {
   const [isOpen, setIsOpen] = useState(false);
   const amapDirectionsUrl = destinationCountry === "CN" ? getAmapDirectionsUrl(place) : undefined;
-  const amapUrl = destinationCountry === "CN" ? amapDirectionsUrl || getAmapSearchUrl(place) : undefined;
+  const amapUrl =
+    destinationCountry === "CN"
+      ? amapDirectionsUrl || getPlaceMarkerUrl("amap", place)
+      : undefined;
+  const needsAmapConfirmation = Boolean(amapUrl && !amapDirectionsUrl);
 
   return (
     <div className="directions-choice">
@@ -31,13 +35,11 @@ export function MapDirectionsChoice({ destinationCountry, place }: MapDirections
       </button>
 
       {isOpen && (
-        <div
-          aria-label="길찾기 지도 선택"
-          className="directions-options"
-          role="group"
-        >
+        <div aria-label="길찾기 지도 선택" className="directions-options" role="group">
           <span>
-            사용할 지도 앱을 선택하세요
+            {needsAmapConfirmation
+              ? "고덕지도에서는 장소를 확인한 뒤 길찾기를 눌러 주세요."
+              : "사용할 지도 앱을 선택하세요"}
           </span>
           <div className={amapUrl ? "directions-grid two-options" : "directions-grid"}>
             {amapUrl && (
@@ -48,7 +50,7 @@ export function MapDirectionsChoice({ destinationCountry, place }: MapDirections
                 target="_blank"
               >
                 <Map size={15} />
-                {amapDirectionsUrl ? "고덕지도" : "고덕지도에서 찾기"}
+                {amapDirectionsUrl ? "고덕지도" : "고덕지도 위치 보기"}
               </a>
             )}
             <a
