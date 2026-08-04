@@ -1,4 +1,4 @@
-import { ArrowRight, CalendarDays, ChevronDown, Compass, Trash2, UsersRound } from "lucide-react";
+import { ArrowRight, CalendarDays, ChevronDown, Compass, PencilLine, Trash2, UsersRound } from "lucide-react";
 import type { OwnerTrip } from "../../../../api/trips";
 import {
   formatKoreanDate,
@@ -7,6 +7,7 @@ import {
   getTravelStatus,
   type TravelPhase,
 } from "../../../../shared/date";
+import { getManageTripEditorPath, getManageTripPath } from "../../../../shared/manageRoute";
 import type { TripListSectionProps } from "../../manageTypes";
 
 const phasePriority: Record<TravelPhase, number> = {
@@ -85,14 +86,18 @@ export function TripListSection({
                   )}
                 </div>
                 <div className="owner-trip-actions">
-                  <a className="primary-button compact-button" href={`/manage/trips/${ownerTrip.id}`}>
+                  <a className="primary-button compact-button" href={getManageTripPath(ownerTrip.id)}>
                     여행 열기
                     <ArrowRight aria-hidden="true" size={17} />
+                  </a>
+                  <a className="secondary-button compact-button" href={getManageTripEditorPath(ownerTrip.id)}>
+                    <PencilLine aria-hidden="true" size={17} />
+                    여행 편집
                   </a>
                 </div>
                 <details className="owner-trip-manage">
                   <summary>
-                    여행 관리
+                    삭제 메뉴
                     <ChevronDown aria-hidden="true" size={16} />
                   </summary>
                   <div className="owner-trip-manage-panel">

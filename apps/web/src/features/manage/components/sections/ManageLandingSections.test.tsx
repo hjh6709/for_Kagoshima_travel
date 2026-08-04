@@ -77,7 +77,7 @@ describe("로그인 후 여행 목록", () => {
     ]);
   });
 
-  it("삭제는 여행 관리 안에서 경고를 확인한 뒤 실행한다", async () => {
+  it("삭제는 삭제 메뉴 안에서 경고를 확인한 뒤 실행한다", async () => {
     const onDeleteTrip = vi.fn();
     const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
 
@@ -95,7 +95,7 @@ describe("로그인 후 여행 목록", () => {
     const deleteButton = within(card).getByRole("button", { name: "여행 삭제" });
     expect(deleteButton).not.toBeVisible();
 
-    await userEvent.click(within(card).getByText("여행 관리"));
+    await userEvent.click(within(card).getByText("삭제 메뉴"));
     expect(deleteButton).toBeVisible();
     expect(within(card).getByText("삭제하면 일정과 장소를 복구할 수 없습니다.")).toBeVisible();
 
