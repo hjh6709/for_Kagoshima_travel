@@ -39,6 +39,10 @@ export function TripPage(props: TripPageComponentProps) {
   }, [activeTab]);
 
   useEffect(() => {
+    if (activeTab === "schedule") props.setSelectedDate(props.focusDate);
+  }, [activeTab, props.focusDate, props.setSelectedDate]);
+
+  useEffect(() => {
     const content = contentRef.current;
     if (!content) return;
     if (typeof content.scrollTo === "function") {

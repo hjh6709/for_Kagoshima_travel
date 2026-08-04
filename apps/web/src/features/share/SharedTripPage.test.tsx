@@ -183,6 +183,37 @@ describe("SharedTripPage", () => {
     expect(screen.getByText("내일 점심")).toBeVisible();
   });
 
+  it("공유 일정도 여행 중에는 첫 일정 날짜가 아니라 오늘 날짜를 선택한다", async () => {
+    render(
+      <SharedTripPage
+        error=""
+        loading={false}
+        sharedTrip={{
+          ...sharedTrip,
+          trip: { ...sharedTrip.trip, startDate: "2026-07-28" },
+          schedules: [
+            {
+              id: "schedule-first-day",
+              date: "2026-07-28",
+              time: "09:00",
+              type: "sightseeing",
+              title: "첫날 일정",
+            },
+            ...sharedTrip.schedules,
+          ],
+        }}
+        warning=""
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "일정" }));
+
+    expect(screen.getByRole("button", { name: "7/29(수)" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "7/28(화)" })).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByText("인민광장 산책")).toBeVisible();
+    expect(screen.queryByText("첫날 일정")).not.toBeInTheDocument();
+  });
+
   it("지도 탭을 다시 열어도 Google 지도 객체를 중복 생성하지 않는다", async () => {
     installLoadedMapRuntime();
     render(<SharedTripPage error="" loading={false} sharedTrip={sharedTrip} warning="" />);
