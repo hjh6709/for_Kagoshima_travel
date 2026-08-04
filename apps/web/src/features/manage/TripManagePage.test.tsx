@@ -54,6 +54,11 @@ describe("TripManagePage creation flow", () => {
     const existingTripHeading = screen.getByRole("heading", { name: "상하이 여행" });
     expect(existingTripHeading).toBeVisible();
     expect(screen.getByRole("link", { name: "여행 열기" })).toBeVisible();
+    expect(screen.getByRole("link", { name: "여행 편집" })).toHaveAttribute(
+      "href",
+      "/manage/trips/trip-1/edit",
+    );
+    expect(screen.getByText("삭제 메뉴")).toBeVisible();
     expect(
       existingTripHeading.compareDocumentPosition(disclosure as Node) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
