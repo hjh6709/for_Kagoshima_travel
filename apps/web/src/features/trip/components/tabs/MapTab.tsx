@@ -203,6 +203,7 @@ export function MapTab({
   isReadOnly,
   places,
   setActiveTab,
+  setSelectedDate,
   setScheduleView,
   travelStatus,
   trip,
@@ -293,6 +294,7 @@ export function MapTab({
     "";
 
   const openSchedule = () => {
+    setSelectedDate(focusDate);
     setScheduleView("itinerary");
     setActiveTab("schedule");
   };
