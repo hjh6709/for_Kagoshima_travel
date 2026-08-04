@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getAmapDirectionsUrl, getAmapSearchUrl, getGoogleDirectionsUrl } from "../utils/mapLinks";
+import { getAmapDirectionsUrl, getGoogleDirectionsUrl, getPlaceMarkerUrl } from "../utils/mapLinks";
 
 async function loadSampleTripAt(date: Date) {
   vi.useFakeTimers();
@@ -84,18 +84,23 @@ describe("상하이 샘플 여행", () => {
     });
   });
 
-  it("WGS84 샘플 좌표는 Google 길찾기에 쓰고 고덕지도에서는 중국어 장소명으로 찾는다", async () => {
+  it("WGS84 샘플 좌표는 고덕지도 위치 표시와 Google 길찾기에 안전하게 사용한다", async () => {
     const sample = await loadSampleTripAt(new Date(2026, 6, 30, 12));
 
     for (const place of sample.places) {
       expect(getAmapDirectionsUrl(place)).toBeUndefined();
 
-      const amapURL = new URL(getAmapSearchUrl(place)!);
-      expect(amapURL.pathname).toBe("/search");
-      expect(amapURL.searchParams.get("keyword")).toBe(place.chineseName);
+      const amapURL = new URL(getPlaceMarkerUrl("amap", place));
+      expect(amapURL.pathname).toBe("/marker");
+      expect(amapURL.searchParams.get("position")).toBe(`${place.longitude},${place.latitude}`);
+      expect(amapURL.searchParams.get("name")).toBe(place.chineseName);
+      expect(amapURL.searchParams.get("coordinate")).toBe("wgs84");
 
       const googleURL = new URL(getGoogleDirectionsUrl(place));
-      expect(googleURL.searchParams.get("destination")).toBe(`${place.latitude},${place.longitude}`);
+      expect(googleURL.searchParams.get("destination")).toBe(
+        `${place.chineseName}, ${place.chineseAddress}`,
+      );
+      expect(googleURL.searchParams.get("dir_action")).toBe("navigate");
     }
   });
 
