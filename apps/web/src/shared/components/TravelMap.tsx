@@ -234,24 +234,35 @@ export function TravelMap<T extends MappableLocation>({
 
     setLocating(true);
     setLocationError("");
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setCurrentLocation({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        });
-        setLocating(false);
-      },
-      (error) => {
-        setLocationError(getLocationErrorMessage(error));
-        setLocating(false);
-      },
-      {
-        enableHighAccuracy: true,
-        maximumAge: 30_000,
+    const handleSuccess: PositionCallback = (position) => {
+      setCurrentLocation({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+      });
+      setLocating(false);
+    };
+    const handleFallbackError: PositionErrorCallback = (error) => {
+      setLocationError(getLocationErrorMessage(error));
+      setLocating(false);
+    };
+    const handleHighAccuracyError: PositionErrorCallback = (error) => {
+      if (error.code === error.PERMISSION_DENIED) {
+        handleFallbackError(error);
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(handleSuccess, handleFallbackError, {
+        enableHighAccuracy: false,
+        maximumAge: 300_000,
         timeout: 10_000,
-      },
-    );
+      });
+    };
+
+    navigator.geolocation.getCurrentPosition(handleSuccess, handleHighAccuracyError, {
+      enableHighAccuracy: true,
+      maximumAge: 30_000,
+      timeout: 10_000,
+    });
   };
 
   return (

@@ -167,18 +167,19 @@ describe("TravelMap", () => {
 
   it("위치 권한이 거부되어도 저장 장소 지도는 유지한다", async () => {
     installLoadedMapRuntime();
+    const getCurrentPosition = vi.fn(
+      (_success: PositionCallback, error: PositionErrorCallback) =>
+        error({
+          code: 1,
+          message: "denied",
+          PERMISSION_DENIED: 1,
+          POSITION_UNAVAILABLE: 2,
+          TIMEOUT: 3,
+        }),
+    );
     Object.defineProperty(navigator, "geolocation", {
       configurable: true,
-      value: {
-        getCurrentPosition: (_success: PositionCallback, error: PositionErrorCallback) =>
-          error({
-            code: 1,
-            message: "denied",
-            PERMISSION_DENIED: 1,
-            POSITION_UNAVAILABLE: 2,
-            TIMEOUT: 3,
-          }),
-      },
+      value: { getCurrentPosition },
     });
 
     render(
@@ -192,7 +193,71 @@ describe("TravelMap", () => {
     await userEvent.click(await screen.findByRole("button", { name: "현재 위치 표시" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("위치 권한을 허용하지 않았습니다");
+    expect(getCurrentPosition).toHaveBeenCalledTimes(1);
     expect(screen.getByLabelText("저장 장소 지도")).toBeVisible();
+  });
+
+  it("고정밀 위치 확인이 일시적으로 실패하면 모바일 친화 설정으로 한 번 더 시도한다", async () => {
+    installLoadedMapRuntime();
+    const getCurrentPosition = vi
+      .fn()
+      .mockImplementationOnce((_success: PositionCallback, error: PositionErrorCallback) =>
+        error({
+          code: 3,
+          message: "high accuracy timeout",
+          PERMISSION_DENIED: 1,
+          POSITION_UNAVAILABLE: 2,
+          TIMEOUT: 3,
+        }),
+      )
+      .mockImplementationOnce((success: PositionCallback) =>
+        success({
+          coords: {
+            accuracy: 42,
+            altitude: null,
+            altitudeAccuracy: null,
+            heading: null,
+            latitude: 31.2304,
+            longitude: 121.4737,
+            speed: null,
+            toJSON: () => ({}),
+          },
+          timestamp: 0,
+          toJSON: () => ({}),
+        }),
+      );
+    Object.defineProperty(navigator, "geolocation", {
+      configurable: true,
+      value: { getCurrentPosition },
+    });
+
+    render(
+      <TravelMap
+        onSelectPlace={() => undefined}
+        places={[mappablePlace]}
+        selectedPlaceID=""
+      />,
+    );
+
+    await userEvent.click(await screen.findByRole("button", { name: "현재 위치 표시" }));
+
+    expect(await screen.findByRole("status", { name: "현재 위치 표시 상태" })).toHaveTextContent(
+      "현재 위치를 지도에 표시했습니다",
+    );
+    expect(getCurrentPosition).toHaveBeenCalledTimes(2);
+    expect(getCurrentPosition).toHaveBeenNthCalledWith(
+      1,
+      expect.any(Function),
+      expect.any(Function),
+      expect.objectContaining({ enableHighAccuracy: true, maximumAge: 30_000 }),
+    );
+    expect(getCurrentPosition).toHaveBeenNthCalledWith(
+      2,
+      expect.any(Function),
+      expect.any(Function),
+      expect.objectContaining({ enableHighAccuracy: false, maximumAge: 300_000 }),
+    );
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("현재 위치를 저장 장소와 같은 지도에 표시하고 성공 상태를 알린다", async () => {
