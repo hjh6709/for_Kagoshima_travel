@@ -105,10 +105,10 @@ test("Pretendard는 앱과 함께 배포되어 오프라인에서도 같은 위�
   assert.match(tokens, /font-display:\s*swap/);
 });
 
-test("200% 확대에서도 일정과 현지 도구는 한 열로 재배치된다", () => {
+test("작은 모바일과 200% 확대에서 일정과 현지 도구는 한 열로 재배치된다", () => {
   assert.match(
     tripStyles,
-    /@media \(max-width: 240px\)[\s\S]*?\.schedule-card\s*{[\s\S]*?grid-template-columns:\s*minmax\(0, 1fr\)/,
+    /@media \(max-width: 360px\)[\s\S]*?\.schedule-card\s*{[\s\S]*?grid-template-columns:\s*minmax\(0, 1fr\)/,
   );
   assert.match(
     tripStyles,

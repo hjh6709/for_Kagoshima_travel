@@ -425,6 +425,17 @@ p {
   scrollbar-width: none;
 }
 
+.date-tabs.fit-tabs {
+  display: grid;
+}
+
+.date-tabs.scroll-tabs {
+  overscroll-behavior-inline: contain;
+  scroll-padding-inline: 4px;
+  scroll-snap-type: x proximity;
+  touch-action: pan-x;
+}
+
 .date-tabs::-webkit-scrollbar {
   display: none;
 }
@@ -432,11 +443,22 @@ p {
 .date-tabs button {
   min-width: 88px;
   min-height: 44px;
+  padding-inline: 4px;
   border: 0;
   background: transparent;
   color: var(--c-muted);
   border-radius: 8px;
+  font-size: var(--type-supporting-size);
   font-weight: var(--font-weight-strong);
+  white-space: nowrap;
+}
+
+.date-tabs.fit-tabs button {
+  min-width: 0;
+}
+
+.date-tabs.scroll-tabs button {
+  scroll-snap-align: center;
 }
 
 .date-tabs button.active {
@@ -1174,6 +1196,26 @@ p {
   .mypage-trip-actions {
     grid-template-columns: 1fr;
   }
+
+  .timeline-stack {
+    padding-left: 0;
+  }
+
+  .timeline-stack::before {
+    left: 12px;
+  }
+
+  .schedule-card {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    margin-left: 28px;
+    padding: 16px 12px;
+  }
+
+  .schedule-card::before {
+    top: 22px;
+    left: -23px;
+  }
 }
 
 @media (max-width: 240px) {
@@ -1258,26 +1300,6 @@ p {
   .next-schedule-empty .secondary-button {
     grid-column: 1;
     justify-self: stretch;
-  }
-
-  .timeline-stack {
-    padding-left: 0;
-  }
-
-  .timeline-stack::before {
-    left: 12px;
-  }
-
-  .schedule-card {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 8px;
-    margin-left: 28px;
-    padding: 16px 12px;
-  }
-
-  .schedule-card::before {
-    top: 22px;
-    left: -23px;
   }
 
   .schedule-actions {

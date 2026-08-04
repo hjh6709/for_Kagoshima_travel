@@ -1,4 +1,5 @@
 import { CalendarDays, ListChecks } from "lucide-react";
+import { useEffect, useRef } from "react";
 import { formatShortDate } from "../../../../shared/date";
 import type { TripPageProps } from "../../tripPageTypes";
 import { ProfileShortcutButton } from "../cards/ProfileShortcutButton";
@@ -44,6 +45,17 @@ export function ScheduleTab({
   trip,
   onNavigateToMyPage,
 }: TripPageProps) {
+  const dateTabsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scheduleView !== "itinerary" || dates.length <= 4) return;
+
+    const selectedDateButton = dateTabsRef.current?.querySelector<HTMLButtonElement>(
+      '[aria-pressed="true"]',
+    );
+    selectedDateButton?.scrollIntoView?.({ block: "nearest", inline: "center" });
+  }, [dates.length, scheduleView, selectedDate]);
+
   return (
     <section className="screen">
       <div className="screen-title-row">
@@ -80,9 +92,19 @@ export function ScheduleTab({
       {scheduleView === "itinerary" ? (
         <>
           {dates.length > 0 && (
-            <div className="date-tabs">
+            <div
+              aria-label="여행 날짜 선택"
+              className={`date-tabs ${dates.length <= 4 ? "fit-tabs" : "scroll-tabs"}`}
+              ref={dateTabsRef}
+              style={
+                dates.length <= 4
+                  ? { gridTemplateColumns: `repeat(${dates.length}, minmax(0, 1fr))` }
+                  : undefined
+              }
+            >
               {dates.map((date) => (
                 <button
+                  aria-pressed={date === selectedDate}
                   className={date === selectedDate ? "active" : ""}
                   key={date}
                   onClick={() => setSelectedDate(date)}
