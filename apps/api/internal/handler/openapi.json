@@ -354,10 +354,21 @@
   "paths": {
     "/healthz": {
       "get": {
-        "summary": "서버 상태 확인",
+        "summary": "API 프로세스 생존 확인",
         "tags": ["헬스"],
         "responses": {
           "200": { "description": "정상" }
+        }
+      }
+    },
+    "/readyz": {
+      "get": {
+        "summary": "API 서비스 준비 상태 확인",
+        "description": "API 프로세스와 데이터베이스가 요청을 처리할 수 있는지 확인합니다.",
+        "tags": ["헬스"],
+        "responses": {
+          "200": { "description": "서비스 준비 완료" },
+          "503": { "description": "데이터베이스 등 필수 의존성 사용 불가" }
         }
       }
     },

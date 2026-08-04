@@ -11,9 +11,9 @@ flowchart LR
   Upload --> Validate["production 환경 검증"]
   Validate --> Swap["기존 binary 백업 · next 활성화"]
   Swap --> Restart["systemd restart"]
-  Restart --> Health{"/healthz 성공?"}
-  Health -->|예| Done["이전 binary 제거"]
-  Health -->|아니오| Rollback["이전 binary 복구 · 재시작"]
+  Restart --> Ready{"/readyz 성공?"}
+  Ready -->|예| Done["이전 binary 제거"]
+  Ready -->|아니오| Rollback["이전 binary 복구 · 재시작"]
 ```
 
 관련 파일:
@@ -85,9 +85,13 @@ chmod 600 /home/opc/travel-api/.env
 ```bash
 sudo systemctl status travel-api --no-pager
 curl --fail --silent http://127.0.0.1:8080/healthz
+curl --fail --silent http://127.0.0.1:8080/readyz
 curl --fail --silent https://api.hjh-dev.site/healthz
+curl --fail --silent https://api.hjh-dev.site/readyz
 sudo journalctl -u travel-api -n 100 --no-pager
 ```
+
+`/healthz`는 API 프로세스가 응답하는지 확인하고, `/readyz`는 PostgreSQL까지 요청을 처리할 준비가 되었는지 확인합니다. 배포 승격과 롤백 판단에는 `/readyz`를 사용합니다.
 
 환경 파일 값 자체를 출력하는 명령은 화면 공유나 CI 로그에서 실행하지 않습니다.
 
@@ -111,7 +115,7 @@ sudo journalctl -u travel-api -n 150 --no-pager
 
 서비스 unit의 `WorkingDirectory`, `ExecStart`, `EnvironmentFile`이 모두 `/home/opc/travel-api`를 가리키는지 확인합니다.
 
-### health check 실패
+### readiness check 실패
 
 배포 스크립트가 이전 바이너리를 복구합니다. 복구도 실패했다면 다음 순서로 확인합니다.
 
@@ -156,7 +160,7 @@ ssh -i <SSH_KEY> opc@<OCI_VM_IP> '/home/opc/travel-api/deploy-api-on-vm.sh /home
 
 ### 배포 후
 
-- 내부·외부 `/healthz` 확인
+- 내부·외부 `/healthz`, `/readyz` 확인
 - 로그인 세션 복구 확인
 - 변경된 대표 API 흐름 확인
 - 새 migration 적용 오류가 없는지 로그 확인

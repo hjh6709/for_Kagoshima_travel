@@ -142,9 +142,14 @@ func (s *Server) registerRoutes(jwtSecret string) {
 		user, err := repository.WithUserRepositoryContext(s.userRepository, ctx).FindByID(claims.UserID)
 		return err == nil && user.Email == claims.Email && user.TokenVersion == claims.TokenVersion
 	})
+	var readinessChecker handler.ReadinessChecker
+	if s.pool != nil {
+		readinessChecker = s.pool
+	}
 
 	// 공개 엔드포인트
 	s.mux.HandleFunc("GET /healthz", handler.Health)
+	s.mux.Handle("GET /readyz", handler.Readiness(readinessChecker))
 	s.mux.HandleFunc("GET /docs", handler.DocsUI)
 	s.mux.HandleFunc("GET /openapi.json", handler.OpenAPISpec)
 	s.mux.HandleFunc("POST /api/auth/register", s.authHandler.Register)

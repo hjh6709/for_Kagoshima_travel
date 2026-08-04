@@ -15,7 +15,7 @@ SPA fallback이 `/api` 요청까지 받아 정적 파일에 POST했습니다. `v
 ### 재발 확인
 
 - `vercel.json`에서 API rewrite가 SPA rewrite보다 앞에 있는지 확인
-- 배포 뒤 `/healthz`와 인증코드 POST를 각각 확인
+- 배포 뒤 `/healthz`, `/readyz`와 인증코드 POST를 각각 확인
 
 ## 2. 공유 응답에 소유자 내부 정보가 섞일 위험
 
@@ -57,7 +57,7 @@ OCI VM 배포 중 활성 `travel-api` 바이너리를 덮어쓰거나 불완전�
 
 ### 원인과 조치
 
-새 바이너리를 `travel-api.next`로 별도 전송하고 기존 활성 바이너리를 timestamp 롤백 파일로 이동한 뒤 next를 활성화합니다. systemd 재시작과 `/healthz`가 실패하면 이전 바이너리를 복원합니다. 구현은 `scripts/deploy-api-on-vm.sh`, 회귀 검사는 `scripts/deploy-api-on-vm.test.sh`가 담당합니다.
+새 바이너리를 `travel-api.next`로 별도 전송하고 기존 활성 바이너리를 timestamp 롤백 파일로 이동한 뒤 next를 활성화합니다. systemd 재시작 또는 DB 연결을 포함한 `/readyz` 검사가 실패하면 이전 바이너리를 복원합니다. `/healthz`는 프로세스 생존 확인에만 사용합니다. 구현은 `scripts/deploy-api-on-vm.sh`, 회귀 검사는 `scripts/deploy-api-on-vm.test.sh`가 담당합니다.
 
 ## 5. production 환경이 개발 모드로 실행될 위험
 

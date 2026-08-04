@@ -46,7 +46,7 @@ validate_production_config() {
     fi
 }
 
-wait_until_healthy() {
+wait_until_ready() {
     local port_value attempts
     port_value=$(env_value PORT)
     port_value=${port_value:-8080}
@@ -54,7 +54,7 @@ wait_until_healthy() {
 
     for ((attempt = 1; attempt <= attempts; attempt++)); do
         if sudo systemctl is-active --quiet "$SERVICE_NAME" \
-            && curl --fail --silent --max-time 2 "http://127.0.0.1:$port_value/healthz" >/dev/null; then
+            && curl --fail --silent --max-time 2 "http://127.0.0.1:$port_value/readyz" >/dev/null; then
             return 0
         fi
         sleep 1
@@ -68,7 +68,7 @@ rollback() {
         return 1
     fi
 
-    echo "health check failed; restoring previous binary" >&2
+    echo "readiness check failed; restoring previous binary" >&2
     sudo systemctl stop "$SERVICE_NAME" || true
     if [ -f "$CURRENT_BINARY" ]; then
         mv "$CURRENT_BINARY" "$FAILED_BINARY"
@@ -76,7 +76,7 @@ rollback() {
     mv "$ROLLBACK_BINARY" "$CURRENT_BINARY"
     chmod 750 "$CURRENT_BINARY"
     sudo systemctl start "$SERVICE_NAME"
-    wait_until_healthy
+    wait_until_ready
 }
 
 validate_production_config
@@ -98,8 +98,8 @@ elif [ -f "$LEGACY_ROLLBACK_BINARY" ]; then
 fi
 mv "$NEXT_BINARY" "$CURRENT_BINARY"
 
-if ! sudo systemctl restart "$SERVICE_NAME" || ! wait_until_healthy; then
-    rollback || echo "rollback health check also failed; inspect systemd logs" >&2
+if ! sudo systemctl restart "$SERVICE_NAME" || ! wait_until_ready; then
+    rollback || echo "rollback readiness check also failed; inspect systemd logs" >&2
     exit 1
 fi
 
@@ -107,4 +107,4 @@ fi
 if [ -f "$ROLLBACK_BINARY" ]; then
     rm -f "$ROLLBACK_BINARY"
 fi
-echo "deployment healthy: $SERVICE_NAME"
+echo "deployment ready: $SERVICE_NAME"
