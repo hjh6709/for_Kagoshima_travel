@@ -19,6 +19,7 @@ const placeSearchStyles = readFileSync(
   "utf8",
 );
 const tripStyles = readFileSync(new URL("../src/styles/trip.css", import.meta.url), "utf8");
+const manageStyles = readFileSync(new URL("../src/styles/manage.css", import.meta.url), "utf8");
 const travelToolStyles = readFileSync(
   new URL("../src/styles/travel-tools.css", import.meta.url),
   "utf8",
@@ -127,5 +128,20 @@ test("좁은 모바일에서 관리 폼과 장소 검색은 한 열 입력 흐�
   assert.match(
     placeSearchStyles,
     /@media \(max-width: 280px\)[\s\S]*?\.place-search-controls\s*{[\s\S]*?grid-template-columns:\s*minmax\(0, 1fr\)/,
+  );
+});
+
+test("첫 화면 주요 행동은 문구를 가운데 두고 화살표만 오른쪽에 배치한다", () => {
+  assert.match(
+    manageStyles,
+    /\.start-primary-action\s*{[\s\S]*?position:\s*relative;[\s\S]*?padding-inline:\s*44px;/,
+  );
+  assert.match(
+    manageStyles,
+    /\.start-primary-action \.trailing-icon\s*{[\s\S]*?position:\s*absolute;[\s\S]*?right:\s*16px;/,
+  );
+  assert.doesNotMatch(
+    manageStyles,
+    /\.start-primary-action \.trailing-icon\s*{[\s\S]*?margin-left:\s*auto;/,
   );
 });
