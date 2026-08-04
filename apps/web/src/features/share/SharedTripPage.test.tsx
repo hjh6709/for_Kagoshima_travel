@@ -145,6 +145,42 @@ describe("SharedTripPage", () => {
     expect(screen.getByText("내일 점심")).toBeVisible();
   });
 
+  it("4일 이하는 날짜를 모두 맞추고 긴 여행은 가로 탐색 상태로 제공한다", async () => {
+    const fourDayTrip: SharedTripResponse = {
+      ...sharedTrip,
+      trip: { ...sharedTrip.trip, endDate: "2026-08-01" },
+    };
+    const { unmount } = render(
+      <SharedTripPage error="" loading={false} sharedTrip={fourDayTrip} warning="" />,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "일정" }));
+    const fittedDates = screen.getByLabelText("여행 날짜 선택");
+    expect(fittedDates).toHaveClass("fit-tabs");
+    expect(screen.getByRole("button", { name: "8/1(토)" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "7/29(수)" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+
+    unmount();
+
+    render(
+      <SharedTripPage
+        error=""
+        loading={false}
+        sharedTrip={{
+          ...sharedTrip,
+          trip: { ...sharedTrip.trip, endDate: "2026-08-02" },
+        }}
+        warning=""
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "일정" }));
+    expect(screen.getByLabelText("여행 날짜 선택")).toHaveClass("scroll-tabs");
+    expect(screen.getByRole("button", { name: "8/2(일)" })).toBeVisible();
+  });
+
   it("공유 화면에서도 여행 전체와 날짜별 체크리스트를 구분한다", async () => {
     render(
       <SharedTripPage
