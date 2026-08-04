@@ -1,72 +1,66 @@
-# 배포 아키텍처 및 운영 가이드
+# 배포 아키텍처
 
-이 문서는 가고시마 여행 공유 서비스의 실제 운영 서버 배포 구조와 관리 방법을 명세합니다.
+## 운영 구성
 
----
-
-## 1. 현재 운영 배포 아키텍처
-
-서비스는 비용 효율성과 안정성을 극대화하기 위해 백엔드 계산 엔진(오라클 VM)과 데이터 저장소(Supabase)를 분리하는 이원화 아키텍처를 채택하고 있습니다.
-
-```text
-[ 유저 브라우저 (PWA) ] 
-       │
-       ├──(HTTPS: api.hjh-dev.site)──> [ Oracle Cloud VM (Go API + Caddy Proxy) ]
-       │                                                     │
-       │                                                (PostgreSQL)
-       │                                                     ▼
-       └─(HTTPS: kagoshima.hjh-dev.site)──> [ Supabase Cloud Database (Seoul) ]
+```mermaid
+flowchart LR
+  Browser["사용자 브라우저"] -->|HTTPS| Vercel["Vercel · kagoshima.hjh-dev.site"]
+  Vercel -->|HTTPS /api| Caddy["OCI VM · api.hjh-dev.site · Caddy"]
+  Caddy -->|127.0.0.1:8080| API["Go API · systemd"]
+  API -->|TLS| DB["Supabase PostgreSQL · Seoul"]
+  API -->|HTTPS| Places["Google Places API (New)"]
+  Browser -->|HTTPS| Maps["Google Maps JavaScript API"]
 ```
 
-* **Frontend**: React + Vite + PWA ➡️ **Vercel Hobby** 배포 및 도메인 연결 완료 (`https://kagoshima.hjh-dev.site`)
-* **Backend API**: Go REST API ➡️ **Oracle Cloud VM (ARM A1)** 호스트 및 도메인 연결 완료 (`https://api.hjh-dev.site`)
-* **Database**: PostgreSQL 17 ➡️ **Supabase Cloud DB** (Northeast Asia - Seoul 리전)
+프런트엔드만 Supabase에 직접 연결하는 경로는 없습니다. 모든 사용자·여행·체크리스트 데이터는 Go API의 인증·소유권 검사를 통과한 뒤 PostgreSQL에 접근합니다.
 
----
+## 프런트엔드: Vercel
 
-## 2. 프론트엔드 배포 (Vercel)
+- 기준 브랜치: `main`
+- 프로젝트: `apps/web`
+- 빌드: `npm run build`
+- 산출물: `apps/web/dist`
+- SPA 경로와 `/api` 프록시: `vercel.json`
 
-Vercel에서 GitHub 리포지토리의 `main` 브랜치를 기준으로 자동 빌드 및 배포(CD)됩니다.
+필수 Production 환경변수:
 
-### Vercel 빌드 설정
-* **Framework Preset**: Vite
-* **Build Command**: `cd apps/web && npm run build`
-* **Output Directory**: `apps/web/dist`
-* **Install Command**: `cd apps/web && npm ci`
+| 이름 | 역할 | 보호 방식 |
+| --- | --- | --- |
+| `VITE_API_BASE_URL` | Go API 기준 URL | 운영 도메인만 사용 |
+| `VITE_GOOGLE_MAPS_BROWSER_KEY` | 앱 내부 지도 렌더링 | 웹사이트·Maps JavaScript API 제한 |
+| `VITE_GOOGLE_MAPS_MAP_ID` | Advanced Marker용 Map ID | 비밀 값은 아니며 환경별 분리 |
 
-### 필수 환경 변수
-* **`VITE_API_BASE_URL`**: `https://api.hjh-dev.site` (운영계 Go API 서버 도메인)
-* **`VITE_GOOGLE_MAPS_BROWSER_KEY`**: Google Maps JavaScript API용 브라우저 키
-* **`VITE_GOOGLE_MAPS_MAP_ID`**: Advanced Marker를 활성화하는 JavaScript용 운영 Map ID
+브라우저 지도 키는 번들에서 확인될 수 있으므로 숨김이 아니라 HTTP referrer, 허용 API와 일별·월별 할당량 제한으로 보호합니다. Places 검색용 서버 키와 브라우저 키는 분리합니다.
 
-지도 키는 Vercel의 Production 환경변수에만 실제 값을 저장합니다. Google Cloud에서는 웹사이트 제한에 `https://kagoshima.hjh-dev.site/*`를 등록하고 API 제한을 Maps JavaScript API로 한정합니다. 이 키는 브라우저 번들에서 보이는 식별자이므로 키 자체를 숨기는 대신 도메인·API·할당량 제한으로 보호하며, 실제 값은 저장소에 커밋하지 않습니다.
+## API: Oracle Cloud VM
 
-`VITE_GOOGLE_MAPS_MAP_ID`가 없으면 기존 마커를 사용해 지도 기능을 유지합니다. Google Cloud Console에서 플랫폼이 JavaScript인 운영용 Map ID를 생성해 등록하면 접근성과 모바일 식별성이 개선된 Advanced Marker로 전환됩니다. `DEMO_MAP_ID`는 테스트 전용이므로 운영 환경에는 사용하지 않습니다.
+- 아키텍처: ARM64
+- 외부 연결: Caddy 443 → `127.0.0.1:8080`
+- 실행: `/home/opc/travel-api/travel-api`
+- 환경 파일: `/home/opc/travel-api/.env` (`0600`)
+- 서비스: `/etc/systemd/system/travel-api.service`
+- 상태 확인: `GET /healthz`
 
----
+API 변경이 main에 병합되면 `.github/workflows/api-release-build.yml`이 ARM64 바이너리를 빌드하고 VM에 `travel-api.next`로 전송합니다. 서버 배포 스크립트는 production 환경을 검증하고 이전 바이너리를 백업한 뒤 재시작·상태 검사를 수행합니다. 상태 검사가 실패하면 이전 바이너리로 복구합니다.
 
-## 3. 백엔드 배포 (Oracle Cloud VM)
+운영 환경변수와 GitHub Secrets의 실제 값은 저장소에 기록하지 않습니다. 이름과 등록 위치는 [`ORACLE_VM_DEPLOYMENT_RUNBOOK.md`](./ORACLE_VM_DEPLOYMENT_RUNBOOK.md)를 기준으로 합니다.
 
-오라클 클라우드 ARM 인스턴스 환경에서 24시간 안정적으로 무중단 가동됩니다.
+## 데이터베이스: Supabase PostgreSQL
 
-### 인프라 구성 실체
-* **Caddy 웹서버**: 외부 80/443 포트로 들어오는 HTTPS 트래픽을 인수하여 내부 `127.0.0.1:8080` Go API 포트로 프록싱하며 SSL 인증서를 자동 갱신합니다.
-* **systemd 서비스**: Go 바이너리를 `travel-api.service` 데몬 시스템 서비스로 등록하여, 서버가 재부팅되어도 자동으로 백그라운드 구동되도록 제어합니다.
-  - 서비스 파일 위치: `/etc/systemd/system/travel-api.service`
-  - 환경변수 주입 파일: `/etc/travel-api/travel-api.env`
+- 운영 데이터는 VM 로컬 디스크가 아니라 Supabase PostgreSQL에 저장합니다.
+- 초기 스키마: `apps/api/schema.sql`
+- 증분 마이그레이션: `apps/api/internal/db/migrations/*.sql`
+- API 시작 시 증분 마이그레이션을 파일명 순서로 반복 적용합니다.
+- `DATABASE_URL`은 TLS가 적용된 운영 연결 문자열을 사용합니다.
 
-### 필수 주입 환경 변수 (`travel-api.env`)
-* `APP_ENV`: `production`
-* `PORT`: `8080`
-* `DATABASE_URL`: `postgresql://postgres.[Project-ID]:[PW]@aws-1-ap-northeast-2.pooler.supabase.com:6543/postgres` (Supabase 트랜잭션 풀러 URI)
-* `JWT_SECRET`: 로그인 세션 서명용 시크릿 키
-* `ALLOWED_ORIGINS`: `https://kagoshima.hjh-dev.site`
+VM을 다시 만들더라도 Supabase 데이터는 유지되지만, 별도 백업과 복구 검증은 계속 필요합니다. 스키마 변경 PR은 기존 데이터 호환성과 롤백 방법을 함께 설명합니다.
 
----
+## 배포 후 확인
 
-## 4. 데이터베이스 마이그레이션 (Supabase)
+1. `https://api.hjh-dev.site/healthz`가 성공하는지 확인합니다.
+2. 시작 화면과 로그인 세션 복구가 정상인지 확인합니다.
+3. 여행 목록·공유 링크·장소 검색 중 변경과 관련된 대표 흐름을 확인합니다.
+4. Vercel과 API 로그에 새 오류가 없는지 확인합니다.
+5. PWA가 입력 중인 폼을 잃지 않고 새 버전을 적용하는지 확인합니다.
 
-데이터베이스의 모든 영속성 스키마는 **Supabase PostgreSQL**에서 관리합니다.
-
-* **테이블 구조 갱신**: 신규 테이블(예: checklists) 생성 또는 변경 시, 로컬의 Go DDL 마이그레이션 유틸리티(`scratch/migrate_db.go`)를 원격 DB 커넥션으로 구동하거나 Supabase SQL Editor를 통해 최종 쿼리를 반영합니다.
-* **데이터 보존 안정성**: 백엔드 서버(오라클 VM)에 문제가 생겨 VM 인스턴스를 재생성하더라도 모든 여행 데이터는 Supabase 클라우드에 고스란히 영구 보존됩니다.
+GitHub Actions 실행을 기다리지 않는 작업 방식이라도 실패 알림이 오면 해당 커밋의 배포 로그와 VM의 `journalctl -u travel-api`를 기준으로 진단합니다.

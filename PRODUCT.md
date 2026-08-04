@@ -44,7 +44,8 @@ Map Planner는 전 세계 여행과 한국 여행을 모두 지원하는 모바�
 ## Evidence on Hand
 
 - 실제 기능 요구사항: `docs/FEATURES.md`
-- 모바일 화면 구조: `docs/WIREFRAME.md`
+- 사용자 이동 흐름: `docs/USER_FLOW.md`
+- 모바일 화면 규칙과 시각 체계: `DESIGN.md`
 - 프런트엔드 구현: `apps/web/src`
 - API와 장소 검색 구현: `apps/api`
 - 실제 고객 후기, 상업적 성과, 가격 정보는 아직 없으며 이를 만들어 내지 않습니다.

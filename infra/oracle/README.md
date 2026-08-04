@@ -2,6 +2,8 @@
 
 Oracle Cloud Always Free VM에서 여행 공유 앱 API를 운영하기 위한 인프라 스크립트입니다.
 
+> 이 폴더는 새 VM을 수동으로 초기화하거나 격리된 복구 환경을 만들 때 사용하는 강화 구성입니다. 현재 GitHub Actions production 배포는 `opc` 사용자와 `/home/opc/travel-api`를 사용하므로 [`../../docs/ORACLE_VM_DEPLOYMENT_RUNBOOK.md`](../../docs/ORACLE_VM_DEPLOYMENT_RUNBOOK.md)를 우선 기준으로 삼습니다. 두 배포 구성을 한 서비스에 섞지 않습니다.
+
 현재 기준 권장 서버 이미지는 Oracle Linux 9입니다. 스크립트는 Oracle Linux/RHEL 계열과 Ubuntu/Debian 계열을 모두 감지해서 처리합니다.
 
 ## 서버 초기 설정
