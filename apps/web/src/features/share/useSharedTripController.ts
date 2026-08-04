@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ApiError } from "../../api/auth";
 import { getSharedTrip, type SharedTripResponse } from "../../api/trips";
 import { getLocalCache, setLocalCache, OFFLINE_CACHE_KEYS, isOnline } from "../../utils/offlineCache";
@@ -14,23 +14,45 @@ export function useSharedTripController({ shareToken }: UseSharedTripControllerP
   const [sharedTripError, setSharedTripError] = useState("");
   const [sharedTripWarning, setSharedTripWarning] = useState("");
   const [sharedTripLoading, setSharedTripLoading] = useState(isShareRoute);
+  const [onlineRecoveryCount, setOnlineRecoveryCount] = useState(0);
+  const activeShareToken = useRef(shareToken);
+  const hasVisibleSharedTrip = useRef(false);
+
+  useEffect(() => {
+    if (!shareToken) return;
+
+    const refreshAfterReconnect = () => setOnlineRecoveryCount((count) => count + 1);
+    window.addEventListener("online", refreshAfterReconnect);
+    return () => window.removeEventListener("online", refreshAfterReconnect);
+  }, [shareToken]);
 
   useEffect(() => {
     if (!shareToken) return;
 
     let cancelled = false;
-    setSharedTripLoading(true);
+    const preserveCurrentTrip =
+      onlineRecoveryCount > 0 &&
+      activeShareToken.current === shareToken &&
+      hasVisibleSharedTrip.current;
+    activeShareToken.current = shareToken;
+
+    if (!preserveCurrentTrip) {
+      setSharedTripLoading(true);
+      setSharedTripWarning("");
+    }
     setSharedTripError("");
-    setSharedTripWarning("");
 
     // 오프라인 상태인 경우 즉시 캐시된 데이터를 불러옵니다.
     if (!isOnline()) {
       const cached = getLocalCache<SharedTripResponse>(OFFLINE_CACHE_KEYS.SHARED_TRIP(shareToken));
       if (!cancelled) {
         if (cached) {
+          hasVisibleSharedTrip.current = true;
           setSharedTrip(cached);
           setSharedTripWarning("네트워크 연결이 끊겼습니다. 보관된 오프라인 데이터를 표시 중입니다.");
         } else {
+          hasVisibleSharedTrip.current = false;
+          setSharedTrip(null);
           setSharedTripError("인터넷 연결이 필요합니다. 저장된 오프라인 데이터가 없습니다.");
         }
         setSharedTripLoading(false);
@@ -38,11 +60,16 @@ export function useSharedTripController({ shareToken }: UseSharedTripControllerP
       return;
     }
 
-    setSharedTrip(null);
+    if (!preserveCurrentTrip) {
+      hasVisibleSharedTrip.current = false;
+      setSharedTrip(null);
+    }
     getSharedTrip(shareToken)
       .then((response) => {
         if (!cancelled) {
+          hasVisibleSharedTrip.current = true;
           setSharedTrip(response);
+          setSharedTripWarning("");
           // 성공 시 다음 오프라인 접속을 위해 로컬 캐시를 업데이트합니다.
           setLocalCache(OFFLINE_CACHE_KEYS.SHARED_TRIP(shareToken), response);
         }
@@ -53,6 +80,7 @@ export function useSharedTripController({ shareToken }: UseSharedTripControllerP
         // 온라인 상태에서 API 에러(예: 서버 장애)가 나더라도 캐시가 존재하면 복구합니다.
         const cached = getLocalCache<SharedTripResponse>(OFFLINE_CACHE_KEYS.SHARED_TRIP(shareToken));
         if (cached) {
+          hasVisibleSharedTrip.current = true;
           setSharedTrip(cached);
           setSharedTripWarning("API 서버와 연결되지 않아 보관된 오프라인 데이터를 표시 중입니다.");
           return;
@@ -71,7 +99,7 @@ export function useSharedTripController({ shareToken }: UseSharedTripControllerP
     return () => {
       cancelled = true;
     };
-  }, [shareToken]);
+  }, [onlineRecoveryCount, shareToken]);
 
   return { isShareRoute, sharedTrip, sharedTripError, sharedTripWarning, sharedTripLoading };
 }
