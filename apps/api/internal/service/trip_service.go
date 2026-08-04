@@ -839,7 +839,7 @@ func mapRouteResponse(route model.Route) dto.RouteResponse {
 	}
 }
 
-// SearchPlaces는 사용자가 입력한 검색어를 Google Places에서 찾고, 예외 시 로컬 명소 DB로 폴백합니다.
+// SearchPlaces는 사용자가 입력한 검색어를 Google Places에서 찾고 공급자 장애와 월 한도를 명확한 오류로 반환합니다.
 func (s *TripService) SearchPlaces(tripID, ownerID, query string) ([]dto.PlaceSearchResult, error) {
 	if err := s.ensureTripOwner(tripID, ownerID); err != nil {
 		return nil, err
@@ -858,12 +858,7 @@ func (s *TripService) SearchPlaces(tripID, ownerID, query string) ([]dto.PlaceSe
 		if errors.Is(err, ErrPlaceSearchQuotaExceeded) {
 			return nil, err
 		}
-		// 알려진 명소는 로컬 데이터로 보완하되, 범주 검색 장애를 빈 결과로 숨기지는 않는다.
-		fallback := s.getMockPlaces(trip.DestinationCountry, query)
-		if len(fallback) == 0 {
-			return nil, fmt.Errorf("%w: %v", ErrPlaceSearchUnavailable, err)
-		}
-		return fallback, nil
+		return nil, fmt.Errorf("%w: %v", ErrPlaceSearchUnavailable, err)
 	}
 	return results, nil
 }
@@ -885,182 +880,4 @@ func (s *TripService) searchPlacesGoogle(query, country string) ([]dto.PlaceSear
 		return nil, ErrPlaceSearchQuotaExceeded
 	}
 	return searchGooglePlaces(s.context(), query, country)
-}
-
-// getMockPlaces는 Google Places 키가 유실되었거나 개발/로컬 환경일 때,
-// 실전 상하이 명소 10선 및 일본 전망대/전철역 7선을 부분 검색 매핑하여 돌려주는 오프라인 Fallback 시뮬레이터입니다.
-func (s *TripService) getMockPlaces(country, query string) []dto.PlaceSearchResult {
-	q := strings.ToLower(strings.TrimSpace(query))
-	results := make([]dto.PlaceSearchResult, 0)
-
-	// 상하이(CN) 오프라인 데이터베이스
-	shanghaiPresets := []dto.PlaceSearchResult{
-		{
-			Name:           "동방명주 타워 (东方明珠)",
-			Address:        "上海市浦东新区世纪大道1号",
-			Latitude:       floatPtr(31.239666),
-			Longitude:      floatPtr(121.499809),
-			ChineseName:    "东方明珠广播电视塔",
-			ChineseAddress: "浦东新区世纪大道1号",
-			SubwayExit:     "2호선 陆家嘴(루자쭈이)역 1번 출구 도보 5분",
-			TaxiPhrase:     "请去东方明珠广播电视塔，谢谢。 (동방명주 타워로 가주세요.)",
-		},
-		{
-			Name:           "와이탄 (外滩)",
-			Address:        "上海市黄浦区中山东一路",
-			Latitude:       floatPtr(31.240375),
-			Longitude:      floatPtr(121.490589),
-			ChineseName:    "外滩",
-			ChineseAddress: "黄浦区中山东一路",
-			SubwayExit:     "2/10호선 南京东路(난징동루)역 7번 출구 도보 15분",
-			TaxiPhrase:     "请去外滩中山东一路，谢谢。 (와이탄으로 가주세요.)",
-		},
-		{
-			Name:           "예원 정원 (豫园)",
-			Address:        "上海市黄浦区豫园老街279号",
-			Latitude:       floatPtr(31.227222),
-			Longitude:      floatPtr(121.490833),
-			ChineseName:    "豫园",
-			ChineseAddress: "黄浦区安仁街218号",
-			SubwayExit:     "10/14호선 豫园(예원)역 3번 출구 도보 8분",
-			TaxiPhrase:     "请去豫园，谢谢。 (예원으로 가주세요.)",
-		},
-		{
-			Name:           "신천지 쇼핑가 (新天地)",
-			Address:        "上海市黄浦区太仓路181弄",
-			Latitude:       floatPtr(31.220833),
-			Longitude:      floatPtr(121.475556),
-			ChineseName:    "新天地",
-			ChineseAddress: "黄浦区太仓路181弄",
-			SubwayExit:     "10/13호선 新天地(신천지)역 6번 출구 도보 2분",
-			TaxiPhrase:     "请去新天地太仓路，谢谢。 (신천지로 가주세요.)",
-		},
-		{
-			Name:           "톈즈팡 예술거리 (田子坊)",
-			Address:        "上海市黄浦区泰康路210弄",
-			Latitude:       floatPtr(31.209167),
-			Longitude:      floatPtr(121.468611),
-			ChineseName:    "田子坊",
-			ChineseAddress: "黄浦区泰康路210弄",
-			SubwayExit:     "9호선 打浦桥(다푸차오)역 1번 출구 도보 1분",
-			TaxiPhrase:     "请去田子坊泰康路，谢谢。 (톈즈팡으로 가주세요.)",
-		},
-		{
-			Name:           "상하이 디즈니랜드 (上海迪士尼乐园)",
-			Address:        "上海市浦东新区川沙新镇黄楼社区妙境路",
-			Latitude:       floatPtr(31.144444),
-			Longitude:      floatPtr(121.657222),
-			ChineseName:    "上海迪士尼乐园",
-			ChineseAddress: "浦东新区申迪北路753号",
-			SubwayExit:     "11호선 迪士尼(디즈니)역 2번/4번 출구 도보 5분",
-			TaxiPhrase:     "请去上海迪士尼乐园，谢谢。 (디즈니랜드로 가주세요.)",
-		},
-		{
-			Name:           "난징동루 보행가 (南京东路)",
-			Address:        "上海市黄浦区南京东路",
-			Latitude:       floatPtr(31.237222),
-			Longitude:      floatPtr(121.482222),
-			ChineseName:    "南京东路步行街",
-			ChineseAddress: "黄浦区南京东路",
-			SubwayExit:     "2/10호선 南京东路역 1~4번 출구 직결",
-			TaxiPhrase:     "请去南京东路步行街，谢谢。 (난징동루 보행자거리로 가주세요.)",
-		},
-		{
-			Name:           "푸동 국제공항 (浦东国际机场)",
-			Address:        "上海市浦东新区迎宾大道6000号",
-			Latitude:       floatPtr(31.144343),
-			Longitude:      floatPtr(121.808273),
-			ChineseName:    "浦东国际机场",
-			ChineseAddress: "浦东新区迎宾大道6000号",
-			SubwayExit:     "2호선/자기부상열차 浦东国际机场역 직결",
-			TaxiPhrase:     "请去浦东机场T2航站楼，谢谢。 (푸동공항 터미널2로 가주세요.)",
-		},
-		{
-			Name:           "상하이 박물관 (上海博物馆)",
-			Address:        "上海市黄浦区人民大道201号",
-			Latitude:       floatPtr(31.230556),
-			Longitude:      floatPtr(121.474167),
-			ChineseName:    "上海博物馆",
-			ChineseAddress: "黄浦区人民大道201号",
-			SubwayExit:     "1/2/8호선 人民广场(인민광장)역 1번 출구 도보 3분",
-			TaxiPhrase:     "请去人民广场上海博物馆, 谢谢。 (인민광장 상하이 박물관으로 가주세요.)",
-		},
-		{
-			Name:           "상하이 타워 (上海中心大厦)",
-			Address:        "上海市浦东新区银城中路501号",
-			Latitude:       floatPtr(31.2335),
-			Longitude:      floatPtr(121.5055),
-			ChineseName:    "上海中心大厦",
-			ChineseAddress: "浦东新区银城中路501号",
-			SubwayExit:     "2호선 陆家嘴(루자쭈이)역 6번 출구 도보 8분",
-			TaxiPhrase:     "请去上海中心大厦，谢谢。 (상하이 타워로 가주세요.)",
-		},
-	}
-
-	// 일본/공통(JP) 오프라인 데이터베이스
-	japanPresets := []dto.PlaceSearchResult{
-		{
-			Name:      "시로야마전망대 (城山展望台)",
-			Address:   "鹿児島県鹿児島市城山町22-13",
-			Latitude:  floatPtr(31.596667),
-			Longitude: floatPtr(130.551389),
-		},
-		{
-			Name:      "센간엔 정원 (仙巌園)",
-			Address:   "鹿児島県鹿児島市吉野町9700-1",
-			Latitude:  floatPtr(31.617222),
-			Longitude: floatPtr(130.578611),
-		},
-		{
-			Name:      "덴몬칸 상가 (天文館)",
-			Address:   "鹿児島県鹿児島市東千石町",
-			Latitude:  floatPtr(31.590833),
-			Longitude: floatPtr(130.554167),
-		},
-		{
-			Name:      "사쿠라지마 페리터미널 (桜島フェリー)",
-			Address:   "鹿児島県鹿児島市本港新町4-1",
-			Latitude:  floatPtr(31.596111),
-			Longitude: floatPtr(130.563889),
-		},
-		{
-			Name:      "도쿄 타워 (Tokyo Tower)",
-			Address:   "4 Chome-2-8 Shibakoen, Minato City, Tokyo",
-			Latitude:  floatPtr(35.658581),
-			Longitude: floatPtr(139.745433),
-		},
-		{
-			Name:      "시부야 크로싱 (Shibuya Crossing)",
-			Address:   "1 Chome-2-1 Dogenzaka, Shibuya City, Tokyo",
-			Latitude:  floatPtr(35.6595),
-			Longitude: floatPtr(139.7004),
-		},
-		{
-			Name:      "가고시마 중앙역 (鹿児島中央駅)",
-			Address:   "鹿児島県鹿児島市中央町1-1",
-			Latitude:  floatPtr(31.583889),
-			Longitude: floatPtr(130.541667),
-		},
-	}
-
-	source := japanPresets
-	if country == "CN" {
-		source = shanghaiPresets
-	}
-
-	for _, preset := range source {
-		// 검색어가 비어있거나, 장소명/주소/중국어명에 키워드가 매칭되는 경우
-		if q == "" ||
-			strings.Contains(strings.ToLower(preset.Name), q) ||
-			strings.Contains(strings.ToLower(preset.Address), q) ||
-			(preset.ChineseName != "" && strings.Contains(strings.ToLower(preset.ChineseName), q)) {
-			results = append(results, preset)
-		}
-	}
-
-	return results
-}
-
-func floatPtr(v float64) *float64 {
-	return &v
 }
