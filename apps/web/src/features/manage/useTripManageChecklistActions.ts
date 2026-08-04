@@ -43,6 +43,7 @@ export function useTripManageChecklistActions({
     }
 
     let cancelled = false;
+    setChecklistItems([]);
     setChecklistLoading(true);
     setChecklistError("");
 
@@ -54,6 +55,7 @@ export function useTripManageChecklistActions({
       })
       .catch((error) => {
         if (!cancelled) {
+          setChecklistItems([]);
           setChecklistError(error instanceof Error ? error.message : "준비물 목록을 가져오지 못했습니다.");
         }
       })

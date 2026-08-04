@@ -110,6 +110,203 @@
   line-height: var(--type-label-line);
 }
 
+.manage-page-state {
+  display: grid;
+  min-height: 320px;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  padding-block: 48px;
+  text-align: center;
+}
+
+.manage-page-state-action {
+  margin-top: 16px;
+}
+
+.edit-hub-back-link {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 12px;
+  color: var(--c-muted);
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-strong);
+  text-decoration: none;
+}
+
+.edit-hub-back-link:hover {
+  color: var(--c-route);
+}
+
+.edit-hub-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.edit-hub-header h1 {
+  margin: 8px 0 2px;
+  overflow-wrap: anywhere;
+}
+
+.edit-hub-next-step {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 12px 14px;
+  padding: 20px;
+  border: 1px solid color-mix(in srgb, var(--c-route) 28%, transparent);
+  border-radius: 16px;
+  background: var(--c-route-soft);
+}
+
+.edit-hub-next-icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--c-route);
+  color: #ffffff;
+}
+
+.edit-hub-kicker {
+  color: var(--c-route);
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
+}
+
+.edit-hub-next-copy h2 {
+  margin: 2px 0 5px;
+  font-size: var(--type-title-size);
+  line-height: var(--type-heading-line);
+}
+
+.edit-hub-next-copy p {
+  max-width: 42ch;
+  margin: 0;
+  color: var(--c-muted);
+  font-size: var(--type-supporting-size);
+  line-height: var(--type-supporting-line);
+}
+
+.edit-hub-next-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-column: 1 / -1;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.edit-hub-all-sections {
+  display: grid;
+  gap: 14px;
+  margin-top: 32px;
+}
+
+.edit-hub-all-sections h2 {
+  margin: 0;
+  font-size: var(--type-title-size);
+}
+
+.edit-hub-all-sections > div > p {
+  margin: 3px 0 0;
+  color: var(--c-muted);
+  font-size: var(--type-supporting-size);
+}
+
+.edit-hub-list {
+  margin: 0;
+  padding: 0;
+  border-block: 1px solid var(--border-color);
+  list-style: none;
+}
+
+.edit-hub-list li + li {
+  border-top: 1px solid var(--border-color);
+}
+
+.edit-hub-list a {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto 18px;
+  min-height: 72px;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 4px;
+  color: var(--c-text);
+  text-decoration: none;
+}
+
+.edit-hub-list a:hover {
+  color: var(--c-route);
+}
+
+.edit-hub-list-icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--c-surface-cool);
+  color: var(--c-route);
+}
+
+.edit-hub-list-copy {
+  display: grid;
+  gap: 1px;
+}
+
+.edit-hub-list-copy strong {
+  font-size: var(--type-body-size);
+}
+
+.edit-hub-list-copy small {
+  color: var(--c-muted);
+  font-size: var(--type-label-size);
+  line-height: var(--type-label-line);
+}
+
+.edit-hub-list-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--c-muted);
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
+  white-space: nowrap;
+}
+
+.edit-hub-list-chevron {
+  color: var(--c-muted);
+}
+
+.edit-hub-data-state {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  padding: 20px 0;
+  border-block: 1px solid var(--border-color);
+}
+
+.edit-hub-data-state h2 {
+  margin: 0;
+  font-size: var(--type-title-size);
+}
+
+.edit-hub-data-state p {
+  margin: 4px 0 0;
+  color: var(--c-muted);
+  font-size: var(--type-supporting-size);
+}
+
+.edit-hub-data-state > .secondary-button {
+  grid-column: 1 / -1;
+}
+
 .trip-create-disclosure {
   overflow: clip;
   border: 1px solid var(--border-color);
@@ -792,6 +989,19 @@
 }
 
 @media (max-width: 560px) {
+  .edit-hub-header {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .edit-hub-header .compact-button {
+    width: 100%;
+  }
+
+  .edit-hub-next-actions {
+    grid-template-columns: 1fr;
+  }
+
   .shanghai-plan-item {
     grid-template-columns: 1fr auto;
   }

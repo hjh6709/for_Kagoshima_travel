@@ -218,6 +218,7 @@ export type SelectedTripDetailSectionProps = {
   onTripEditDestinationCountryChange: (value: string) => void;
   ownerDetailDataError: string;
   ownerDetailDataLoading: boolean;
+  ownerDetailDataTripID: string;
   ownerFlights: SharedFlight[];
   ownerPlaces: SharedPlace[];
   ownerSchedules: SharedSchedule[];
