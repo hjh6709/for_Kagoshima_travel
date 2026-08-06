@@ -2,6 +2,7 @@ import { ChevronLeft, Share2 } from "lucide-react";
 import { formatKoreanDate, type TravelPhase, type TripDates } from "../../../../shared/date";
 import { getDestinationCountryLabel } from "../../../../shared/travelOptions";
 import type { Trip } from "../../../../types/travel";
+import { getTodayTabCopy } from "../../todayCopy";
 import { ProfileShortcutButton } from "../cards/ProfileShortcutButton";
 
 type TodayHeaderSectionProps = {
@@ -59,6 +60,7 @@ export function TodayHeaderSection({
 }: TodayHeaderSectionProps) {
   const countryBadge = getCountryBadge(trip.destinationCountry);
   const dday = getDDayLabel(tripDates.startDate, tripDates.endDate);
+  const copy = getTodayTabCopy(travelStatus.phase);
 
   return (
     <div className={`trip-header${isReadOnly ? " shared-trip-header" : ""}`}>
@@ -84,9 +86,9 @@ export function TodayHeaderSection({
         </div>
       </div>
       <p className="today-kicker">
-        {travelStatus.label} · {formatKoreanDate(focusDate)}
+        {travelStatus.label} · {copy.dayLabel} {formatKoreanDate(focusDate)}
       </p>
-      <h1>오늘</h1>
+      <h1>{copy.screenTitle}</h1>
       <p className="today-trip-title">{trip.title}</p>
     </div>
   );

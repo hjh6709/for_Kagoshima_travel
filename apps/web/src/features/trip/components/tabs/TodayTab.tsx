@@ -68,6 +68,7 @@ export function TodayTab(props: TripPageProps) {
         onOpenCurrency={() => setActiveTab("concierge")}
         scheduleCount={focusSchedules.length}
         statusLabel={travelStatus.label}
+        travelPhase={travelStatus.phase}
       />
       <TodayRouteSection
         completedSchedules={completedSchedules}
@@ -77,6 +78,7 @@ export function TodayTab(props: TripPageProps) {
           setActiveTab("schedule");
         }}
         schedules={focusSchedules}
+        travelPhase={travelStatus.phase}
       />
       <HomeChecklistSection
         checkedItems={checkedItems}

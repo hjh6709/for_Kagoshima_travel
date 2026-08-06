@@ -1,6 +1,8 @@
 import { CalendarCheck, Coins, Plane } from "lucide-react";
 import { getCurrencyConfig } from "../../../../shared/currency";
+import type { TravelPhase } from "../../../../shared/date";
 import { readCachedRate } from "../../../../shared/exchangeRateCache";
+import { getTodayTabCopy } from "../../todayCopy";
 
 type TodayStatsSectionProps = {
   completedScheduleCount: number;
@@ -8,6 +10,7 @@ type TodayStatsSectionProps = {
   onOpenCurrency: () => void;
   scheduleCount: number;
   statusLabel: string;
+  travelPhase: TravelPhase;
 };
 
 // 오늘 탭 상단 스탯 행. 값은 전부 이미 계산된 실제 데이터만 쓴다.
@@ -17,12 +20,14 @@ export function TodayStatsSection({
   onOpenCurrency,
   scheduleCount,
   statusLabel,
+  travelPhase,
 }: TodayStatsSectionProps) {
   const currencyConfig = getCurrencyConfig(destinationCountry);
   const cachedRate = currencyConfig ? readCachedRate(currencyConfig.code) : null;
+  const copy = getTodayTabCopy(travelPhase);
 
   return (
-    <div className="today-stats" aria-label="오늘 요약">
+    <div className="today-stats" aria-label={`${copy.dayLabel} 요약`}>
       <article className="today-stat-card">
         <Plane aria-hidden="true" size={16} />
         <strong>{statusLabel}</strong>
@@ -34,7 +39,7 @@ export function TodayStatsSection({
         <strong>
           {completedScheduleCount}/{scheduleCount}
         </strong>
-        <span>오늘 일정</span>
+        <span>{copy.scheduleStatLabel}</span>
       </article>
 
       {currencyConfig && (

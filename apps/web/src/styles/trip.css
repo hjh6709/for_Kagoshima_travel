@@ -1480,15 +1480,24 @@ p {
   line-height: 1.5;
 }
 
+/* 좁은 화면에서는 길찾기와 완료 버튼이 한 줄에 못 들어가 완료 버튼이 카드 밖으로
+   밀려난다. 줄바꿈을 허용하고, 줄이 나뉘면 완료 버튼이 남은 폭을 채우게 한다. */
+/* 길찾기 선택지를 펼치면 좌측 블록만 길어진다. 완료 버튼이 그 가운데로 떠오르지
+   않도록 위쪽(길찾기 버튼 줄)에 맞춘다. */
 .next-schedule-actions {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
+  align-items: flex-start;
   gap: 10px;
   margin-top: 14px;
 }
 
 .next-schedule-actions .directions-choice {
-  flex: 1;
+  flex: 1 1 140px;
+}
+
+.next-schedule-actions .next-schedule-complete {
+  flex: 1 0 46px;
 }
 
 .next-schedule-complete {
@@ -1548,6 +1557,22 @@ p {
   background: var(--c-route-soft);
 }
 
+/* 안내 문구는 span을 직접 지정한 map.css 규칙이 이기므로 여기서도 span을 직접 지정한다.
+   진한 Primary 배경 위에서 4.5:1 이상(#d6dcea 기준 7.04:1)을 만족한다. */
 .next-schedule-card .directions-options {
-  color: rgba(255, 255, 255, 0.8);
+  border-top-color: rgba(255, 255, 255, 0.28);
+}
+
+.next-schedule-card .directions-options > span {
+  color: #d6dcea;
+}
+
+/* Primary 버튼은 카드 배경과 색이 같아 hero 안에서는 보이지 않는다. 밝은 면으로 뒤집는다. */
+.next-schedule-card .directions-link.primary-button {
+  background: #ffffff;
+  color: var(--c-route);
+}
+
+.next-schedule-card .directions-link.primary-button:hover:not(:disabled) {
+  background: var(--c-route-soft);
 }

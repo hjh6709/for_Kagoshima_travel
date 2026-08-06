@@ -31,6 +31,7 @@ describe("TodayStatsSection", () => {
         onOpenCurrency={vi.fn()}
         scheduleCount={3}
         statusLabel="여행 2일차"
+        travelPhase="during"
       />,
     );
 
@@ -51,6 +52,7 @@ describe("TodayStatsSection", () => {
         onOpenCurrency={vi.fn()}
         scheduleCount={0}
         statusLabel="출발 D-3"
+        travelPhase="before"
       />,
     );
 
@@ -67,6 +69,7 @@ describe("TodayStatsSection", () => {
         onOpenCurrency={onOpenCurrency}
         scheduleCount={0}
         statusLabel="출발 D-3"
+        travelPhase="before"
       />,
     );
 
@@ -83,10 +86,27 @@ describe("TodayStatsSection", () => {
         onOpenCurrency={vi.fn()}
         scheduleCount={2}
         statusLabel="여행 1일차"
+        travelPhase="during"
       />,
     );
 
     expect(screen.queryByText(/환율/)).not.toBeInTheDocument();
     expect(screen.getByText("0/2")).toBeVisible();
+  });
+
+  it("출발 전에는 일정 라벨을 오늘이 아니라 첫날로 쓴다", () => {
+    render(
+      <TodayStatsSection
+        completedScheduleCount={0}
+        destinationCountry="JP"
+        onOpenCurrency={vi.fn()}
+        scheduleCount={3}
+        statusLabel="출발 D-14"
+        travelPhase="before"
+      />,
+    );
+
+    expect(screen.getByText("첫날 일정")).toBeVisible();
+    expect(screen.queryByText("오늘 일정")).not.toBeInTheDocument();
   });
 });

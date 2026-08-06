@@ -30,8 +30,37 @@ describe("TodayHeaderSection", () => {
       />,
     );
 
-    expect(screen.getByText("여행 2일차 · 11월 4일(수)")).toBeVisible();
+    expect(screen.getByText("여행 2일차 · 오늘 11월 4일(수)")).toBeVisible();
     expect(screen.getByRole("heading", { name: "오늘" })).toBeVisible();
+  });
+
+  it("출발 전에는 오늘이 아니라 첫날 기준 문구를 쓴다", () => {
+    render(
+      <TodayHeaderSection
+        focusDate="2026-11-03"
+        travelStatus={{ phase: "before", label: "출발 D-14", description: "" }}
+        trip={trip}
+        tripDates={tripDates}
+      />,
+    );
+
+    expect(screen.getByText("출발 D-14 · 첫날 11월 3일(화)")).toBeVisible();
+    expect(screen.getByRole("heading", { name: "출발 준비" })).toBeVisible();
+    expect(screen.queryByRole("heading", { name: "오늘" })).not.toBeInTheDocument();
+  });
+
+  it("여행이 끝난 뒤에는 마지막 날 기준 문구를 쓴다", () => {
+    render(
+      <TodayHeaderSection
+        focusDate="2026-11-06"
+        travelStatus={{ phase: "after", label: "여행 완료", description: "" }}
+        trip={trip}
+        tripDates={tripDates}
+      />,
+    );
+
+    expect(screen.getByText("여행 완료 · 마지막 날 11월 6일(금)")).toBeVisible();
+    expect(screen.getByRole("heading", { name: "여행 마무리" })).toBeVisible();
   });
 
   it("여행 목록으로 돌아가는 링크와 마이페이지 버튼을 유지한다", () => {
