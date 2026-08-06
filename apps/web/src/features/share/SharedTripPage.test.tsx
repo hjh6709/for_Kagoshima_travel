@@ -157,7 +157,9 @@ describe("SharedTripPage", () => {
     );
 
     expect(screen.getByRole("button", { name: "오늘" })).toHaveAttribute("aria-current", "page");
-    expect(screen.getByText("인민광장 산책")).toBeVisible();
+    // 다음 일정 카드(제목)와 오늘의 동선 목록 양쪽에 같은 일정이 나오므로 카드 제목을 지목한다.
+    expect(screen.getByRole("heading", { name: "인민광장 산책" })).toBeVisible();
+    expect(screen.getByText("인민광장 산책", { selector: ".today-route-title" })).toBeVisible();
     expect(screen.queryByText("내일 점심")).not.toBeInTheDocument();
   });
 

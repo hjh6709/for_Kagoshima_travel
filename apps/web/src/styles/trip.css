@@ -135,34 +135,6 @@ p {
   box-shadow: var(--shadow-card);
 }
 
-.next-schedule-card {
-  position: relative;
-  padding: 22px 20px 22px 52px;
-}
-
-.next-schedule-card::before {
-  position: absolute;
-  top: 22px;
-  bottom: 22px;
-  left: 25px;
-  width: 2px;
-  border-radius: 999px;
-  background: var(--c-route);
-  content: "";
-}
-
-.next-schedule-card::after {
-  position: absolute;
-  top: 24px;
-  left: 20px;
-  width: 8px;
-  height: 8px;
-  border: 2px solid var(--c-surface);
-  border-radius: 50%;
-  background: var(--c-destination);
-  box-shadow: 0 0 0 2px var(--c-destination);
-  content: "";
-}
 
 .next-schedule-kicker {
   display: inline-flex;
@@ -1351,4 +1323,231 @@ p {
   .progress-percentage {
     align-self: flex-end;
   }
+}
+
+/* ── 오늘 탭 (2단계) ─────────────────────────────────────────── */
+.today-kicker {
+  margin: 4px 0 2px;
+  color: var(--c-muted);
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-strong);
+}
+
+.today-trip-title {
+  margin: 2px 0 0;
+  color: var(--c-muted);
+  font-size: var(--type-supporting-size);
+}
+
+/* 좁은 화면에서는 3칸이 찌그러지는 대신 아래로 줄바꿈되게 최소 폭을 준다. */
+.today-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 96px), 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.today-stat-card {
+  display: grid;
+  gap: 2px;
+  justify-items: start;
+  padding: 12px;
+  border-radius: 16px;
+  background: var(--c-surface);
+  color: var(--c-muted);
+}
+
+.today-stat-card svg {
+  color: var(--c-route);
+}
+
+.today-stat-card strong {
+  color: var(--c-text);
+  font-size: var(--type-body-size);
+  font-weight: var(--font-weight-strong);
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+.today-stat-card span {
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
+}
+
+.today-stat-action {
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--c-route);
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-strong);
+  text-align: left;
+}
+
+.today-check-count {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius-chip);
+  background: var(--c-surface-cool);
+  color: var(--c-route);
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-display);
+}
+
+.today-check-group {
+  margin-top: 12px;
+}
+
+.today-check-empty {
+  margin: 0;
+  padding: 16px;
+  border-radius: var(--radius-card);
+  background: var(--c-surface);
+}
+
+.today-route-link {
+  min-height: 44px;
+  padding: 0 8px;
+  border: 0;
+  background: transparent;
+}
+
+.today-route-list {
+  margin: 12px 0 0;
+  padding: 6px 16px;
+  list-style: none;
+  border-radius: var(--radius-card);
+  background: var(--c-surface);
+}
+
+.today-route-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 40px 12px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+}
+
+/* 도트(시간 거터 40px + gap 10px 뒤, 지름 9px)의 가로 중심에 연결선을 맞춘다. */
+.today-route-row + .today-route-row::before {
+  position: absolute;
+  top: -14px;
+  bottom: calc(100% - 6px);
+  left: 54px;
+  width: 1.5px;
+  background: var(--border-color);
+  content: "";
+}
+
+.today-route-time {
+  color: var(--c-muted);
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-strong);
+}
+
+.today-route-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--c-destination);
+  box-shadow: 0 0 0 3px var(--c-destination-soft);
+}
+
+.today-route-row.completed .today-route-dot {
+  background: var(--c-success);
+  box-shadow: 0 0 0 3px var(--c-success-soft);
+}
+
+.today-route-title {
+  color: var(--c-text);
+  font-size: var(--type-body-size);
+  font-weight: var(--font-weight-strong);
+  overflow-wrap: anywhere;
+}
+
+.today-route-row.completed .today-route-title {
+  color: var(--c-faint);
+  text-decoration: line-through;
+}
+
+.next-schedule-memo {
+  margin: 6px 0 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: var(--type-supporting-size);
+  line-height: 1.5;
+}
+
+.next-schedule-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.next-schedule-actions .directions-choice {
+  flex: 1;
+}
+
+.next-schedule-complete {
+  flex: 0 0 auto;
+  width: 46px;
+  height: 46px;
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--c-surface-cool);
+  color: var(--c-route);
+}
+
+.next-schedule-card {
+  position: relative;
+  display: block;
+  padding: 20px;
+  border: 0;
+  border-radius: 24px;
+  background: var(--c-route);
+  box-shadow: var(--shadow-hero);
+  color: #ffffff;
+}
+
+.next-schedule-card h2 {
+  margin: 8px 0 0;
+  color: #ffffff;
+  font-size: var(--type-headline-size);
+  font-weight: var(--font-weight-display);
+  letter-spacing: -0.02em;
+}
+
+.next-schedule-card .next-schedule-kicker {
+  margin-bottom: 0;
+  min-height: 25px;
+  padding: 0 10px;
+  border-radius: 100px;
+  background: var(--c-destination);
+  color: #ffffff;
+}
+
+.next-schedule-card .next-schedule-time {
+  margin: 6px 0 0;
+  color: rgba(255, 255, 255, 0.66);
+}
+
+/* 진한 Primary 카드 위에서는 길찾기 버튼을 흰 배경 + Primary 글자로 뒤집는다. */
+.next-schedule-card .directions-trigger {
+  background: #ffffff;
+  color: var(--c-route);
+}
+
+.next-schedule-card .directions-trigger:hover:not(:disabled) {
+  background: var(--c-route-soft);
+}
+
+.next-schedule-card .directions-options {
+  color: rgba(255, 255, 255, 0.8);
 }
