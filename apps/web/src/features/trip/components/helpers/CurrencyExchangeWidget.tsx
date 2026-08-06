@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowUpDown, Landmark, RefreshCw } from "lucide-react";
 import type { CurrencyConfig } from "../../../../shared/currency";
+import { readCachedRate, saveCachedRate } from "../../../../shared/exchangeRateCache";
 
 type RateStatus = "loading" | "live" | "cached" | "manual" | "error";
 
@@ -8,37 +9,7 @@ interface CurrencyExchangeWidgetProps {
   config: CurrencyConfig;
 }
 
-type CachedRate = {
-  rate: number;
-  savedAt: number;
-};
-
-const CACHE_MAX_AGE = 1000 * 60 * 60 * 24 * 7;
 const REQUEST_TIMEOUT = 8000;
-
-function getCacheKey(currencyCode: string) {
-  return `map-planner:exchange-rate:${currencyCode}`;
-}
-
-function readCachedRate(currencyCode: string): CachedRate | null {
-  try {
-    const raw = localStorage.getItem(getCacheKey(currencyCode));
-    if (!raw) return null;
-    const cached = JSON.parse(raw) as CachedRate;
-    if (!Number.isFinite(cached.rate) || cached.rate <= 0 || Date.now() - cached.savedAt > CACHE_MAX_AGE) return null;
-    return cached;
-  } catch {
-    return null;
-  }
-}
-
-function saveCachedRate(currencyCode: string, rate: number) {
-  try {
-    localStorage.setItem(getCacheKey(currencyCode), JSON.stringify({ rate, savedAt: Date.now() } satisfies CachedRate));
-  } catch {
-    // 저장소를 사용할 수 없어도 현재 화면의 계산은 계속 제공한다.
-  }
-}
 
 function foreignToKrw(amount: number, rate: number, rateUnit: number) {
   return Math.round((amount * rate) / rateUnit);

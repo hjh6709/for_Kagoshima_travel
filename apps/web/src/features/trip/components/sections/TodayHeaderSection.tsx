@@ -2,9 +2,11 @@ import { ChevronLeft, Share2 } from "lucide-react";
 import { formatKoreanDate, type TravelPhase, type TripDates } from "../../../../shared/date";
 import { getDestinationCountryLabel } from "../../../../shared/travelOptions";
 import type { Trip } from "../../../../types/travel";
+import { getTodayTabCopy } from "../../todayCopy";
 import { ProfileShortcutButton } from "../cards/ProfileShortcutButton";
 
 type TodayHeaderSectionProps = {
+  focusDate: string;
   travelStatus: { phase: TravelPhase; label: string; description: string };
   trip: Trip;
   tripDates: TripDates;
@@ -47,10 +49,18 @@ function getDDayLabel(startDateStr: string, endDateStr: string): { text: string;
   }
 }
 
-// 여행 홈 상단의 제목, 기간, 현재 여행 상태를 더 풍부하게 표시한다.
-export function TodayHeaderSection({ travelStatus, trip, tripDates, isReadOnly, onNavigateToMyPage }: TodayHeaderSectionProps) {
+// 여행 홈 상단. 여행 단계와 오늘 날짜를 키커 한 줄로 묶고 타이틀은 "오늘"로 고정한다.
+export function TodayHeaderSection({
+  focusDate,
+  travelStatus,
+  trip,
+  tripDates,
+  isReadOnly,
+  onNavigateToMyPage,
+}: TodayHeaderSectionProps) {
   const countryBadge = getCountryBadge(trip.destinationCountry);
   const dday = getDDayLabel(tripDates.startDate, tripDates.endDate);
+  const copy = getTodayTabCopy(travelStatus.phase);
 
   return (
     <div className={`trip-header${isReadOnly ? " shared-trip-header" : ""}`}>
@@ -75,14 +85,11 @@ export function TodayHeaderSection({ travelStatus, trip, tripDates, isReadOnly, 
           <ProfileShortcutButton onClick={onNavigateToMyPage} />
         </div>
       </div>
-      <h1>{trip.title}</h1>
-      <p className="trip-dates">
-        {formatKoreanDate(tripDates.startDate)} ~ {formatKoreanDate(tripDates.endDate)}
+      <p className="today-kicker">
+        {travelStatus.label} · {copy.dayLabel} {formatKoreanDate(focusDate)}
       </p>
-      <article className={`status-card ${travelStatus.phase}`}>
-        <span>{travelStatus.label}</span>
-        <p>{travelStatus.description}</p>
-      </article>
+      <h1>{copy.screenTitle}</h1>
+      <p className="today-trip-title">{trip.title}</p>
     </div>
   );
 }

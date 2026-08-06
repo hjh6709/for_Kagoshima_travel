@@ -3,11 +3,14 @@ import { NextScheduleCard } from "../cards/NextScheduleCard";
 import { TripDateEditor } from "../helpers/TripDateEditor";
 import { HomeChecklistSection } from "../sections/HomeChecklistSection";
 import { TodayHeaderSection } from "../sections/TodayHeaderSection";
+import { TodayRouteSection } from "../sections/TodayRouteSection";
+import { TodayStatsSection } from "../sections/TodayStatsSection";
 
 // 오늘 탭 렌더링만 담당한다. 상태 변경은 상위에서 전달한 핸들러를 호출한다.
 export function TodayTab(props: TripPageProps) {
   const {
     checkedItems,
+    completedSchedules,
     dates,
     editSchedulesHref,
     focusDate,
@@ -25,6 +28,7 @@ export function TodayTab(props: TripPageProps) {
     setSelectedDate,
     setScheduleView,
     toggleCheck,
+    toggleScheduleComplete,
     trip,
     tripDates,
     travelStatus,
@@ -34,6 +38,7 @@ export function TodayTab(props: TripPageProps) {
   return (
     <section className="screen">
       <TodayHeaderSection
+        focusDate={focusDate}
         travelStatus={travelStatus}
         trip={trip}
         tripDates={tripDates}
@@ -54,6 +59,25 @@ export function TodayTab(props: TripPageProps) {
           setScheduleView("itinerary");
           setActiveTab("schedule");
         }}
+        onToggleComplete={toggleScheduleComplete}
+        travelPhase={travelStatus.phase}
+      />
+      <TodayStatsSection
+        completedScheduleCount={focusCompletedScheduleCount}
+        destinationCountry={trip.destinationCountry}
+        onOpenCurrency={() => setActiveTab("concierge")}
+        scheduleCount={focusSchedules.length}
+        statusLabel={travelStatus.label}
+        travelPhase={travelStatus.phase}
+      />
+      <TodayRouteSection
+        completedSchedules={completedSchedules}
+        onOpenSchedule={() => {
+          setSelectedDate(focusDate);
+          setScheduleView("itinerary");
+          setActiveTab("schedule");
+        }}
+        schedules={focusSchedules}
         travelPhase={travelStatus.phase}
       />
       <HomeChecklistSection
