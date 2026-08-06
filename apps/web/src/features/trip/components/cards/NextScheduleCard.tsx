@@ -1,7 +1,7 @@
 import { MapDirectionsChoice } from "../../../../shared/components/MapDirectionsChoice";
 import { formatKoreanDate, type TravelPhase } from "../../../../shared/date";
 import type { Place, ScheduleItem } from "../../../../types/travel";
-import { CalendarPlus, Clock, MapPin } from "lucide-react";
+import { CalendarPlus, Check, Clock, MapPin } from "lucide-react";
 
 type NextScheduleCardProps = {
   destinationCountry?: string;
@@ -13,6 +13,7 @@ type NextScheduleCardProps = {
   isReadOnly?: boolean;
   nextSchedule: ScheduleItem | null;
   onOpenSchedule: () => void;
+  onToggleComplete: (id: string) => void;
   travelPhase: TravelPhase;
 };
 
@@ -27,6 +28,7 @@ export function NextScheduleCard({
   isReadOnly,
   nextSchedule,
   onOpenSchedule,
+  onToggleComplete,
   travelPhase,
 }: NextScheduleCardProps) {
   if (travelPhase === "after") return null;
@@ -73,19 +75,29 @@ export function NextScheduleCard({
 
   return (
     <article className="hero-card next-schedule-card">
-      <div>
-        <span className="next-schedule-kicker">
-          <MapPin aria-hidden="true" size={14} />
-          {kicker}
-        </span>
-        <h2>{nextSchedule.title}</h2>
-        <p className="next-schedule-time">
-          <Clock aria-hidden="true" size={14} />
-          {formatKoreanDate(getDisplayDate(nextSchedule.date))} {nextSchedule.time}
-        </p>
-        <p className="muted">{nextSchedule.guideMemo}</p>
+      <span className="next-schedule-kicker">
+        <MapPin aria-hidden="true" size={14} />
+        {kicker}
+      </span>
+      <h2>{nextSchedule.title}</h2>
+      <p className="next-schedule-time">
+        <Clock aria-hidden="true" size={14} />
+        {formatKoreanDate(getDisplayDate(nextSchedule.date))} {nextSchedule.time}
+      </p>
+      {nextSchedule.guideMemo && <p className="next-schedule-memo">{nextSchedule.guideMemo}</p>}
+      <div className="next-schedule-actions">
+        {place && <MapDirectionsChoice destinationCountry={destinationCountry} place={place} />}
+        {!isReadOnly && (
+          <button
+            aria-label="완료"
+            className="next-schedule-complete"
+            onClick={() => onToggleComplete(nextSchedule.id)}
+            type="button"
+          >
+            <Check aria-hidden="true" size={20} />
+          </button>
+        )}
       </div>
-      {place && <MapDirectionsChoice destinationCountry={destinationCountry} place={place} />}
     </article>
   );
 }
