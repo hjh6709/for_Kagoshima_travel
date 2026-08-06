@@ -58,6 +58,24 @@ describe("NextScheduleCard 완료 처리", () => {
     expect(onToggleComplete).toHaveBeenCalledWith("schedule-1");
   });
 
+  it("출발 전에는 기준 날짜가 첫날이어도 다음 정류장이 아니라 첫 일정으로 표시한다", () => {
+    render(
+      <NextScheduleCard
+        focusDate="2026-08-03"
+        getDisplayDate={(date) => date}
+        getPlace={() => undefined}
+        hasSchedules
+        nextSchedule={nextSchedule}
+        onOpenSchedule={vi.fn()}
+        onToggleComplete={vi.fn()}
+        travelPhase="before"
+      />,
+    );
+
+    expect(screen.getByText("첫 일정")).toBeVisible();
+    expect(screen.queryByText("다음 정류장")).not.toBeInTheDocument();
+  });
+
   it("공유 보기에서는 완료 버튼을 렌더하지 않는다", () => {
     render(
       <NextScheduleCard

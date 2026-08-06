@@ -1496,8 +1496,18 @@ p {
   flex: 1 1 140px;
 }
 
+/* 기본은 46px 정사각형을 유지한다. 남는 폭을 먹으면 아이콘 하나짜리 버튼이
+   길찾기 버튼만큼 넓어져 위계가 무너진다. */
 .next-schedule-actions .next-schedule-complete {
-  flex: 1 0 46px;
+  flex: 0 0 46px;
+}
+
+/* 길찾기(140px) + 간격(10px) + 완료(46px)가 카드 안쪽 폭을 넘기는 지점부터는
+   줄이 나뉘므로, 그때만 완료 버튼이 남은 줄을 채우게 한다. */
+@media (max-width: 280px) {
+  .next-schedule-actions .next-schedule-complete {
+    flex: 1 0 100%;
+  }
 }
 
 .next-schedule-complete {

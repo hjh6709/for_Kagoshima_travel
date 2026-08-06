@@ -71,7 +71,13 @@ export function NextScheduleCard({
   }
 
   const place = getPlace(nextSchedule.placeId);
-  const kicker = nextSchedule.date === focusDate ? "다음 정류장" : travelPhase === "before" ? "첫 일정" : "다음 일정";
+  // 출발 전에는 focusDate가 첫날이라 "다음 정류장"이 항상 참이 된다. 단계를 먼저 본다.
+  const kicker =
+    travelPhase === "before"
+      ? "첫 일정"
+      : nextSchedule.date === focusDate
+        ? "다음 정류장"
+        : "다음 일정";
 
   return (
     <article className="hero-card next-schedule-card">
