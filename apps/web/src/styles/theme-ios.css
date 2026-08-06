@@ -84,12 +84,23 @@
   gap: 8px;
 }
 
-/* 체크 행은 카드 사이 간격 대신 하나의 그룹 + 헤어라인으로 */
+/* 체크 행은 카드 사이 간격 대신 하나의 그룹 + 헤어라인으로
+   overflow: hidden을 쓰지 않는다 — 첫/마지막 행의 포커스 링(outline)이 잘린다.
+   대신 모서리를 첫/마지막 .check-toggle에 직접 둥글린다. */
 .card-stack:has(> .check-row) {
   gap: 0;
   border-radius: var(--radius-card);
   background: var(--c-surface);
-  overflow: hidden;
+}
+
+.card-stack:has(> .check-row) > .check-row:first-child .check-toggle {
+  border-top-left-radius: var(--radius-card);
+  border-top-right-radius: var(--radius-card);
+}
+
+.card-stack:has(> .check-row) > .check-row:last-child .check-toggle {
+  border-bottom-left-radius: var(--radius-card);
+  border-bottom-right-radius: var(--radius-card);
 }
 
 .check-row {
@@ -172,7 +183,7 @@
 }
 
 .compact-button {
-  min-height: 36px;
+  min-height: 44px;
   padding: 0 13px;
   border-radius: 12px;
   font-size: var(--type-supporting-size);
@@ -181,7 +192,7 @@
 .emergency-call-button {
   background: var(--c-destination-deep);
   color: #ffffff;
-  min-height: 40px;
+  min-height: 44px;
   border-radius: 12px;
 }
 
@@ -213,11 +224,12 @@ textarea:focus-visible {
 
 .segment-btn {
   flex: 1;
-  min-height: 34px;
+  min-height: 44px;
   border: 0;
   border-radius: 9px;
   background: transparent;
-  color: #7b8089;
+  /* var(--c-fill-strong)(#e8e4dd) 위에서 4.5:1 이상 만족하도록 원래 색보다 어둡게 조정 */
+  color: #575b62;
   font-size: var(--type-supporting-size);
   font-weight: var(--font-weight-strong);
   letter-spacing: -0.015em;
@@ -230,24 +242,23 @@ textarea:focus-visible {
 }
 
 /* ── 날짜 필 ─────────────────────────────────────────────────── */
+/* 좁은 화면(예: 195px)에서 필이 찌그러져 겹치지 않도록 기본 클래스 자체에
+   가로 스크롤을 둔다 — .scroll-tabs 수정자가 없는 사용처도 안전해야 한다. */
 .date-tabs {
   display: flex;
   gap: 8px;
   margin-top: 16px;
   padding-bottom: 2px;
-}
-
-.date-tabs.scroll-tabs {
   overflow-x: auto;
   scrollbar-width: none;
 }
 
-.date-tabs.scroll-tabs::-webkit-scrollbar {
+.date-tabs::-webkit-scrollbar {
   display: none;
 }
 
 .date-tabs button {
-  flex: 1;
+  flex: 1 0 auto;
   min-width: 68px;
   min-height: 68px;
   border: 1px solid var(--border-color);
@@ -332,10 +343,16 @@ textarea:focus-visible {
   color: var(--c-route);
 }
 
+/* 출발/도착 지명 길이가 달라도 가운데 노선 컬럼이 항상 고정 비율을 유지하도록 grid로 */
 .flight-route {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   padding: 20px 18px 18px;
+}
+
+.flight-route-point.arrival {
+  text-align: right;
 }
 
 .flight-route-point strong {
@@ -384,7 +401,7 @@ textarea:focus-visible {
   border: 0;
   background: transparent;
   color: var(--c-faint);
-  font-size: 0.65625rem;
+  font-size: var(--type-label-size);
   font-weight: var(--font-weight-strong);
   letter-spacing: -0.01em;
 }
@@ -465,4 +482,13 @@ textarea:focus-visible {
 
 .empty-state-action {
   margin-top: 12px;
+}
+
+/* "첫 여행이 없습니다" 카드(TripListSection)는 아이콘 + 제목 + 설명이 세로로
+   쌓이는 구조라 위 가로 flex 규칙이 깨진다 — 이 조합에서만 세로 배치로 복구. */
+.info-card.empty-state-card {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
 }

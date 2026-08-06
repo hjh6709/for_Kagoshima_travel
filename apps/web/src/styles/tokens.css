@@ -48,7 +48,8 @@
   --c-ink-muted: #5a5f68;
   /* --c-bg(#f7f5f2) 위 텍스트 대비 4.5:1 이상을 만족하도록 원래 팔레트보다 어둡게 조정 */
   --c-muted: #6a6f76;
-  --c-faint: #a7a29a;
+  /* 하단 탭바(흰 배경에 가까움)·완료된 체크 항목 텍스트로 쓰인다 — 4.5:1 이상 만족하도록 보정 */
+  --c-faint: #6d7177;
 
   /* Lines */
   --border-color: #efebe4;
@@ -113,8 +114,17 @@
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
   color-scheme: light;
-  font-size: var(--type-body-size);
+  /* font-size는 여기(:root)에 두지 않는다 — rem 단위는 항상 root(html) 요소의
+     "계산된" font-size를 기준으로 하는데, :root 자신이 rem 값을 쓰면 그 계산이
+     브라우저 기본값(16px) 기준으로 한 번 줄어든 뒤, 그 축소된 값이 다시 모든
+     자손의 rem 기준이 되어 전체 타입 스케일이 실제보다 작게 렌더된다
+     (예: --type-supporting-size 13px 주석 값이 실제로는 12.19px로 렌더됨).
+     html의 font-size는 브라우저 기본 16px로 유지하고, 본문 기준 크기만 body에 적용한다. */
   font-weight: var(--font-weight-body);
   line-height: var(--type-body-line);
   letter-spacing: var(--tracking-body);
+}
+
+body {
+  font-size: var(--type-body-size);
 }
