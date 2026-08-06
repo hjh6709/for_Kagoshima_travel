@@ -1,0 +1,468 @@
+/* ---------------------------------------------------------------------------
+ * theme-ios.css — 기존 클래스 위에 얹는 리스킨 레이어
+ *
+ * styles.css에서 "가장 마지막"에 import 한다. 마크업을 바꾸지 않고 라운드 ·
+ * 간격 · 그림자 · 상태색을 새 디자인으로 맞춘다. 구조 변경(next hero, 보딩패스,
+ * 날짜 필 등)은 이후 단계에서 컴포넌트를 수정해 완성한다.
+ * ------------------------------------------------------------------------- */
+
+/* ── 프레임 & 화면 ─────────────────────────────────────────────── */
+.app-shell {
+  background: radial-gradient(120% 90% at 50% 0%, #f3f0ea 0%, #e4dfd7 100%);
+}
+
+.phone-frame {
+  width: min(100%, 390px);
+  border: 0;
+  border-radius: var(--radius-frame);
+  box-shadow: var(--shadow-frame), 0 0 0 10px #17181c, 0 0 0 11px #33353c;
+  background: var(--c-bg);
+}
+
+.screen {
+  padding: calc(14px + env(safe-area-inset-top)) 22px calc(28px + env(safe-area-inset-bottom));
+}
+
+.screen h1 {
+  font-size: var(--type-screen-size);
+  font-weight: var(--font-weight-display);
+  letter-spacing: var(--tracking-display);
+  line-height: 1.2;
+  margin: 0;
+}
+
+.screen h2 {
+  font-size: var(--type-section-size);
+  font-weight: var(--font-weight-strong);
+  letter-spacing: var(--tracking-title);
+  margin: 0;
+}
+
+.screen-intro,
+.section-caption,
+.flight-screen-intro,
+.muted {
+  color: var(--c-muted);
+  font-size: var(--type-supporting-size);
+  letter-spacing: 0;
+}
+
+.screen-title-row {
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.section-block {
+  margin-top: 24px;
+}
+
+.section-block.compact {
+  margin-top: 20px;
+}
+
+/* ── 카드 / 리스트 그룹 ────────────────────────────────────────── */
+.list-card,
+.card,
+.status-card,
+.accommodation-summary,
+.emergency-contact,
+.mypage-trip-card,
+.mypage-demo-card,
+.empty-state-card,
+.concierge-empty-state {
+  border: 0;
+  border-radius: var(--radius-card);
+  background: var(--c-surface);
+  box-shadow: none;
+  padding: 17px;
+}
+
+.card-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 체크 행은 카드 사이 간격 대신 하나의 그룹 + 헤어라인으로 */
+.card-stack:has(> .check-row) {
+  gap: 0;
+  border-radius: var(--radius-card);
+  background: var(--c-surface);
+  overflow: hidden;
+}
+
+.check-row {
+  border: 0;
+  border-radius: 0;
+  border-bottom: 1px solid var(--c-hairline);
+  background: transparent;
+  padding: 0;
+}
+
+.check-row:last-child {
+  border-bottom: 0;
+}
+
+.check-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 52px;
+  padding: 14px 16px;
+  font-size: var(--type-body-size);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  text-align: left;
+  color: var(--c-text);
+}
+
+.check-toggle:hover {
+  background: #faf9f6;
+}
+
+.check-toggle svg {
+  color: #c6c2ba;
+  flex: 0 0 auto;
+}
+
+.check-toggle svg.checked {
+  color: var(--c-success);
+}
+
+.check-row.completed .check-toggle,
+.check-row.completed .check-toggle span {
+  color: var(--c-faint);
+  text-decoration: line-through;
+}
+
+/* ── 버튼 ─────────────────────────────────────────────────────── */
+.primary-button,
+.secondary-button,
+.emergency-call-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 50px;
+  border: 0;
+  border-radius: var(--radius-control);
+  font-size: var(--type-body-size);
+  font-weight: var(--font-weight-strong);
+  letter-spacing: -0.015em;
+}
+
+.primary-button {
+  background: var(--c-route);
+  color: #ffffff;
+}
+
+.primary-button:hover:not(:disabled) {
+  background: var(--c-route-deep);
+}
+
+.secondary-button {
+  background: var(--c-surface-cool);
+  color: var(--c-route);
+}
+
+.secondary-button:hover:not(:disabled) {
+  background: var(--c-fill-strong);
+}
+
+.compact-button {
+  min-height: 36px;
+  padding: 0 13px;
+  border-radius: 12px;
+  font-size: var(--type-supporting-size);
+}
+
+.emergency-call-button {
+  background: var(--c-destination-deep);
+  color: #ffffff;
+  min-height: 40px;
+  border-radius: 12px;
+}
+
+.text-link {
+  color: var(--c-route);
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-strong);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(46, 67, 116, 0.28);
+  outline-offset: 3px;
+}
+
+/* ── 세그먼트 컨트롤 ──────────────────────────────────────────── */
+.segment-control-wrapper {
+  display: flex;
+  gap: 3px;
+  padding: 3px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--c-fill-strong);
+  margin: 14px 0 0;
+}
+
+.segment-btn {
+  flex: 1;
+  min-height: 34px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #7b8089;
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-strong);
+  letter-spacing: -0.015em;
+}
+
+.segment-btn.active {
+  background: var(--c-surface);
+  color: var(--c-text);
+  box-shadow: var(--shadow-segment);
+}
+
+/* ── 날짜 필 ─────────────────────────────────────────────────── */
+.date-tabs {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  padding-bottom: 2px;
+}
+
+.date-tabs.scroll-tabs {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.date-tabs.scroll-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.date-tabs button {
+  flex: 1;
+  min-width: 68px;
+  min-height: 68px;
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  background: var(--c-surface);
+  color: var(--c-text);
+  font-size: 1.25rem;
+  font-weight: var(--font-weight-display);
+  letter-spacing: -0.03em;
+  padding: 11px 4px 12px;
+}
+
+.date-tabs button.active {
+  border-color: var(--c-route);
+  background: var(--c-route);
+  color: #ffffff;
+}
+
+.schedule-summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.schedule-summary span {
+  font-size: 0.875rem;
+  font-weight: var(--font-weight-strong);
+  letter-spacing: var(--tracking-title);
+}
+
+.schedule-summary small {
+  color: var(--c-muted);
+}
+
+/* ── 타임라인 ────────────────────────────────────────────────── */
+.timeline-stack {
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.timeline-stack .list-card {
+  border-radius: var(--radius-card-sm);
+  padding: 15px;
+}
+
+.timeline-stack .list-card.completed {
+  background: #fbfaf8;
+  border: 1px solid var(--border-color);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  height: 25px;
+  padding: 0 10px;
+  border-radius: 100px;
+  background: var(--c-route-soft);
+  color: var(--c-route);
+  font-size: var(--type-chip-size);
+  font-weight: var(--font-weight-display);
+  letter-spacing: 0.03em;
+}
+
+/* ── 항공 ─────────────────────────────────────────────────────── */
+.flight-journey-card {
+  border: 0;
+  border-radius: 22px;
+  background: var(--c-surface);
+  box-shadow: var(--shadow-raised);
+  overflow: hidden;
+  padding: 0;
+}
+
+.flight-journey-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 18px;
+  background: var(--c-route-soft);
+  color: var(--c-route);
+}
+
+.flight-route {
+  display: flex;
+  align-items: center;
+  padding: 20px 18px 18px;
+}
+
+.flight-route-point strong {
+  display: block;
+  font-size: 1.6875rem;
+  font-weight: var(--font-weight-display);
+  letter-spacing: -0.02em;
+}
+
+.flight-route-point small {
+  color: var(--c-muted);
+  font-size: 0.75rem;
+}
+
+.flight-route-line span {
+  display: block;
+  height: 1.5px;
+  background: repeating-linear-gradient(90deg, #dcd8d0 0 5px, transparent 5px 10px);
+}
+
+.flight-memo {
+  border-top: 1px dashed #e6e2dc;
+  padding: 13px 18px;
+}
+
+/* ── 하단 탭바 ───────────────────────────────────────────────── */
+.bottom-tabs {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  min-height: 84px;
+  padding: 9px 6px calc(4px + env(safe-area-inset-bottom));
+  border-top: 1px solid #ebe7e0;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(18px);
+  box-shadow: none;
+}
+
+.bottom-tabs button {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: var(--c-faint);
+  font-size: 0.65625rem;
+  font-weight: var(--font-weight-strong);
+  letter-spacing: -0.01em;
+}
+
+.bottom-tabs button.active {
+  color: var(--c-route);
+  background: transparent;
+}
+
+.bottom-tabs button.active svg {
+  stroke-width: 2.4;
+}
+
+/* ── 폼 ───────────────────────────────────────────────────────── */
+.auth-form input,
+.auth-form select,
+.auth-form textarea,
+.date-form input {
+  min-height: 50px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-control);
+  background: var(--c-surface);
+  font-weight: 600;
+}
+
+.auth-form input:focus,
+.auth-form select:focus,
+.auth-form textarea:focus {
+  border-color: var(--c-route);
+  box-shadow: 0 0 0 3px rgba(46, 67, 116, 0.16);
+}
+
+.auth-card {
+  border-top: 0;
+}
+
+.form-error {
+  background: var(--c-danger-light);
+  color: var(--c-danger);
+  border-radius: 12px;
+}
+
+.form-success {
+  background: var(--c-success-soft);
+  color: var(--c-success);
+  border-radius: 12px;
+}
+
+/* ── 빈 상태 ─────────────────────────────────────────────────── */
+.empty-state-card,
+.concierge-empty-state {
+  display: flex;
+  gap: 13px;
+  align-items: flex-start;
+  padding: 18px;
+}
+
+.empty-state-card svg,
+.concierge-empty-state svg {
+  color: #c6c2ba;
+  flex: 0 0 auto;
+}
+
+.empty-state-card strong,
+.concierge-empty-state strong {
+  display: block;
+  font-size: var(--type-title-size);
+  font-weight: var(--font-weight-strong);
+  letter-spacing: var(--tracking-title);
+}
+
+.empty-state-card p,
+.concierge-empty-state p {
+  margin: 4px 0 0;
+  color: var(--c-muted);
+  font-size: var(--type-supporting-size);
+}
+
+.empty-state-action {
+  margin-top: 12px;
+}
