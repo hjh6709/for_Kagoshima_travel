@@ -19,11 +19,12 @@
   --c-route-soft: #eaeef6;
 
   /* Accent = 지금 해야 할 하나 (기존 --c-destination 역할)
-     흰 배경(#ffffff) 위 텍스트 대비 4.5:1 이상을 만족하도록 원래 팔레트보다 어둡게 조정했다
-     (scripts/mobile-ui-foundations.test.mjs의 접근성 대비 계약). */
-  --c-destination: #ba5326;
-  --c-destination-deep: #a8431a;
-  --c-destination-soft: #fbede7;
+     오렌지 대신 그린 계열. --c-success(#2f7a54, 청록 계열)와 색상이 겹치지
+     않도록 올리브 쪽으로 톤을 잡았다. 흰 배경 및 --c-destination-soft 배경
+     양쪽에서 4.5:1 이상을 만족한다 (scripts/mobile-ui-foundations.test.mjs). */
+  --c-destination: #437033;
+  --c-destination-deep: #325023;
+  --c-destination-soft: #e9f0e2;
 
   /* danger-light(#fbede7) 위 텍스트 대비 4.5:1 이상을 만족하도록 조정 */
   --c-danger: #b0451f;
