@@ -7,50 +7,102 @@
 }
 
 :root {
-  /* Pocket Atlas palette: route, destination, ink, and map paper. */
-  --c-route: #0b6f6a;
-  --c-route-deep: #075a57;
-  --c-route-soft: #e1f0ee;
-  --c-destination: #c84e3c;
-  --c-destination-deep: #ad3e2f;
-  --c-destination-soft: #faeae6;
-  --c-danger: #b33a3a;
-  --c-warning: #925c00;
-  --c-orange: var(--c-warning);
-  --c-success: #25734b;
-  --c-bg: #f5f8f7;
-  --c-page: #dfe9e8;
-  --c-surface: #ffffff;
-  --c-text: #17333d;
-  --c-muted: #4c626a;
-  --c-surface-cool: #edf3f2;
-  --c-danger-light: #f9e9e8;
-  --c-warning-light: #f7edd6;
-  --border-color: #cad8d7;
-  --bg-secondary: var(--c-route-soft);
-  --radius-card: 14px;
-  --radius-control: 10px;
-  --radius-sheet: 20px;
-  --shadow-card: none;
-  --shadow-frame: 0 24px 64px rgba(23, 51, 61, 0.14);
-  --shadow-overlay: 0 16px 40px rgba(23, 51, 61, 0.18);
-  --ease-route: cubic-bezier(0.22, 1, 0.36, 1);
+  /* ---------------------------------------------------------------
+   * Map Planner — iOS-native redesign
+   * 웜 페이퍼 뉴트럴 + 더스크 인디고(선택/이동) + 선셋(지금 할 하나)
+   * 변수 이름은 기존과 동일하므로 이 파일만 교체해도 전 화면이 새 팔레트로 전환됩니다.
+   * --------------------------------------------------------------- */
 
-  /* Six roles keep the mobile hierarchy predictable across every trip screen. */
-  --type-display-size: 2rem;
-  --type-screen-size: 1.625rem;
-  --type-title-size: 1.25rem;
-  --type-body-size: 1rem;
-  --type-supporting-size: 0.875rem;
-  --type-label-size: 0.75rem;
-  --type-presentation-size: clamp(2rem, 9vw, 2.75rem);
-  --type-display-line: 1.18;
+  /* Primary = 브랜드/선택/이동 (기존 --c-route 역할) */
+  --c-route: #2e4374;
+  --c-route-deep: #24345a;
+  --c-route-soft: #eaeef6;
+
+  /* Accent = 지금 해야 할 하나 (기존 --c-destination 역할)
+     오렌지 대신 그린 계열. --c-success(#2f7a54, 청록 계열)와 색상이 겹치지
+     않도록 올리브 쪽으로 톤을 잡았다. 흰 배경 및 --c-destination-soft 배경
+     양쪽에서 4.5:1 이상을 만족한다 (scripts/mobile-ui-foundations.test.mjs). */
+  --c-destination: #437033;
+  --c-destination-deep: #325023;
+  --c-destination-soft: #e9f0e2;
+
+  /* danger-light(#fbede7) 위 텍스트 대비 4.5:1 이상을 만족하도록 조정 */
+  --c-danger: #b0451f;
+  --c-danger-light: #fbede7;
+  /* warning-light(#f7efe0) 위 텍스트 대비 4.5:1 이상을 만족하도록 조정 */
+  --c-warning: #7a5c27;
+  --c-warning-light: #f7efe0;
+  --c-orange: var(--c-destination);
+  --c-success: #2f7a54;
+  --c-success-soft: #e4f0e9;
+
+  /* Surfaces */
+  --c-bg: #f7f5f2;          /* 앱 배경 */
+  --c-page: #eae6e0;        /* 프레임 밖 데스크 */
+  --c-surface: #ffffff;     /* 카드 · 리스트 그룹 */
+  --c-surface-cool: #f1efea; /* 세컨더리 버튼 · 아이콘 타일 · 칩 */
+  --c-fill-strong: #e8e4dd; /* 세그먼트 트랙 · 프로그레스 트랙 */
+
+  /* Text */
+  --c-text: #191b1f;
+  --c-text-strong: #191b1f;
+  --c-ink-muted: #5a5f68;
+  /* --c-bg(#f7f5f2) 위 텍스트 대비 4.5:1 이상을 만족하도록 원래 팔레트보다 어둡게 조정 */
+  --c-muted: #6a6f76;
+  /* 하단 탭바(흰 배경에 가까움)·완료된 체크 항목 텍스트로 쓰인다 — 4.5:1 이상 만족하도록 보정 */
+  --c-faint: #6d7177;
+
+  /* Lines */
+  --border-color: #efebe4;
+  --c-hairline: #f1efea;
+  --bg-secondary: var(--c-route-soft);
+
+  /* Shape */
+  --radius-card: 20px;
+  --radius-card-sm: 18px;
+  --radius-control: 14px;
+  --radius-chip: 8px;
+  --radius-sheet: 26px;
+  --radius-frame: 46px;
+
+  /* Elevation — 카드 기본 그림자 없음 */
+  --shadow-card: none;
+  --shadow-hero: 0 16px 34px rgba(46, 67, 116, 0.26);
+  --shadow-raised: 0 10px 26px rgba(24, 26, 32, 0.07);
+  --shadow-frame: 0 40px 90px rgba(24, 26, 32, 0.28);
+  --shadow-overlay: 0 -12px 40px rgba(24, 26, 32, 0.18);
+  --shadow-segment: 0 2px 6px rgba(24, 26, 32, 0.1);
+
+  /* Motion */
+  --ease-route: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
+
+  /* Type scale */
+  --type-display-size: 2.0625rem;    /* 33px — 시작 화면 헤드라인 */
+  --type-screen-size: 1.8125rem;     /* 29px — 화면 타이틀 */
+  --type-headline-size: 1.5rem;      /* 24px — hero 장소명 */
+  --type-section-size: 1.1875rem;    /* 19px — 섹션 제목 */
+  --type-title-size: 1rem;           /* 16px — 카드 제목 */
+  --type-body-size: 0.9375rem;       /* 15px */
+  --type-supporting-size: 0.8125rem; /* 13px — 메타 · 현지어 */
+  --type-label-size: 0.75rem;        /* 12px — 섹션 라벨 */
+  --type-chip-size: 0.71875rem;      /* 11.5px */
+  --type-presentation-size: clamp(1.75rem, 8vw, 2.0625rem);
+
+  --type-display-line: 1.24;
   --type-heading-line: 1.3;
   --type-body-line: 1.6;
-  --type-supporting-line: 1.5;
+  --type-supporting-line: 1.45;
   --type-label-line: 1.35;
+
+  --tracking-display: -0.035em;
+  --tracking-title: -0.025em;
+  --tracking-body: -0.01em;
+  --tracking-label: 0.06em;
+
   --font-weight-body: 500;
-  --font-weight-strong: 700;
+  --font-weight-medium: 650;
+  --font-weight-strong: 750;
   --font-weight-display: 800;
 
   color: var(--c-text);
@@ -63,8 +115,17 @@
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
   color-scheme: light;
-  font-size: var(--type-body-size);
+  /* font-size는 여기(:root)에 두지 않는다 — rem 단위는 항상 root(html) 요소의
+     "계산된" font-size를 기준으로 하는데, :root 자신이 rem 값을 쓰면 그 계산이
+     브라우저 기본값(16px) 기준으로 한 번 줄어든 뒤, 그 축소된 값이 다시 모든
+     자손의 rem 기준이 되어 전체 타입 스케일이 실제보다 작게 렌더된다
+     (예: --type-supporting-size 13px 주석 값이 실제로는 12.19px로 렌더됨).
+     html의 font-size는 브라우저 기본 16px로 유지하고, 본문 기준 크기만 body에 적용한다. */
   font-weight: var(--font-weight-body);
   line-height: var(--type-body-line);
-  letter-spacing: 0;
+  letter-spacing: var(--tracking-body);
+}
+
+body {
+  font-size: var(--type-body-size);
 }

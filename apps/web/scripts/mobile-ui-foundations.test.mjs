@@ -62,6 +62,60 @@ function contrastRatio(foreground, background) {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
+function readRuleBlock(css, selectorSource) {
+  // 줄 맨 앞에서 시작하는 선택자만 매칭한다 — ".place-search-controls .compact-button"처럼
+  // 다른 선택자의 자손으로 쓰인 동명 클래스와 혼동하지 않기 위함.
+  const match = css.match(new RegExp(`^\\s*${selectorSource}\\s*{([^}]*)}`, "m"));
+  assert.ok(match, `"${selectorSource}" 규칙을 찾지 못했습니다.`);
+  return match[1];
+}
+
+function tokenPxValue(varName) {
+  const remMatch = tokens.match(new RegExp(`${varName}:\\s*([\\d.]+)rem`));
+  if (remMatch) return Number(remMatch[1]) * 16;
+  const pxMatch = tokens.match(new RegExp(`${varName}:\\s*([\\d.]+)px`));
+  if (pxMatch) return Number(pxMatch[1]);
+  assert.fail(`${varName} 크기 토큰을 해석할 수 없습니다.`);
+}
+
+function fontSizePx(raw) {
+  const trimmed = raw.trim();
+  const varMatch = trimmed.match(/^var\((--[\w-]+)\)/);
+  if (varMatch) return tokenPxValue(varMatch[1]);
+  const remMatch = trimmed.match(/^([\d.]+)rem/);
+  if (remMatch) return Number(remMatch[1]) * 16;
+  const pxMatch = trimmed.match(/^([\d.]+)px/);
+  if (pxMatch) return Number(pxMatch[1]);
+  assert.fail(`font-size 값을 해석할 수 없습니다: ${raw}`);
+}
+
+function ruleFontSizePx(block) {
+  const match = block.match(/font-size:\s*([^;]+);/);
+  assert.ok(match, "font-size를 찾을 수 없습니다.");
+  return fontSizePx(match[1]);
+}
+
+function ruleMinHeightPx(block) {
+  const match = block.match(/min-height:\s*([\d.]+)px/);
+  assert.ok(match, "min-height(px)를 찾을 수 없습니다.");
+  return Number(match[1]);
+}
+
+function resolveColorHex(raw) {
+  const trimmed = raw.trim();
+  const varMatch = trimmed.match(/^var\((--[\w-]+)\)$/);
+  if (varMatch) return readHexToken(varMatch[1]);
+  const hexMatch = trimmed.match(/^(#[0-9a-fA-F]{6})$/);
+  if (hexMatch) return hexMatch[1];
+  assert.fail(`색상 값을 해석할 수 없습니다: ${raw}`);
+}
+
+function ruleColorHex(block) {
+  const match = block.match(/(?:^|[\s;])color:\s*([^;]+);/);
+  assert.ok(match, "color를 찾을 수 없습니다.");
+  return resolveColorHex(match[1]);
+}
+
 test("모바일 타이포그래피는 역할 토큰과 12px 최소 크기를 사용한다", () => {
   for (const token of requiredTypeTokens) {
     assert.match(tokens, new RegExp(`${token}:`), `${token}이 필요합니다.`);
@@ -144,4 +198,72 @@ test("첫 화면 주요 행동은 문구를 가운데 두고 화살표만 오른
     manageStyles,
     /\.start-primary-action \.trailing-icon\s*{[\s\S]*?margin-left:\s*auto;/,
   );
+});
+
+test("compact · segment · 긴급전화 버튼은 44px 이상의 터치 영역을 갖는다", () => {
+  const selectors = [
+    String.raw`\.compact-button(?![\w.-])`,
+    String.raw`\.segment-btn(?![\w.-])`,
+    String.raw`\.emergency-call-button(?![\w.-])`,
+  ];
+  for (const selector of selectors) {
+    const block = readRuleBlock(styles, selector);
+    assert.ok(
+      ruleMinHeightPx(block) >= 44,
+      `${selector}의 최소 높이가 44px 미만입니다.`,
+    );
+  }
+});
+
+test("하단 탭과 세그먼트 텍스트는 12px 이상이며 4.5대 1 이상의 대비를 갖는다", () => {
+  const bottomTabBlock = readRuleBlock(styles, String.raw`\.bottom-tabs button(?![\w.-])`);
+  assert.ok(
+    ruleFontSizePx(bottomTabBlock) >= 12,
+    "하단 탭 글자 크기가 12px 미만입니다.",
+  );
+  assert.ok(
+    contrastRatio(ruleColorHex(bottomTabBlock), "#ffffff") >= 4.5,
+    "하단 탭 대비가 4.5:1 미만입니다.",
+  );
+
+  const segmentBlock = readRuleBlock(styles, String.raw`\.segment-btn(?![\w.-])`);
+  assert.ok(
+    ruleFontSizePx(segmentBlock) >= 12,
+    "세그먼트 글자 크기가 12px 미만입니다.",
+  );
+  assert.ok(
+    contrastRatio(ruleColorHex(segmentBlock), readHexToken("--c-fill-strong")) >= 4.5,
+    "세그먼트 대비가 4.5:1 미만입니다.",
+  );
+});
+
+test(":root는 rem 단위 font-size를 직접 선언하지 않고 body가 기준 크기를 정한다", () => {
+  const rootBlock = readRuleBlock(tokens, ":root");
+  assert.doesNotMatch(
+    rootBlock,
+    /font-size:/,
+    ":root에 font-size가 있으면 rem 기준이 이중으로 축소됩니다.",
+  );
+  const bodyBlock = readRuleBlock(tokens, "body");
+  assert.match(bodyBlock, /font-size:\s*var\(--type-body-size\)/);
+});
+
+test("날짜 탭은 좁은 화면에서 겹치는 대신 가로로 스크롤된다", () => {
+  const block = readRuleBlock(styles, String.raw`\.date-tabs(?![\w.-])`);
+  assert.match(block, /overflow-x:\s*auto/);
+});
+
+test("항공 노선은 grid로 가운데 열의 비율을 고정한다", () => {
+  const block = readRuleBlock(styles, String.raw`\.flight-route(?![\w.-])`);
+  assert.match(block, /display:\s*grid/);
+});
+
+test("첫 여행이 없는 empty-state 카드는 세로로 아이콘 · 제목 · 설명을 쌓는다", () => {
+  const block = readRuleBlock(styles, String.raw`\.info-card\.empty-state-card`);
+  assert.match(block, /flex-direction:\s*column/);
+});
+
+test("체크리스트 카드 그룹은 overflow: hidden을 쓰지 않아 포커스 링이 잘리지 않는다", () => {
+  const block = readRuleBlock(styles, String.raw`\.card-stack:has\(> \.check-row\)`);
+  assert.doesNotMatch(block, /overflow:\s*hidden/);
 });
