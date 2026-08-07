@@ -299,16 +299,16 @@
 
 .travel-map-stage {
   position: relative;
-  min-height: clamp(260px, 72vw, 340px);
+  min-height: clamp(246px, 66vw, 300px);
   overflow: hidden;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-card);
+  border: 0;
+  border-radius: 22px;
   background: var(--c-surface-cool);
 }
 
 .travel-map-canvas {
   width: 100%;
-  min-height: clamp(260px, 72vw, 340px);
+  min-height: clamp(246px, 66vw, 300px);
 }
 
 .travel-map-state {
@@ -724,4 +724,114 @@
   .map-stop-selected-label {
     display: none;
   }
+}
+
+/* ── 지도 탭 (4b단계) ────────────────────────────────────────── */
+.map-destination-open {
+  width: 100%;
+  margin-top: 14px;
+}
+
+.map-saved-place {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 14px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--c-surface);
+  color: var(--c-text);
+  text-align: left;
+}
+
+.map-saved-place > svg {
+  flex: 0 0 auto;
+  color: var(--c-muted);
+}
+
+/* 위쪽 .map-stop-index와 묶여 있던 원형 표식 규칙(2px 테두리)을 명시적으로 해제한다. */
+.map-saved-marker {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--c-route-soft);
+  color: var(--c-route);
+}
+
+.map-saved-copy {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.map-saved-copy small {
+  color: var(--c-muted);
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
+}
+
+.map-saved-copy strong {
+  font-size: var(--type-body-size);
+  font-weight: var(--font-weight-strong);
+  letter-spacing: var(--tracking-title);
+  overflow-wrap: anywhere;
+}
+
+.map-saved-sub {
+  color: var(--c-muted);
+  font-size: var(--type-label-size);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 시트 안 유틸리티 행과 기사님 모드 */
+.place-sheet-utilities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.place-sheet-copy-error {
+  margin: 10px 0 0;
+  color: var(--c-danger);
+  font-size: var(--type-supporting-size);
+}
+
+.place-sheet-phrase {
+  padding: 8px 0 4px;
+  text-align: center;
+}
+
+.place-sheet-phrase-label {
+  margin: 0;
+  color: var(--c-muted);
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-display);
+  letter-spacing: 0.06em;
+}
+
+.place-sheet-phrase-title {
+  margin: 8px 0 18px;
+  font-size: 2rem;
+  font-weight: var(--font-weight-display);
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.place-sheet-phrase-address {
+  margin: 8px 0 20px;
+  font-size: 1.25rem;
+  font-weight: var(--font-weight-medium);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }

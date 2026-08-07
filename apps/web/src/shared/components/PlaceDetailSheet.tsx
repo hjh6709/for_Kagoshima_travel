@@ -1,5 +1,5 @@
-import { useRef } from "react";
-import { Map, X } from "lucide-react";
+import { useRef, useState } from "react";
+import { ArrowLeft, Check, Copy, Map, Maximize2, X } from "lucide-react";
 import { placeCategoryIcons } from "../../features/trip/placeCategoryIcons";
 import type { Place } from "../../types/travel";
 import { getAmapDirectionsUrl, getGoogleDirectionsUrl, getPlaceMarkerUrl } from "../../utils/mapLinks";
@@ -17,12 +17,32 @@ export function PlaceDetailSheet({ destinationCountry, onClose, place }: PlaceDe
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   useDialogFocusTrap({ dialogRef, initialFocusRef: closeButtonRef, isOpen: true, onClose });
+  const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState("");
+  const [isPhraseMode, setIsPhraseMode] = useState(false);
 
   const CategoryIcon = placeCategoryIcons[place.category];
   const displayAddress = place.chineseAddress || place.address;
   const isChina = destinationCountry === "CN";
   const amapDirectionsUrl = isChina ? getAmapDirectionsUrl(place) : undefined;
   const amapUrl = isChina ? amapDirectionsUrl || getPlaceMarkerUrl("amap", place) : undefined;
+  const copyTarget = place.chineseAddress || place.address || "";
+
+  const handleCopyAddress = async () => {
+    if (!navigator.clipboard) {
+      setCopyError("이 브라우저에서는 주소 복사를 지원하지 않습니다. 주소를 길게 눌러 직접 복사해 주세요.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(copyTarget);
+      setCopyError("");
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+      setCopyError("주소를 복사하지 못했습니다. 주소를 길게 눌러 직접 복사해 주세요.");
+    }
+  };
 
   return (
     <div className="place-sheet-backdrop">
@@ -35,6 +55,25 @@ export function PlaceDetailSheet({ destinationCountry, onClose, place }: PlaceDe
       >
         <span aria-hidden="true" className="place-sheet-handle" />
 
+        {isPhraseMode ? (
+          <div className="place-sheet-phrase">
+            <p className="place-sheet-phrase-label">택시 기사님께 보여주세요</p>
+            <h2 className="place-sheet-phrase-title">{place.chineseName || place.name}</h2>
+            <p className="place-sheet-phrase-label">현지 주소</p>
+            <p className="place-sheet-phrase-address">
+              {place.chineseAddress || place.address || "주소 정보 없음"}
+            </p>
+            <button
+              className="secondary-button place-sheet-action"
+              onClick={() => setIsPhraseMode(false)}
+              type="button"
+            >
+              <ArrowLeft aria-hidden="true" size={16} />
+              장소 정보로 돌아가기
+            </button>
+          </div>
+        ) : (
+          <>
         <div className="place-sheet-heading">
           <span aria-hidden="true" className="place-sheet-tile">
             <CategoryIcon size={22} />
@@ -77,6 +116,37 @@ export function PlaceDetailSheet({ destinationCountry, onClose, place }: PlaceDe
             Google 지도
           </a>
         </div>
+
+        <div className="place-sheet-utilities">
+          {copyTarget && (
+            <button
+              className="secondary-button place-sheet-action"
+              onClick={() => void handleCopyAddress()}
+              type="button"
+            >
+              {copied ? <Check aria-hidden="true" size={16} /> : <Copy aria-hidden="true" size={16} />}
+              주소 복사
+            </button>
+          )}
+          {isChina && (
+            <button
+              className="secondary-button place-sheet-action"
+              onClick={() => setIsPhraseMode(true)}
+              type="button"
+            >
+              <Maximize2 aria-hidden="true" size={16} />
+              기사님께 보기
+            </button>
+          )}
+        </div>
+
+        {copyError && (
+          <p className="place-sheet-copy-error" role="alert">
+            {copyError}
+          </p>
+        )}
+          </>
+        )}
 
         <button className="place-sheet-close" onClick={onClose} ref={closeButtonRef} type="button">
           <X aria-hidden="true" size={16} />
