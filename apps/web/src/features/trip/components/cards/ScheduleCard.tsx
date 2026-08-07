@@ -1,13 +1,15 @@
-import { ArrowDown, ArrowUp, CheckCircle2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Check } from "lucide-react";
 import { MapDirectionsChoice } from "../../../../shared/components/MapDirectionsChoice";
 import { MaskedText } from "../../../../shared/components/MaskedText";
 import { scheduleTypeLabels } from "../../../../shared/travelOptions";
 import type { Place, ScheduleItem } from "../../../../types/travel";
+import { scheduleTypeIcons } from "../../scheduleTypeIcons";
 
 type ScheduleCardProps = {
   index: number;
   isCompleted: boolean;
   isReadOnly?: boolean;
+  isReordering?: boolean;
   isLast: boolean;
   item: ScheduleItem;
   destinationCountry?: string;
@@ -17,11 +19,12 @@ type ScheduleCardProps = {
   showGuideMemo?: boolean;
 };
 
-// 일정 카드 한 개의 렌더링만 담당한다. 완료/순서 변경 동작은 상위 핸들러를 호출한다.
+// 일정 카드 한 개의 렌더링만 담당한다. 완료·순서 변경은 상위 핸들러를 호출한다.
 export function ScheduleCard({
   index,
   isCompleted,
   isReadOnly,
+  isReordering = false,
   isLast,
   item,
   destinationCountry,
@@ -30,16 +33,37 @@ export function ScheduleCard({
   place,
   showGuideMemo = false,
 }: ScheduleCardProps) {
+  const TypeIcon = scheduleTypeIcons[item.type];
+
   return (
     <article className={`schedule-card ${isCompleted ? "completed" : ""}`}>
       <span className="time">{item.time}</span>
       <div className="schedule-content">
-        <div className="schedule-meta">
+        <div className="schedule-headline">
+          <span aria-hidden="true" className="schedule-type-tile">
+            <TypeIcon size={18} />
+          </span>
+          <div className="schedule-headline-copy">
+            <h2>{item.title}</h2>
+            {place && <p className="schedule-place">{place.name}</p>}
+          </div>
+          {!isReadOnly && (
+            <button
+              aria-label={`${item.title} ${isCompleted ? "완료 취소" : "완료"}`}
+              className={`schedule-check${isCompleted ? " checked" : ""}`}
+              onClick={() => onToggleComplete(item.id)}
+              type="button"
+            >
+              <Check aria-hidden="true" size={20} />
+            </button>
+          )}
+        </div>
+
+        <div className="schedule-chips">
           <span className="pill subtle">{scheduleTypeLabels[item.type]}</span>
           {isCompleted && <span className="pill completed-pill">완료</span>}
-          {place && <span className="place-label">{place.name}</span>}
         </div>
-        <h2>{item.title}</h2>
+
         {item.transportMemo && (
           <p className="schedule-detail">
             <strong>이동</strong>
@@ -59,45 +83,37 @@ export function ScheduleCard({
               {item.guideMemo}
             </p>
           ) : (
-            <div className="muted" style={{ marginTop: "4px", fontSize: "var(--type-label-size)" }}>
+            <div className="muted schedule-guide-memo">
               <MaskedText text={item.guideMemo} label="안내:" />
             </div>
           )
         )}
-        {!isReadOnly && (
-          <div className="schedule-actions">
+
+        {!isReadOnly && isReordering && (
+          <div className="schedule-move-actions" aria-label={`${item.title} 순서 변경`}>
             <button
-              className="secondary-button compact-button"
-              onClick={() => onToggleComplete(item.id)}
+              aria-label={`${item.title} 위로 이동`}
+              className="icon-button neutral"
+              disabled={index === 0}
+              onClick={() => onMove(item.id, "up")}
               type="button"
             >
-              <CheckCircle2 size={18} />
-              {isCompleted ? "완료 취소" : "완료"}
+              <ArrowUp size={18} />
             </button>
-            <div className="schedule-move-actions" aria-label={`${item.title} 순서 변경`}>
-              <button
-                aria-label={`${item.title} 위로 이동`}
-                className="icon-button neutral"
-                disabled={index === 0}
-                onClick={() => onMove(item.id, "up")}
-                type="button"
-              >
-                <ArrowUp size={18} />
-              </button>
-              <button
-                aria-label={`${item.title} 아래로 이동`}
-                className="icon-button neutral"
-                disabled={isLast}
-                onClick={() => onMove(item.id, "down")}
-                type="button"
-              >
-                <ArrowDown size={18} />
-              </button>
-            </div>
+            <button
+              aria-label={`${item.title} 아래로 이동`}
+              className="icon-button neutral"
+              disabled={isLast}
+              onClick={() => onMove(item.id, "down")}
+              type="button"
+            >
+              <ArrowDown size={18} />
+            </button>
           </div>
         )}
+
         {place && (
-          <div style={{ marginTop: "12px" }}>
+          <div className="schedule-directions">
             <MapDirectionsChoice destinationCountry={destinationCountry} place={place} />
           </div>
         )}
