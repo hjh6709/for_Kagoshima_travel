@@ -2,6 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { loadGoogleMaps } from "../map/googleMapsLoader";
+import { MARKER_COLORS } from "../map/mapModel";
 import { TravelMap } from "./TravelMap";
 
 vi.mock("../map/googleMapsLoader", () => ({
@@ -353,7 +354,7 @@ describe("TravelMap", () => {
       zIndex: 20,
     });
     expect(pinInstances[0]?.options).toMatchObject({
-      background: "#C94F3D",
+      background: MARKER_COLORS.destination,
       borderColor: "#FFFFFF",
       glyphColor: "#FFFFFF",
       scale: 1.15,

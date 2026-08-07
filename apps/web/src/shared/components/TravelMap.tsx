@@ -2,6 +2,7 @@ import { AlertTriangle, LocateFixed, MapPin } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { loadGoogleMaps, type GoogleMapsRuntime } from "../map/googleMapsLoader";
 import {
+  MARKER_COLORS,
   getMapCenter,
   getMappablePlaces,
   getMarkerAppearance,
@@ -177,7 +178,7 @@ export function TravelMap<T extends MappableLocation>({
       const appearance = getMarkerAppearance(place.id, selectedPlaceID);
       const position = { lat: place.latitude, lng: place.longitude };
       const marker = createMapMarker({
-        background: appearance.background === "destination" ? "#C94F3D" : "#0B6F6A",
+        background: appearance.color,
         legacyStrokeWeight: appearance.selected ? 4 : 3,
         map,
         onClick: () => onSelectPlace(place.id),
@@ -195,7 +196,7 @@ export function TravelMap<T extends MappableLocation>({
       const position = { lat: currentLocation.latitude, lng: currentLocation.longitude };
       nextMarkers.push(
         createMapMarker({
-          background: "#17333D",
+          background: MARKER_COLORS.currentLocation,
           glyphText: "●",
           legacyStrokeWeight: 4,
           map,
