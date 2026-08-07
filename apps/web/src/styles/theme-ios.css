@@ -277,23 +277,8 @@ textarea:focus-visible {
   color: #ffffff;
 }
 
-.schedule-summary {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-  margin-top: 18px;
-}
-
-.schedule-summary span {
-  font-size: 0.875rem;
-  font-weight: var(--font-weight-strong);
-  letter-spacing: var(--tracking-title);
-}
-
-.schedule-summary small {
-  color: var(--c-muted);
-}
+/* 날짜 요약은 3단계에서 진행률 막대 구조로 바뀌었다. 레이아웃은 trip.css의
+   .schedule-summary / .schedule-summary-row가 정의하므로 여기서는 손대지 않는다. */
 
 /* ── 타임라인 ────────────────────────────────────────────────── */
 .timeline-stack {

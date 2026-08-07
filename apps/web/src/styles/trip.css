@@ -1586,3 +1586,221 @@ p {
 .next-schedule-card .directions-link.primary-button:hover:not(:disabled) {
   background: var(--c-route-soft);
 }
+
+/* ── 일정 탭 (3단계) ─────────────────────────────────────────── */
+.date-pill-weekday {
+  display: block;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
+  opacity: 0.72;
+}
+
+.date-pill-day {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: var(--font-weight-display);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.date-pill-badge {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
+  letter-spacing: 0.04em;
+  opacity: 0.72;
+}
+
+.schedule-summary-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.schedule-summary {
+  flex: 1;
+  display: grid;
+  gap: 7px;
+}
+
+.schedule-summary-count {
+  margin: 0;
+  color: var(--c-text);
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-strong);
+  letter-spacing: var(--tracking-title);
+}
+
+.schedule-summary-track {
+  height: 5px;
+  border-radius: 100px;
+  background: var(--c-fill-strong);
+  overflow: hidden;
+}
+
+.schedule-summary-fill {
+  height: 100%;
+  border-radius: 100px;
+  background: var(--c-route);
+  transform-origin: left center;
+  transition: transform 0.24s var(--ease-route);
+}
+
+.schedule-reorder-toggle {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0 8px;
+  border: 0;
+  background: transparent;
+}
+
+.schedule-headline {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.schedule-type-tile {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: var(--c-route-soft);
+  color: var(--c-route);
+}
+
+.schedule-card.completed .schedule-type-tile {
+  background: var(--c-surface-cool);
+  color: var(--c-muted);
+}
+
+.schedule-headline-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.schedule-headline-copy h2 {
+  margin: 0;
+  font-size: var(--type-title-size);
+  font-weight: var(--font-weight-strong);
+  letter-spacing: var(--tracking-title);
+  overflow-wrap: anywhere;
+}
+
+.schedule-place {
+  margin: 2px 0 0;
+  color: var(--c-muted);
+  font-size: var(--type-label-size);
+  overflow-wrap: anywhere;
+}
+
+.schedule-check {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  background: var(--c-surface);
+  color: #c6c2ba;
+}
+
+.schedule-check.checked {
+  border-color: transparent;
+  background: var(--c-success-soft);
+  color: var(--c-success);
+}
+
+.schedule-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.schedule-guide-memo {
+  margin-top: 4px;
+  font-size: var(--type-label-size);
+}
+
+.schedule-move-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.schedule-directions {
+  margin-top: 12px;
+}
+
+.check-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.check-group-header h3 {
+  margin: 0;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-display);
+  letter-spacing: 0.06em;
+}
+
+.check-group-count {
+  color: var(--c-muted);
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
+}
+
+/* 시간 거터를 스펙대로 좁혀 제목이 쓸 폭을 넓힌다. 기존 72px에서는 아이콘 타일과
+   체크 버튼을 뺀 나머지가 65px밖에 남지 않아 장소명이 글자 단위로 접혔다. */
+.schedule-card {
+  grid-template-columns: 46px minmax(0, 1fr);
+  gap: 10px;
+  padding: 15px;
+}
+
+.schedule-card .time {
+  text-align: right;
+  font-size: var(--type-supporting-size);
+}
+
+/* 아주 좁은 화면(또는 200% 확대)에서는 시간 거터와 헤드라인이 한 줄에 들어가지
+   못해 체크 버튼이 카드 밖으로 밀린다. 거터를 접고 각 행이 줄바꿈되게 한다. */
+@media (max-width: 360px) {
+  .schedule-card {
+    grid-template-columns: minmax(0, 1fr);
+    margin-left: 14px;
+  }
+
+  .schedule-card .time {
+    text-align: left;
+  }
+
+  .schedule-headline {
+    flex-wrap: wrap;
+  }
+
+  .schedule-headline-copy {
+    flex: 1 1 100%;
+    order: 3;
+  }
+
+  .schedule-summary-row {
+    flex-wrap: wrap;
+  }
+
+  .schedule-reorder-toggle {
+    flex: 1 0 100%;
+    text-align: left;
+  }
+}
