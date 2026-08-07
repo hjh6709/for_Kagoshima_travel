@@ -27,7 +27,8 @@
 | 1 | 토큰 교체 + `theme-ios.css` 리스킨 레이어 | 없음 | **완료** → `docs/superpowers/plans/2026-07-24-ios-redesign-stage1-tokens-theme.md` |
 | 2 | 오늘 탭 (`TodayTab`/`TodayHeaderSection`/`NextScheduleCard`/`HomeChecklistSection`) | 있음 | **완료** → `docs/superpowers/plans/2026-08-06-ios-redesign-stage2-today-tab.md` |
 | 3 | 일정 탭 (`ScheduleTab`/`ScheduleCard`/`ChecklistSection`) | 있음 | **완료** → `docs/superpowers/plans/2026-08-06-ios-redesign-stage3-schedule-tab.md` |
-| 4 | 항공 탭 + 지도 탭 + 신규 `PlaceDetailSheet` 공용 시트 | 있음(+신규 컴포넌트 1개) | 로드맵만, 실행 직전 작성 |
+| 4a | 항공 탭 + 신규 `PlaceDetailSheet` 공용 시트 | 있음(+신규 컴포넌트 1개) | **완료** → `docs/superpowers/plans/2026-08-06-ios-redesign-stage4a-flight-place-sheet.md` |
+| 4b | 지도 탭 (인라인 펼침을 시트로 교체 + 지도 프레임·핀) | 있음 | 로드맵만, 실행 직전 작성 |
 | 5 | 긴급 탭 + 하단 탭바 | 있음 | 로드맵만, 실행 직전 작성 |
 | 6 | 마이페이지 + 여행 목록(`TripManagePage`) + 편집 허브(`TripEditHubPage`) | 있음 | 로드맵만, 실행 직전 작성 |
 
