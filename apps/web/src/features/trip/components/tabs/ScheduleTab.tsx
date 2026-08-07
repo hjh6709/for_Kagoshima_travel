@@ -1,10 +1,11 @@
 import { CalendarDays, ListChecks } from "lucide-react";
-import { useEffect, useRef } from "react";
-import { formatShortDate } from "../../../../shared/date";
+import { useEffect, useRef, useState } from "react";
 import type { TripPageProps } from "../../tripPageTypes";
+import { DatePillList } from "../cards/DatePillList";
 import { ProfileShortcutButton } from "../cards/ProfileShortcutButton";
 import { ScheduleCard } from "../cards/ScheduleCard";
 import { ChecklistSection } from "../sections/ChecklistSection";
+import { ScheduleSummarySection } from "../sections/ScheduleSummarySection";
 
 // 일정 탭과 체크리스트 렌더링만 담당한다. 완료/순서/추가/삭제는 상위 핸들러를 호출한다.
 export function ScheduleTab({
@@ -46,6 +47,7 @@ export function ScheduleTab({
   onNavigateToMyPage,
 }: TripPageProps) {
   const dateTabsRef = useRef<HTMLDivElement>(null);
+  const [isReordering, setIsReordering] = useState(false);
 
   useEffect(() => {
     if (scheduleView !== "itinerary" || dates.length <= 4) return;
@@ -92,34 +94,29 @@ export function ScheduleTab({
       {scheduleView === "itinerary" ? (
         <>
           {dates.length > 0 && (
-            <div
-              aria-label="여행 날짜 선택"
-              className={`date-tabs ${dates.length <= 4 ? "fit-tabs" : "scroll-tabs"}`}
+            <DatePillList
+              dates={dates}
+              getDisplayDate={getDisplayDate}
+              onSelectDate={setSelectedDate}
               ref={dateTabsRef}
-              style={
-                dates.length <= 4
-                  ? { gridTemplateColumns: `repeat(${dates.length}, minmax(0, 1fr))` }
-                  : undefined
-              }
-            >
-              {dates.map((date) => (
-                <button
-                  aria-pressed={date === selectedDate}
-                  className={date === selectedDate ? "active" : ""}
-                  key={date}
-                  onClick={() => setSelectedDate(date)}
-                  type="button"
-                >
-                  {formatShortDate(getDisplayDate(date))}
-                </button>
-              ))}
-            </div>
+              selectedDate={selectedDate}
+            />
           )}
-          <div className="schedule-summary">
-            <span>
-              {selectedSchedules.length}개 중 {completedScheduleCount}개 완료
-            </span>
-            <small>선택한 날짜의 일정만 표시합니다.</small>
+          <div className="schedule-summary-row">
+            <ScheduleSummarySection
+              completedCount={completedScheduleCount}
+              totalCount={selectedSchedules.length}
+            />
+            {!isReadOnly && selectedSchedules.length > 1 && (
+              <button
+                aria-pressed={isReordering}
+                className="text-link schedule-reorder-toggle"
+                onClick={() => setIsReordering((current) => !current)}
+                type="button"
+              >
+                {isReordering ? "순서 편집 완료" : "순서 편집"}
+              </button>
+            )}
           </div>
           {selectedSchedules.length > 0 ? (
             <div className="card-stack timeline-stack">
@@ -131,6 +128,7 @@ export function ScheduleTab({
                     index={index}
                     isCompleted={Boolean(isCompleted)}
                     isReadOnly={isReadOnly}
+                    isReordering={isReordering}
                     isLast={index === selectedSchedules.length - 1}
                     item={item}
                     key={item.id}
