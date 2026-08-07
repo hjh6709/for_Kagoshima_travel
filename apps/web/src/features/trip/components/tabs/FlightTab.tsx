@@ -20,43 +20,55 @@ function FlightJourneyCard({ flight, getDisplayDate }: FlightCardProps) {
   const departureDate = displayFlightDate(flight.date, getDisplayDate);
   const arrivalDate = displayFlightDate(flight.arrivalDate, getDisplayDate);
 
+  const isReturn = flight.direction === "return";
+
   return (
     <article className="flight-journey-card">
-      <header className="flight-journey-header">
-        <span className="pill">{flight.label}</span>
-        <div className="flight-identity">
+      {/* 편명은 이 카드의 제목이다. 스펙의 2단 헤더 바를 유지하되 제목 요소로 남겨
+          화면 읽기 프로그램이 항공편 단위로 건너뛸 수 있게 한다. */}
+      <header className={`flight-journey-header${isReturn ? " return" : ""}`}>
+        <div className="flight-journey-identity">
+          <span className="flight-journey-label">{flight.label}</span>
           <h2>{flight.flightNumber || "편명 미등록"}</h2>
-          <p>{flight.airline || "항공사 미등록"}</p>
         </div>
+        <span className="flight-journey-date">{departureDate}</span>
       </header>
 
       <div className="flight-route" aria-label={`${flight.label} 항공 노선`}>
         <div className="flight-route-point">
           <span>출발</span>
           <strong>{flight.departureAirport || "출발 공항 미등록"}</strong>
-          <small>{departureDate}</small>
           <b>{flight.time || "시각 미등록"}</b>
         </div>
         <div className="flight-route-line" aria-hidden="true">
           <span />
-          <Plane size={17} />
+          <Plane size={18} />
         </div>
         <div className="flight-route-point arrival">
           <span>도착</span>
           <strong>{flight.arrivalAirport || "도착 공항 미등록"}</strong>
-          <small>{flight.arrivalDate ? arrivalDate : "도착 날짜 미등록"}</small>
           <b>{flight.arrivalTime || "도착 시각 미등록"}</b>
         </div>
       </div>
 
-      {flight.memo && (
-        <details className="flight-memo">
-          <summary>예약 메모 확인</summary>
+      <dl className="flight-journey-facts">
+        <div>
+          <dt>항공사</dt>
+          <dd>{flight.airline || "항공사 미등록"}</dd>
+        </div>
+        <div>
+          <dt>도착 날짜</dt>
+          <dd>{flight.arrivalDate ? arrivalDate : "도착 날짜 미등록"}</dd>
+        </div>
+        {flight.memo && (
           <div>
-            <MaskedText text={flight.memo} />
+            <dt>예약 정보</dt>
+            <dd>
+              <MaskedText text={flight.memo} />
+            </dd>
           </div>
-        </details>
-      )}
+        )}
+      </dl>
     </article>
   );
 }

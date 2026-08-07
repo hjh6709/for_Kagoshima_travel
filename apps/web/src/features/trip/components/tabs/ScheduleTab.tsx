@@ -1,5 +1,7 @@
 import { CalendarDays, ListChecks } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { PlaceDetailSheet } from "../../../../shared/components/PlaceDetailSheet";
+import type { Place } from "../../../../types/travel";
 import type { TripPageProps } from "../../tripPageTypes";
 import { DatePillList } from "../cards/DatePillList";
 import { ProfileShortcutButton } from "../cards/ProfileShortcutButton";
@@ -48,6 +50,7 @@ export function ScheduleTab({
 }: TripPageProps) {
   const dateTabsRef = useRef<HTMLDivElement>(null);
   const [isReordering, setIsReordering] = useState(false);
+  const [sheetPlace, setSheetPlace] = useState<Place | null>(null);
 
   useEffect(() => {
     if (scheduleView !== "itinerary" || dates.length <= 4) return;
@@ -132,8 +135,8 @@ export function ScheduleTab({
                     isLast={index === selectedSchedules.length - 1}
                     item={item}
                     key={item.id}
-                    destinationCountry={trip.destinationCountry}
                     onMove={moveSchedule}
+                    onOpenPlace={setSheetPlace}
                     onToggleComplete={toggleScheduleComplete}
                     place={place}
                     showGuideMemo={isDemo}
@@ -184,6 +187,14 @@ export function ScheduleTab({
             toggleCheck={toggleCheck}
           />
         </div>
+      )}
+
+      {sheetPlace && (
+        <PlaceDetailSheet
+          destinationCountry={trip.destinationCountry}
+          onClose={() => setSheetPlace(null)}
+          place={sheetPlace}
+        />
       )}
     </section>
   );

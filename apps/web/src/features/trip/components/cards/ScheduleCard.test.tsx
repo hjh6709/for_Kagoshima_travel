@@ -7,7 +7,6 @@ describe("ScheduleCard", () => {
   it("일반 여행 안내는 가리지 않고 예약 메모만 민감 정보로 보호한다", () => {
     render(
       <ScheduleCard
-        destinationCountry="CN"
         index={0}
         isCompleted={false}
         isLast
@@ -135,5 +134,62 @@ describe("ScheduleCard 구조와 순서 편집", () => {
     expect(screen.queryByRole("button", { name: "센간엔 정원 완료" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "센간엔 정원 위로 이동" })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "센간엔 정원" })).toBeVisible();
+  });
+});
+
+describe("ScheduleCard 장소 시트 연결", () => {
+  const place = {
+    id: "place-1",
+    name: "센간엔 정원",
+    category: "sightseeing" as const,
+  };
+
+  it("장소가 있으면 길찾기 칩으로 시트를 연다", async () => {
+    const onOpenPlace = vi.fn();
+    render(
+      <ScheduleCard
+        index={0}
+        isCompleted={false}
+        isLast
+        item={{
+          id: "schedule-1",
+          date: "2026-08-20",
+          time: "10:30",
+          type: "sightseeing" as const,
+          title: "센간엔 정원 관람",
+          placeId: "place-1",
+        }}
+        onMove={vi.fn()}
+        onOpenPlace={onOpenPlace}
+        onToggleComplete={vi.fn()}
+        place={place}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "센간엔 정원 길찾기" }));
+
+    expect(onOpenPlace).toHaveBeenCalledWith(place);
+  });
+
+  it("연결된 장소가 없으면 길찾기 칩을 넣지 않는다", () => {
+    render(
+      <ScheduleCard
+        index={0}
+        isCompleted={false}
+        isLast
+        item={{
+          id: "schedule-2",
+          date: "2026-08-20",
+          time: "12:00",
+          type: "etc" as const,
+          title: "자유 시간",
+        }}
+        onMove={vi.fn()}
+        onOpenPlace={vi.fn()}
+        onToggleComplete={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: /길찾기/ })).not.toBeInTheDocument();
   });
 });

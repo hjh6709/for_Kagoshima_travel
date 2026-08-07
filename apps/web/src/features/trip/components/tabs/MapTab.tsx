@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   AlertTriangle,
   CalendarDays,
@@ -15,6 +15,7 @@ import { MapDirectionsChoice } from "../../../../shared/components/MapDirections
 import { TravelMap } from "../../../../shared/components/TravelMap";
 import { formatKoreanDate } from "../../../../shared/date";
 import { placeCategoryLabels } from "../../../../shared/travelOptions";
+import { useDialogFocusTrap } from "../../../../shared/useDialogFocusTrap";
 import type { Place, ScheduleItem } from "../../../../types/travel";
 import type { TripPageProps } from "../../tripPageTypes";
 import { ProfileShortcutButton } from "../cards/ProfileShortcutButton";
@@ -222,39 +223,16 @@ export function MapTab({
     travelStatus.phase === "before" ? "첫날 동선" : travelStatus.phase === "during" ? "오늘 동선" : "마지막 날 동선";
   const routeDate = formatKoreanDate(getDisplayDate(focusDate));
 
-  useEffect(() => {
-    if (!phraseModal.open) return;
-    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    closeButtonRef.current?.focus();
+  const closePhraseModal = useCallback(() => {
+    setPhraseModal({ open: false, title: "", address: "" });
+  }, []);
 
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setPhraseModal({ open: false, title: "", address: "" });
-        return;
-      }
-      if (event.key !== "Tab" || !dialogRef.current) return;
-
-      const focusable = Array.from(
-        dialogRef.current.querySelectorAll<HTMLElement>("button, [href], [tabindex]:not([tabindex='-1'])"),
-      );
-      const first = focusable[0];
-      const last = focusable.at(-1);
-      if (!first || !last) return;
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      previouslyFocused?.focus();
-    };
-  }, [phraseModal.open]);
+  useDialogFocusTrap({
+    dialogRef,
+    initialFocusRef: closeButtonRef,
+    isOpen: phraseModal.open,
+    onClose: closePhraseModal,
+  });
 
   const handleCopyAddress = async (placeID: string, address: string) => {
     if (!navigator.clipboard) {
@@ -516,7 +494,7 @@ export function MapTab({
               aria-label="크게 보기 닫기"
               className="taxi-phrase-close"
               ref={closeButtonRef}
-              onClick={() => setPhraseModal({ open: false, title: "", address: "" })}
+              onClick={closePhraseModal}
               type="button"
             >
               <X aria-hidden="true" size={20} />

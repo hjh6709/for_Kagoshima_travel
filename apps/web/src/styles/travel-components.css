@@ -1002,3 +1002,215 @@
 .masked-toggle-btn:focus-visible {
   outline: 3px solid rgba(11, 111, 106, 0.5);
 }
+
+/* ── 장소 상세 시트 (4a단계) ─────────────────────────────────── */
+/* 하단 탭바가 z-index 100이므로 시트는 그보다 위에 떠야 닫기 버튼이 가려지지 않는다. */
+.place-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(24, 26, 32, 0.36);
+}
+
+.place-sheet {
+  width: min(100%, 390px);
+  max-height: 86vh;
+  overflow-y: auto;
+  padding: 10px 22px calc(30px + env(safe-area-inset-bottom));
+  border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+  background: var(--c-surface);
+  box-shadow: var(--shadow-overlay);
+}
+
+.place-sheet-handle {
+  display: block;
+  width: 38px;
+  height: 5px;
+  margin: 0 auto 16px;
+  border-radius: 100px;
+  background: #e0dcd4;
+}
+
+.place-sheet-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.place-sheet-tile {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--c-route-soft);
+  color: var(--c-route);
+}
+
+.place-sheet-title-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.place-sheet-title-copy h2 {
+  margin: 0;
+  font-size: var(--type-headline-size);
+  font-weight: var(--font-weight-display);
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+.place-sheet-category,
+.place-sheet-local {
+  margin: 2px 0 0;
+  color: var(--c-muted);
+  font-size: var(--type-supporting-size);
+}
+
+.place-sheet-description {
+  margin: 14px 0 0;
+  color: var(--c-ink-muted);
+  font-size: var(--type-body-size);
+  line-height: 1.6;
+}
+
+.place-sheet-address {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--c-bg);
+}
+
+.place-sheet-address-label {
+  display: block;
+  color: var(--c-muted);
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-display);
+  letter-spacing: 0.06em;
+}
+
+.place-sheet-address p {
+  margin: 6px 0 0;
+  font-size: var(--type-body-size);
+  font-weight: var(--font-weight-medium);
+  overflow-wrap: anywhere;
+}
+
+.place-sheet-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.place-sheet-action {
+  flex: 1 1 140px;
+  min-height: 50px;
+  border-radius: 15px;
+  text-decoration: none;
+}
+
+.place-sheet-close {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  color: var(--c-muted);
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-strong);
+}
+
+.schedule-directions-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 100px;
+  background: var(--c-route-soft);
+  color: var(--c-route);
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-strong);
+}
+
+/* ── 보딩패스 카드 (4a단계) ─────────────────────────────────── */
+.flight-journey-header {
+  justify-content: space-between;
+}
+
+.flight-journey-header.return {
+  background: var(--c-bg);
+  color: var(--c-ink-muted);
+}
+
+.flight-journey-identity {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.flight-journey-identity h2 {
+  margin: 0;
+  color: inherit;
+  font-size: var(--type-title-size);
+  font-weight: var(--font-weight-display);
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+.flight-journey-label {
+  flex: 0 0 auto;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-display);
+  letter-spacing: 0.04em;
+}
+
+.flight-journey-date {
+  flex: 0 0 auto;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
+}
+
+.flight-journey-facts {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 14px 18px 16px;
+  border-top: 1px dashed #e6e2dc;
+}
+
+.flight-journey-facts > div {
+  display: grid;
+  gap: 3px;
+}
+
+.flight-journey-facts dt {
+  color: var(--c-muted);
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-display);
+  letter-spacing: 0.04em;
+}
+
+.flight-journey-facts dd {
+  margin: 0;
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-strong);
+  overflow-wrap: anywhere;
+}
+
+/* 보딩패스에서는 노선이 헤더 바에 바로 이어져야 한다. 옛 카드의 margin-top을 없앤다. */
+.flight-journey-card .flight-route {
+  margin-top: 0;
+}

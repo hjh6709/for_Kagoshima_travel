@@ -1,5 +1,4 @@
-import { ArrowDown, ArrowUp, Check } from "lucide-react";
-import { MapDirectionsChoice } from "../../../../shared/components/MapDirectionsChoice";
+import { ArrowDown, ArrowUp, Check, Navigation } from "lucide-react";
 import { MaskedText } from "../../../../shared/components/MaskedText";
 import { scheduleTypeLabels } from "../../../../shared/travelOptions";
 import type { Place, ScheduleItem } from "../../../../types/travel";
@@ -12,8 +11,8 @@ type ScheduleCardProps = {
   isReordering?: boolean;
   isLast: boolean;
   item: ScheduleItem;
-  destinationCountry?: string;
   onMove: (scheduleID: string, direction: "up" | "down") => void;
+  onOpenPlace?: (place: Place) => void;
   onToggleComplete: (scheduleID: string) => void;
   place?: Place;
   showGuideMemo?: boolean;
@@ -27,8 +26,8 @@ export function ScheduleCard({
   isReordering = false,
   isLast,
   item,
-  destinationCountry,
   onMove,
+  onOpenPlace,
   onToggleComplete,
   place,
   showGuideMemo = false,
@@ -112,9 +111,17 @@ export function ScheduleCard({
           </div>
         )}
 
-        {place && (
+        {place && onOpenPlace && (
           <div className="schedule-directions">
-            <MapDirectionsChoice destinationCountry={destinationCountry} place={place} />
+            <button
+              aria-label={`${place.name} 길찾기`}
+              className="schedule-directions-chip"
+              onClick={() => onOpenPlace(place)}
+              type="button"
+            >
+              <Navigation aria-hidden="true" size={15} />
+              길찾기
+            </button>
           </div>
         )}
       </div>
