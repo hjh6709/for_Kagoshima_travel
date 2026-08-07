@@ -62,11 +62,15 @@ export function ChecklistSection({
   });
   const visibleCompletedCount = visibleChecklist.filter((item) => checkedItems[item.id]).length;
   const visibleGroups = checklistCategories
-    .map(([category, label]) => ({
-      category,
-      label,
-      items: visibleChecklist.filter((item) => item.category === category),
-    }))
+    .map(([category, label]) => {
+      const items = visibleChecklist.filter((item) => item.category === category);
+      return {
+        category,
+        label,
+        items,
+        completedCount: items.filter((item) => checkedItems[item.id]).length,
+      };
+    })
     .filter((group) => group.items.length > 0);
   const filterLabel =
     checklistDateFilter === "all"
@@ -190,7 +194,12 @@ export function ChecklistSection({
         {visibleGroups.length > 0 ? (
           visibleGroups.map((group) => (
             <section className="check-group" key={group.category}>
-              <h3>{group.label}</h3>
+              <div className="check-group-header">
+                <h3>{group.label}</h3>
+                <span className="check-group-count">
+                  {group.completedCount} / {group.items.length}
+                </span>
+              </div>
               <div className="card-stack">
                 {group.items.map((item) => (
                   <div className={`check-row${checkedItems[item.id] ? " completed" : ""}`} key={item.id}>
