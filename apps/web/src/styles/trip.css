@@ -440,14 +440,14 @@ p {
 
 .timeline-stack {
   position: relative;
-  padding-left: 20px;
+  padding-left: 0;
   margin-top: 14px;
 }
 
 .timeline-stack::before {
   content: "";
   position: absolute;
-  left: 36px;
+  left: 13px;
   top: 12px;
   bottom: 12px;
   width: 2px;
@@ -459,31 +459,28 @@ p {
   position: relative;
   z-index: 2;
   display: grid;
-  grid-template-columns: 72px minmax(0, 1fr);
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr);
   padding: 18px 18px;
-  margin-left: 24px;
+  margin-left: 26px;
   border-radius: var(--radius-card);
 }
 
 .schedule-card::before {
   content: "";
   position: absolute;
-  left: -33px;
+  left: -21px;
   top: 26px;
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
-  background: var(--c-surface);
-  border: 3px solid var(--c-destination);
-  box-shadow: 0 0 0 3px var(--c-bg);
+  background: var(--c-destination);
+  box-shadow: 0 0 0 3px var(--c-destination-soft);
   z-index: 3;
 }
 
 .schedule-card.completed::before {
-  border-color: var(--c-success);
   background: var(--c-success);
-  box-shadow: 0 0 0 3px var(--c-bg);
+  box-shadow: 0 0 0 3px var(--c-success-soft);
 }
 
 .schedule-card.completed {
@@ -497,7 +494,7 @@ p {
 
 .schedule-content {
   display: grid;
-  gap: 10px;
+  gap: 12px;
   min-width: 0;
 }
 
@@ -1615,14 +1612,39 @@ p {
 .schedule-summary-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   margin-top: 18px;
+  padding: 14px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  background: var(--c-surface);
+}
+
+.schedule-card-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.schedule-card-meta .schedule-check {
+  margin-left: auto;
+}
+
+.schedule-type-pill {
+  gap: 5px;
 }
 
 .schedule-summary {
   flex: 1;
   display: grid;
   gap: 7px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .schedule-summary-count {
@@ -1651,32 +1673,15 @@ p {
 .schedule-reorder-toggle {
   flex: 0 0 auto;
   min-height: 44px;
-  padding: 0 8px;
+  padding: 0 0 0 16px;
   border: 0;
+  border-left: 1px solid var(--border-color);
   background: transparent;
+  text-decoration: none;
 }
 
 .schedule-headline {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-}
-
-.schedule-type-tile {
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 12px;
-  background: var(--c-route-soft);
-  color: var(--c-route);
-}
-
-.schedule-card.completed .schedule-type-tile {
-  background: var(--c-surface-cool);
-  color: var(--c-muted);
+  min-width: 0;
 }
 
 .schedule-headline-copy {
@@ -1706,10 +1711,14 @@ p {
   justify-content: center;
   width: 44px;
   height: 44px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--c-route);
   border-radius: 50%;
   background: var(--c-surface);
-  color: #c6c2ba;
+  color: var(--c-route);
+}
+
+.schedule-check:hover {
+  background: var(--c-route-soft);
 }
 
 .schedule-check.checked {
@@ -1718,11 +1727,8 @@ p {
   color: var(--c-success);
 }
 
-.schedule-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 10px;
+.schedule-check.checked:hover {
+  background: var(--c-success-soft);
 }
 
 .schedule-guide-memo {
@@ -1733,11 +1739,11 @@ p {
 .schedule-move-actions {
   display: flex;
   gap: 8px;
-  margin-top: 12px;
+  margin-top: 0;
 }
 
 .schedule-directions {
-  margin-top: 12px;
+  margin-top: 0;
 }
 
 .check-group-header {
@@ -1761,38 +1767,20 @@ p {
   font-weight: var(--font-weight-strong);
 }
 
-/* 시간 거터를 스펙대로 좁혀 제목이 쓸 폭을 넓힌다. 기존 72px에서는 아이콘 타일과
-   체크 버튼을 뺀 나머지가 65px밖에 남지 않아 장소명이 글자 단위로 접혔다. */
+/* 시간과 분류를 카드 상단 메타 행으로 분리해 제목·장소명이 쓸 폭을 확보한다. */
 .schedule-card {
-  grid-template-columns: 46px minmax(0, 1fr);
-  gap: 10px;
   padding: 15px;
 }
 
 .schedule-card .time {
-  text-align: right;
+  text-align: left;
   font-size: var(--type-supporting-size);
 }
 
-/* 아주 좁은 화면(또는 200% 확대)에서는 시간 거터와 헤드라인이 한 줄에 들어가지
-   못해 체크 버튼이 카드 밖으로 밀린다. 거터를 접고 각 행이 줄바꿈되게 한다. */
+/* 좁은 화면에서는 요약과 순서 편집을 분리해 각 조작의 터치 폭을 지킨다. */
 @media (max-width: 360px) {
   .schedule-card {
-    grid-template-columns: minmax(0, 1fr);
-    margin-left: 14px;
-  }
-
-  .schedule-card .time {
-    text-align: left;
-  }
-
-  .schedule-headline {
-    flex-wrap: wrap;
-  }
-
-  .schedule-headline-copy {
-    flex: 1 1 100%;
-    order: 3;
+    margin-left: 26px;
   }
 
   .schedule-summary-row {
@@ -1801,6 +1789,30 @@ p {
 
   .schedule-reorder-toggle {
     flex: 1 0 100%;
-    text-align: left;
+    padding: 10px 0 0;
+    border-top: 1px solid var(--border-color);
+    border-left: 0;
+    text-align: right;
+  }
+}
+
+@media (max-width: 240px) {
+  .schedule-card {
+    margin-left: 20px;
+    padding: 12px;
+  }
+
+  .schedule-card::before {
+    left: -17px;
+  }
+
+  .timeline-stack::before {
+    left: 9px;
+  }
+
+  .schedule-check {
+    flex-basis: 100%;
+    width: 100%;
+    border-radius: var(--radius-control);
   }
 }

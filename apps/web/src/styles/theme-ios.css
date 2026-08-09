@@ -377,6 +377,8 @@ textarea:focus-visible {
 }
 
 .bottom-tabs button {
+  position: relative;
+  min-width: 0;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -394,6 +396,19 @@ textarea:focus-visible {
 .bottom-tabs button.active {
   color: var(--c-route);
   background: transparent;
+  box-shadow: none;
+}
+
+.bottom-tabs button.active::before {
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  width: 32px;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: var(--c-route);
+  content: "";
+  transform: translateX(-50%);
 }
 
 .bottom-tabs button.active svg {

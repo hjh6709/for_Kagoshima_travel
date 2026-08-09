@@ -933,6 +933,8 @@
 
 /* 상단 프로필 헤더 내 마이페이지 버튼 */
 .header-profile-btn {
+  flex: 0 0 44px;
+  min-width: 44px;
   width: 44px;
   height: 44px;
   border-radius: 50%;

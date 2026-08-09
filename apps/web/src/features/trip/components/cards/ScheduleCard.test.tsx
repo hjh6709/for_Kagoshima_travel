@@ -135,6 +135,45 @@ describe("ScheduleCard 구조와 순서 편집", () => {
     expect(screen.queryByRole("button", { name: "센간엔 정원 위로 이동" })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "센간엔 정원" })).toBeVisible();
   });
+
+  it("이동 일정에서는 유형과 이동 메모 제목을 중복해서 보여주지 않는다", () => {
+    render(
+      <ScheduleCard
+        index={0}
+        isCompleted={false}
+        isLast
+        item={{
+          ...baseItem,
+          type: "move",
+          title: "푸둥공항 도착",
+          transportMemo: "공항철도로 숙소까지 이동합니다.",
+        }}
+        onMove={vi.fn()}
+        onToggleComplete={vi.fn()}
+      />,
+    );
+
+    expect(screen.getAllByText("이동")).toHaveLength(1);
+    expect(screen.getByText("공항철도로 숙소까지 이동합니다.")).toBeVisible();
+  });
+
+  it("다른 유형의 일정에서는 이동 메모의 의미를 표시한다", () => {
+    render(
+      <ScheduleCard
+        index={0}
+        isCompleted={false}
+        isLast
+        item={{
+          ...baseItem,
+          transportMemo: "지하철로 이동합니다.",
+        }}
+        onMove={vi.fn()}
+        onToggleComplete={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("이동")).toBeVisible();
+  });
 });
 
 describe("ScheduleCard 장소 시트 연결", () => {

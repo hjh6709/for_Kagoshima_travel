@@ -36,16 +36,14 @@ export function ScheduleCard({
 
   return (
     <article className={`schedule-card ${isCompleted ? "completed" : ""}`}>
-      <span className="time">{item.time}</span>
       <div className="schedule-content">
-        <div className="schedule-headline">
-          <span aria-hidden="true" className="schedule-type-tile">
-            <TypeIcon size={18} />
+        <div className="schedule-card-meta">
+          <span className="time">{item.time}</span>
+          <span className="pill subtle schedule-type-pill">
+            <TypeIcon aria-hidden="true" size={14} />
+            {scheduleTypeLabels[item.type]}
           </span>
-          <div className="schedule-headline-copy">
-            <h2>{item.title}</h2>
-            {place && <p className="schedule-place">{place.name}</p>}
-          </div>
+          {isCompleted && <span className="pill completed-pill">완료</span>}
           {!isReadOnly && (
             <button
               aria-label={`${item.title} ${isCompleted ? "완료 취소" : "완료"}`}
@@ -58,14 +56,16 @@ export function ScheduleCard({
           )}
         </div>
 
-        <div className="schedule-chips">
-          <span className="pill subtle">{scheduleTypeLabels[item.type]}</span>
-          {isCompleted && <span className="pill completed-pill">완료</span>}
+        <div className="schedule-headline">
+          <div className="schedule-headline-copy">
+            <h2>{item.title}</h2>
+            {place && <p className="schedule-place">{place.name}</p>}
+          </div>
         </div>
 
         {item.transportMemo && (
           <p className="schedule-detail">
-            <strong>이동</strong>
+            {item.type !== "move" && <strong>이동</strong>}
             {item.transportMemo}
           </p>
         )}
