@@ -12,6 +12,10 @@ export type OwnerTrip = {
   travelers: string[];
   destinationCountry: string;
   memo?: string;
+  // 목록 응답에만 실린다. 백엔드가 먼저 배포되지 않아도 화면이 깨지지 않도록 선택 필드로 둔다.
+  placeCount?: number;
+  scheduleCount?: number;
+  flightCount?: number;
 };
 
 export type CreateTripPayload = {
