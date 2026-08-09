@@ -1,4 +1,15 @@
-import { ArrowRight, CalendarDays, ChevronDown, Compass, PencilLine, Trash2, UsersRound } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarDays,
+  Compass,
+  MapPin,
+  MoreHorizontal,
+  PencilLine,
+  Plane,
+  Share2,
+  Trash2,
+  UsersRound,
+} from "lucide-react";
 import type { OwnerTrip } from "../../../../api/trips";
 import {
   formatKoreanDate,
@@ -7,7 +18,11 @@ import {
   getTravelStatus,
   type TravelPhase,
 } from "../../../../shared/date";
-import { getManageTripEditorPath, getManageTripPath } from "../../../../shared/manageRoute";
+import {
+  getManageTripEditSectionPath,
+  getManageTripEditorPath,
+  getManageTripPath,
+} from "../../../../shared/manageRoute";
 import type { TripListSectionProps } from "../../manageTypes";
 
 const phasePriority: Record<TravelPhase, number> = {
@@ -69,6 +84,7 @@ export function TripListSection({
           {sortedOwnerTrips.map((ownerTrip) => {
             const isDeleting = deletingTripID === ownerTrip.id;
             const status = getTravelStatus(today, ownerTrip);
+            const shareHref = getManageTripEditSectionPath(ownerTrip.id, "share");
             return (
               <article className={`owner-trip-card${isDeleting ? " is-deleting" : ""}`} key={ownerTrip.id}>
                 <div className="owner-trip-summary">
@@ -85,6 +101,22 @@ export function TripListSection({
                     </p>
                   )}
                 </div>
+                {typeof ownerTrip.placeCount === "number" && (
+                  <div className="owner-trip-stats">
+                    <span aria-label={`장소 ${ownerTrip.placeCount}곳`}>
+                      <MapPin aria-hidden="true" size={16} />
+                      {ownerTrip.placeCount}
+                    </span>
+                    <span aria-label={`일정 ${ownerTrip.scheduleCount ?? 0}개`}>
+                      <CalendarDays aria-hidden="true" size={16} />
+                      {ownerTrip.scheduleCount ?? 0}
+                    </span>
+                    <span aria-label={`항공편 ${ownerTrip.flightCount ?? 0}개`}>
+                      <Plane aria-hidden="true" size={16} />
+                      {ownerTrip.flightCount ?? 0}
+                    </span>
+                  </div>
+                )}
                 <div className="owner-trip-actions">
                   <a className="primary-button compact-button" href={getManageTripPath(ownerTrip.id)}>
                     여행 열기
@@ -95,13 +127,16 @@ export function TripListSection({
                     여행 편집
                   </a>
                 </div>
-                <details className="owner-trip-manage">
+                <details aria-label={`${ownerTrip.title} 관리 메뉴`} className="owner-trip-manage">
                   <summary>
-                    삭제 메뉴
-                    <ChevronDown aria-hidden="true" size={16} />
+                    <MoreHorizontal aria-hidden="true" size={18} />
+                    <span className="visually-hidden">관리 메뉴 열기</span>
                   </summary>
                   <div className="owner-trip-manage-panel">
-                    <p>삭제하면 일정과 장소를 복구할 수 없습니다.</p>
+                    <a className="secondary-button compact-button" href={shareHref}>
+                      <Share2 aria-hidden="true" size={16} />
+                      공유 링크
+                    </a>
                     <button
                       className="danger-button compact-button"
                       disabled={isDeleting}
@@ -115,6 +150,7 @@ export function TripListSection({
                       <Trash2 aria-hidden="true" size={16} />
                       {isDeleting ? "삭제 중" : "여행 삭제"}
                     </button>
+                    <p>삭제하면 일정과 장소를 복구할 수 없습니다.</p>
                   </div>
                 </details>
               </article>

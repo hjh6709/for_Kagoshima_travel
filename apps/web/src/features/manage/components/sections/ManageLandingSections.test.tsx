@@ -95,7 +95,7 @@ describe("로그인 후 여행 목록", () => {
     const deleteButton = within(card).getByRole("button", { name: "여행 삭제" });
     expect(deleteButton).not.toBeVisible();
 
-    await userEvent.click(within(card).getByText("삭제 메뉴"));
+    await userEvent.click(within(card).getByText("관리 메뉴 열기"));
     expect(deleteButton).toBeVisible();
     expect(within(card).getByText("삭제하면 일정과 장소를 복구할 수 없습니다.")).toBeVisible();
 
@@ -104,5 +104,38 @@ describe("로그인 후 여행 목록", () => {
     expect(onDeleteTrip).toHaveBeenCalledWith("trip-1");
 
     confirmSpy.mockRestore();
+  });
+});
+
+describe("여행 카드 하위 개수 스탯", () => {
+  function renderList(trip: OwnerTrip) {
+    render(
+      <TripListSection
+        deletingTripID=""
+        onDeleteTrip={vi.fn()}
+        ownerTrips={[trip]}
+        ownerTripsError=""
+        ownerTripsLoading={false}
+      />,
+    );
+  }
+
+  it("개수를 받으면 장소·일정·항공을 함께 보여준다", () => {
+    renderList({
+      ...createTrip("trip-1", "상하이 여행", "2026-07-29", "2026-08-01"),
+      placeCount: 7,
+      scheduleCount: 12,
+      flightCount: 2,
+    });
+
+    expect(screen.getByLabelText("장소 7곳")).toBeVisible();
+    expect(screen.getByLabelText("일정 12개")).toBeVisible();
+    expect(screen.getByLabelText("항공편 2개")).toBeVisible();
+  });
+
+  it("개수를 아직 못 받았으면 스탯 행을 넣지 않는다", () => {
+    renderList(createTrip("trip-1", "상하이 여행", "2026-07-29", "2026-08-01"));
+
+    expect(screen.queryByLabelText(/장소 \d+곳/)).not.toBeInTheDocument();
   });
 });
