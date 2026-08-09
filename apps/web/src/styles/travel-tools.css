@@ -840,3 +840,154 @@
 .shared-place-card .primary-button.compact-button {
   width: auto;
 }
+
+/* ── 긴급 탭 (5단계) ─────────────────────────────────────────── */
+/* 스펙은 2칸 그리드를 그리지만 실제 긴급 연락처 설명은 여러 문장이라
+   좁은 칸에서 한 글자씩 줄바꿈된다. 한 열로 두고 카드 외형만 스펙에 맞춘다. */
+.emergency-contact-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.emergency-contact-grid .emergency-contact {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 6px;
+}
+
+.emergency-contact-tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: var(--c-destination-soft);
+  color: var(--c-destination-deep);
+}
+
+.emergency-contact h3 {
+  margin: 4px 0 0;
+  color: var(--c-text);
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-display);
+  letter-spacing: var(--tracking-title);
+}
+
+.emergency-contact p {
+  margin: 0;
+  color: var(--c-muted);
+  font-size: var(--type-label-size);
+  line-height: 1.5;
+}
+
+.emergency-contact-address {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  color: var(--c-muted);
+  font-size: var(--type-label-size);
+  overflow-wrap: anywhere;
+}
+
+.emergency-contact .emergency-call-button {
+  width: 100%;
+  margin-top: 6px;
+}
+
+.emergency-unregistered {
+  margin-top: 6px;
+  color: var(--c-muted);
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
+}
+
+.accommodation-subtitle {
+  margin: 2px 0 0;
+  color: var(--c-muted);
+  font-size: var(--type-supporting-size);
+}
+
+.accommodation-driver-address {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--c-bg);
+}
+
+.accommodation-driver-label {
+  display: block;
+  color: var(--c-muted);
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-display);
+  letter-spacing: 0.06em;
+}
+
+.accommodation-driver-address p {
+  margin: 6px 0 0;
+  font-size: var(--type-body-size);
+  font-weight: var(--font-weight-strong);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.accommodation-copy {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 14px;
+}
+
+.concierge-tool-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.concierge-tool-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 14px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--c-surface);
+  color: var(--c-text);
+  text-align: left;
+}
+
+.concierge-tool-row > svg {
+  flex: 0 0 auto;
+  color: var(--c-muted);
+}
+
+.concierge-tool-tile {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--c-route-soft);
+  color: var(--c-route);
+}
+
+.concierge-tool-copy {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.concierge-tool-copy strong {
+  font-size: var(--type-body-size);
+  font-weight: var(--font-weight-strong);
+  letter-spacing: var(--tracking-title);
+}
+
+.concierge-tool-copy small {
+  color: var(--c-muted);
+  font-size: var(--type-label-size);
+}
