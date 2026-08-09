@@ -18,7 +18,11 @@ export function TripManagePage(props: TripManagePageProps) {
 
             {authChecked && auth && (
               <>
-                <ManageHeader auth={auth} />
+                <ManageHeader
+                  auth={auth}
+                  onCreateTrip={() => setIsTripCreateOpen(true)}
+                  tripCount={ownerTrips.length}
+                />
                 {(ownerTripsLoading || ownerTripsError || ownerTrips.length > 0) && (
                   <TripListSection {...props} />
                 )}

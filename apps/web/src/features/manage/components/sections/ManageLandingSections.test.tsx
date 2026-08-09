@@ -21,6 +21,8 @@ describe("로그인 후 여행 목록", () => {
     render(
       <ManageHeader
         auth={{ accessToken: "token", user: { id: "user-1", email: "traveler@example.com" } }}
+        onCreateTrip={vi.fn()}
+        tripCount={2}
       />,
     );
 
