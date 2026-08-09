@@ -1,10 +1,10 @@
-import { useRef, useState } from "react";
-import { ArrowLeft, Check, Copy, Map, Maximize2, X } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, Check, Copy, Map, Maximize2 } from "lucide-react";
 import { placeCategoryIcons } from "../../features/trip/placeCategoryIcons";
 import type { Place } from "../../types/travel";
 import { getAmapDirectionsUrl, getGoogleDirectionsUrl, getPlaceMarkerUrl } from "../../utils/mapLinks";
 import { placeCategoryLabels } from "../travelOptions";
-import { useDialogFocusTrap } from "../useDialogFocusTrap";
+import { BottomSheet } from "./BottomSheet";
 
 type PlaceDetailSheetProps = {
   destinationCountry?: string;
@@ -14,9 +14,6 @@ type PlaceDetailSheetProps = {
 
 // 장소 상세 바텀 시트. 지도·일정 어디서 열어도 같은 정보와 같은 길찾기 흐름을 준다.
 export function PlaceDetailSheet({ destinationCountry, onClose, place }: PlaceDetailSheetProps) {
-  const dialogRef = useRef<HTMLDivElement>(null);
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
-  useDialogFocusTrap({ dialogRef, initialFocusRef: closeButtonRef, isOpen: true, onClose });
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState("");
   const [isPhraseMode, setIsPhraseMode] = useState(false);
@@ -45,16 +42,7 @@ export function PlaceDetailSheet({ destinationCountry, onClose, place }: PlaceDe
   };
 
   return (
-    <div className="place-sheet-backdrop">
-      <div
-        aria-label={`${place.name} 상세`}
-        aria-modal="true"
-        className="place-sheet"
-        ref={dialogRef}
-        role="dialog"
-      >
-        <span aria-hidden="true" className="place-sheet-handle" />
-
+    <BottomSheet ariaLabel={`${place.name} 상세`} onClose={onClose}>
         {isPhraseMode ? (
           <div className="place-sheet-phrase">
             <p className="place-sheet-phrase-label">택시 기사님께 보여주세요</p>
@@ -148,11 +136,6 @@ export function PlaceDetailSheet({ destinationCountry, onClose, place }: PlaceDe
           </>
         )}
 
-        <button className="place-sheet-close" onClick={onClose} ref={closeButtonRef} type="button">
-          <X aria-hidden="true" size={16} />
-          닫기
-        </button>
-      </div>
-    </div>
+    </BottomSheet>
   );
 }

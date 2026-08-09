@@ -29,7 +29,7 @@ export function BottomTabs({ activeTab, setActiveTab }: BottomTabsProps) {
             onClick={() => setActiveTab(tab.id)}
             type="button"
           >
-            <Icon size={21} aria-hidden="true" />
+            <Icon size={24} aria-hidden="true" />
             <span>{tab.label}</span>
           </button>
         );
