@@ -63,29 +63,33 @@ export function ScheduleCard({
           </div>
         </div>
 
-        {item.transportMemo && (
-          <p className="schedule-detail">
-            {item.type !== "move" && <strong>이동</strong>}
-            {item.transportMemo}
-          </p>
-        )}
-        {item.reservationMemo && (
-          <p className="schedule-detail">
-            <strong style={{ marginRight: "6px" }}>예약</strong>
-            <MaskedText text={item.reservationMemo} />
-          </p>
-        )}
-        {item.guideMemo && (
-          showGuideMemo ? (
-            <p className="schedule-detail muted">
-              <strong>안내</strong>
-              {item.guideMemo}
-            </p>
-          ) : (
-            <div className="muted schedule-guide-memo">
-              <MaskedText text={item.guideMemo} label="안내:" />
-            </div>
-          )
+        {(item.transportMemo || item.reservationMemo || item.guideMemo) && (
+          <div className="schedule-note-list">
+            {item.transportMemo && (
+              <p className={`schedule-detail${item.type === "move" ? " unlabeled" : ""}`}>
+                {item.type !== "move" && <strong>이동</strong>}
+                <span>{item.transportMemo}</span>
+              </p>
+            )}
+            {item.reservationMemo && (
+              <p className="schedule-detail">
+                <strong>예약</strong>
+                <MaskedText text={item.reservationMemo} />
+              </p>
+            )}
+            {item.guideMemo && (
+              showGuideMemo ? (
+                <p className="schedule-detail muted">
+                  <strong>안내</strong>
+                  <span>{item.guideMemo}</span>
+                </p>
+              ) : (
+                <div className="muted schedule-guide-memo">
+                  <MaskedText text={item.guideMemo} label="안내:" />
+                </div>
+              )
+            )}
+          </div>
         )}
 
         {!isReadOnly && isReordering && (
