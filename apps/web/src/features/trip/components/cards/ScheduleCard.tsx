@@ -65,7 +65,7 @@ export function ScheduleCard({
 
         {item.transportMemo && (
           <p className="schedule-detail">
-            <strong>이동</strong>
+            {item.type !== "move" && <strong>이동</strong>}
             {item.transportMemo}
           </p>
         )}
