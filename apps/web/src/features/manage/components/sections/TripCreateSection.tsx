@@ -1,4 +1,5 @@
 import { ChevronDown, PlusCircle, Route } from "lucide-react";
+import type { RefObject } from "react";
 import { destinationCountryOptions } from "../../../../shared/travelOptions";
 import type { TripCreateSectionProps } from "../../manageTypes";
 
@@ -6,6 +7,7 @@ type TripCreateDisclosureProps = TripCreateSectionProps & {
   isFirstTrip: boolean;
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
+  sectionRef?: RefObject<HTMLElement | null>;
 };
 
 // 첫 여행은 곧바로 입력할 수 있게 보여 주고, 기존 사용자의 추가 여행만 접이식으로 표시한다.
@@ -28,6 +30,7 @@ export function TripCreateSection({
   isFirstTrip,
   isOpen,
   onOpenChange,
+  sectionRef,
 }: TripCreateDisclosureProps) {
   const submitLabel = tripCreateSubmitting
     ? "여행 만드는 중"
@@ -135,7 +138,7 @@ export function TripCreateSection({
 
   if (isFirstTrip) {
     return (
-      <section className="section-block first-trip-create">
+      <section className="section-block first-trip-create" ref={sectionRef}>
         <header className="first-trip-intro">
           <span className="first-trip-route-mark" aria-hidden="true">
             <Route size={22} />
@@ -152,7 +155,7 @@ export function TripCreateSection({
   }
 
   return (
-    <section className="section-block">
+    <section className="section-block" ref={sectionRef}>
       <details
         className="trip-create-disclosure"
         onToggle={(event) => onOpenChange(event.currentTarget.open)}

@@ -16,6 +16,13 @@ type TripWithChecklistRepository interface {
 	SaveTripWithChecklist(context.Context, model.Trip, []model.ChecklistItem) error
 }
 
+type TripSummary struct {
+	Trip          model.Trip
+	PlaceCount    int
+	ScheduleCount int
+	FlightCount   int
+}
+
 func WithTripRepositoryContext(repo TripRepository, ctx context.Context) TripRepository {
 	if contextual, ok := repo.(TripRepositoryContextProvider); ok {
 		return contextual.WithContext(ctx)
@@ -32,6 +39,7 @@ var (
 type TripRepository interface {
 	FindTrip(id string) (model.Trip, error)
 	FindByOwner(ownerID string) ([]model.Trip, error)
+	FindSummariesByOwner(ownerID string) ([]TripSummary, error)
 	FindShareLinkByToken(token string) (model.ShareLink, error)
 	FindSchedule(tripID, scheduleID string) (model.Schedule, error)
 	FindSchedules(tripID string) ([]model.Schedule, error)
@@ -185,6 +193,37 @@ func (r *MemoryTripRepository) FindByOwner(ownerID string) ([]model.Trip, error)
 		if trip.OwnerID == ownerID {
 			result = append(result, trip)
 		}
+	}
+	return result, nil
+}
+
+func (r *MemoryTripRepository) FindSummariesByOwner(ownerID string) ([]TripSummary, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	result := make([]TripSummary, 0)
+	for _, trip := range r.trips {
+		if trip.OwnerID != ownerID {
+			continue
+		}
+
+		summary := TripSummary{Trip: trip}
+		for _, place := range r.places {
+			if place.TripID == trip.ID {
+				summary.PlaceCount++
+			}
+		}
+		for _, schedule := range r.schedules {
+			if schedule.TripID == trip.ID {
+				summary.ScheduleCount++
+			}
+		}
+		for _, flight := range r.flights {
+			if flight.TripID == trip.ID {
+				summary.FlightCount++
+			}
+		}
+		result = append(result, summary)
 	}
 	return result, nil
 }

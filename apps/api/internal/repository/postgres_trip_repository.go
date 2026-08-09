@@ -63,6 +63,65 @@ func (r *PostgresTripRepository) FindByOwner(ownerID string) ([]model.Trip, erro
 	return result, rows.Err()
 }
 
+func (r *PostgresTripRepository) FindSummariesByOwner(ownerID string) ([]TripSummary, error) {
+	rows, err := r.pool.Query(r.context(), `
+		WITH owner_trips AS (
+			SELECT id, owner_id, title, start_date, end_date, travelers, destination_country, memo
+			FROM trips
+			WHERE owner_id = $1
+		), place_counts AS (
+			SELECT p.trip_id, COUNT(*)::int AS child_count
+			FROM places p
+			JOIN owner_trips t ON t.id = p.trip_id
+			GROUP BY p.trip_id
+		), schedule_counts AS (
+			SELECT s.trip_id, COUNT(*)::int AS child_count
+			FROM schedules s
+			JOIN owner_trips t ON t.id = s.trip_id
+			GROUP BY s.trip_id
+		), flight_counts AS (
+			SELECT f.trip_id, COUNT(*)::int AS child_count
+			FROM flights f
+			JOIN owner_trips t ON t.id = f.trip_id
+			GROUP BY f.trip_id
+		)
+		SELECT t.id::text, t.owner_id::text, t.title, t.start_date::text, t.end_date::text,
+		       t.travelers, t.destination_country, COALESCE(t.memo,''),
+		       COALESCE(p.child_count, 0), COALESCE(s.child_count, 0), COALESCE(f.child_count, 0)
+		FROM owner_trips t
+		LEFT JOIN place_counts p ON p.trip_id = t.id
+		LEFT JOIN schedule_counts s ON s.trip_id = t.id
+		LEFT JOIN flight_counts f ON f.trip_id = t.id
+		ORDER BY t.start_date`, ownerID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	result := make([]TripSummary, 0)
+	for rows.Next() {
+		var summary TripSummary
+		trip := &summary.Trip
+		if err := rows.Scan(
+			&trip.ID,
+			&trip.OwnerID,
+			&trip.Title,
+			&trip.StartDate,
+			&trip.EndDate,
+			&trip.Travelers,
+			&trip.DestinationCountry,
+			&trip.Memo,
+			&summary.PlaceCount,
+			&summary.ScheduleCount,
+			&summary.FlightCount,
+		); err != nil {
+			return nil, err
+		}
+		result = append(result, summary)
+	}
+	return result, rows.Err()
+}
+
 func (r *PostgresTripRepository) FindShareLinkByToken(token string) (model.ShareLink, error) {
 	row := r.pool.QueryRow(r.context(),
 		`SELECT id::text, trip_id::text, token, created_at, expires_at
