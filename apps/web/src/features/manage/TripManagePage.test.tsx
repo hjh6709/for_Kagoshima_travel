@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import type { OwnerTrip } from "../../api/trips";
@@ -46,6 +46,37 @@ function createProps(
 }
 
 describe("TripManagePage creation flow", () => {
+  it("헤더의 새 여행 버튼이 생성 폼을 열고 화면과 포커스를 이동한다", async () => {
+    const originalScrollIntoView = Object.getOwnPropertyDescriptor(
+      HTMLElement.prototype,
+      "scrollIntoView",
+    );
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+      configurable: true,
+      value: scrollIntoView,
+    });
+
+    try {
+      render(<TripManagePage {...createProps([existingTrip])} />);
+
+      await userEvent.click(screen.getByRole("button", { name: "새 여행" }));
+
+      await waitFor(() => expect(scrollIntoView).toHaveBeenCalledWith({
+        behavior: "smooth",
+        block: "start",
+      }));
+      expect(screen.getByLabelText("새 여행 추가 닫기").closest("details")).toHaveAttribute("open");
+      expect(screen.getByLabelText("여행명")).toHaveFocus();
+    } finally {
+      if (originalScrollIntoView) {
+        Object.defineProperty(HTMLElement.prototype, "scrollIntoView", originalScrollIntoView);
+      } else {
+        delete (HTMLElement.prototype as { scrollIntoView?: unknown }).scrollIntoView;
+      }
+    }
+  });
+
   it("기존 여행이 있으면 생성 폼을 접고 필요할 때 같은 화면에서 연다", async () => {
     render(<TripManagePage {...createProps([existingTrip])} />);
 
@@ -80,6 +111,37 @@ describe("TripManagePage creation flow", () => {
     expect(screen.getByRole("heading", { name: "첫 여행 만들기" })).toBeVisible();
     expect(screen.queryByLabelText("새 여행 추가 닫기")).not.toBeInTheDocument();
     expect(screen.getByLabelText("여행명")).toBeVisible();
+  });
+
+  it("첫 사용자도 헤더의 새 여행 버튼으로 생성 폼 위치와 입력 포커스를 확인한다", async () => {
+    const originalScrollIntoView = Object.getOwnPropertyDescriptor(
+      HTMLElement.prototype,
+      "scrollIntoView",
+    );
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+      configurable: true,
+      value: scrollIntoView,
+    });
+
+    try {
+      render(<TripManagePage {...createProps([])} />);
+
+      await userEvent.click(screen.getByRole("button", { name: "새 여행" }));
+
+      await waitFor(() => expect(scrollIntoView).toHaveBeenCalledWith({
+        behavior: "smooth",
+        block: "start",
+      }));
+      expect(screen.getByRole("heading", { name: "첫 여행 만들기" })).toBeVisible();
+      expect(screen.getByLabelText("여행명")).toHaveFocus();
+    } finally {
+      if (originalScrollIntoView) {
+        Object.defineProperty(HTMLElement.prototype, "scrollIntoView", originalScrollIntoView);
+      } else {
+        delete (HTMLElement.prototype as { scrollIntoView?: unknown }).scrollIntoView;
+      }
+    }
   });
 
   it("여행 목록 오류가 있으면 생성 폼을 숨기고 복구 안내에 집중한다", () => {

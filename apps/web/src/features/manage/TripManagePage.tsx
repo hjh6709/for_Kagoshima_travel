@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ManageAuthSection, ManageHeader, TripCreateSection, TripListSection } from "./components";
 import type { TripManagePageProps } from "./manageTypes";
 
@@ -7,7 +7,17 @@ import type { TripManagePageProps } from "./manageTypes";
 export function TripManagePage(props: TripManagePageProps) {
   const { auth, authChecked, ownerTrips, ownerTripsError, ownerTripsLoading } = props;
   const [isTripCreateOpen, setIsTripCreateOpen] = useState(false);
+  const tripCreateSectionRef = useRef<HTMLElement>(null);
   const isFirstTrip = !ownerTripsLoading && !ownerTripsError && ownerTrips.length === 0;
+
+  const openTripCreateForm = () => {
+    setIsTripCreateOpen(true);
+    requestAnimationFrame(() => {
+      const section = tripCreateSectionRef.current;
+      section?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+      section?.querySelector<HTMLInputElement>("input:not([type='hidden'])")?.focus();
+    });
+  };
 
   return (
     <main className="app-shell">
@@ -20,7 +30,7 @@ export function TripManagePage(props: TripManagePageProps) {
               <>
                 <ManageHeader
                   auth={auth}
-                  onCreateTrip={() => setIsTripCreateOpen(true)}
+                  onCreateTrip={openTripCreateForm}
                   tripCount={ownerTrips.length}
                 />
                 {(ownerTripsLoading || ownerTripsError || ownerTrips.length > 0) && (
@@ -32,6 +42,7 @@ export function TripManagePage(props: TripManagePageProps) {
                     isFirstTrip={isFirstTrip}
                     isOpen={isTripCreateOpen}
                     onOpenChange={setIsTripCreateOpen}
+                    sectionRef={tripCreateSectionRef}
                   />
                 )}
               </>

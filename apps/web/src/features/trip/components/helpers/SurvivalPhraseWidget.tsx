@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Copy, Languages, Maximize2, X } from "lucide-react";
 import { CHINESE_PHRASES, JAPANESE_PHRASES, type Phrase } from "../../../../data/survivalPhrases";
+import { useDialogFocusTrap } from "../../../../shared/useDialogFocusTrap";
 
 interface SurvivalPhraseWidgetProps {
   destinationCountry?: string;
@@ -10,19 +11,17 @@ export function SurvivalPhraseWidget({ destinationCountry }: SurvivalPhraseWidge
   const isJapan = destinationCountry === "JP";
   const phrases = isJapan ? JAPANESE_PHRASES : CHINESE_PHRASES;
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const [zoomedPhrase, setZoomedPhrase] = useState<Phrase | null>(null);
   const [copyMessage, setCopyMessage] = useState("");
 
-  useEffect(() => {
-    if (!zoomedPhrase) return;
-    closeButtonRef.current?.focus();
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setZoomedPhrase(null);
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [zoomedPhrase]);
+  const closeZoomedPhrase = useCallback(() => setZoomedPhrase(null), []);
+  useDialogFocusTrap({
+    dialogRef,
+    initialFocusRef: closeButtonRef,
+    isOpen: zoomedPhrase !== null,
+    onClose: closeZoomedPhrase,
+  });
 
   const handleCopyPhrase = async (phrase: Phrase) => {
     if (!navigator.clipboard) {
@@ -86,18 +85,19 @@ export function SurvivalPhraseWidget({ destinationCountry }: SurvivalPhraseWidge
       </article>
 
       {zoomedPhrase && (
-        <div className="modal-overlay" onClick={() => setZoomedPhrase(null)}>
+        <div className="modal-overlay" onClick={closeZoomedPhrase}>
           <div
             aria-labelledby="phrase-dialog-title"
             aria-modal="true"
             className="zoom-modal-card"
             onClick={(event) => event.stopPropagation()}
+            ref={dialogRef}
             role="dialog"
           >
             <button
               aria-label="큰 문장 닫기"
               className="close-btn"
-              onClick={() => setZoomedPhrase(null)}
+              onClick={closeZoomedPhrase}
               ref={closeButtonRef}
               type="button"
             >
