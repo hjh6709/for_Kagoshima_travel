@@ -30,7 +30,9 @@
 | 4a | 항공 탭 + 신규 `PlaceDetailSheet` 공용 시트 | 있음(+신규 컴포넌트 1개) | **완료** → `docs/superpowers/plans/2026-08-06-ios-redesign-stage4a-flight-place-sheet.md` |
 | 4b | 지도 탭 (인라인 펼침을 시트로 교체 + 지도 프레임·핀) | 있음 | **완료** → `docs/superpowers/plans/2026-08-06-ios-redesign-stage4b-map-tab.md` |
 | 5 | 긴급 탭 + 하단 탭바 | 있음 | **완료** → `docs/superpowers/plans/2026-08-06-ios-redesign-stage5-concierge-tab.md` |
-| 6 | 마이페이지 + 여행 목록(`TripManagePage`) + 편집 허브(`TripEditHubPage`) | 있음 | 로드맵만, 실행 직전 작성 |
+| 6 | 마이페이지 + 여행 목록(`TripManagePage`) | 있음 | **완료** → `docs/superpowers/plans/2026-08-09-ios-redesign-stage6-mypage-trip-list.md` |
+
+**리디자인 6단계 전부 완료.** 편집 허브(`TripEditHubPage`)는 핸드오프 스펙에 대응 화면이 없어 이번 리디자인 범위에서 제외했다 — 별도 작업으로 다룬다.
 
 **왜 전부 지금 상세 플랜으로 안 쓰는가:** `writing-plans`는 매 단계가 실제 코드를 근거로 한 완전한 스텝(플레이스홀더
 없이, 실제 prop 이름·시그니처 포함)을 요구한다. 2~6단계 각각 4~6개 컴포넌트를 다루고, 이미 이번 세션에서

@@ -194,9 +194,11 @@ test("첫 화면 주요 행동은 문구를 가운데 두고 화살표만 오른
     manageStyles,
     /\.start-primary-action \.trailing-icon\s*{[\s\S]*?position:\s*absolute;[\s\S]*?right:\s*16px;/,
   );
+  // [^}]* 로 규칙 블록 안에서만 본다. [\s\S]*? 를 쓰면 파일 뒤쪽 다른 규칙의
+  // margin-left: auto까지 삼켜 오탐이 난다.
   assert.doesNotMatch(
-    manageStyles,
-    /\.start-primary-action \.trailing-icon\s*{[\s\S]*?margin-left:\s*auto;/,
+    readRuleBlock(manageStyles, String.raw`\.start-primary-action \.trailing-icon`),
+    /margin-left:\s*auto/,
   );
 });
 

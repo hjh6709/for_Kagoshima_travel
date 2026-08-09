@@ -58,7 +58,7 @@ describe("TripManagePage creation flow", () => {
       "href",
       "/manage/trips/trip-1/edit",
     );
-    expect(screen.getByText("삭제 메뉴")).toBeVisible();
+    expect(screen.getByRole("group", { name: "상하이 여행 관리 메뉴" })).toBeInTheDocument();
     expect(
       existingTripHeading.compareDocumentPosition(disclosure as Node) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();

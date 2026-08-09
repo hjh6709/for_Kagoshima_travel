@@ -128,3 +128,49 @@ func TestGetSharedTripOmitsSensitiveInternalMemos(t *testing.T) {
 		t.Errorf("sensitive flight not found in shared response")
 	}
 }
+
+func TestListMyTripsIncludesChildCounts(t *testing.T) {
+	tripRepo := repository.NewMemoryTripRepository()
+	service := NewTripService(tripRepo, repository.NewMemoryChecklistRepository())
+
+	const (
+		tripID  = "count-trip"
+		ownerID = "count-owner"
+	)
+
+	if err := tripRepo.Save(model.Trip{
+		ID:        tripID,
+		OwnerID:   ownerID,
+		Title:     "개수 집계 테스트",
+		StartDate: "2026-11-03",
+		EndDate:   "2026-11-06",
+	}); err != nil {
+		t.Fatalf("Save() error = %v", err)
+	}
+	if err := tripRepo.SavePlace(model.Place{ID: "place-1", TripID: tripID, Name: "센간엔"}); err != nil {
+		t.Fatalf("SavePlace() error = %v", err)
+	}
+	if err := tripRepo.SavePlace(model.Place{ID: "place-2", TripID: tripID, Name: "사쿠라지마"}); err != nil {
+		t.Fatalf("SavePlace() error = %v", err)
+	}
+	if err := tripRepo.SaveSchedule(model.Schedule{ID: "schedule-1", TripID: tripID, Title: "센간엔 관람"}); err != nil {
+		t.Fatalf("SaveSchedule() error = %v", err)
+	}
+
+	trips, err := service.ListMyTrips(ownerID)
+	if err != nil {
+		t.Fatalf("ListMyTrips() error = %v", err)
+	}
+	if len(trips) != 1 {
+		t.Fatalf("len(trips) = %d, want 1", len(trips))
+	}
+	if trips[0].PlaceCount != 2 {
+		t.Errorf("PlaceCount = %d, want 2", trips[0].PlaceCount)
+	}
+	if trips[0].ScheduleCount != 1 {
+		t.Errorf("ScheduleCount = %d, want 1", trips[0].ScheduleCount)
+	}
+	if trips[0].FlightCount != 0 {
+		t.Errorf("FlightCount = %d, want 0", trips[0].FlightCount)
+	}
+}
