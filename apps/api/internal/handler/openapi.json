@@ -118,6 +118,22 @@
           "memo": { "type": "string" }
         }
       },
+      "TripSummaryResponse": {
+        "type": "object",
+        "description": "여행 목록 전용. 상세 조회에는 개수가 실리지 않는다.",
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "startDate": { "type": "string", "example": "2026-06-27" },
+          "endDate": { "type": "string", "example": "2026-06-30" },
+          "travelers": { "type": "array", "items": { "type": "string" } },
+          "destinationCountry": { "type": "string", "pattern": "^[A-Z]{2}$", "example": "CN" },
+          "memo": { "type": "string" },
+          "placeCount": { "type": "integer", "example": 7 },
+          "scheduleCount": { "type": "integer", "example": 12 },
+          "flightCount": { "type": "integer", "example": 2 }
+        }
+      },
       "PublicTripResponse": {
         "type": "object",
         "properties": {
@@ -504,7 +520,7 @@
         "tags": ["여행"],
         "security": [{ "bearerAuth": [] }],
         "responses": {
-          "200": { "description": "성공", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/TripResponse" } } } } },
+          "200": { "description": "성공", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/TripSummaryResponse" } } } } },
           "401": { "description": "인증 필요" }
         }
       },

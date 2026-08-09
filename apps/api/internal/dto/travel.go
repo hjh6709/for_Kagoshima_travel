@@ -109,6 +109,21 @@ type TripResponse struct {
 	Memo               string   `json:"memo,omitempty"`
 }
 
+// TripSummaryResponse는 여행 목록 화면 전용이다.
+// 상세 조회(TripResponse)에는 개수를 넣지 않는다 — 항상 0이 실려 오해를 준다.
+type TripSummaryResponse struct {
+	ID                 string   `json:"id"`
+	Title              string   `json:"title"`
+	StartDate          string   `json:"startDate"`
+	EndDate            string   `json:"endDate"`
+	Travelers          []string `json:"travelers"`
+	DestinationCountry string   `json:"destinationCountry"`
+	Memo               string   `json:"memo,omitempty"`
+	PlaceCount         int      `json:"placeCount"`
+	ScheduleCount      int      `json:"scheduleCount"`
+	FlightCount        int      `json:"flightCount"`
+}
+
 type PublicTripResponse struct {
 	ID                 string   `json:"id"`
 	Title              string   `json:"title"`

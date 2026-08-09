@@ -639,14 +639,46 @@ func (s *TripService) CreateTrip(ownerID string, req dto.CreateTripRequest) (dto
 	return mapTripResponse(trip), nil
 }
 
-func (s *TripService) ListMyTrips(ownerID string) ([]dto.TripResponse, error) {
+// ListMyTrips는 목록 카드에 필요한 하위 개수까지 함께 돌려준다.
+//
+// 여행 1건당 조회가 3번 늘어난다(N+1). 개인 여행 계획 앱이라 사용자당 여행 수가
+// 많아야 수십 건이므로 지금 규모에서는 집계 쿼리를 따로 두지 않는다.
+// 목록이 커지면 저장소에 집계 메서드를 추가해 한 번에 세도록 바꾼다.
+func (s *TripService) ListMyTrips(ownerID string) ([]dto.TripSummaryResponse, error) {
 	trips, err := s.tripRepository.FindByOwner(ownerID)
 	if err != nil {
 		return nil, err
 	}
-	responses := make([]dto.TripResponse, 0, len(trips))
+
+	responses := make([]dto.TripSummaryResponse, 0, len(trips))
 	for _, trip := range trips {
-		responses = append(responses, mapTripResponse(trip))
+		base := mapTripResponse(trip)
+
+		places, err := s.tripRepository.FindPlaces(trip.ID)
+		if err != nil {
+			return nil, err
+		}
+		schedules, err := s.tripRepository.FindSchedules(trip.ID)
+		if err != nil {
+			return nil, err
+		}
+		flights, err := s.tripRepository.FindFlights(trip.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		responses = append(responses, dto.TripSummaryResponse{
+			ID:                 base.ID,
+			Title:              base.Title,
+			StartDate:          base.StartDate,
+			EndDate:            base.EndDate,
+			Travelers:          base.Travelers,
+			DestinationCountry: base.DestinationCountry,
+			Memo:               base.Memo,
+			PlaceCount:         len(places),
+			ScheduleCount:      len(schedules),
+			FlightCount:        len(flights),
+		})
 	}
 	return responses, nil
 }
