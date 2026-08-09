@@ -28,3 +28,22 @@ describe("MyPageTab demo", () => {
     expect(screen.queryByText(/평생 무료/)).not.toBeInTheDocument();
   });
 });
+
+describe("MyPageTab 설정 그룹", () => {
+  it("아직 준비되지 않은 설정은 눌리지 않게 두고 준비 중임을 알린다", () => {
+    render(
+      <MyPageTab
+        auth={{ accessToken: "token", user: { id: "user-1", email: "traveler@example.com" } }}
+        onAuthChanged={vi.fn()}
+        onLogout={vi.fn()}
+        trip={trip}
+      />,
+    );
+
+    for (const label of ["여행 알림", "언어", "오프라인 저장"]) {
+      const row = screen.getByRole("button", { name: new RegExp(label) });
+      expect(row).toBeDisabled();
+      expect(row).toHaveTextContent("준비 중");
+    }
+  });
+});

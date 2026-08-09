@@ -1613,3 +1613,107 @@
 .auth-form .input-with-icon input.with-password-toggle {
   padding-right: 48px;
 }
+
+/* ── 여행 목록 · 마이페이지 (6단계) ──────────────────────────── */
+/* 새 여행 버튼이 늘면서 좁은 화면에서 헤더가 넘쳤다. 두 곳 다 줄바꿈을 허용한다. */
+.owner-header {
+  flex-wrap: wrap;
+}
+
+.owner-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.owner-trip-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-color);
+}
+
+.owner-trip-stats span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--c-muted);
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-strong);
+}
+
+.owner-trip-stats svg {
+  color: var(--c-route);
+}
+
+.owner-trip-manage > summary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-left: auto;
+  border-radius: 12px;
+  color: var(--c-muted);
+  cursor: pointer;
+  list-style: none;
+}
+
+.owner-trip-manage > summary::-webkit-details-marker {
+  display: none;
+}
+
+.owner-trip-manage-panel {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--c-bg);
+}
+
+.owner-trip-manage-panel p {
+  margin: 0;
+  color: var(--c-muted);
+  font-size: var(--type-label-size);
+  line-height: 1.5;
+}
+
+.mypage-setting-list {
+  display: grid;
+  gap: 8px;
+}
+
+.mypage-setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 14px 16px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--c-surface);
+  color: var(--c-text);
+  font-size: var(--type-body-size);
+  font-weight: var(--font-weight-strong);
+  text-align: left;
+}
+
+.mypage-setting-row:disabled {
+  color: var(--c-muted);
+  cursor: not-allowed;
+}
+
+.mypage-setting-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--c-muted);
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-strong);
+}

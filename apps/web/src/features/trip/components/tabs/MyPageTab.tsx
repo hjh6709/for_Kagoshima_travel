@@ -1,6 +1,7 @@
 import {
   ArrowRight,
   CalendarCheck2,
+  ChevronRight,
   List,
   MapPinned,
   Settings2,
@@ -137,6 +138,25 @@ export function MyPageTab({
           </article>
         </section>
       )}
+
+      <section className="mypage-section" aria-labelledby="mypage-settings">
+        <h2 className="mypage-section-title" id="mypage-settings">
+          설정
+        </h2>
+        <div className="mypage-setting-list">
+          {/* 대응하는 기능이 아직 없다. 값이 켜져 있는 것처럼 보이면 거짓말이 되므로
+              눌리지 않게 두고 준비 중임을 그대로 밝힌다. */}
+          {["여행 알림", "언어", "오프라인 저장"].map((label) => (
+            <button className="mypage-setting-row" disabled key={label} type="button">
+              <span>{label}</span>
+              <span className="mypage-setting-value">
+                준비 중
+                <ChevronRight aria-hidden="true" size={17} />
+              </span>
+            </button>
+          ))}
+        </div>
+      </section>
 
       <PasswordSettingsSection
         accessToken={auth?.accessToken ?? ""}
