@@ -1,9 +1,12 @@
 import { useState } from "react";
-import { Building2, Copy, MapPin, Phone } from "lucide-react";
+import { Building2, ChevronRight, Coins, Copy, CreditCard, Languages, MapPin, MapPinned, Phone } from "lucide-react";
 import { ChinaPaymentHelper } from "../../../manage/components";
+import { BottomSheet } from "../../../../shared/components/BottomSheet";
+import { getCurrencyConfig } from "../../../../shared/currency";
 import type { TripPageProps } from "../../tripPageTypes";
 import { ProfileShortcutButton } from "../cards/ProfileShortcutButton";
-import { QuickTravelHelper } from "../helpers/QuickTravelHelper";
+import { CurrencyExchangeWidget } from "../helpers/CurrencyExchangeWidget";
+import { SurvivalPhraseWidget } from "../helpers/SurvivalPhraseWidget";
 
 // 긴급/여행 정보 탭 렌더링만 담당한다. 주소 복사는 상위 핸들러를 호출한다.
 export function ConciergeTab({
@@ -16,6 +19,34 @@ export function ConciergeTab({
   onNavigateToMyPage,
 }: TripPageProps) {
   const [subTab, setSubTab] = useState<"emergency" | "tools">("emergency");
+  const [openTool, setOpenTool] = useState<"currency" | "phrase" | "payment" | null>(null);
+  const currency = getCurrencyConfig(trip.destinationCountry);
+  const supportsPhrases = trip.destinationCountry === "JP" || trip.destinationCountry === "CN";
+  const isChina = trip.destinationCountry === "CN";
+
+  const tools = [
+    currency && {
+      id: "currency" as const,
+      icon: Coins,
+      title: "환율 계산",
+      description: `${currency.label} ↔ 원 환산`,
+    },
+    supportsPhrases && {
+      id: "phrase" as const,
+      icon: Languages,
+      title: "택시 · 식당 문구",
+      description: "상황별 현지어 문장",
+    },
+    isChina && {
+      id: "payment" as const,
+      icon: CreditCard,
+      title: "현지 결제 안내",
+      description: "알리페이 · 위챗페이 준비",
+    },
+  ].filter(
+    (tool): tool is { id: "currency" | "phrase" | "payment"; icon: typeof Coins; title: string; description: string } =>
+      Boolean(tool),
+  );
   const hasAccommodation = Boolean(
     accommodation.name || accommodation.address || accommodation.phone || accommodation.checkIn || accommodation.checkOut || accommodation.memo,
   );
@@ -69,16 +100,26 @@ export function ConciergeTab({
                 </div>
               </article>
             ) : (
-              <div className="emergency-contact-list">
+              <div className="emergency-contact-grid">
                 {emergencies.map((item) => (
                   <article className="emergency-contact" key={item.id}>
-                    <div>
-                      <h3>{item.title}</h3>
-                      <p>{item.description}</p>
-                      {item.address && <span><MapPin aria-hidden="true" size={14} />{item.address}</span>}
-                    </div>
+                    <span aria-hidden="true" className="emergency-contact-tile">
+                      <Phone size={18} />
+                    </span>
+                    <h3>{item.title}</h3>
+                    <p>{item.description}</p>
+                    {item.address && (
+                      <span className="emergency-contact-address">
+                        <MapPin aria-hidden="true" size={14} />
+                        {item.address}
+                      </span>
+                    )}
                     {item.phone ? (
-                      <a aria-label={`${item.title} ${item.phone}로 전화`} className="emergency-call-button" href={`tel:${item.phone}`}>
+                      <a
+                        aria-label={`${item.title} ${item.phone}로 전화`}
+                        className="emergency-call-button"
+                        href={`tel:${item.phone}`}
+                      >
                         <Phone aria-hidden="true" size={17} />
                         <span>{item.phone}</span>
                       </a>
@@ -114,8 +155,10 @@ export function ConciergeTab({
                 <header>
                   <Building2 aria-hidden="true" size={20} />
                   <div>
-                    <span>숙소</span>
                     <h3>{accommodation.name || "숙소 이름 미등록"}</h3>
+                    <p className="accommodation-subtitle">
+                      체크아웃 {accommodation.checkOut || "미등록"}
+                    </p>
                   </div>
                 </header>
 
@@ -130,11 +173,16 @@ export function ConciergeTab({
                   </div>
                 </dl>
 
-                {accommodation.address && <p className="accommodation-address"><MapPin aria-hidden="true" size={16} />{accommodation.address}</p>}
+                {accommodation.address && (
+                  <div className="accommodation-driver-address">
+                    <span className="accommodation-driver-label">기사님께 보여주는 주소</span>
+                    <p>{accommodation.address}</p>
+                  </div>
+                )}
                 {accommodation.phone && <a className="accommodation-phone" href={`tel:${accommodation.phone}`}><Phone aria-hidden="true" size={16} />{accommodation.phone}</a>}
                 {accommodation.memo && <p className="accommodation-memo">{accommodation.memo}</p>}
                 {accommodation.address && (
-                  <button className="secondary-button" onClick={copyAccommodationAddress} type="button">
+                  <button className="secondary-button accommodation-copy" onClick={copyAccommodationAddress} type="button">
                     <Copy aria-hidden="true" size={18} />
                     {addressCopied ? "주소 복사 완료" : "주소 복사"}
                   </button>
@@ -144,19 +192,63 @@ export function ConciergeTab({
           </section>
         </>
       ) : (
-        <>
-          {trip.destinationCountry === "CN" && <ChinaPaymentHelper />}
-
-          <section className="section-block">
-            <div className="section-title-row">
-              <div>
-                <h2>현지에서 바로 사용</h2>
-                <p className="section-caption">목적지에 맞는 통화와 번역 도구를 제공합니다.</p>
-              </div>
+        <section className="section-block">
+          <div className="section-title-row">
+            <div>
+              <h2>현지에서 바로</h2>
+              <p className="section-caption">필요한 도구만 눌러서 크게 봅니다.</p>
             </div>
-            <QuickTravelHelper destinationCountry={trip.destinationCountry} />
-          </section>
-        </>
+          </div>
+
+          {tools.length === 0 ? (
+            <article className="concierge-empty-state">
+              <MapPinned aria-hidden="true" size={21} />
+              <div>
+                <strong>이 목적지에는 준비된 도구가 없습니다</strong>
+                <p>환전이나 현지어 준비 없이 일정과 지도에 집중할 수 있습니다.</p>
+              </div>
+            </article>
+          ) : (
+            <div className="concierge-tool-list">
+              {tools.map((tool) => {
+                const ToolIcon = tool.icon;
+                return (
+                  <button
+                    className="concierge-tool-row"
+                    key={tool.id}
+                    onClick={() => setOpenTool(tool.id)}
+                    type="button"
+                  >
+                    <span aria-hidden="true" className="concierge-tool-tile">
+                      <ToolIcon size={18} />
+                    </span>
+                    <span className="concierge-tool-copy">
+                      <strong>{tool.title}</strong>
+                      <small>{tool.description}</small>
+                    </span>
+                    <ChevronRight aria-hidden="true" size={18} />
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
+
+      {openTool === "currency" && currency && (
+        <BottomSheet ariaLabel="환율 계산" onClose={() => setOpenTool(null)}>
+          <CurrencyExchangeWidget config={currency} />
+        </BottomSheet>
+      )}
+      {openTool === "phrase" && (
+        <BottomSheet ariaLabel="택시 · 식당 문구" onClose={() => setOpenTool(null)}>
+          <SurvivalPhraseWidget destinationCountry={trip.destinationCountry} />
+        </BottomSheet>
+      )}
+      {openTool === "payment" && (
+        <BottomSheet ariaLabel="현지 결제 안내" onClose={() => setOpenTool(null)}>
+          <ChinaPaymentHelper />
+        </BottomSheet>
       )}
     </section>
   );
