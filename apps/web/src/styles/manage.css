@@ -1620,11 +1620,20 @@
   flex-wrap: wrap;
 }
 
+/* 액션 두 개는 한 줄로 붙여 두고, 헤더가 좁아지면 통째로 다음 줄로 내린다.
+   내부에서 쪼개지면 새 여행과 마이페이지가 서로 다른 줄에 어긋나 보인다. */
 .owner-header-actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 8px;
+  margin-left: auto;
+}
+
+@media (max-width: 360px) {
+  .owner-header-actions {
+    flex-wrap: wrap;
+  }
 }
 
 .owner-trip-stats {
@@ -1649,8 +1658,10 @@
   color: var(--c-route);
 }
 
+/* inline-flex면 인라인 레벨이라 margin-left: auto가 먹지 않는다. flex로 둔다. */
 .owner-trip-manage > summary {
-  display: inline-flex;
+  display: flex;
+  width: 44px;
   align-items: center;
   justify-content: center;
   width: 44px;
