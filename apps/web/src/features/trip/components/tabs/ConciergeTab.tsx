@@ -1,8 +1,20 @@
 import { useState } from "react";
-import { Building2, ChevronRight, Coins, Copy, CreditCard, Languages, MapPin, MapPinned, Phone } from "lucide-react";
+import {
+  Building2,
+  ChevronRight,
+  Coins,
+  Copy,
+  CreditCard,
+  ExternalLink,
+  Languages,
+  MapPin,
+  MapPinned,
+  Phone,
+} from "lucide-react";
 import { ChinaPaymentHelper } from "../../../manage/components";
 import { BottomSheet } from "../../../../shared/components/BottomSheet";
 import { getCurrencyConfig } from "../../../../shared/currency";
+import { getDestinationCountryLabel, translationLinks } from "../../../../shared/travelOptions";
 import type { TripPageProps } from "../../tripPageTypes";
 import { ProfileShortcutButton } from "../cards/ProfileShortcutButton";
 import { CurrencyExchangeWidget } from "../helpers/CurrencyExchangeWidget";
@@ -19,10 +31,12 @@ export function ConciergeTab({
   onNavigateToMyPage,
 }: TripPageProps) {
   const [subTab, setSubTab] = useState<"emergency" | "tools">("emergency");
-  const [openTool, setOpenTool] = useState<"currency" | "phrase" | "payment" | null>(null);
+  const [openTool, setOpenTool] = useState<"currency" | "phrase" | "payment" | "translation" | null>(null);
   const currency = getCurrencyConfig(trip.destinationCountry);
   const supportsPhrases = trip.destinationCountry === "JP" || trip.destinationCountry === "CN";
   const isChina = trip.destinationCountry === "CN";
+  // 국내 여행은 환전·번역 준비가 필요 없다(기존 QuickTravelHelper와 같은 판단).
+  const isDomestic = trip.destinationCountry === "KR";
 
   const tools = [
     currency && {
@@ -31,12 +45,23 @@ export function ConciergeTab({
       title: "환율 계산",
       description: `${currency.label} ↔ 원 환산`,
     },
-    supportsPhrases && {
-      id: "phrase" as const,
-      icon: Languages,
-      title: "택시 · 식당 문구",
-      description: "상황별 현지어 문장",
-    },
+    supportsPhrases
+      ? {
+          id: "phrase" as const,
+          icon: Languages,
+          title: "택시 · 식당 문구",
+          description: "상황별 현지어 문장",
+        }
+      : isDomestic
+        ? null
+        : // 문구 위젯이 없는 목적지라도 번역 서비스로는 이어 줘야 한다.
+          // (5단계에서 이 폴백을 빠뜨려 일본·중국 외 목적지가 번역 링크를 잃었다)
+          {
+            id: "translation" as const,
+            icon: Languages,
+            title: "번역 도구",
+            description: `${getDestinationCountryLabel(trip.destinationCountry)} 번역 서비스 열기`,
+          },
     isChina && {
       id: "payment" as const,
       icon: CreditCard,
@@ -44,8 +69,14 @@ export function ConciergeTab({
       description: "알리페이 · 위챗페이 준비",
     },
   ].filter(
-    (tool): tool is { id: "currency" | "phrase" | "payment"; icon: typeof Coins; title: string; description: string } =>
-      Boolean(tool),
+    (
+      tool,
+    ): tool is {
+      id: "currency" | "phrase" | "payment" | "translation";
+      icon: typeof Coins;
+      title: string;
+      description: string;
+    } => Boolean(tool),
   );
   const hasAccommodation = Boolean(
     accommodation.name || accommodation.address || accommodation.phone || accommodation.checkIn || accommodation.checkOut || accommodation.memo,
@@ -243,6 +274,27 @@ export function ConciergeTab({
       {openTool === "phrase" && (
         <BottomSheet ariaLabel="택시 · 식당 문구" onClose={() => setOpenTool(null)}>
           <SurvivalPhraseWidget destinationCountry={trip.destinationCountry} />
+        </BottomSheet>
+      )}
+      {openTool === "translation" && (
+        <BottomSheet ariaLabel="번역 도구" onClose={() => setOpenTool(null)}>
+          <div className="concierge-translation-sheet">
+            <p className="concierge-translation-intro">
+              현지어 문장과 발음은 번역 서비스에서 바로 확인할 수 있습니다.
+            </p>
+            {translationLinks.map((link) => (
+              <a
+                className="secondary-button place-sheet-action"
+                href={link.href}
+                key={link.id}
+                rel="noreferrer"
+                target="_blank"
+              >
+                {link.label}
+                <ExternalLink aria-hidden="true" size={15} />
+              </a>
+            ))}
+          </div>
         </BottomSheet>
       )}
       {openTool === "payment" && (
