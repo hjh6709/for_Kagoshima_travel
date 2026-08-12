@@ -20,5 +20,4 @@ export { ProfileShortcutButton } from "./cards/ProfileShortcutButton";
 export { ScheduleCard } from "./cards/ScheduleCard";
 
 // Helpers
-export { QuickTravelHelper } from "./helpers/QuickTravelHelper";
 export { TripDateEditor } from "./helpers/TripDateEditor";
