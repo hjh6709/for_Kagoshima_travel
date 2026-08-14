@@ -2,13 +2,14 @@ package handler
 
 import (
 	"errors"
-	"log"
+	"log/slog"
 	"net/http"
 	"time"
 
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/dto"
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/httpjson"
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/middleware"
+	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/observability"
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/service"
 )
 
@@ -75,8 +76,8 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, service.ErrInvalidVerificationCode):
 			httpjson.WriteError(w, http.StatusBadRequest, "이메일 인증코드가 일치하지 않거나 만료되었습니다.")
 		default:
-			log.Printf("register user: %v", err)
-			httpjson.WriteError(w, http.StatusInternalServerError, "회원가입을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.")
+			observability.LoggerFromContext(r.Context()).Error("register user failed", slog.Any("error", err))
+			httpjson.WriteErrorWithContext(r.Context(), w, http.StatusInternalServerError, "회원가입을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.")
 		}
 		return
 	}
@@ -98,7 +99,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 			httpjson.WriteError(w, http.StatusUnauthorized, "이메일 또는 비밀번호가 올바르지 않습니다.")
 			return
 		}
-		httpjson.WriteError(w, http.StatusInternalServerError, "서버 오류가 발생했습니다.")
+		httpjson.WriteErrorWithContext(r.Context(), w, http.StatusInternalServerError, "서버 오류가 발생했습니다.")
 		return
 	}
 
@@ -143,8 +144,8 @@ func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, service.ErrInvalidVerificationCode), errors.Is(err, service.ErrInvalidInput):
 			httpjson.WriteError(w, http.StatusBadRequest, "이메일 인증코드가 일치하지 않거나 만료되었습니다.")
 		default:
-			log.Printf("reset password: %v", err)
-			httpjson.WriteError(w, http.StatusInternalServerError, "비밀번호 재설정을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.")
+			observability.LoggerFromContext(r.Context()).Error("reset password failed", slog.Any("error", err))
+			httpjson.WriteErrorWithContext(r.Context(), w, http.StatusInternalServerError, "비밀번호 재설정을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.")
 		}
 		return
 	}
@@ -175,8 +176,8 @@ func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 			errors.Is(err, service.ErrPasswordComplexity):
 			httpjson.WriteError(w, http.StatusBadRequest, err.Error())
 		default:
-			log.Printf("change password: %v", err)
-			httpjson.WriteError(w, http.StatusInternalServerError, "비밀번호 변경을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.")
+			observability.LoggerFromContext(r.Context()).Error("change password failed", slog.Any("error", err))
+			httpjson.WriteErrorWithContext(r.Context(), w, http.StatusInternalServerError, "비밀번호 변경을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.")
 		}
 		return
 	}
@@ -209,8 +210,8 @@ func (h *AuthHandler) DeleteAccount(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, service.ErrCurrentPasswordMismatch):
 			httpjson.WriteError(w, http.StatusBadRequest, err.Error())
 		default:
-			log.Printf("delete account: %v", err)
-			httpjson.WriteError(w, http.StatusInternalServerError, "계정을 삭제하지 못했습니다. 잠시 후 다시 시도해 주세요.")
+			observability.LoggerFromContext(r.Context()).Error("delete account failed", slog.Any("error", err))
+			httpjson.WriteErrorWithContext(r.Context(), w, http.StatusInternalServerError, "계정을 삭제하지 못했습니다. 잠시 후 다시 시도해 주세요.")
 		}
 		return
 	}
@@ -238,11 +239,11 @@ func (h *AuthHandler) SendVerificationCode(w http.ResponseWriter, r *http.Reques
 		case errors.Is(err, service.ErrInvalidInput):
 			httpjson.WriteError(w, http.StatusBadRequest, "이메일 주소 또는 인증 목적이 올바르지 않습니다.")
 		case errors.Is(err, service.ErrEmailDelivery):
-			log.Printf("send verification email: %v", err)
+			observability.LoggerFromContext(r.Context()).Error("send verification email failed", slog.Any("error", err))
 			httpjson.WriteError(w, http.StatusBadGateway, "인증 메일을 보내지 못했습니다. 잠시 후 다시 시도해 주세요.")
 		default:
-			log.Printf("prepare verification email: %v", err)
-			httpjson.WriteError(w, http.StatusInternalServerError, "인증 요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.")
+			observability.LoggerFromContext(r.Context()).Error("prepare verification email failed", slog.Any("error", err))
+			httpjson.WriteErrorWithContext(r.Context(), w, http.StatusInternalServerError, "인증 요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.")
 		}
 		return
 	}
@@ -267,8 +268,8 @@ func (h *AuthHandler) VerifyCode(w http.ResponseWriter, r *http.Request) {
 			httpjson.WriteError(w, http.StatusBadRequest, "인증 코드가 일치하지 않거나 만료되었습니다.")
 			return
 		}
-		log.Printf("verify email code: %v", err)
-		httpjson.WriteError(w, http.StatusInternalServerError, "인증 요청을 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.")
+		observability.LoggerFromContext(r.Context()).Error("verify email code failed", slog.Any("error", err))
+		httpjson.WriteErrorWithContext(r.Context(), w, http.StatusInternalServerError, "인증 요청을 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.")
 		return
 	}
 

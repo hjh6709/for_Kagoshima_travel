@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"errors"
 	"net/http"
 
@@ -26,7 +27,7 @@ func (h *TripHandler) GetTrip(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
 	trip, err := h.service(r).GetOwnedTrip(r.PathValue("tripID"), claims.UserID)
 	if err != nil {
-		writeServiceError(w, err)
+		writeServiceError(r.Context(), w, err)
 		return
 	}
 	httpjson.Write(w, http.StatusOK, trip)
@@ -36,7 +37,7 @@ func (h *TripHandler) ListMyTrips(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
 	trips, err := h.service(r).ListMyTrips(claims.UserID)
 	if err != nil {
-		writeServiceError(w, err)
+		writeServiceError(r.Context(), w, err)
 		return
 	}
 	httpjson.Write(w, http.StatusOK, trips)
@@ -50,7 +51,7 @@ func (h *TripHandler) CreateTrip(w http.ResponseWriter, r *http.Request) {
 	}
 	trip, err := h.service(r).CreateTrip(claims.UserID, req)
 	if err != nil {
-		writeServiceError(w, err)
+		writeServiceError(r.Context(), w, err)
 		return
 	}
 	httpjson.Write(w, http.StatusCreated, trip)
@@ -60,7 +61,7 @@ func (h *TripHandler) CreateShareLink(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
 	link, err := h.service(r).CreateShareLink(r.PathValue("tripID"), claims.UserID)
 	if err != nil {
-		writeServiceError(w, err)
+		writeServiceError(r.Context(), w, err)
 		return
 	}
 	httpjson.Write(w, http.StatusCreated, link)
@@ -69,7 +70,7 @@ func (h *TripHandler) CreateShareLink(w http.ResponseWriter, r *http.Request) {
 func (h *TripHandler) GetSharedTrip(w http.ResponseWriter, r *http.Request) {
 	sharedTrip, err := h.service(r).GetSharedTrip(r.PathValue("token"))
 	if err != nil {
-		writeServiceError(w, err)
+		writeServiceError(r.Context(), w, err)
 		return
 	}
 	httpjson.Write(w, http.StatusOK, sharedTrip)
@@ -83,7 +84,7 @@ func (h *TripHandler) UpdateTrip(w http.ResponseWriter, r *http.Request) {
 	}
 	trip, err := h.service(r).UpdateTrip(r.PathValue("tripID"), claims.UserID, req)
 	if err != nil {
-		writeServiceError(w, err)
+		writeServiceError(r.Context(), w, err)
 		return
 	}
 	httpjson.Write(w, http.StatusOK, trip)
@@ -92,7 +93,7 @@ func (h *TripHandler) UpdateTrip(w http.ResponseWriter, r *http.Request) {
 func (h *TripHandler) DeleteTrip(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
 	if err := h.service(r).DeleteTrip(r.PathValue("tripID"), claims.UserID); err != nil {
-		writeServiceError(w, err)
+		writeServiceError(r.Context(), w, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -102,7 +103,7 @@ func (h *TripHandler) ListSchedules(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
 	schedules, err := h.service(r).ListSchedulesForOwner(r.PathValue("tripID"), claims.UserID)
 	if err != nil {
-		writeServiceError(w, err)
+		writeServiceError(r.Context(), w, err)
 		return
 	}
 	httpjson.Write(w, http.StatusOK, schedules)
@@ -116,7 +117,7 @@ func (h *TripHandler) CreateSchedule(w http.ResponseWriter, r *http.Request) {
 	}
 	schedule, err := h.service(r).CreateSchedule(r.PathValue("tripID"), claims.UserID, req)
 	if err != nil {
-		writeServiceError(w, err)
+		writeServiceError(r.Context(), w, err)
 		return
 	}
 	httpjson.Write(w, http.StatusCreated, schedule)
@@ -131,7 +132,7 @@ func (h *TripHandler) UpdateSchedule(w http.ResponseWriter, r *http.Request) {
 	}
 	schedule, err := h.service(r).UpdateSchedule(r.PathValue("tripID"), r.PathValue("scheduleID"), claims.UserID, req)
 	if err != nil {
-		writeServiceError(w, err)
+		writeServiceError(r.Context(), w, err)
 		return
 	}
 	httpjson.Write(w, http.StatusOK, schedule)
@@ -140,7 +141,7 @@ func (h *TripHandler) UpdateSchedule(w http.ResponseWriter, r *http.Request) {
 func (h *TripHandler) DeleteSchedule(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
 	if err := h.service(r).DeleteSchedule(r.PathValue("tripID"), r.PathValue("scheduleID"), claims.UserID); err != nil {
-		writeServiceError(w, err)
+		writeServiceError(r.Context(), w, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -150,7 +151,7 @@ func (h *TripHandler) ListPlaces(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
 	places, err := h.service(r).ListPlacesForOwner(r.PathValue("tripID"), claims.UserID)
 	if err != nil {
-		writeServiceError(w, err)
+		writeServiceError(r.Context(), w, err)
 		return
 	}
 	httpjson.Write(w, http.StatusOK, places)
@@ -164,7 +165,7 @@ func (h *TripHandler) CreatePlace(w http.ResponseWriter, r *http.Request) {
 	}
 	place, err := h.service(r).CreatePlace(r.PathValue("tripID"), claims.UserID, req)
 	if err != nil {
-		writeServiceError(w, err)
+		writeServiceError(r.Context(), w, err)
 		return
 	}
 	httpjson.Write(w, http.StatusCreated, place)
@@ -179,7 +180,7 @@ func (h *TripHandler) UpdatePlace(w http.ResponseWriter, r *http.Request) {
 	}
 	place, err := h.service(r).UpdatePlace(r.PathValue("tripID"), r.PathValue("placeID"), claims.UserID, req)
 	if err != nil {
-		writeServiceError(w, err)
+		writeServiceError(r.Context(), w, err)
 		return
 	}
 	httpjson.Write(w, http.StatusOK, place)
@@ -188,7 +189,7 @@ func (h *TripHandler) UpdatePlace(w http.ResponseWriter, r *http.Request) {
 func (h *TripHandler) DeletePlace(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
 	if err := h.service(r).DeletePlace(r.PathValue("tripID"), r.PathValue("placeID"), claims.UserID); err != nil {
-		writeServiceError(w, err)
+		writeServiceError(r.Context(), w, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -198,7 +199,7 @@ func (h *TripHandler) ListFlights(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
 	flights, err := h.service(r).ListFlightsForOwner(r.PathValue("tripID"), claims.UserID)
 	if err != nil {
-		writeServiceError(w, err)
+		writeServiceError(r.Context(), w, err)
 		return
 	}
 	httpjson.Write(w, http.StatusOK, flights)
@@ -212,7 +213,7 @@ func (h *TripHandler) CreateFlight(w http.ResponseWriter, r *http.Request) {
 	}
 	flight, err := h.service(r).CreateFlight(r.PathValue("tripID"), claims.UserID, req)
 	if err != nil {
-		writeServiceError(w, err)
+		writeServiceError(r.Context(), w, err)
 		return
 	}
 	httpjson.Write(w, http.StatusCreated, flight)
@@ -227,7 +228,7 @@ func (h *TripHandler) UpdateFlight(w http.ResponseWriter, r *http.Request) {
 	}
 	flight, err := h.service(r).UpdateFlight(r.PathValue("tripID"), r.PathValue("flightID"), claims.UserID, req)
 	if err != nil {
-		writeServiceError(w, err)
+		writeServiceError(r.Context(), w, err)
 		return
 	}
 	httpjson.Write(w, http.StatusOK, flight)
@@ -237,7 +238,7 @@ func (h *TripHandler) DeleteFlight(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
 	// DeleteFlight는 여행 상세 화면에서 사용자가 직접 항공편을 제거할 때 호출된다.
 	if err := h.service(r).DeleteFlight(r.PathValue("tripID"), r.PathValue("flightID"), claims.UserID); err != nil {
-		writeServiceError(w, err)
+		writeServiceError(r.Context(), w, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -247,7 +248,7 @@ func (h *TripHandler) ListRoutes(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
 	routes, err := h.service(r).ListRoutesForOwner(r.PathValue("tripID"), claims.UserID)
 	if err != nil {
-		writeServiceError(w, err)
+		writeServiceError(r.Context(), w, err)
 		return
 	}
 	httpjson.Write(w, http.StatusOK, routes)
@@ -260,13 +261,13 @@ func (h *TripHandler) SearchPlaces(w http.ResponseWriter, r *http.Request) {
 
 	results, err := h.service(r).SearchPlaces(tripID, claims.UserID, query)
 	if err != nil {
-		writeServiceError(w, err)
+		writeServiceError(r.Context(), w, err)
 		return
 	}
 	httpjson.Write(w, http.StatusOK, results)
 }
 
-func writeServiceError(w http.ResponseWriter, err error) {
+func writeServiceError(ctx context.Context, w http.ResponseWriter, err error) {
 	switch {
 	case errors.Is(err, service.ErrTripNotFound):
 		httpjson.WriteError(w, http.StatusNotFound, "여행을 찾을 수 없습니다.")
@@ -285,6 +286,6 @@ func writeServiceError(w http.ResponseWriter, err error) {
 	case errors.Is(err, service.ErrPlaceSearchQuotaExceeded):
 		httpjson.WriteError(w, http.StatusTooManyRequests, "이번 달 지도 검색 제공량을 모두 사용했습니다. 저장된 장소나 직접 입력을 이용해 주세요.")
 	default:
-		httpjson.WriteError(w, http.StatusInternalServerError, "서버 오류가 발생했습니다.")
+		httpjson.WriteErrorWithContext(ctx, w, http.StatusInternalServerError, "서버 오류가 발생했습니다.")
 	}
 }
