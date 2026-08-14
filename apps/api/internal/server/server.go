@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -103,7 +104,7 @@ func New() (*Server, error) {
 		authHandler:      handler.NewAuthHandler(authService, production),
 		checklistHandler: handler.NewChecklistHandler(checklistService),
 		userRepository:   userRepository,
-		rateLimiter:      middleware.NewRateLimiter(rate.Limit(5), 20),
+		rateLimiter:      middleware.NewRateLimiter(rateLimitPerSecond(), rateLimitBurst()),
 		pool:             pool,
 	}
 	s.registerRoutes(jwtSecret)
@@ -124,6 +125,37 @@ func isProduction() bool {
 	}
 	env = strings.ToLower(env)
 	return env == "production" || env == "prod"
+}
+
+// 레이트 리밋 기본값은 초당 5회, 버스트 20이다. 한 사용자가 화면 하나를 열 때
+// 나가는 요청 수를 감당하면서 자동화된 대량 요청은 막는 값이다.
+//
+// E2E처럼 여러 브라우저가 같은 IP에서 동시에 도는 환경에서는 이 값이 너무 낮아
+// 429가 섞인다. 기본값은 그대로 두고 환경변수로만 올릴 수 있게 한다.
+func rateLimitPerSecond() rate.Limit {
+	if parsed, ok := positiveFloatEnv("RATE_LIMIT_PER_SECOND"); ok {
+		return rate.Limit(parsed)
+	}
+	return rate.Limit(5)
+}
+
+func rateLimitBurst() int {
+	if parsed, ok := positiveFloatEnv("RATE_LIMIT_BURST"); ok {
+		return int(parsed)
+	}
+	return 20
+}
+
+func positiveFloatEnv(name string) (float64, bool) {
+	raw := strings.TrimSpace(os.Getenv(name))
+	if raw == "" {
+		return 0, false
+	}
+	parsed, err := strconv.ParseFloat(raw, 64)
+	if err != nil || parsed <= 0 {
+		return 0, false
+	}
+	return parsed, true
 }
 
 func validateProductionOrigins(configuredOrigins string) error {

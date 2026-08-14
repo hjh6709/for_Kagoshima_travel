@@ -144,9 +144,11 @@ textarea[aria-invalid="true"] {
     left: 18px;
   }
 
-  .date-form {
-    grid-template-columns: minmax(0, 1fr);
-  }
+  /*
+   * 여기 있던 .date-form 한 칸 규칙은 지웠다. 미디어 쿼리는 특이도를 올리지 않는데
+   * 기본 .date-form 규칙이 이 블록보다 아래(206행)에 있어서 항상 덮어써졌다.
+   * 이제 기본 규칙이 auto-fit으로 스스로 접힌다.
+   */
 }
 
 .trip-header {
@@ -203,9 +205,15 @@ textarea[aria-invalid="true"] {
   font-weight: var(--font-weight-body);
 }
 
+/*
+ * `1fr`은 `minmax(auto, 1fr)`이라 트랙의 최소 폭이 내용의 min-content가 된다.
+ * type="date" 입력은 Chromium에서 min-content가 약 143px이라, 두 칸이면
+ * 294px을 요구해 375px 화면에서도 카드 밖으로 삐져나갔다.
+ * auto-fit + minmax로 자리가 없으면 한 칸으로 접히게 한다.
+ */
 .date-form {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 110px), 1fr));
   gap: 8px;
   margin-top: 12px;
 }
@@ -220,6 +228,8 @@ textarea[aria-invalid="true"] {
 
 .date-form input {
   width: 100%;
+  /* 브라우저 기본 min-content(약 143px)를 풀어야 좁은 화면에서 트랙 안에 들어간다. */
+  min-width: 0;
   min-height: 48px;
   border: 1px solid rgba(23, 51, 61, 0.12);
   border-radius: 10px;
@@ -250,6 +260,9 @@ textarea[aria-invalid="true"] {
 .auth-form textarea,
 .auth-form select {
   width: 100%;
+  /* type="date" 입력은 브라우저 기본 min-content가 약 143px이라, 풀어주지 않으면
+     좁은 그리드 트랙 안에서 라벨째 밖으로 삐져나간다. */
+  min-width: 0;
   min-height: 48px;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-control);
@@ -282,16 +295,16 @@ textarea[aria-invalid="true"] {
   resize: vertical;
 }
 
+/* 자리가 부족하면 두 칸을 억지로 유지하지 않고 한 칸으로 접힌다.
+   고정 2칸이던 시절에는 375px에서도 날짜 라벨이 트랙 밖으로 나갔다. */
 .form-grid-two {
   display: grid;
   gap: 10px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 130px), 1fr));
 }
 
-@media (max-width: 360px) {
-  .form-grid-two {
-    grid-template-columns: minmax(0, 1fr);
-  }
+.form-grid-two > label {
+  min-width: 0;
 }
 
 .trip-create-form {

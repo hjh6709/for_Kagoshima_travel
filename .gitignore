@@ -15,6 +15,10 @@ apps/api/bin/
 
 test-results/
 
+# Playwright — 리포트와 E2E가 만든 세션 상태
+playwright-report/
+apps/web/e2e/.auth/
+
 .agents/
 .claude/
 skills-lock.json
