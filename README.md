@@ -51,6 +51,14 @@ npm run check
 
 프런트엔드만 검증하려면 `npm --prefix apps/web test`, `typecheck`, `build`를 실행하고, API만 검증하려면 `cd apps/api && go test ./... -count=1`을 실행합니다.
 
+실제 브라우저에서 화면을 훑는 E2E 스모크는 별도로 실행합니다. 프런트엔드 프로덕션 빌드와 API를 Playwright가 직접 띄우므로 서버를 미리 켤 필요가 없습니다.
+
+```bash
+npm --prefix apps/web run test:e2e
+```
+
+처음 실행한다면 브라우저를 먼저 받습니다 — `npx --prefix apps/web playwright install chromium`. 실패를 읽는 방법과 자주 나오는 원인은 [`docs/superpowers/plans/2026-08-14-e2e-smoke-tests.md`](docs/superpowers/plans/2026-08-14-e2e-smoke-tests.md)와 `~/dev/docs/travel_app/troubleshooting/e2e-smoke-local-run.md`에 정리했습니다.
+
 ## 문서
 
 - 문서 단일 진입점: [`docs/README.md`](docs/README.md)
