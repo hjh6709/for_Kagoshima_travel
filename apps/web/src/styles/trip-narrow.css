@@ -1,0 +1,146 @@
+@media (max-width: 360px) {
+  .mypage-screen {
+    gap: 24px;
+  }
+
+  .mypage-trip-actions {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+@media (max-width: 240px) {
+  h1 {
+    font-size: var(--type-screen-size);
+  }
+
+  .trip-header-meta,
+  .screen-title-row,
+  .section-title-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .trip-header-meta {
+    gap: 10px;
+  }
+
+  .trip-badges {
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .badge-item {
+    padding-right: 8px;
+    padding-left: 8px;
+  }
+
+  .back-to-list-link {
+    align-self: flex-start;
+    white-space: nowrap;
+  }
+
+  .mypage-demo-card {
+    gap: 16px;
+    padding: 16px 12px;
+  }
+
+  .mypage-demo-feature-list li {
+    grid-template-columns: 28px minmax(0, 1fr);
+    gap: 9px;
+  }
+
+  .mypage-demo-feature-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .hero-card,
+  .info-card,
+  .emergency-card,
+  .flight-card {
+    padding: 16px 12px;
+  }
+
+  .next-schedule-card {
+    padding: 18px 12px 18px 36px;
+  }
+
+  .next-schedule-card::before {
+    top: 18px;
+    bottom: 18px;
+    left: 15px;
+  }
+
+  .next-schedule-card::after {
+    top: 20px;
+    left: 10px;
+  }
+
+  .next-schedule-time {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .next-schedule-empty {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .next-schedule-empty .primary-button,
+  .next-schedule-empty .secondary-button {
+    grid-column: 1;
+    justify-self: stretch;
+  }
+
+  .schedule-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .schedule-actions > .compact-button {
+    width: 100%;
+  }
+
+  .schedule-move-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .schedule-move-actions .icon-button {
+    width: 100%;
+  }
+
+  .screen-title-actions,
+  .section-actions,
+  .owner-linked-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .section-title-row .compact-button,
+  .screen-title-actions .compact-button,
+  .section-actions .compact-button,
+  .owner-linked-actions .compact-button {
+    width: 100%;
+  }
+
+  .grid-two {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .progress-container {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .progress-track {
+    flex: none;
+    width: 100%;
+  }
+
+  .progress-percentage {
+    align-self: flex-end;
+  }
+}
+

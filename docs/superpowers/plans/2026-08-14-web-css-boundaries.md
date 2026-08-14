@@ -20,99 +20,68 @@
 
 ---
 
-### Task 1: Lock the trip stylesheet bundle interface
+### Task 1: Make CSS behavior tests consume the real trip entry
 
 **Files:**
 - Create: `apps/web/scripts/style-test-utils.mjs`
-- Create: `apps/web/scripts/trip-css-boundaries.test.mjs`
 - Modify: `apps/web/scripts/mobile-ui-foundations.test.mjs:1-24`
 - Modify: `apps/web/scripts/mobile-empty-state-layout.test.mjs:1-5`
 
 **Interfaces:**
-- Produces: `readStyleFiles(fileNames: string[]): string`
-- Produces: `TRIP_STYLE_FILES: string[]` in cascade order
-- Produces: `readTripStyles(): string`
-- Consumes: CSS files under `apps/web/src/styles/`
+- Produces: `readStyleEntry(fileName: string): string`
+- Consumes: a CSS entry file and its local `@import "./..."` graph under `apps/web/src/styles/`
 
-- [ ] **Step 1: Add the shared test-only style loader**
+- [ ] **Step 1: Add a shared test-only entry resolver**
 
 ```js
 import { readFileSync } from "node:fs";
 
 const stylesDirectory = new URL("../src/styles/", import.meta.url);
+const localImportPattern = /@import\s+["']\.\/([^"']+)["'];/g;
 
-export const TRIP_STYLE_FILES = [
-  "trip-core.css",
-  "trip-mypage.css",
-  "trip-narrow.css",
-  "trip-today.css",
-  "trip-schedule.css",
-];
+export function readStyleEntry(fileName, stack = []) {
+  if (stack.includes(fileName)) {
+    throw new Error(`순환 CSS import: ${[...stack, fileName].join(" -> ")}`);
+  }
 
-export function readStyleFiles(fileNames) {
-  return fileNames
-    .map((fileName) => readFileSync(new URL(fileName, stylesDirectory), "utf8"))
-    .join("");
-}
-
-export function readTripStyles() {
-  return readStyleFiles(TRIP_STYLE_FILES);
+  const css = readFileSync(new URL(fileName, stylesDirectory), "utf8");
+  return css.replace(localImportPattern, (_statement, importedFile) =>
+    readStyleEntry(importedFile, [...stack, fileName]),
+  );
 }
 ```
 
-- [ ] **Step 2: Add a contract test for the entry file and ownership markers**
+This helper follows the same ordered local imports as the browser-facing entry instead of hard-coding the new file names in tests.
 
-Create `trip-css-boundaries.test.mjs` that reads `trip.css` and asserts this exact import order:
+- [ ] **Step 2: Point existing trip CSS contracts at the real entry resolver**
 
-```js
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { test } from "node:test";
-import { readStyleFiles, TRIP_STYLE_FILES } from "./style-test-utils.mjs";
-
-const tripEntry = readFileSync(new URL("../src/styles/trip.css", import.meta.url), "utf8");
-
-test("trip style entry preserves feature cascade order", () => {
-  assert.deepEqual(
-    [...tripEntry.matchAll(/@import "\.\/([^\"]+)";/g)].map((match) => match[1]),
-    TRIP_STYLE_FILES,
-  );
-});
-
-test("trip style files retain their responsibility markers", () => {
-  const [core, myPage, narrow, today, schedule] = TRIP_STYLE_FILES.map((fileName) =>
-    readStyleFiles([fileName]),
-  );
-
-  assert.match(core, /^\.eyebrow\s*{/);
-  assert.match(myPage, /\/\* My page: account, active trip, and security settings rail\. \*\//);
-  assert.match(narrow, /^@media \(max-width: 360px\)/);
-  assert.match(today, /\/\* ── 오늘 탭 \(2단계\)/);
-  assert.match(schedule, /\/\* ── 일정 탭 \(3단계\)/);
-});
-```
-
-- [ ] **Step 3: Run the new contract test and confirm it fails before the split**
-
-Run: `node --test apps/web/scripts/trip-css-boundaries.test.mjs`
-
-Expected: FAIL with `ENOENT` for `trip-core.css` or an empty import-order assertion.
-
-- [ ] **Step 4: Point existing trip CSS contracts at `readTripStyles()`**
-
-In both existing scripts, replace direct `readFileSync(...trip.css...)` usage with:
+In `mobile-ui-foundations.test.mjs`:
 
 ```js
-import { readTripStyles } from "./style-test-utils.mjs";
+import { readStyleEntry } from "./style-test-utils.mjs";
 
-const tripStyles = readTripStyles();
+const tripStyles = readStyleEntry("trip.css");
 ```
 
-Keep the existing local variable spelling in each file (`tripStyles` or `tripCSS`) so the assertions below do not change.
+In `mobile-empty-state-layout.test.mjs`:
 
-- [ ] **Step 5: Do not commit yet**
+```js
+import { readStyleEntry } from "./style-test-utils.mjs";
 
-The test-only interface and split files form one reviewable change and are committed together in Task 2.
+const tripCSS = readStyleEntry("trip.css");
+```
+
+Remove `readFileSync` from the second file because it has no other filesystem reads. Keep every behavior assertion unchanged.
+
+- [ ] **Step 3: Run the characterization tests before changing production CSS**
+
+Run: `npm --prefix apps/web run test:dependencies`
+
+Expected: all 17 existing contracts PASS against the current monolithic `trip.css`. These tests are the behavior-preserving refactor safety net; do not add tests that only inspect file names or source markers.
+
+- [ ] **Step 4: Do not commit yet**
+
+The test-only entry resolver and split files form one reviewable change and are committed together in Task 2.
 
 ---
 
@@ -125,7 +94,6 @@ The test-only interface and split files form one reviewable change and are commi
 - Create: `apps/web/src/styles/trip-today.css`
 - Create: `apps/web/src/styles/trip-schedule.css`
 - Modify: `apps/web/src/styles/trip.css:1-1845`
-- Test: `apps/web/scripts/trip-css-boundaries.test.mjs`
 - Test: `apps/web/scripts/mobile-ui-foundations.test.mjs`
 - Test: `apps/web/scripts/mobile-empty-state-layout.test.mjs`
 
@@ -192,7 +160,6 @@ git add apps/web/src/styles/trip.css \
   apps/web/src/styles/trip-today.css \
   apps/web/src/styles/trip-schedule.css \
   apps/web/scripts/style-test-utils.mjs \
-  apps/web/scripts/trip-css-boundaries.test.mjs \
   apps/web/scripts/mobile-ui-foundations.test.mjs \
   apps/web/scripts/mobile-empty-state-layout.test.mjs
 git commit -m "refactor(web): 여행 화면 CSS 책임 분리"

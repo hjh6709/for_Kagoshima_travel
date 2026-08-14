@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import { test } from "node:test";
+import { readStyleEntry } from "./style-test-utils.mjs";
 
-const tripCSS = readFileSync(new URL("../src/styles/trip.css", import.meta.url), "utf8");
+const tripCSS = readStyleEntry("trip.css");
 
 test("빈 일정 카드의 행동 버튼은 아이콘 열이 아니라 본문 열에 배치된다", () => {
   assert.match(

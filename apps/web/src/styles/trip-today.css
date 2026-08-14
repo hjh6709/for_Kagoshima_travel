@@ -1,0 +1,262 @@
+/* ── 오늘 탭 (2단계) ─────────────────────────────────────────── */
+.today-kicker {
+  margin: 4px 0 2px;
+  color: var(--c-muted);
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-strong);
+}
+
+.today-trip-title {
+  margin: 2px 0 0;
+  color: var(--c-muted);
+  font-size: var(--type-supporting-size);
+}
+
+/* 좁은 화면에서는 3칸이 찌그러지는 대신 아래로 줄바꿈되게 최소 폭을 준다. */
+.today-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 96px), 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.today-stat-card {
+  display: grid;
+  gap: 2px;
+  justify-items: start;
+  padding: 12px;
+  border-radius: 16px;
+  background: var(--c-surface);
+  color: var(--c-muted);
+}
+
+.today-stat-card svg {
+  color: var(--c-route);
+}
+
+.today-stat-card strong {
+  color: var(--c-text);
+  font-size: var(--type-body-size);
+  font-weight: var(--font-weight-strong);
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+.today-stat-card span {
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
+}
+
+.today-stat-action {
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--c-route);
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-strong);
+  text-align: left;
+}
+
+.today-check-count {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius-chip);
+  background: var(--c-surface-cool);
+  color: var(--c-route);
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-display);
+}
+
+.today-check-group {
+  margin-top: 12px;
+}
+
+.today-check-empty {
+  margin: 0;
+  padding: 16px;
+  border-radius: var(--radius-card);
+  background: var(--c-surface);
+}
+
+.today-route-link {
+  min-height: 44px;
+  padding: 0 8px;
+  border: 0;
+  background: transparent;
+}
+
+.today-route-list {
+  margin: 12px 0 0;
+  padding: 6px 16px;
+  list-style: none;
+  border-radius: var(--radius-card);
+  background: var(--c-surface);
+}
+
+.today-route-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 40px 12px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+}
+
+/* 도트(시간 거터 40px + gap 10px 뒤, 지름 9px)의 가로 중심에 연결선을 맞춘다. */
+.today-route-row + .today-route-row::before {
+  position: absolute;
+  top: -14px;
+  bottom: calc(100% - 6px);
+  left: 54px;
+  width: 1.5px;
+  background: var(--border-color);
+  content: "";
+}
+
+.today-route-time {
+  color: var(--c-muted);
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-strong);
+}
+
+.today-route-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--c-destination);
+  box-shadow: 0 0 0 3px var(--c-destination-soft);
+}
+
+.today-route-row.completed .today-route-dot {
+  background: var(--c-success);
+  box-shadow: 0 0 0 3px var(--c-success-soft);
+}
+
+.today-route-title {
+  color: var(--c-text);
+  font-size: var(--type-body-size);
+  font-weight: var(--font-weight-strong);
+  overflow-wrap: anywhere;
+}
+
+.today-route-row.completed .today-route-title {
+  color: var(--c-faint);
+  text-decoration: line-through;
+}
+
+.next-schedule-memo {
+  margin: 6px 0 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: var(--type-supporting-size);
+  line-height: 1.5;
+}
+
+/* 좁은 화면에서는 길찾기와 완료 버튼이 한 줄에 못 들어가 완료 버튼이 카드 밖으로
+   밀려난다. 줄바꿈을 허용하고, 줄이 나뉘면 완료 버튼이 남은 폭을 채우게 한다. */
+/* 길찾기 선택지를 펼치면 좌측 블록만 길어진다. 완료 버튼이 그 가운데로 떠오르지
+   않도록 위쪽(길찾기 버튼 줄)에 맞춘다. */
+.next-schedule-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.next-schedule-actions .directions-choice {
+  flex: 1 1 140px;
+}
+
+/* 기본은 46px 정사각형을 유지한다. 남는 폭을 먹으면 아이콘 하나짜리 버튼이
+   길찾기 버튼만큼 넓어져 위계가 무너진다. */
+.next-schedule-actions .next-schedule-complete {
+  flex: 0 0 46px;
+}
+
+/* 길찾기(140px) + 간격(10px) + 완료(46px)가 카드 안쪽 폭을 넘기는 지점부터는
+   줄이 나뉘므로, 그때만 완료 버튼이 남은 줄을 채우게 한다. */
+@media (max-width: 280px) {
+  .next-schedule-actions .next-schedule-complete {
+    flex: 1 0 100%;
+  }
+}
+
+.next-schedule-complete {
+  flex: 0 0 auto;
+  width: 46px;
+  height: 46px;
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--c-surface-cool);
+  color: var(--c-route);
+}
+
+.next-schedule-card {
+  position: relative;
+  display: block;
+  padding: 20px;
+  border: 0;
+  border-radius: 24px;
+  background: var(--c-route);
+  box-shadow: var(--shadow-hero);
+  color: #ffffff;
+}
+
+.next-schedule-card h2 {
+  margin: 8px 0 0;
+  color: #ffffff;
+  font-size: var(--type-headline-size);
+  font-weight: var(--font-weight-display);
+  letter-spacing: -0.02em;
+}
+
+.next-schedule-card .next-schedule-kicker {
+  margin-bottom: 0;
+  min-height: 25px;
+  padding: 0 10px;
+  border-radius: 100px;
+  background: var(--c-destination);
+  color: #ffffff;
+}
+
+.next-schedule-card .next-schedule-time {
+  margin: 6px 0 0;
+  color: rgba(255, 255, 255, 0.66);
+}
+
+/* 진한 Primary 카드 위에서는 길찾기 버튼을 흰 배경 + Primary 글자로 뒤집는다. */
+.next-schedule-card .directions-trigger {
+  background: #ffffff;
+  color: var(--c-route);
+}
+
+.next-schedule-card .directions-trigger:hover:not(:disabled) {
+  background: var(--c-route-soft);
+}
+
+/* 안내 문구는 span을 직접 지정한 map.css 규칙이 이기므로 여기서도 span을 직접 지정한다.
+   진한 Primary 배경 위에서 4.5:1 이상(#d6dcea 기준 7.04:1)을 만족한다. */
+.next-schedule-card .directions-options {
+  border-top-color: rgba(255, 255, 255, 0.28);
+}
+
+.next-schedule-card .directions-options > span {
+  color: #d6dcea;
+}
+
+/* Primary 버튼은 카드 배경과 색이 같아 hero 안에서는 보이지 않는다. 밝은 면으로 뒤집는다. */
+.next-schedule-card .directions-link.primary-button {
+  background: #ffffff;
+  color: var(--c-route);
+}
+
+.next-schedule-card .directions-link.primary-button:hover:not(:disabled) {
+  background: var(--c-route-soft);
+}
+
