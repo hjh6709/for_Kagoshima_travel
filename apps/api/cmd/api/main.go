@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -46,11 +47,11 @@ func main() {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 		if err := httpServer.Shutdown(ctx); err != nil {
-			log.Printf("api server shutdown: %v", err)
+			slog.Error("api server shutdown failed", slog.Any("error", err))
 		}
 	}()
 
-	log.Printf("api server listening on :%s", port)
+	slog.Info("api server listening", slog.String("port", port))
 	if err := httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal(err)
 	}

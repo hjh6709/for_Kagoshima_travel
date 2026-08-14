@@ -362,7 +362,11 @@
       "Error": {
         "type": "object",
         "properties": {
-          "error": { "type": "string" }
+          "error": { "type": "string" },
+          "requestId": {
+            "type": "string",
+            "description": "5xx 응답에만 실린다. 서버 로그에서 이 요청을 찾는 데 쓴다."
+          }
         }
       }
     }

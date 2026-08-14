@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
@@ -17,6 +17,7 @@ import (
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/db"
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/handler"
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/middleware"
+	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/observability"
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/repository"
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/service"
 )
@@ -29,6 +30,7 @@ type Server struct {
 	userRepository   repository.UserRepository
 	rateLimiter      *middleware.RateLimiter
 	pool             *pgxpool.Pool
+	logger           *slog.Logger
 }
 
 func New() (*Server, error) {
@@ -49,6 +51,9 @@ func New() (*Server, error) {
 	if jwtSecret == "" {
 		jwtSecret = "dev-secret-replace-in-production"
 	}
+	logger := observability.NewLogger(os.Stdout)
+	slog.SetDefault(logger)
+
 	dbURL := os.Getenv("DATABASE_URL")
 	if production && strings.TrimSpace(dbURL) == "" {
 		return nil, errors.New("production DATABASE_URL is required")
@@ -73,13 +78,14 @@ func New() (*Server, error) {
 			pool.Close()
 			return nil, fmt.Errorf("DB migration 실패: %w", err)
 		}
-		log.Println("PostgreSQL 연결됨")
+		logger.Info("storage ready", slog.String("backend", "postgres"))
 		tripRepository = repository.NewPostgresTripRepository(pool)
 		userRepository = repository.NewPostgresUserRepository(pool)
 		checklistRepository = repository.NewPostgresChecklistRepository(pool)
 		verificationRepository = repository.NewPostgresVerificationRepository(pool)
 	} else {
-		log.Println("in-memory 리포지토리 사용 (DATABASE_URL 미설정)")
+		logger.Warn("storage ready", slog.String("backend", "in-memory"),
+			slog.String("reason", "DATABASE_URL is not set"))
 		tripRepository = repository.NewMemoryTripRepository()
 		userRepository = repository.NewMemoryUserRepository()
 		checklistRepository = repository.NewMemoryChecklistRepository()
@@ -91,6 +97,7 @@ func New() (*Server, error) {
 	checklistService := service.NewChecklistService(checklistRepository, tripRepository)
 
 	s := &Server{
+		logger:           logger,
 		mux:              http.NewServeMux(),
 		tripHandler:      handler.NewTripHandler(tripService),
 		authHandler:      handler.NewAuthHandler(authService, production),
@@ -133,8 +140,21 @@ func validateProductionOrigins(configuredOrigins string) error {
 	return nil
 }
 
+// Routes는 미들웨어를 바깥에서 안쪽 순서로 감싼다.
+//
+//	CORS            — 프리플라이트를 가장 먼저 처리해야 한다
+//	RequestContext  — 그다음. 이후 모든 계층이 request ID를 쓴다
+//	RequestLog      — 레이트 리밋 거부(429)까지 기록하려면 그 바깥이어야 한다
+//	rateLimiter     — 실제 차단
+//	DiscordAlert    — 패닉 복구는 핸들러에 가장 가깝게
 func (s *Server) Routes() http.Handler {
-	return withCORS(s.rateLimiter.Limit(middleware.DiscordAlert(s.mux)))
+	return withCORS(
+		middleware.RequestContext(s.logger)(
+			middleware.RequestLog(
+				s.rateLimiter.Limit(middleware.DiscordAlert(s.mux)),
+			),
+		),
+	)
 }
 
 func (s *Server) registerRoutes(jwtSecret string) {

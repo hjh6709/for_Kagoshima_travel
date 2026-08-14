@@ -28,7 +28,7 @@ func (h *ChecklistHandler) ListChecklist(w http.ResponseWriter, r *http.Request)
 
 	items, err := h.checklistService.ListChecklist(r.Context(), tripID, claims.UserID)
 	if err != nil {
-		writeServiceError(w, err)
+		writeServiceError(r.Context(), w, err)
 		return
 	}
 	httpjson.Write(w, http.StatusOK, items)
@@ -47,7 +47,7 @@ func (h *ChecklistHandler) CreateChecklistCustomItem(w http.ResponseWriter, r *h
 
 	item, err := h.checklistService.CreateChecklistCustomItem(r.Context(), tripID, claims.UserID, req)
 	if err != nil {
-		writeServiceError(w, err)
+		writeServiceError(r.Context(), w, err)
 		return
 	}
 	httpjson.Write(w, http.StatusCreated, item)
@@ -66,7 +66,7 @@ func (h *ChecklistHandler) UpdateChecklistItem(w http.ResponseWriter, r *http.Re
 
 	item, err := h.checklistService.UpdateChecklistItem(r.Context(), checklistID, claims.UserID, req)
 	if err != nil {
-		writeServiceError(w, err)
+		writeServiceError(r.Context(), w, err)
 		return
 	}
 	httpjson.Write(w, http.StatusOK, item)
@@ -80,7 +80,7 @@ func (h *ChecklistHandler) DeleteChecklistItem(w http.ResponseWriter, r *http.Re
 
 	err := h.checklistService.DeleteChecklistItem(r.Context(), checklistID, claims.UserID)
 	if err != nil {
-		writeServiceError(w, err)
+		writeServiceError(r.Context(), w, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
