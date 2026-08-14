@@ -262,12 +262,18 @@
 
 .travel-map {
   display: grid;
+  /* 암시적 auto 트랙은 자식 하나의 min-content가 화면을 넘겨도 그대로 따라간다.
+     툴바가 한 줄을 고집하던 시절 195px에서 지도 화면 전체가 밖으로 나갔다. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 10px;
   margin-bottom: 24px;
 }
 
 .travel-map-toolbar {
   display: flex;
+  /* "현재 위치 표시" 버튼은 지도가 실제로 로드된 뒤에만 나타난다. 그 버튼까지 한 줄에
+     넣으면 좁은 화면에서 183px이 필요해 컨테이너(151px)를 넘겼다. 자리가 없으면 접는다. */
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
