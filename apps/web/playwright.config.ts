@@ -20,11 +20,24 @@ export default defineConfig({
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },
-  projects: VIEWPORTS.map((viewport) => ({
-    name: `demo-${viewport.name}`,
-    testMatch: /demo.*\.spec\.ts/,
-    use: { ...devices["Desktop Chrome"], viewport: { width: viewport.width, height: viewport.height } },
-  })),
+  projects: [
+    { name: "setup", testMatch: /auth\.setup\.ts/ },
+    ...VIEWPORTS.map((viewport) => ({
+      name: `demo-${viewport.name}`,
+      testMatch: /demo.*\.spec\.ts/,
+      use: { ...devices["Desktop Chrome"], viewport: { width: viewport.width, height: viewport.height } },
+    })),
+    ...VIEWPORTS.map((viewport) => ({
+      name: `owner-${viewport.name}`,
+      testMatch: /owner\.spec\.ts/,
+      dependencies: ["setup"],
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: viewport.width, height: viewport.height },
+        storageState: "e2e/.auth/owner.json",
+      },
+    })),
+  ],
   webServer: [
     {
       // 프로덕션 빌드를 그대로 검증한다. 개발 서버는 CSS 주입 순서가 달라
@@ -47,6 +60,10 @@ export default defineConfig({
         AUTH_TEST_BYPASS: "1",
         PORT: String(API_PORT),
         LOG_LEVEL: "warn",
+        // 여러 브라우저가 같은 IP에서 동시에 도므로 기본 레이트 리밋(초당 5회, 버스트 20)에
+        // 걸려 429가 섞인다. 테스트 환경에서만 올린다 — 기본값은 서버 쪽에 그대로 있다.
+        RATE_LIMIT_PER_SECOND: "500",
+        RATE_LIMIT_BURST: "1000",
       },
     },
   ],

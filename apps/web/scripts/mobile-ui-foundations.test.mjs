@@ -175,9 +175,12 @@ test("작은 모바일과 200% 확대에서 일정과 현지 도구는 한 열�
 });
 
 test("좁은 모바일에서 관리 폼과 장소 검색은 한 열 입력 흐름을 사용한다", () => {
+  // 미디어 쿼리 대신 auto-fit으로 접는다. 고정 2칸이던 시절에는 375px에서도
+  // 날짜 라벨이 트랙 밖으로 나갔고, 미디어 쿼리 방식은 폭 하나만 겨우 막았다.
+  // 핵심은 "자리가 부족하면 한 칸이 된다"이므로 그 형태를 검사한다.
   assert.match(
     foundationStyles,
-    /@media \(max-width: 360px\)[\s\S]*?\.form-grid-two\s*{[\s\S]*?grid-template-columns:\s*minmax\(0, 1fr\)/,
+    /\.form-grid-two\s*{[^}]*?grid-template-columns:\s*repeat\(auto-fit,\s*minmax\(min\(100%,\s*\d+px\),\s*1fr\)\)/,
   );
   assert.match(
     placeSearchStyles,
