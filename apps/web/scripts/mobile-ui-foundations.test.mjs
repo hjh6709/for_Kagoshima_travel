@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { test } from "node:test";
+import { readStyleEntry } from "./style-test-utils.mjs";
 
 const stylesDirectory = new URL("../src/styles/", import.meta.url);
 const styleFiles = readdirSync(stylesDirectory)
@@ -18,7 +19,7 @@ const placeSearchStyles = readFileSync(
   new URL("../src/styles/place-search.css", import.meta.url),
   "utf8",
 );
-const tripStyles = readFileSync(new URL("../src/styles/trip.css", import.meta.url), "utf8");
+const tripStyles = readStyleEntry("trip.css");
 const manageStyles = readFileSync(new URL("../src/styles/manage.css", import.meta.url), "utf8");
 const travelToolStyles = readFileSync(
   new URL("../src/styles/travel-tools.css", import.meta.url),

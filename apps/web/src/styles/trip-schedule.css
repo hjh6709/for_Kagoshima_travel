@@ -1,0 +1,256 @@
+/* ── 일정 탭 (3단계) ─────────────────────────────────────────── */
+.date-pill-weekday {
+  display: block;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
+  opacity: 0.72;
+}
+
+.date-pill-day {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: var(--font-weight-display);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.date-pill-badge {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
+  letter-spacing: 0.04em;
+  opacity: 0.72;
+}
+
+.schedule-summary-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 18px;
+  padding: 14px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  background: var(--c-surface);
+}
+
+.schedule-card-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.schedule-card-meta .schedule-check {
+  margin-left: auto;
+}
+
+.schedule-type-pill {
+  gap: 5px;
+}
+
+.schedule-summary {
+  flex: 1;
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.schedule-summary-count {
+  margin: 0;
+  color: var(--c-text);
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-strong);
+  letter-spacing: var(--tracking-title);
+}
+
+.schedule-summary-track {
+  height: 5px;
+  border-radius: 100px;
+  background: var(--c-fill-strong);
+  overflow: hidden;
+}
+
+.schedule-summary-fill {
+  height: 100%;
+  border-radius: 100px;
+  background: var(--c-route);
+  transform-origin: left center;
+  transition: transform 0.24s var(--ease-route);
+}
+
+.schedule-reorder-toggle {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0 0 0 16px;
+  border: 0;
+  border-left: 1px solid var(--border-color);
+  background: transparent;
+  text-decoration: none;
+}
+
+.schedule-headline {
+  min-width: 0;
+}
+
+.schedule-headline-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.schedule-headline-copy h2 {
+  margin: 0;
+  font-size: var(--type-title-size);
+  font-weight: var(--font-weight-strong);
+  letter-spacing: var(--tracking-title);
+  overflow-wrap: anywhere;
+}
+
+.schedule-place {
+  margin: 2px 0 0;
+  color: var(--c-muted);
+  font-size: var(--type-label-size);
+  overflow-wrap: anywhere;
+}
+
+.schedule-check {
+  position: relative;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--c-route);
+}
+
+.schedule-check svg {
+  box-sizing: border-box;
+  width: 36px;
+  height: 36px;
+  padding: 7px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  background: var(--c-surface);
+}
+
+.schedule-check:hover svg {
+  background: var(--c-route-soft);
+}
+
+.schedule-check.checked {
+  color: var(--c-success);
+}
+
+.schedule-check.checked svg,
+.schedule-check.checked:hover svg {
+  border-color: transparent;
+  background: var(--c-success-soft);
+}
+
+.schedule-guide-memo {
+  margin-top: 4px;
+  font-size: var(--type-label-size);
+}
+
+.schedule-move-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 0;
+}
+
+.schedule-directions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 2px;
+}
+
+.check-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.check-group-header h3 {
+  margin: 0;
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-display);
+  letter-spacing: 0.06em;
+}
+
+.check-group-count {
+  color: var(--c-muted);
+  font-size: var(--type-label-size);
+  font-weight: var(--font-weight-strong);
+}
+
+/* 시간과 분류를 카드 상단 메타 행으로 분리해 제목·장소명이 쓸 폭을 확보한다. */
+.schedule-card {
+  padding: 15px;
+}
+
+.schedule-card .time {
+  text-align: left;
+  font-size: var(--type-supporting-size);
+}
+
+/* 좁은 화면에서는 요약과 순서 편집을 분리해 각 조작의 터치 폭을 지킨다. */
+@media (max-width: 360px) {
+  .timeline-stack {
+    --timeline-axis: 12px;
+    --timeline-card-offset: 26px;
+  }
+
+  .schedule-card {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 14px 12px;
+  }
+
+  .schedule-card::before {
+    top: 22px;
+  }
+
+  .schedule-summary-row {
+    flex-wrap: wrap;
+  }
+
+  .schedule-reorder-toggle {
+    flex: 1 0 100%;
+    padding: 10px 0 0;
+    border-top: 1px solid var(--border-color);
+    border-left: 0;
+    text-align: right;
+  }
+}
+
+@media (max-width: 240px) {
+  .timeline-stack {
+    --timeline-axis: 9px;
+    --timeline-card-offset: 20px;
+  }
+
+  .schedule-card {
+    padding: 12px;
+  }
+
+  .schedule-check {
+    flex-basis: 100%;
+    width: 100%;
+  }
+
+  .schedule-directions-chip {
+    width: 100%;
+    justify-content: center;
+  }
+}
