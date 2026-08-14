@@ -31,7 +31,7 @@
 - Produces: `readStyleEntry(fileName: string): string`
 - Consumes: a CSS entry file and its local `@import "./..."` graph under `apps/web/src/styles/`
 
-- [ ] **Step 1: Add a shared test-only entry resolver**
+- [x] **Step 1: Add a shared test-only entry resolver**
 
 ```js
 import { readFileSync } from "node:fs";
@@ -53,7 +53,7 @@ export function readStyleEntry(fileName, stack = []) {
 
 This helper follows the same ordered local imports as the browser-facing entry instead of hard-coding the new file names in tests.
 
-- [ ] **Step 2: Point existing trip CSS contracts at the real entry resolver**
+- [x] **Step 2: Point existing trip CSS contracts at the real entry resolver**
 
 In `mobile-ui-foundations.test.mjs`:
 
@@ -73,13 +73,13 @@ const tripCSS = readStyleEntry("trip.css");
 
 Remove `readFileSync` from the second file because it has no other filesystem reads. Keep every behavior assertion unchanged.
 
-- [ ] **Step 3: Run the characterization tests before changing production CSS**
+- [x] **Step 3: Run the characterization tests before changing production CSS**
 
 Run: `npm --prefix apps/web run test:dependencies`
 
 Expected: all 17 existing contracts PASS against the current monolithic `trip.css`. These tests are the behavior-preserving refactor safety net; do not add tests that only inspect file names or source markers.
 
-- [ ] **Step 4: Do not commit yet**
+- [x] **Step 4: Do not commit yet**
 
 The test-only entry resolver and split files form one reviewable change and are committed together in Task 2.
 
@@ -102,7 +102,7 @@ The test-only entry resolver and split files form one reviewable change and are 
 - Produces: five ordered CSS implementation files consumed through `trip.css`
 - Produces: unchanged external import `@import "./styles/trip.css";` in `styles.css`
 
-- [ ] **Step 1: Split at the existing contiguous boundaries**
+- [x] **Step 1: Split at the existing contiguous boundaries**
 
 Use the pre-change `trip.css` content and preserve all characters within each range:
 
@@ -112,7 +112,7 @@ Use the pre-change `trip.css` content and preserve all characters within each ra
 - `trip-today.css`: the Today tab comment through the closing brace immediately before `/* ── 일정 탭 (3단계)`
 - `trip-schedule.css`: the Schedule tab comment through end of file
 
-- [ ] **Step 2: Replace `trip.css` with the ordered entry imports**
+- [x] **Step 2: Replace `trip.css` with the ordered entry imports**
 
 ```css
 /*
@@ -126,7 +126,7 @@ Use the pre-change `trip.css` content and preserve all characters within each ra
 @import "./trip-schedule.css";
 ```
 
-- [ ] **Step 3: Prove that the five files exactly reproduce the previous stylesheet**
+- [x] **Step 3: Prove that the five files exactly reproduce the previous stylesheet**
 
 Before committing, run:
 
@@ -138,19 +138,19 @@ cmp /tmp/trip-before.css /tmp/trip-after.css
 
 Expected: `cmp` exits 0 with no output.
 
-- [ ] **Step 4: Run CSS contract tests**
+- [x] **Step 4: Run CSS contract tests**
 
 Run: `npm --prefix apps/web run test:dependencies`
 
 Expected: all dependency and accessibility contracts PASS, including the new boundary tests.
 
-- [ ] **Step 5: Run the web unit suite and production build**
+- [x] **Step 5: Run the web unit suite and production build**
 
 Run: `npm --prefix apps/web test && npm --prefix apps/web run build`
 
 Expected: all Vitest tests PASS and Vite completes a production build.
 
-- [ ] **Step 6: Commit the mechanical split**
+- [x] **Step 6: Commit the mechanical split**
 
 ```bash
 git add apps/web/src/styles/trip.css \
@@ -178,7 +178,7 @@ git commit -m "refactor(web): 여행 화면 CSS 책임 분리"
 - Consumes: `VIEWPORTS` from `apps/web/e2e/fixtures/viewport.ts`
 - Produces: Playwright project `demo-320x700` and `owner-320x700`
 
-- [ ] **Step 1: Add 320px between the existing 375px and 195px viewports**
+- [x] **Step 1: Add 320px between the existing 375px and 195px viewports**
 
 ```ts
 export const VIEWPORTS = [
@@ -190,7 +190,7 @@ export const VIEWPORTS = [
 
 Update the adjacent comment so it names all three verification roles: normal compact phone, narrow phone, and minimum specification width.
 
-- [ ] **Step 2: Run demo E2E at all three widths**
+- [x] **Step 2: Run demo E2E at all three widths**
 
 Run:
 
@@ -203,7 +203,7 @@ npm --prefix apps/web run test:e2e -- \
 
 Expected: Today, Schedule, Map, Flights, and Concierge tabs open without console errors, horizontal overflow, or bottom-tab touch-target failures at 375px, 320px, and 195px.
 
-- [ ] **Step 3: Run owner E2E at all three widths**
+- [x] **Step 3: Run owner E2E at all three widths**
 
 Run:
 
@@ -216,7 +216,7 @@ npm --prefix apps/web run test:e2e -- \
 
 Expected: list, trip detail, and My Page tests pass. The same-row header assertion runs only at 375px; it remains skipped at 320px and 195px because that assertion documents the 375px layout contract.
 
-- [ ] **Step 4: Commit the viewport coverage**
+- [x] **Step 4: Commit the viewport coverage**
 
 ```bash
 git add apps/web/e2e/fixtures/viewport.ts
@@ -234,13 +234,13 @@ git commit -m "test(web): 320px 모바일 회귀 검증 추가"
 - Consumes: all changes from Tasks 1-3
 - Produces: a clean branch ready for review
 
-- [ ] **Step 1: Run the complete repository check**
+- [x] **Step 1: Run the complete repository check**
 
 Run: `npm run check`
 
 Expected: TypeScript, production build, Go tests, race tests, vet, and gofmt checks all PASS.
 
-- [ ] **Step 2: Inspect the final diff for accidental visual changes**
+- [x] **Step 2: Inspect the final diff for accidental visual changes**
 
 Run:
 
@@ -252,13 +252,13 @@ git diff --check
 
 Expected: `styles.css` is unchanged; child CSS concatenation still equals the original `trip.css`; no declarations were edited.
 
-- [ ] **Step 3: Confirm the branch is clean**
+- [x] **Step 3: Confirm the branch is clean**
 
 Run: `git status --short --branch`
 
 Expected: no unstaged or uncommitted source changes after the plan checklist update is committed.
 
-- [ ] **Step 4: Commit the completed plan record**
+- [x] **Step 4: Commit the completed plan record**
 
 ```bash
 git add docs/superpowers/plans/2026-08-14-web-css-boundaries.md
