@@ -51,6 +51,9 @@ func TestRequestContextRejectsUnsafeIncomingHeader(t *testing.T) {
 		"too long": "0123456789012345678901234567890123456789012345678901234567890123456789",
 		"space":    "has space",
 		"symbol":   "abc;rm -rf",
+		// 로그 위조가 이 검증의 존재 이유다. 개행이 통과하면 가짜 로그 줄을 심을 수 있다.
+		"newline":         "abc\n{\"level\":\"INFO\",\"msg\":\"admin login\"}",
+		"carriage return": "abc\rdef",
 	} {
 		t.Run(name, func(t *testing.T) {
 			var seen string
