@@ -34,11 +34,20 @@ export async function expectNoHorizontalOverflow(page: Page): Promise<void> {
   expect(overflowing, `가로로 넘친 컨테이너 ${overflowing.length}개:\n${detail}`).toEqual([]);
 }
 
+type TouchTargetOptions = {
+  minPx?: number;
+  // 하단 탭바처럼 뷰포트를 n등분하는 요소는 195px에서 폭 44px을 물리적으로 만족할 수 없다
+  // (195 / 5 = 39px). 그런 경우에만 높이로 판정한다.
+  dimension?: "both" | "height";
+};
+
 // 44px는 iOS 휴먼 인터페이스 가이드라인의 최소 터치 영역이며,
 // scripts/mobile-ui-foundations.test.mjs가 CSS에서 검사하는 값과 같다.
 // 여기서는 CSS 규칙이 아니라 실제로 렌더된 박스를 잰다.
-export async function expectTouchTargets(page: Page, selector: string, minPx = 44): Promise<void> {
-  const tooSmall = await page.locator(selector).evaluateAll((elements, min) => {
+export async function expectTouchTargets(page: Page, selector: string, options: TouchTargetOptions = {}): Promise<void> {
+  const { minPx = 44, dimension = "both" } = options;
+
+  const tooSmall = await page.locator(selector).evaluateAll((elements, config) => {
     return elements
       .map((element) => {
         const rect = element.getBoundingClientRect();
@@ -49,8 +58,8 @@ export async function expectTouchTargets(page: Page, selector: string, minPx = 4
         };
       })
       .filter((box) => box.width > 0 && box.height > 0)
-      .filter((box) => box.width < min || box.height < min);
-  }, minPx);
+      .filter((box) => (config.dimension === "height" ? box.height < config.minPx : box.width < config.minPx || box.height < config.minPx));
+  }, { minPx, dimension });
 
   const detail = tooSmall.map((box) => `"${box.text}" ${box.width}x${box.height}`).join("\n");
   expect(tooSmall, `${minPx}px 미만 터치 영역 ${tooSmall.length}개:\n${detail}`).toEqual([]);

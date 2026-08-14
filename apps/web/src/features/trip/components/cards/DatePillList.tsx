@@ -23,7 +23,10 @@ export const DatePillList = forwardRef<HTMLDivElement, DatePillListProps>(functi
       ref={ref}
       style={
         dates.length <= 4
-          ? { gridTemplateColumns: `repeat(${dates.length}, minmax(0, 1fr))` }
+          ? // minmax(0, 1fr)로 두면 트랙이 내용보다 작아질 수 있어, 195px에서 날짜가 잘렸다.
+            // min-content를 하한으로 두면 자리가 부족할 때 트랙이 줄지 않고 트랙 컨테이너가
+            // 가로로 스크롤된다(.date-tabs는 overflow-x: auto).
+            { gridTemplateColumns: `repeat(${dates.length}, minmax(min-content, 1fr))` }
           : undefined
       }
     >
