@@ -17,6 +17,7 @@ test("여행 목록이 뜨고 가로로 넘치지 않는다", async ({ page }) =
   expectNoConsoleErrors(consoleWatch.errors);
 });
 
+
 // 회귀 1 — inline-flex는 inline-level이라 margin-left: auto가 적용되지 않는다.
 // 이 버그로 ⋯ 메뉴가 카드 왼쪽에 붙어 있었다.
 test("여행 카드의 관리 메뉴는 카드 오른쪽 끝에 붙는다", async ({ page }) => {
@@ -41,7 +42,7 @@ test("여행 카드의 관리 메뉴는 카드 오른쪽 끝에 붙는다", asyn
 
 // 회귀 2 — 헤더 액션이 두 줄로 갈라졌다. 375px에서는 한 줄이어야 한다.
 test("375px에서 헤더의 두 버튼은 같은 줄에 있다", async ({ page }, testInfo) => {
-  test.skip(!testInfo.project.name.includes("375"), "195px에서는 두 줄이 정상이다");
+  test.skip(!testInfo.project.name.includes("375"), "320px 이하에서는 두 줄이 정상이다");
 
   await page.goto("/manage");
 
@@ -78,4 +79,3 @@ test("마이페이지가 에러 없이 열린다", async ({ page }) => {
   await expectNoHorizontalOverflow(page);
   expectNoConsoleErrors(consoleWatch.errors);
 });
-
