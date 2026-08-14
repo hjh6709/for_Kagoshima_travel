@@ -24,6 +24,7 @@ const travelToolStyles = readFileSync(
   new URL("../src/styles/travel-tools.css", import.meta.url),
   "utf8",
 );
+const mapStyles = readFileSync(new URL("../src/styles/map.css", import.meta.url), "utf8");
 
 const requiredTypeTokens = [
   "--type-display-size",
@@ -185,6 +186,26 @@ test("좁은 모바일에서 관리 폼과 장소 검색은 한 열 입력 흐�
   assert.match(
     placeSearchStyles,
     /@media \(max-width: 280px\)[\s\S]*?\.place-search-controls\s*{[\s\S]*?grid-template-columns:\s*minmax\(0, 1fr\)/,
+  );
+});
+
+// E2E는 이 회귀를 잡을 수 없다. "현재 위치 표시" 버튼이 loadState === "ready"일 때만
+// 렌더되는데, 로컬과 CI에는 VITE_GOOGLE_MAPS_BROWSER_KEY가 없어 지도가 로드되지 않는다.
+// 실제로 이 버그는 프로덕션에서만 재현됐다(195px에서 지도 화면 205px > 195px).
+// 키 없이도 지킬 수 있는 층이 여기라서 CSS 계약으로 고정한다.
+test("지도 툴바는 좁은 화면에서 한 줄을 고집하지 않는다", () => {
+  const toolbar = readRuleBlock(mapStyles, "\\.travel-map-toolbar");
+  assert.match(
+    toolbar,
+    /flex-wrap:\s*wrap/,
+    "지도가 로드되면 툴바에 위치 버튼이 추가돼 183px이 필요하다. 접히지 않으면 195px 화면을 넘긴다.",
+  );
+
+  const map = readRuleBlock(mapStyles, "\\.travel-map");
+  assert.match(
+    map,
+    /grid-template-columns:\s*minmax\(0,\s*1fr\)/,
+    "암시적 auto 트랙은 자식의 min-content를 그대로 따라가 화면 밖으로 나간다.",
   );
 });
 
