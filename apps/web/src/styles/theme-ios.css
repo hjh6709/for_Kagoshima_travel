@@ -253,6 +253,12 @@ textarea:focus-visible {
   scrollbar-width: none;
 }
 
+/* Feature modifiers keep their layout semantics even though this theme layer
+   intentionally outranks the feature layer's base presentation. */
+.date-tabs.fit-tabs {
+  display: revert-layer;
+}
+
 .date-tabs::-webkit-scrollbar {
   display: none;
 }
@@ -269,6 +275,10 @@ textarea:focus-visible {
   font-weight: var(--font-weight-display);
   letter-spacing: -0.03em;
   padding: 11px 4px 12px;
+}
+
+.date-tabs.fit-tabs button {
+  min-width: revert-layer;
 }
 
 .date-tabs button.active {
@@ -307,6 +317,12 @@ textarea:focus-visible {
   font-size: var(--type-chip-size);
   font-weight: var(--font-weight-display);
   letter-spacing: 0.03em;
+}
+
+.pill.subtle,
+.pill.destination {
+  background: revert-layer;
+  color: revert-layer;
 }
 
 /* ── 항공 ─────────────────────────────────────────────────────── */
