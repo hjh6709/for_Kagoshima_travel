@@ -29,6 +29,19 @@ test("데모 화면은 콘솔 에러 없이 뜨고 가로로 넘치지 않는다
   expectNoConsoleErrors(consoleWatch.errors);
 });
 
+test("일정 화면의 fit·subtle modifier는 테마 기본값보다 우선한다", async ({ page }) => {
+  await page.goto("/demo");
+  await page.getByRole("button", { name: "일정", exact: true }).click();
+
+  const dateTabs = page.locator(".date-tabs.fit-tabs");
+  await expect(dateTabs).toHaveCSS("display", "grid");
+  await expect(dateTabs.locator("button").first()).toHaveCSS("min-width", "0px");
+
+  const scheduleType = page.locator(".schedule-type-pill").first();
+  await expect(scheduleType).toHaveCSS("color", "rgb(106, 111, 118)");
+  await expect(scheduleType).toHaveCSS("background-color", "rgb(241, 239, 234)");
+});
+
 for (const tab of TABS) {
   test(`${tab.label} 탭이 에러 없이 열린다`, async ({ page }) => {
     const consoleWatch = watchConsole(page);

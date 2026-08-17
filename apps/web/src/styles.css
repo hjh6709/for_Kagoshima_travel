@@ -1,15 +1,17 @@
 /*
  * Map Planner style entry point.
- * Keep imports in cascade order: foundations first, feature refinements last.
+ * Layer order is the global priority contract; source order still resolves ties within a layer.
  */
-@import "./styles/tokens.css";
-@import "./styles/foundation.css";
-@import "./styles/manage.css";
-@import "./styles/place-search.css";
-@import "./styles/share.css";
-@import "./styles/trip.css";
-@import "./styles/map.css";
-@import "./styles/travel-components.css";
-@import "./styles/feedback.css";
-@import "./styles/travel-tools.css";
-@import "./styles/theme-ios.css";
+@layer tokens, foundation, features, feedback, theme;
+
+@import "./styles/tokens.css" layer(tokens);
+@import "./styles/foundation.css" layer(foundation);
+@import "./styles/manage.css" layer(features);
+@import "./styles/place-search.css" layer(features);
+@import "./styles/share.css" layer(features);
+@import "./styles/trip.css" layer(features);
+@import "./styles/map.css" layer(features);
+@import "./styles/travel-components.css" layer(features);
+@import "./styles/feedback.css" layer(feedback);
+@import "./styles/travel-tools.css" layer(features);
+@import "./styles/theme-ios.css" layer(theme);
