@@ -186,7 +186,7 @@ export function ManageAuthSection({
       <div className="auth-brand-row">
         <a className="auth-product-link" href="/">
           <span className="auth-brand-circle">
-            <Compass className="auth-hero-icon" size={21} />
+            <Compass className="auth-hero-icon" size={23} />
           </span>
           <span>Map Planner</span>
         </a>
