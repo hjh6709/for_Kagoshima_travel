@@ -1275,14 +1275,13 @@
   text-underline-offset: 3px;
 }
 
+/* 분리된 박스 UI로 바뀌면서 입력과 버튼을 한 줄에 욱여넣을 이유가 없어졌다.
+   박스 6개 + 버튼이 375px 한 줄에 다 들어가려면 각 박스가 너무 좁아져
+   숫자가 읽기 힘들어진다. 세로로 쌓는다. */
 .auth-verification-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(96px, auto);
-  gap: 8px;
-  min-width: 0;
-}
-
-.auth-verification-row > input {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
   min-width: 0;
 }
 
@@ -1291,6 +1290,46 @@
   margin-top: 0;
   padding-inline: 13px;
   font-size: var(--type-supporting-size);
+}
+
+/* 카카오·토스 스타일의 분리된 인증코드 입력. Figma iOS 레퍼런스에서
+   레이아웃 패턴만 가져오고 색은 프로젝트 토큰을 그대로 썼다
+   (get_design_context 요청이 Figma MCP 요청 한도에 걸려 정확한 원본 색상을
+   확인하지 못했다 — 우리 값이 원본과 다를 수 있다는 뜻이다). */
+.otp-code-input {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.otp-code-input input {
+  min-width: 0;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  min-height: 44px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-control);
+  background: #ffffff;
+  color: var(--c-text);
+  font: inherit;
+  font-size: var(--type-title-size);
+  font-weight: var(--font-weight-display);
+  text-align: center;
+  padding: 0;
+  box-shadow: none;
+  transition: border-color 0.18s var(--ease-route), box-shadow 0.18s var(--ease-route);
+}
+
+.otp-code-input input:focus {
+  outline: none;
+  border-color: var(--c-route);
+  box-shadow: 0 0 0 3px rgba(11, 111, 106, 0.18);
+  background: var(--c-surface);
+}
+
+.otp-code-input input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .auth-verified-state {
@@ -1544,10 +1583,6 @@
 }
 
 @media (max-width: 360px) {
-  .auth-verification-row {
-    grid-template-columns: 1fr;
-  }
-
   .auth-verify-code-button {
     width: 100%;
   }

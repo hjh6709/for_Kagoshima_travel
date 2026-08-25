@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { LockKeyhole, Mail, Key, Compass, Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import type { ManageAuthSectionProps } from "../../manageTypes";
 import { sendVerificationCode, verifyCode } from "../../../../api/auth";
+import { OtpCodeInput } from "../../../../shared/components/OtpCodeInput";
 import { ToastNotification, type ToastMessage, type ToastType } from "../../../../shared/components/ToastNotification";
 import { ForgotPasswordModal } from "./ForgotPasswordModal";
 
@@ -263,19 +264,12 @@ export function ManageAuthSection({
               {authEmail}로 보냈습니다. 코드는 5분 동안 유효합니다.
             </p>
             <div className="auth-verification-row">
-              <input
+              <OtpCodeInput
+                ariaDescribedBy="manage-auth-code-hint"
                 autoFocus
+                disabled={verifyingSubmitting}
                 id="manage-auth-code"
-                aria-describedby="manage-auth-code-hint"
-                autoComplete="one-time-code"
-                inputMode="numeric"
-                name="code"
-                onChange={(event) => setInputCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
-                pattern="[0-9]{6}"
-                placeholder="000000"
-                required
-                type="text"
-                maxLength={6}
+                onChange={setInputCode}
                 value={inputCode}
               />
               <button
