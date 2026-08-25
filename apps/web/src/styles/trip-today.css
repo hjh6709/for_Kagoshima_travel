@@ -197,15 +197,43 @@
   color: var(--c-route);
 }
 
+/* DESIGN.md는 "얇은 지도선과 정류장 점"을 이 브랜드의 시각 문법으로 못 박아
+   두지만, 실제로는 화면 어디에도 그려진 적이 없어 이 화면당 하나뿐인 Next
+   hero 카드가 평범한 단색 사각형으로 보였다. 브리프가 이미 선언한 모티프를
+   그대로 가져와 카드 배경에 실제로 그린다 — 새 장식을 발명한 게 아니라
+   문서에만 있던 걸 처음으로 구현한 것이다. */
 .next-schedule-card {
   position: relative;
   display: block;
   padding: 20px;
+  overflow: hidden;
   border: 0;
   border-radius: 24px;
-  background: var(--c-route);
+  background: linear-gradient(155deg, var(--c-route) 0%, var(--c-route-deep) 100%);
   box-shadow: var(--shadow-hero);
   color: #ffffff;
+}
+
+.next-schedule-card::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  /* 고정 220px는 카드가 더 좁아질 수 있는 극단적으로 좁은 화면(195px 뷰포트
+     테스트)에서 카드 자체보다 넓어져, overflow: hidden으로 시각적으로는
+     가려져도 scrollWidth 계약 테스트에는 실제 가로 오버플로로 잡혔다.
+     카드 폭에 비례하게 해 어떤 폭에서도 카드 밖으로 나가지 않게 한다. */
+  width: min(220px, 65%);
+  height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 220 200' fill='none'%3E%3Cpath d='M10 190 C 70 150 100 170 140 110 S 205 45 210 15' stroke='white' stroke-opacity='0.14' stroke-width='2' stroke-linecap='round' stroke-dasharray='1 11'/%3E%3Ccircle cx='10' cy='190' r='4' fill='white' fill-opacity='0.16'/%3E%3Ccircle cx='140' cy='110' r='4' fill='white' fill-opacity='0.16'/%3E%3Ccircle cx='210' cy='15' r='5' fill='white' fill-opacity='0.22'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: top right;
+  background-size: cover;
+  content: "";
+  pointer-events: none;
+}
+
+.next-schedule-card > * {
+  position: relative;
 }
 
 .next-schedule-card h2 {

@@ -1,4 +1,4 @@
-import { ChevronLeft, Share2 } from "lucide-react";
+import { Camera, ChevronLeft, Plane, Share2, type LucideIcon } from "lucide-react";
 import { formatKoreanDate, type TravelPhase, type TripDates } from "../../../../shared/date";
 import { getDestinationCountryLabel } from "../../../../shared/travelOptions";
 import type { Trip } from "../../../../types/travel";
@@ -24,28 +24,31 @@ function getCountryBadge(countryCode?: string): string {
   return `${flag} ${getDestinationCountryLabel(code)}`;
 }
 
-// D-Day 라벨 헬퍼
-function getDDayLabel(startDateStr: string, endDateStr: string): { text: string; className: string } {
+// D-Day 라벨 헬퍼. 이모지 대신 나머지 화면과 같은 lucide 아이콘 체계를 쓴다.
+function getDDayLabel(
+  startDateStr: string,
+  endDateStr: string,
+): { text: string; className: string; icon?: LucideIcon } {
   if (!startDateStr) return { text: "일정 미정", className: "dday-muted" };
-  
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  
+
   const start = new Date(startDateStr);
   start.setHours(0, 0, 0, 0);
-  
+
   const end = new Date(endDateStr || startDateStr);
   end.setHours(0, 0, 0, 0);
-  
+
   const diffTimeStart = start.getTime() - today.getTime();
   const diffDaysStart = Math.ceil(diffTimeStart / (1000 * 60 * 60 * 24));
-  
+
   if (diffDaysStart > 0) {
     return { text: `D-${diffDaysStart}`, className: "dday-upcoming" };
   } else if (today.getTime() >= start.getTime() && today.getTime() <= end.getTime()) {
-    return { text: "여행 중 ✈️", className: "dday-active" };
+    return { text: "여행 중", className: "dday-active", icon: Plane };
   } else {
-    return { text: "추억 기록 📸", className: "dday-past" };
+    return { text: "추억 기록", className: "dday-past", icon: Camera };
   }
 }
 
@@ -75,7 +78,10 @@ export function TodayHeaderSection({
         </a>
         <div className="trip-badges">
           <span className="badge-item country-badge">{countryBadge}</span>
-          <span className={`badge-item dday-badge ${dday.className}`}>{dday.text}</span>
+          <span className={`badge-item dday-badge ${dday.className}`}>
+            {dday.icon && <dday.icon aria-hidden="true" size={13} />}
+            {dday.text}
+          </span>
           {isReadOnly && (
             <span className="badge-item shared-view-badge">
               <Share2 aria-hidden="true" size={14} />
