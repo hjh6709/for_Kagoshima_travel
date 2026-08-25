@@ -1,0 +1,92 @@
+/* ── iOS 네이티브 알럿 ──────────────────────────────────────────
+ * Figma 커뮤니티 "iOS Alerts"(JmHcDpYsxJhryNs3my5cdQ, node 3:26 / 3:51) 참조.
+ * 폰트만 프로젝트 기본(Pretendard)으로 바꾸고, 나머지 치수·색은 원본 값을 그대로 썼다.
+ * SF Pro Text가 아니라 Pretendard를 쓰므로, 원본의 17px/13px 스케일과 굵기 대비만 지키면
+ * 시각적으로 동등하다.
+ */
+.ios-alert-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2100;
+  display: grid;
+  place-items: center;
+  /* Figma 원본: rgba(0,0,0,0.2) */
+  background: rgba(0, 0, 0, 0.2);
+  padding: 20px;
+}
+
+.ios-alert-popover {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 270px;
+  max-width: 100%;
+  background: var(--c-surface, #ffffff);
+  /* --radius-control(14px)이 Figma 원본과 정확히 일치한다 */
+  border-radius: var(--radius-control);
+  box-shadow: var(--shadow-raised);
+  overflow: hidden;
+}
+
+.ios-alert-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 20px 16px;
+  min-height: 90px;
+  justify-content: center;
+  text-align: center;
+}
+
+.ios-alert-title {
+  margin: 0;
+  font-size: 17px;
+  line-height: 22px;
+  letter-spacing: -0.408px;
+  font-weight: var(--font-weight-strong);
+  color: var(--c-text, #191b1f);
+}
+
+.ios-alert-description {
+  margin: 0;
+  font-size: 13px;
+  line-height: 18px;
+  letter-spacing: -0.078px;
+  font-weight: var(--font-weight-body);
+  color: var(--c-text, #191b1f);
+}
+
+.ios-alert-actions {
+  display: flex;
+  align-items: stretch;
+  /* Figma 원본: rgba(0,0,0,0.24) 0.5px */
+  border-top: 0.5px solid rgba(0, 0, 0, 0.24);
+}
+
+.ios-alert-action {
+  flex: 1 0 0;
+  min-width: 0;
+  height: 44px;
+  border: 0;
+  background: transparent;
+  /* iOS 시스템 블루. 앱의 --c-route(인디고)로 바꾸면 취소/확인 둘 다 같은 색이 되어
+     원본이 굵기로만 구분하던 위계가 사라진다. 시스템 블루를 그대로 둔다. */
+  color: #007aff;
+  font-size: 17px;
+  line-height: 22px;
+  letter-spacing: -0.408px;
+  cursor: pointer;
+}
+
+.ios-alert-action + .ios-alert-action {
+  border-left: 0.5px solid rgba(0, 0, 0, 0.24);
+}
+
+.ios-alert-action-emphasis {
+  font-weight: var(--font-weight-strong);
+}
+
+.ios-alert-action-destructive {
+  color: var(--c-danger, #b0451f);
+}

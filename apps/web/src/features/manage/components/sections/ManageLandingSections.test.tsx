@@ -81,7 +81,6 @@ describe("로그인 후 여행 목록", () => {
 
   it("삭제는 삭제 메뉴 안에서 경고를 확인한 뒤 실행한다", async () => {
     const onDeleteTrip = vi.fn();
-    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
 
     render(
       <TripListSection
@@ -102,10 +101,38 @@ describe("로그인 후 여행 목록", () => {
     expect(within(card).getByText("삭제하면 일정과 장소를 복구할 수 없습니다.")).toBeVisible();
 
     await userEvent.click(deleteButton);
-    expect(confirmSpy).toHaveBeenCalledOnce();
-    expect(onDeleteTrip).toHaveBeenCalledWith("trip-1");
+    // window.confirm 대신 iOS 스타일 alertdialog로 한 번 더 확인한다.
+    const alert = screen.getByRole("alertdialog");
+    expect(within(alert).getByText("삭제하면 일정과 장소를 복구할 수 없습니다.")).toBeVisible();
+    expect(onDeleteTrip).not.toHaveBeenCalled();
 
-    confirmSpy.mockRestore();
+    await userEvent.click(within(alert).getByRole("button", { name: "삭제" }));
+    expect(onDeleteTrip).toHaveBeenCalledWith("trip-1");
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+  });
+
+  it("삭제 알럿에서 취소하면 삭제되지 않는다", async () => {
+    const onDeleteTrip = vi.fn();
+
+    render(
+      <TripListSection
+        deletingTripID=""
+        onDeleteTrip={onDeleteTrip}
+        ownerTrips={[createTrip("trip-1", "상하이 여행", "2026-08-03", "2026-08-06")]}
+        ownerTripsError=""
+        ownerTripsLoading={false}
+      />,
+    );
+
+    const card = screen.getByRole("article");
+    await userEvent.click(within(card).getByText("관리 메뉴 열기"));
+    await userEvent.click(within(card).getByRole("button", { name: "여행 삭제" }));
+
+    const alert = screen.getByRole("alertdialog");
+    await userEvent.click(within(alert).getByRole("button", { name: "취소" }));
+
+    expect(onDeleteTrip).not.toHaveBeenCalled();
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
   });
 });
 

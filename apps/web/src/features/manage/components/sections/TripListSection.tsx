@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   ArrowRight,
   CalendarDays,
@@ -11,6 +12,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import type { OwnerTrip } from "../../../../api/trips";
+import { AlertDialog } from "../../../../shared/components/AlertDialog";
 import {
   formatKoreanDate,
   getTodayDateString,
@@ -57,6 +59,7 @@ export function TripListSection({
 }: TripListSectionProps) {
   const today = getTodayDateString();
   const sortedOwnerTrips = sortOwnerTripsByRelevance(ownerTrips, today);
+  const [pendingDelete, setPendingDelete] = useState<{ id: string; title: string } | null>(null);
 
   return (
     <section className="section-block">
@@ -140,11 +143,7 @@ export function TripListSection({
                     <button
                       className="danger-button compact-button"
                       disabled={isDeleting}
-                      onClick={() => {
-                        if (window.confirm(`정말로 '${ownerTrip.title}' 여행 일정을 영구 삭제하시겠습니까?`)) {
-                          onDeleteTrip(ownerTrip.id);
-                        }
-                      }}
+                      onClick={() => setPendingDelete({ id: ownerTrip.id, title: ownerTrip.title })}
                       type="button"
                     >
                       <Trash2 aria-hidden="true" size={16} />
@@ -157,6 +156,23 @@ export function TripListSection({
             );
           })}
         </div>
+      )}
+
+      {pendingDelete && (
+        <AlertDialog
+          action={{
+            label: "삭제",
+            onClick: () => {
+              onDeleteTrip(pendingDelete.id);
+              setPendingDelete(null);
+            },
+            tone: "destructive",
+          }}
+          cancelLabel="취소"
+          description="삭제하면 일정과 장소를 복구할 수 없습니다."
+          onCancel={() => setPendingDelete(null)}
+          title={`'${pendingDelete.title}' 여행을 영구 삭제하시겠습니까?`}
+        />
       )}
     </section>
   );
