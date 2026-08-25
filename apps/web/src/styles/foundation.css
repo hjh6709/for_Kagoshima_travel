@@ -356,15 +356,25 @@ textarea[aria-invalid="true"] {
   width: 100%;
 }
 
+/* 로컬 개발 전용 안내라 커밋 후에도 프로덕션 화면 어디에도 노출되면 안 되지만,
+   본문과 같은 크기의 raw <code>가 화면 아래로 흘러내려 상용 화면처럼 안 보였다.
+   작은 콜아웃 박스로 눈에 띄지 않게 접어 둔다. */
 .auth-help {
-  margin: 14px 0 0;
-  color: var(--c-muted);
-  font-size: var(--type-supporting-size);
+  margin: 20px 0 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-control);
+  background: var(--c-route-soft);
+  color: var(--c-route-deep);
+  font-size: var(--type-label-size);
+  line-height: 1.5;
 }
 
 .auth-help code {
-  color: var(--c-route);
+  display: inline-block;
+  margin-top: 2px;
+  font-size: var(--type-label-size);
   font-weight: var(--font-weight-strong);
+  word-break: break-all;
 }
 
 .form-error {

@@ -1130,11 +1130,11 @@
 
 .auth-brand-circle {
   display: grid;
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   flex: 0 0 auto;
   place-items: center;
-  border-radius: 11px;
+  border-radius: 13px;
   background: var(--c-route-soft);
   color: var(--c-route);
 }
