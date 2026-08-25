@@ -60,8 +60,11 @@ describe("ManageAuthSection", () => {
     const codeInput = screen.getByLabelText("6자리 인증코드");
     expect(codeInput).toHaveAttribute("inputmode", "numeric");
     expect(codeInput).toHaveAttribute("autocomplete", "one-time-code");
+    // 6개 박스로 나뉘어 있다 — 문자가 섞여 들어와도 숫자만 남기고 다음 칸으로
+    // 자동으로 넘어가는지, 최종 조합값이 맞는지 각 박스를 모아 확인한다.
     await user.type(codeInput, "12a34b56");
-    expect(codeInput).toHaveValue("123456");
+    const codeBoxes = screen.getAllByLabelText(/인증코드 \d번째 자리/);
+    expect(codeBoxes.map((box) => (box as HTMLInputElement).value).join("")).toBe("123456");
     await user.click(screen.getByRole("button", { name: "코드 확인" }));
 
     expect(verifyCode).toHaveBeenCalledWith("traveler@example.com", "register", "123456");
