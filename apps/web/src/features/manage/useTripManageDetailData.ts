@@ -61,6 +61,7 @@ type UseTripManageDetailDataParams = {
     newPlaceChineseAddress: string;
     newPlaceSubwayExit: string;
     newPlaceTaxiPhrase: string;
+    newPlacePhone: string;
     newPlaceSearchSelection: PlaceSearchSelection | null;
     cancelPlaceEdit: () => void;
     editingPlaceAddress: string;
@@ -73,6 +74,7 @@ type UseTripManageDetailDataParams = {
     editingPlaceChineseAddress: string;
     editingPlaceSubwayExit: string;
     editingPlaceTaxiPhrase: string;
+    editingPlacePhone: string;
     setDeletingPlaceID: Dispatch<SetStateAction<string>>;
     setPlaceEditError: Dispatch<SetStateAction<string>>;
     setPlaceEditSubmitting: Dispatch<SetStateAction<boolean>>;
@@ -84,6 +86,7 @@ type UseTripManageDetailDataParams = {
     setNewPlaceChineseAddress: Dispatch<SetStateAction<string>>;
     setNewPlaceSubwayExit: Dispatch<SetStateAction<string>>;
     setNewPlaceTaxiPhrase: Dispatch<SetStateAction<string>>;
+    setNewPlacePhone: Dispatch<SetStateAction<string>>;
     setNewPlaceSearchSelection: Dispatch<SetStateAction<PlaceSearchSelection | null>>;
     setNewSchedulePlaceID: Dispatch<SetStateAction<string>>;
     setPlaceCreateError: Dispatch<SetStateAction<string>>;

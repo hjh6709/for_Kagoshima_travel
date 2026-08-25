@@ -89,6 +89,7 @@ export type SelectedTripDetailSectionProps = {
   editingPlaceChineseAddress: string;
   editingPlaceSubwayExit: string;
   editingPlaceTaxiPhrase: string;
+  editingPlacePhone: string;
   editingScheduleDate: string;
   editingScheduleGuideMemo: string;
   editingScheduleID: string;
@@ -125,6 +126,7 @@ export type SelectedTripDetailSectionProps = {
   newPlaceChineseAddress: string;
   newPlaceSubwayExit: string;
   newPlaceTaxiPhrase: string;
+  newPlacePhone: string;
   newPlaceSearchSelection: PlaceSearchSelection | null;
   newScheduleDate: string;
   newScheduleGuideMemo: string;
@@ -162,6 +164,7 @@ export type SelectedTripDetailSectionProps = {
   onEditingPlaceChineseAddressChange: (value: string) => void;
   onEditingPlaceSubwayExitChange: (value: string) => void;
   onEditingPlaceTaxiPhraseChange: (value: string) => void;
+  onEditingPlacePhoneChange: (value: string) => void;
   onEditingScheduleDateChange: (value: string) => void;
   onEditingScheduleGuideMemoChange: (value: string) => void;
   onEditingSchedulePlaceIDChange: (value: string) => void;
@@ -189,6 +192,7 @@ export type SelectedTripDetailSectionProps = {
   onNewPlaceChineseAddressChange: (value: string) => void;
   onNewPlaceSubwayExitChange: (value: string) => void;
   onNewPlaceTaxiPhraseChange: (value: string) => void;
+  onNewPlacePhoneChange: (value: string) => void;
   onNewPlaceSearchSelectionChange: (value: PlaceSearchSelection | null) => void;
   onNewScheduleDateChange: (value: string) => void;
   onNewScheduleGuideMemoChange: (value: string) => void;

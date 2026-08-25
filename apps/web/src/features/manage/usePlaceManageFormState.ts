@@ -13,6 +13,7 @@ export function usePlaceManageFormState() {
   const [newPlaceChineseAddress, setNewPlaceChineseAddress] = useState("");
   const [newPlaceSubwayExit, setNewPlaceSubwayExit] = useState("");
   const [newPlaceTaxiPhrase, setNewPlaceTaxiPhrase] = useState("");
+  const [newPlacePhone, setNewPlacePhone] = useState("");
   const [newPlaceSearchSelection, setNewPlaceSearchSelection] = useState<PlaceSearchSelection | null>(null);
   const [placeCreateError, setPlaceCreateError] = useState("");
   const [placeCreateSubmitting, setPlaceCreateSubmitting] = useState(false);
@@ -29,6 +30,7 @@ export function usePlaceManageFormState() {
   const [editingPlaceChineseAddress, setEditingPlaceChineseAddress] = useState("");
   const [editingPlaceSubwayExit, setEditingPlaceSubwayExit] = useState("");
   const [editingPlaceTaxiPhrase, setEditingPlaceTaxiPhrase] = useState("");
+  const [editingPlacePhone, setEditingPlacePhone] = useState("");
   const [placeEditError, setPlaceEditError] = useState("");
   const [placeEditSubmitting, setPlaceEditSubmitting] = useState(false);
 
@@ -44,6 +46,7 @@ export function usePlaceManageFormState() {
     setEditingPlaceChineseAddress("");
     setEditingPlaceSubwayExit("");
     setEditingPlaceTaxiPhrase("");
+    setEditingPlacePhone("");
     setPlaceEditError("");
     setPlaceEditSubmitting(false);
   }
@@ -60,6 +63,7 @@ export function usePlaceManageFormState() {
     setEditingPlaceChineseAddress(place.chineseAddress ?? "");
     setEditingPlaceSubwayExit(place.subwayExit ?? "");
     setEditingPlaceTaxiPhrase(place.taxiPhrase ?? "");
+    setEditingPlacePhone(place.phone ?? "");
     setPlaceEditError("");
   }
 
@@ -74,6 +78,7 @@ export function usePlaceManageFormState() {
     setNewPlaceChineseAddress("");
     setNewPlaceSubwayExit("");
     setNewPlaceTaxiPhrase("");
+    setNewPlacePhone("");
     setNewPlaceSearchSelection(null);
     setPlaceCreateError("");
     setIsPlaceListEditing(false);
@@ -100,7 +105,9 @@ export function usePlaceManageFormState() {
     newPlaceSubwayExit,
     setNewPlaceSubwayExit,
     newPlaceTaxiPhrase,
+    newPlacePhone,
     setNewPlaceTaxiPhrase,
+    setNewPlacePhone,
     newPlaceSearchSelection,
     setNewPlaceSearchSelection,
     placeCreateError,
@@ -131,7 +138,9 @@ export function usePlaceManageFormState() {
     editingPlaceSubwayExit,
     setEditingPlaceSubwayExit,
     editingPlaceTaxiPhrase,
+    editingPlacePhone,
     setEditingPlaceTaxiPhrase,
+    setEditingPlacePhone,
     placeEditError,
     setPlaceEditError,
     placeEditSubmitting,

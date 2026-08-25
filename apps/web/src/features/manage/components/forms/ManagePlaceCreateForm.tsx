@@ -16,6 +16,7 @@ type ManagePlaceCreateFormProps = Pick<
   | "newPlaceChineseAddress"
   | "newPlaceSubwayExit"
   | "newPlaceTaxiPhrase"
+  | "newPlacePhone"
   | "auth"
   | "onNewPlaceAddressChange"
   | "onNewPlaceCategoryChange"
@@ -26,6 +27,7 @@ type ManagePlaceCreateFormProps = Pick<
   | "onNewPlaceChineseAddressChange"
   | "onNewPlaceSubwayExitChange"
   | "onNewPlaceTaxiPhraseChange"
+  | "onNewPlacePhoneChange"
   | "onNewPlaceSearchSelectionChange"
   | "onSubmitNewPlace"
   | "placeCreateError"
@@ -56,6 +58,7 @@ export function ManagePlaceCreateForm({
   newPlaceChineseAddress,
   newPlaceSubwayExit,
   newPlaceTaxiPhrase,
+  newPlacePhone,
   onNewPlaceAddressChange,
   onNewPlaceCategoryChange,
   onNewPlaceGoogleMapsURLChange,
@@ -65,6 +68,7 @@ export function ManagePlaceCreateForm({
   onNewPlaceChineseAddressChange,
   onNewPlaceSubwayExitChange,
   onNewPlaceTaxiPhraseChange,
+  onNewPlacePhoneChange,
   onNewPlaceSearchSelectionChange,
   onSubmitNewPlace,
   placeCreateError,
@@ -361,6 +365,16 @@ export function ManagePlaceCreateForm({
             placeholder="예: 공항 1층 또는 숙소 주소"
             type="text"
             value={newPlaceAddress}
+          />
+        </label>
+
+        <label>
+          전화번호
+          <input
+            onChange={(event) => onNewPlacePhoneChange(event.target.value)}
+            placeholder="예: 010-1234-5678"
+            type="tel"
+            value={newPlacePhone}
           />
         </label>
 
