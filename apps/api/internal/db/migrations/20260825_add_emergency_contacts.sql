@@ -1,0 +1,8 @@
+ALTER TABLE IF EXISTS trips
+    ADD COLUMN IF NOT EXISTS emergency_contact_name TEXT;
+
+ALTER TABLE IF EXISTS trips
+    ADD COLUMN IF NOT EXISTS emergency_contact_phone TEXT;
+
+ALTER TABLE IF EXISTS places
+    ADD COLUMN IF NOT EXISTS phone TEXT;

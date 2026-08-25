@@ -1,21 +1,25 @@
 package dto
 
 type CreateTripRequest struct {
-	Title              string   `json:"title"`
-	StartDate          string   `json:"startDate"`
-	EndDate            string   `json:"endDate"`
-	Travelers          []string `json:"travelers"`
-	DestinationCountry string   `json:"destinationCountry"`
-	Memo               string   `json:"memo"`
+	Title                 string   `json:"title"`
+	StartDate             string   `json:"startDate"`
+	EndDate               string   `json:"endDate"`
+	Travelers             []string `json:"travelers"`
+	DestinationCountry    string   `json:"destinationCountry"`
+	Memo                  string   `json:"memo"`
+	EmergencyContactName  string   `json:"emergencyContactName"`
+	EmergencyContactPhone string   `json:"emergencyContactPhone"`
 }
 
 type UpdateTripRequest struct {
-	Title              *string  `json:"title"`
-	StartDate          *string  `json:"startDate"`
-	EndDate            *string  `json:"endDate"`
-	Travelers          []string `json:"travelers"`
-	DestinationCountry *string  `json:"destinationCountry"`
-	Memo               *string  `json:"memo"`
+	Title                 *string  `json:"title"`
+	StartDate             *string  `json:"startDate"`
+	EndDate               *string  `json:"endDate"`
+	Travelers             []string `json:"travelers"`
+	DestinationCountry    *string  `json:"destinationCountry"`
+	Memo                  *string  `json:"memo"`
+	EmergencyContactName  *string  `json:"emergencyContactName"`
+	EmergencyContactPhone *string  `json:"emergencyContactPhone"`
 }
 
 type CreateScheduleRequest struct {
@@ -52,6 +56,7 @@ type CreatePlaceRequest struct {
 	ChineseAddress    string   `json:"chineseAddress"`
 	SubwayExit        string   `json:"subwayExit"`
 	TaxiPhrase        string   `json:"taxiPhrase"`
+	Phone             string   `json:"phone"`
 }
 
 // UpdatePlaceRequest는 장소 수정 화면에서 바뀐 필드만 PATCH로 보낼 수 있게 포인터로 받는다.
@@ -68,6 +73,7 @@ type UpdatePlaceRequest struct {
 	ChineseAddress    *string  `json:"chineseAddress"`
 	SubwayExit        *string  `json:"subwayExit"`
 	TaxiPhrase        *string  `json:"taxiPhrase"`
+	Phone             *string  `json:"phone"`
 }
 
 type CreateFlightRequest struct {
@@ -100,37 +106,54 @@ type UpdateFlightRequest struct {
 }
 
 type TripResponse struct {
-	ID                 string   `json:"id"`
-	Title              string   `json:"title"`
-	StartDate          string   `json:"startDate"`
-	EndDate            string   `json:"endDate"`
-	Travelers          []string `json:"travelers"`
-	DestinationCountry string   `json:"destinationCountry"`
-	Memo               string   `json:"memo,omitempty"`
+	ID                    string   `json:"id"`
+	Title                 string   `json:"title"`
+	StartDate             string   `json:"startDate"`
+	EndDate               string   `json:"endDate"`
+	Travelers             []string `json:"travelers"`
+	DestinationCountry    string   `json:"destinationCountry"`
+	Memo                  string   `json:"memo,omitempty"`
+	EmergencyContactName  string   `json:"emergencyContactName,omitempty"`
+	EmergencyContactPhone string   `json:"emergencyContactPhone,omitempty"`
 }
 
 // TripSummaryResponse는 여행 목록 화면 전용이다.
 // 상세 조회(TripResponse)에는 개수를 넣지 않는다 — 항상 0이 실려 오해를 준다.
+//
+// 프론트는 이 응답을 여행 목록뿐 아니라 개별 여행 화면(오늘/일정/지도/긴급 탭)의
+// 유일한 데이터 소스로도 쓴다 — 상세 조회(GetTrip)가 아니라 목록에서 골라 쓴다.
+// 그래서 TripResponse에만 넣고 여기 빠뜨리면, 값은 DB에 잘 저장되는데 정작
+// 여행을 보는 화면에는 반영이 안 되는 조용한 버그가 생긴다(실제로 겪었다).
 type TripSummaryResponse struct {
-	ID                 string   `json:"id"`
-	Title              string   `json:"title"`
-	StartDate          string   `json:"startDate"`
-	EndDate            string   `json:"endDate"`
-	Travelers          []string `json:"travelers"`
-	DestinationCountry string   `json:"destinationCountry"`
-	Memo               string   `json:"memo,omitempty"`
-	PlaceCount         int      `json:"placeCount"`
-	ScheduleCount      int      `json:"scheduleCount"`
-	FlightCount        int      `json:"flightCount"`
+	ID                    string   `json:"id"`
+	Title                 string   `json:"title"`
+	StartDate             string   `json:"startDate"`
+	EndDate               string   `json:"endDate"`
+	Travelers             []string `json:"travelers"`
+	DestinationCountry    string   `json:"destinationCountry"`
+	Memo                  string   `json:"memo,omitempty"`
+	EmergencyContactName  string   `json:"emergencyContactName,omitempty"`
+	EmergencyContactPhone string   `json:"emergencyContactPhone,omitempty"`
+	PlaceCount            int      `json:"placeCount"`
+	ScheduleCount         int      `json:"scheduleCount"`
+	FlightCount           int      `json:"flightCount"`
 }
 
+// PublicTripResponse는 공유 링크로 로그인 없이 보는 응답이다. 내부 메모(Memo)는
+// 일부러 뺐다 — 소유자 혼잣말이 공유 화면에 노출됐던 사고 이후로 지키는 규칙이다.
+//
+// 긴급 연락처는 다르다. 이건 소유자만 보는 메모가 아니라 동행자가 여행 중 실제로
+// 눌러 쓰는 정보라, 공유 응답에도 포함한다 — 이 기능의 존재 이유 자체가 로그인
+// 없이 보는 가족에게 연락처를 보여주는 것이다.
 type PublicTripResponse struct {
-	ID                 string   `json:"id"`
-	Title              string   `json:"title"`
-	StartDate          string   `json:"startDate"`
-	EndDate            string   `json:"endDate"`
-	Travelers          []string `json:"travelers"`
-	DestinationCountry string   `json:"destinationCountry"`
+	ID                    string   `json:"id"`
+	Title                 string   `json:"title"`
+	StartDate             string   `json:"startDate"`
+	EndDate               string   `json:"endDate"`
+	Travelers             []string `json:"travelers"`
+	DestinationCountry    string   `json:"destinationCountry"`
+	EmergencyContactName  string   `json:"emergencyContactName,omitempty"`
+	EmergencyContactPhone string   `json:"emergencyContactPhone,omitempty"`
 }
 
 type ScheduleResponse struct {
@@ -158,6 +181,7 @@ type PlaceResponse struct {
 	ChineseAddress    string   `json:"chineseAddress,omitempty"`
 	SubwayExit        string   `json:"subwayExit,omitempty"`
 	TaxiPhrase        string   `json:"taxiPhrase,omitempty"`
+	Phone             string   `json:"phone,omitempty"`
 }
 
 type FlightResponse struct {

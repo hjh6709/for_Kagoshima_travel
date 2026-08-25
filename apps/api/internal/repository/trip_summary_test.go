@@ -80,8 +80,9 @@ func TestPostgresTripRepositoryFindSummariesByOwnerUsesAggregateCounts(t *testin
 
 	var tripID string
 	if err := pool.QueryRow(ctx, `
-		INSERT INTO trips (owner_id, title, start_date, end_date, destination_country)
-		VALUES ($1, '상하이 여행', '2026-08-23', '2026-08-26', 'CN')
+		INSERT INTO trips (owner_id, title, start_date, end_date, destination_country,
+		                    emergency_contact_name, emergency_contact_phone)
+		VALUES ($1, '상하이 여행', '2026-08-23', '2026-08-26', 'CN', '아빠 휴대폰', '010-1234-5678')
 		RETURNING id::text
 	`, ownerID).Scan(&tripID); err != nil {
 		t.Fatalf("insert trip: %v", err)
@@ -125,5 +126,15 @@ func TestPostgresTripRepositoryFindSummariesByOwnerUsesAggregateCounts(t *testin
 			summaries[0].ScheduleCount,
 			summaries[0].FlightCount,
 		)
+	}
+
+	// 목록 SQL이 개수 집계 CTE만 셀렉트하고 emergency_contact_* 컬럼을 빠뜨리면,
+	// 값은 trips 테이블에 잘 저장되는데 목록/상세 화면에는 반영되지 않는 조용한
+	// 버그가 생긴다 — 실제로 겪은 뒤 추가한 회귀 테스트다.
+	if summaries[0].Trip.EmergencyContactName != "아빠 휴대폰" {
+		t.Errorf("Trip.EmergencyContactName = %q, want %q", summaries[0].Trip.EmergencyContactName, "아빠 휴대폰")
+	}
+	if summaries[0].Trip.EmergencyContactPhone != "010-1234-5678" {
+		t.Errorf("Trip.EmergencyContactPhone = %q, want %q", summaries[0].Trip.EmergencyContactPhone, "010-1234-5678")
 	}
 }

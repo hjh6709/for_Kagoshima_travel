@@ -32,10 +32,10 @@ func (r *PostgresTripRepository) context() context.Context {
 
 func (r *PostgresTripRepository) FindTrip(id string) (model.Trip, error) {
 	row := r.pool.QueryRow(r.context(),
-		`SELECT id::text, owner_id::text, title, start_date::text, end_date::text, travelers, destination_country, COALESCE(memo,'') FROM trips WHERE id = $1`, id)
+		`SELECT id::text, owner_id::text, title, start_date::text, end_date::text, travelers, destination_country, COALESCE(memo,''), COALESCE(emergency_contact_name,''), COALESCE(emergency_contact_phone,'') FROM trips WHERE id = $1`, id)
 
 	var t model.Trip
-	if err := row.Scan(&t.ID, &t.OwnerID, &t.Title, &t.StartDate, &t.EndDate, &t.Travelers, &t.DestinationCountry, &t.Memo); err != nil {
+	if err := row.Scan(&t.ID, &t.OwnerID, &t.Title, &t.StartDate, &t.EndDate, &t.Travelers, &t.DestinationCountry, &t.Memo, &t.EmergencyContactName, &t.EmergencyContactPhone); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return model.Trip{}, ErrNotFound
 		}
@@ -46,7 +46,7 @@ func (r *PostgresTripRepository) FindTrip(id string) (model.Trip, error) {
 
 func (r *PostgresTripRepository) FindByOwner(ownerID string) ([]model.Trip, error) {
 	rows, err := r.pool.Query(r.context(),
-		`SELECT id::text, owner_id::text, title, start_date::text, end_date::text, travelers, destination_country, COALESCE(memo,'') FROM trips WHERE owner_id = $1 ORDER BY start_date`, ownerID)
+		`SELECT id::text, owner_id::text, title, start_date::text, end_date::text, travelers, destination_country, COALESCE(memo,''), COALESCE(emergency_contact_name,''), COALESCE(emergency_contact_phone,'') FROM trips WHERE owner_id = $1 ORDER BY start_date`, ownerID)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func (r *PostgresTripRepository) FindByOwner(ownerID string) ([]model.Trip, erro
 	result := make([]model.Trip, 0)
 	for rows.Next() {
 		var t model.Trip
-		if err := rows.Scan(&t.ID, &t.OwnerID, &t.Title, &t.StartDate, &t.EndDate, &t.Travelers, &t.DestinationCountry, &t.Memo); err != nil {
+		if err := rows.Scan(&t.ID, &t.OwnerID, &t.Title, &t.StartDate, &t.EndDate, &t.Travelers, &t.DestinationCountry, &t.Memo, &t.EmergencyContactName, &t.EmergencyContactPhone); err != nil {
 			return nil, err
 		}
 		result = append(result, t)
@@ -66,7 +66,8 @@ func (r *PostgresTripRepository) FindByOwner(ownerID string) ([]model.Trip, erro
 func (r *PostgresTripRepository) FindSummariesByOwner(ownerID string) ([]TripSummary, error) {
 	rows, err := r.pool.Query(r.context(), `
 		WITH owner_trips AS (
-			SELECT id, owner_id, title, start_date, end_date, travelers, destination_country, memo
+			SELECT id, owner_id, title, start_date, end_date, travelers, destination_country, memo,
+			       emergency_contact_name, emergency_contact_phone
 			FROM trips
 			WHERE owner_id = $1
 		), place_counts AS (
@@ -87,6 +88,7 @@ func (r *PostgresTripRepository) FindSummariesByOwner(ownerID string) ([]TripSum
 		)
 		SELECT t.id::text, t.owner_id::text, t.title, t.start_date::text, t.end_date::text,
 		       t.travelers, t.destination_country, COALESCE(t.memo,''),
+		       COALESCE(t.emergency_contact_name,''), COALESCE(t.emergency_contact_phone,''),
 		       COALESCE(p.child_count, 0), COALESCE(s.child_count, 0), COALESCE(f.child_count, 0)
 		FROM owner_trips t
 		LEFT JOIN place_counts p ON p.trip_id = t.id
@@ -111,6 +113,8 @@ func (r *PostgresTripRepository) FindSummariesByOwner(ownerID string) ([]TripSum
 			&trip.Travelers,
 			&trip.DestinationCountry,
 			&trip.Memo,
+			&trip.EmergencyContactName,
+			&trip.EmergencyContactPhone,
 			&summary.PlaceCount,
 			&summary.ScheduleCount,
 			&summary.FlightCount,
@@ -140,8 +144,8 @@ func (r *PostgresTripRepository) FindShareLinkByToken(token string) (model.Share
 
 func (r *PostgresTripRepository) Save(trip model.Trip) error {
 	_, err := r.pool.Exec(r.context(),
-		`INSERT INTO trips (id, owner_id, title, start_date, end_date, travelers, destination_country, memo) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-		trip.ID, trip.OwnerID, trip.Title, trip.StartDate, trip.EndDate, trip.Travelers, trip.DestinationCountry, trip.Memo)
+		`INSERT INTO trips (id, owner_id, title, start_date, end_date, travelers, destination_country, memo, emergency_contact_name, emergency_contact_phone) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+		trip.ID, trip.OwnerID, trip.Title, trip.StartDate, trip.EndDate, trip.Travelers, trip.DestinationCountry, trip.Memo, trip.EmergencyContactName, trip.EmergencyContactPhone)
 	return err
 }
 
@@ -153,8 +157,8 @@ func (r *PostgresTripRepository) SaveTripWithChecklist(ctx context.Context, trip
 	defer func() { _ = tx.Rollback(context.WithoutCancel(ctx)) }()
 
 	if _, err := tx.Exec(ctx,
-		`INSERT INTO trips (id, owner_id, title, start_date, end_date, travelers, destination_country, memo) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-		trip.ID, trip.OwnerID, trip.Title, trip.StartDate, trip.EndDate, trip.Travelers, trip.DestinationCountry, trip.Memo,
+		`INSERT INTO trips (id, owner_id, title, start_date, end_date, travelers, destination_country, memo, emergency_contact_name, emergency_contact_phone) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+		trip.ID, trip.OwnerID, trip.Title, trip.StartDate, trip.EndDate, trip.Travelers, trip.DestinationCountry, trip.Memo, trip.EmergencyContactName, trip.EmergencyContactPhone,
 	); err != nil {
 		return err
 	}
@@ -254,11 +258,11 @@ func (r *PostgresTripRepository) UpdateSchedule(schedule model.Schedule) error {
 
 func (r *PostgresTripRepository) SavePlace(place model.Place) error {
 	_, err := r.pool.Exec(r.context(),
-		`INSERT INTO places (id, trip_id, name, category, address, google_maps_url, recommended_reason, 
-		                     latitude, longitude, google_place_id, chinese_name, chinese_address, subway_exit, taxi_phrase)
-		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+		`INSERT INTO places (id, trip_id, name, category, address, google_maps_url, recommended_reason,
+		                     latitude, longitude, google_place_id, chinese_name, chinese_address, subway_exit, taxi_phrase, phone)
+		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
 		place.ID, place.TripID, place.Name, place.Category, place.Address, place.GoogleMapsURL, place.RecommendedReason,
-		place.Latitude, place.Longitude, place.GooglePlaceID, place.ChineseName, place.ChineseAddress, place.SubwayExit, place.TaxiPhrase)
+		place.Latitude, place.Longitude, place.GooglePlaceID, place.ChineseName, place.ChineseAddress, place.SubwayExit, place.TaxiPhrase, place.Phone)
 	return err
 }
 
@@ -268,13 +272,13 @@ func (r *PostgresTripRepository) FindPlace(tripID, placeID string) (model.Place,
 		`SELECT id::text, trip_id::text, name, category, COALESCE(address,''),
 		        COALESCE(google_maps_url,''), COALESCE(recommended_reason,''),
 		        latitude, longitude, COALESCE(google_place_id,''), COALESCE(chinese_name,''),
-		        COALESCE(chinese_address,''), COALESCE(subway_exit,''), COALESCE(taxi_phrase,'')
+		        COALESCE(chinese_address,''), COALESCE(subway_exit,''), COALESCE(taxi_phrase,''), COALESCE(phone,'')
 		 FROM places WHERE trip_id = $1 AND id = $2`, tripID, placeID)
 
 	var place model.Place
 	if err := row.Scan(&place.ID, &place.TripID, &place.Name, &place.Category, &place.Address,
 		&place.GoogleMapsURL, &place.RecommendedReason, &place.Latitude, &place.Longitude,
-		&place.GooglePlaceID, &place.ChineseName, &place.ChineseAddress, &place.SubwayExit, &place.TaxiPhrase); err != nil {
+		&place.GooglePlaceID, &place.ChineseName, &place.ChineseAddress, &place.SubwayExit, &place.TaxiPhrase, &place.Phone); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return model.Place{}, ErrNotFound
 		}
@@ -289,11 +293,11 @@ func (r *PostgresTripRepository) UpdatePlace(place model.Place) error {
 		`UPDATE places
 		 SET name = $1, category = $2, address = $3, google_maps_url = $4, recommended_reason = $5,
 		     latitude = $6, longitude = $7, google_place_id = $8, chinese_name = $9, chinese_address = $10,
-		     subway_exit = $11, taxi_phrase = $12
-		 WHERE trip_id = $13 AND id = $14`,
+		     subway_exit = $11, taxi_phrase = $12, phone = $13
+		 WHERE trip_id = $14 AND id = $15`,
 		place.Name, place.Category, place.Address, place.GoogleMapsURL, place.RecommendedReason,
 		place.Latitude, place.Longitude, place.GooglePlaceID, place.ChineseName, place.ChineseAddress,
-		place.SubwayExit, place.TaxiPhrase, place.TripID, place.ID)
+		place.SubwayExit, place.TaxiPhrase, place.Phone, place.TripID, place.ID)
 	if err != nil {
 		return err
 	}
@@ -420,8 +424,8 @@ func (r *PostgresTripRepository) ConsumeMonthlyAPIRequest(provider, periodStart 
 
 func (r *PostgresTripRepository) Update(trip model.Trip) error {
 	tag, err := r.pool.Exec(r.context(),
-		`UPDATE trips SET title=$1, start_date=$2, end_date=$3, travelers=$4, destination_country=$5, memo=$6, updated_at=NOW() WHERE id=$7`,
-		trip.Title, trip.StartDate, trip.EndDate, trip.Travelers, trip.DestinationCountry, trip.Memo, trip.ID)
+		`UPDATE trips SET title=$1, start_date=$2, end_date=$3, travelers=$4, destination_country=$5, memo=$6, emergency_contact_name=$7, emergency_contact_phone=$8, updated_at=NOW() WHERE id=$9`,
+		trip.Title, trip.StartDate, trip.EndDate, trip.Travelers, trip.DestinationCountry, trip.Memo, trip.EmergencyContactName, trip.EmergencyContactPhone, trip.ID)
 	if err != nil {
 		return mapPostgresWriteError(err)
 	}
@@ -469,7 +473,7 @@ func (r *PostgresTripRepository) FindPlaces(tripID string) ([]model.Place, error
 		`SELECT id::text, trip_id::text, name, category, COALESCE(address,''),
 		        COALESCE(google_maps_url,''), COALESCE(recommended_reason,''),
 		        latitude, longitude, COALESCE(google_place_id,''), COALESCE(chinese_name,''),
-		        COALESCE(chinese_address,''), COALESCE(subway_exit,''), COALESCE(taxi_phrase,'')
+		        COALESCE(chinese_address,''), COALESCE(subway_exit,''), COALESCE(taxi_phrase,''), COALESCE(phone,'')
 		 FROM places WHERE trip_id = $1 ORDER BY category`, tripID)
 	if err != nil {
 		return nil, err
@@ -481,7 +485,7 @@ func (r *PostgresTripRepository) FindPlaces(tripID string) ([]model.Place, error
 		var p model.Place
 		if err := rows.Scan(&p.ID, &p.TripID, &p.Name, &p.Category, &p.Address,
 			&p.GoogleMapsURL, &p.RecommendedReason, &p.Latitude, &p.Longitude,
-			&p.GooglePlaceID, &p.ChineseName, &p.ChineseAddress, &p.SubwayExit, &p.TaxiPhrase); err != nil {
+			&p.GooglePlaceID, &p.ChineseName, &p.ChineseAddress, &p.SubwayExit, &p.TaxiPhrase, &p.Phone); err != nil {
 			return nil, err
 		}
 		result = append(result, p)

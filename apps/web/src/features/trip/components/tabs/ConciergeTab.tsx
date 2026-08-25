@@ -145,18 +145,19 @@ export function ConciergeTab({
                         {item.address}
                       </span>
                     )}
-                    {item.phone ? (
-                      <a
-                        aria-label={`${item.title} ${item.phone}로 전화`}
-                        className="emergency-call-button"
-                        href={`tel:${item.phone}`}
-                      >
-                        <Phone aria-hidden="true" size={17} />
-                        <span>{item.phone}</span>
-                      </a>
-                    ) : (
-                      <span className="emergency-unregistered">연락처 미등록</span>
-                    )}
+                    {item.callable &&
+                      (item.phone ? (
+                        <a
+                          aria-label={`${item.title} ${item.phone}로 전화`}
+                          className="emergency-call-button"
+                          href={`tel:${item.phone}`}
+                        >
+                          <Phone aria-hidden="true" size={17} />
+                          <span>{item.phone}</span>
+                        </a>
+                      ) : (
+                        <span className="emergency-unregistered">전화번호가 등록되지 않았습니다</span>
+                      ))}
                   </article>
                 ))}
               </div>

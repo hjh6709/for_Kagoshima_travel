@@ -310,6 +310,7 @@ func (s *TripService) CreatePlace(tripID, ownerID string, req dto.CreatePlaceReq
 		ChineseAddress:    req.ChineseAddress,
 		SubwayExit:        req.SubwayExit,
 		TaxiPhrase:        req.TaxiPhrase,
+		Phone:             strings.TrimSpace(req.Phone),
 	}
 	if err := s.tripRepository.SavePlace(place); err != nil {
 		return dto.PlaceResponse{}, err
@@ -363,6 +364,9 @@ func (s *TripService) UpdatePlace(tripID, placeID, ownerID string, req dto.Updat
 	}
 	if req.TaxiPhrase != nil {
 		place.TaxiPhrase = *req.TaxiPhrase
+	}
+	if req.Phone != nil {
+		place.Phone = strings.TrimSpace(*req.Phone)
 	}
 
 	// 장소 카드가 화면에 의미 있게 표시되려면 이름과 분류는 수정 후에도 필수다.
@@ -593,14 +597,16 @@ func (s *TripService) CreateTrip(ownerID string, req dto.CreateTripRequest) (dto
 		return dto.TripResponse{}, err
 	}
 	trip := model.Trip{
-		ID:                 id,
-		OwnerID:            ownerID,
-		Title:              title,
-		StartDate:          req.StartDate,
-		EndDate:            req.EndDate,
-		Travelers:          req.Travelers,
-		DestinationCountry: destCountry,
-		Memo:               req.Memo,
+		ID:                    id,
+		OwnerID:               ownerID,
+		Title:                 title,
+		StartDate:             req.StartDate,
+		EndDate:               req.EndDate,
+		Travelers:             req.Travelers,
+		DestinationCountry:    destCountry,
+		Memo:                  req.Memo,
+		EmergencyContactName:  strings.TrimSpace(req.EmergencyContactName),
+		EmergencyContactPhone: strings.TrimSpace(req.EmergencyContactPhone),
 	}
 	// 기본 체크리스트 프리셋 자동 주입
 	presetItems := make([]model.ChecklistItem, 0)
@@ -650,16 +656,18 @@ func (s *TripService) ListMyTrips(ownerID string) ([]dto.TripSummaryResponse, er
 	for _, summary := range summaries {
 		base := mapTripResponse(summary.Trip)
 		responses = append(responses, dto.TripSummaryResponse{
-			ID:                 base.ID,
-			Title:              base.Title,
-			StartDate:          base.StartDate,
-			EndDate:            base.EndDate,
-			Travelers:          base.Travelers,
-			DestinationCountry: base.DestinationCountry,
-			Memo:               base.Memo,
-			PlaceCount:         summary.PlaceCount,
-			ScheduleCount:      summary.ScheduleCount,
-			FlightCount:        summary.FlightCount,
+			ID:                    base.ID,
+			Title:                 base.Title,
+			StartDate:             base.StartDate,
+			EndDate:               base.EndDate,
+			Travelers:             base.Travelers,
+			DestinationCountry:    base.DestinationCountry,
+			Memo:                  base.Memo,
+			EmergencyContactName:  base.EmergencyContactName,
+			EmergencyContactPhone: base.EmergencyContactPhone,
+			PlaceCount:            summary.PlaceCount,
+			ScheduleCount:         summary.ScheduleCount,
+			FlightCount:           summary.FlightCount,
 		})
 	}
 	return responses, nil
@@ -694,6 +702,12 @@ func (s *TripService) UpdateTrip(id, ownerID string, req dto.UpdateTripRequest) 
 	}
 	if req.Memo != nil {
 		trip.Memo = *req.Memo
+	}
+	if req.EmergencyContactName != nil {
+		trip.EmergencyContactName = strings.TrimSpace(*req.EmergencyContactName)
+	}
+	if req.EmergencyContactPhone != nil {
+		trip.EmergencyContactPhone = strings.TrimSpace(*req.EmergencyContactPhone)
 	}
 	if _, valid := normalizeRequiredText(trip.Title, maxTitleRunes); !valid || !validateDateRange(trip.StartDate, trip.EndDate) {
 		return dto.TripResponse{}, ErrInvalidTrip
@@ -761,24 +775,31 @@ func mapRepositoryError(err error) error {
 
 func mapTripResponse(trip model.Trip) dto.TripResponse {
 	return dto.TripResponse{
-		ID:                 trip.ID,
-		Title:              trip.Title,
-		StartDate:          trip.StartDate,
-		EndDate:            trip.EndDate,
-		Travelers:          trip.Travelers,
-		DestinationCountry: trip.DestinationCountry,
-		Memo:               trip.Memo,
+		ID:                    trip.ID,
+		Title:                 trip.Title,
+		StartDate:             trip.StartDate,
+		EndDate:               trip.EndDate,
+		Travelers:             trip.Travelers,
+		DestinationCountry:    trip.DestinationCountry,
+		Memo:                  trip.Memo,
+		EmergencyContactName:  trip.EmergencyContactName,
+		EmergencyContactPhone: trip.EmergencyContactPhone,
 	}
 }
 
+// 공유 응답에도 긴급 연락처를 넣는다 — 로그인 없이 링크로 보는 동행자가
+// 여행 중 실제로 쓰는 정보다. 내부 메모(Memo)와 달리 이건 처음부터
+// 가족에게 보여주려고 만든 필드라 공개 응답 규칙(메모 제외)의 예외다.
 func mapPublicTripResponse(trip model.Trip) dto.PublicTripResponse {
 	return dto.PublicTripResponse{
-		ID:                 trip.ID,
-		Title:              trip.Title,
-		StartDate:          trip.StartDate,
-		EndDate:            trip.EndDate,
-		Travelers:          trip.Travelers,
-		DestinationCountry: trip.DestinationCountry,
+		ID:                    trip.ID,
+		Title:                 trip.Title,
+		StartDate:             trip.StartDate,
+		EndDate:               trip.EndDate,
+		Travelers:             trip.Travelers,
+		DestinationCountry:    trip.DestinationCountry,
+		EmergencyContactName:  trip.EmergencyContactName,
+		EmergencyContactPhone: trip.EmergencyContactPhone,
 	}
 }
 
@@ -822,6 +843,7 @@ func mapPlaceResponse(place model.Place) dto.PlaceResponse {
 		ChineseAddress:    place.ChineseAddress,
 		SubwayExit:        place.SubwayExit,
 		TaxiPhrase:        place.TaxiPhrase,
+		Phone:             place.Phone,
 	}
 }
 

@@ -81,6 +81,7 @@ export type Place = {
   chineseAddress?: string;
   subwayExit?: string;
   taxiPhrase?: string;
+  phone?: string;
 };
 
 export type RecommendedRoute = {
@@ -107,4 +108,7 @@ export type EmergencyInfo = {
   description: string;
   phone?: string;
   address?: string;
+  // true면 전화 걸기 버튼 또는 "연락처 미등록" 상태를 보여준다.
+  // false/undefined면 원래 전화번호가 없는 안내형 항목이라 그 줄 자체를 숨긴다.
+  callable?: boolean;
 };

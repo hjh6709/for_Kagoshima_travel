@@ -1,14 +1,16 @@
 package model
 
 type Trip struct {
-	ID                 string   `json:"id"`
-	OwnerID            string   `json:"ownerId"`
-	Title              string   `json:"title"`
-	StartDate          string   `json:"startDate"`
-	EndDate            string   `json:"endDate"`
-	Travelers          []string `json:"travelers"`
-	DestinationCountry string   `json:"destinationCountry"`
-	Memo               string   `json:"memo,omitempty"`
+	ID                    string   `json:"id"`
+	OwnerID               string   `json:"ownerId"`
+	Title                 string   `json:"title"`
+	StartDate             string   `json:"startDate"`
+	EndDate               string   `json:"endDate"`
+	Travelers             []string `json:"travelers"`
+	DestinationCountry    string   `json:"destinationCountry"`
+	Memo                  string   `json:"memo,omitempty"`
+	EmergencyContactName  string   `json:"emergencyContactName,omitempty"`
+	EmergencyContactPhone string   `json:"emergencyContactPhone,omitempty"`
 }
 
 type Schedule struct {
@@ -38,6 +40,7 @@ type Place struct {
 	ChineseAddress    string   `json:"chineseAddress,omitempty"`
 	SubwayExit        string   `json:"subwayExit,omitempty"`
 	TaxiPhrase        string   `json:"taxiPhrase,omitempty"`
+	Phone             string   `json:"phone,omitempty"`
 }
 
 type Flight struct {

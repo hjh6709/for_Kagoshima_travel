@@ -7,6 +7,8 @@ type EditableTrip = {
   travelers: string[];
   destinationCountry?: string;
   memo?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
 };
 
 // 선택한 여행의 기본 정보 수정 폼 상태를 모아 관리한다.
@@ -17,6 +19,8 @@ export function useTripEditFormState() {
   const [tripEditTravelers, setTripEditTravelers] = useState("");
   const [tripEditDestinationCountry, setTripEditDestinationCountry] = useState("JP");
   const [tripEditMemo, setTripEditMemo] = useState("");
+  const [tripEditEmergencyContactName, setTripEditEmergencyContactName] = useState("");
+  const [tripEditEmergencyContactPhone, setTripEditEmergencyContactPhone] = useState("");
   const [tripEditError, setTripEditError] = useState("");
   const [tripEditSubmitting, setTripEditSubmitting] = useState(false);
 
@@ -28,6 +32,8 @@ export function useTripEditFormState() {
     setTripEditTravelers("");
     setTripEditDestinationCountry("JP");
     setTripEditMemo("");
+    setTripEditEmergencyContactName("");
+    setTripEditEmergencyContactPhone("");
     setTripEditError("");
   }
 
@@ -39,6 +45,8 @@ export function useTripEditFormState() {
     setTripEditTravelers(trip.travelers.join(", "));
     setTripEditDestinationCountry(trip.destinationCountry ?? "JP");
     setTripEditMemo(trip.memo ?? "");
+    setTripEditEmergencyContactName(trip.emergencyContactName ?? "");
+    setTripEditEmergencyContactPhone(trip.emergencyContactPhone ?? "");
     setTripEditError("");
   }
 
@@ -55,6 +63,10 @@ export function useTripEditFormState() {
     setTripEditDestinationCountry,
     tripEditMemo,
     setTripEditMemo,
+    tripEditEmergencyContactName,
+    setTripEditEmergencyContactName,
+    tripEditEmergencyContactPhone,
+    setTripEditEmergencyContactPhone,
     tripEditError,
     setTripEditError,
     tripEditSubmitting,

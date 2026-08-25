@@ -54,6 +54,8 @@ type TripEditFormState = {
   setTripEditSubmitting: Dispatch<SetStateAction<boolean>>;
   tripEditEndDate: string;
   tripEditMemo: string;
+  tripEditEmergencyContactName: string;
+  tripEditEmergencyContactPhone: string;
   tripEditStartDate: string;
   tripEditTitle: string;
   tripEditTravelers: string;
@@ -356,6 +358,8 @@ export function useTripManageSessionTrips({
       tripEditForm.tripEditEndDate || tripEditForm.tripEditStartDate;
     const travelers = parseTravelers(tripEditForm.tripEditTravelers);
     const memo = tripEditForm.tripEditMemo.trim();
+    const emergencyContactName = tripEditForm.tripEditEmergencyContactName.trim();
+    const emergencyContactPhone = tripEditForm.tripEditEmergencyContactPhone.trim();
 
     if (!title || !startDate || !endDate) {
       tripEditForm.setTripEditError("여행명과 여행 날짜를 입력해주세요.");
@@ -379,6 +383,8 @@ export function useTripManageSessionTrips({
           travelers,
           destinationCountry: tripEditForm.tripEditDestinationCountry,
           memo,
+          emergencyContactName,
+          emergencyContactPhone,
         },
       );
       setOwnerTrips((currentTrips) =>

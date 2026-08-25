@@ -48,6 +48,7 @@ export function mapOwnerPlace(place: SharedPlace): Place {
     chineseAddress: place.chineseAddress,
     subwayExit: place.subwayExit,
     taxiPhrase: place.taxiPhrase,
+    phone: place.phone,
   };
 }
 
@@ -122,13 +123,26 @@ export function deriveAccommodation(places: Place[]): AccommodationInfo {
   };
 }
 
-export function deriveEmergencies(places: Place[]): EmergencyInfo[] {
+// 긴급 연락처 카드. `callable: true`인 항목만 전화 걸기/미등록 상태를 보여준다 —
+// 여권 분실처럼 원래 전화번호가 없는 안내형 항목까지 "미등록"으로 표시하면
+// 사용자가 뭔가 빠졌다고 오해한다(실제로 이 문제로 사용자 신고를 받았다).
+export function deriveEmergencies(
+  places: Place[],
+  emergencyContact?: { name?: string; phone?: string },
+): EmergencyInfo[] {
   const hotel = places.find((place) => place.category === "hotel");
+  const contactName = emergencyContact?.name?.trim();
+  const contactPhone = emergencyContact?.phone?.trim();
+
   return [
     {
       id: "emergency-family",
-      title: "가족 연락",
-      description: "문제가 생기면 가장 먼저 가족에게 연락하세요.",
+      title: contactName ? `가족 연락 (${contactName})` : "가족 연락",
+      description: contactPhone
+        ? "문제가 생기면 가장 먼저 연락하세요."
+        : "문제가 생기면 가장 먼저 가족에게 연락하세요. 여행 편집 > 기본 정보에서 연락처를 등록하면 바로 전화 걸 수 있습니다.",
+      phone: contactPhone,
+      callable: true,
     },
     {
       id: "emergency-hotel",
@@ -137,11 +151,14 @@ export function deriveEmergencies(places: Place[]): EmergencyInfo[] {
         ? `${hotel.name}\n${hotel.address || ""}`
         : "장소 관리에서 숙소(호텔)를 등록하면 여기에 표시됩니다.",
       address: hotel?.address,
+      phone: hotel?.phone,
+      callable: true,
     },
     {
       id: "emergency-passport",
       title: "여권 분실",
       description: "가족에게 연락한 뒤 가까운 경찰서와 영사관 안내를 확인하세요.",
+      callable: false,
     },
   ];
 }

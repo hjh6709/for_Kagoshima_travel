@@ -13,6 +13,7 @@ export type CreatePlacePayload = {
   chineseAddress?: string;
   subwayExit?: string;
   taxiPhrase?: string;
+  phone?: string;
 };
 
 export type UpdatePlacePayload = Partial<CreatePlacePayload>;
@@ -45,6 +46,7 @@ export type SharedPlace = {
   chineseAddress?: string;
   subwayExit?: string;
   taxiPhrase?: string;
+  phone?: string;
 };
 
 export function listTripPlaces(accessToken: string, tripID: string) {
