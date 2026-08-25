@@ -352,9 +352,25 @@
   margin-top: 2px;
 }
 
+/* 비밀번호 변경 카드와 구조가 같아서(둘 다 mypage-security-card) 펼치기 전에는
+   구분이 안 됐다 — 접힌 상태에서도 위험한 동작임을 알 수 있게 테두리와
+   배경을 danger 톤으로 미리 표시한다. */
+.mypage-danger-card {
+  border-color: var(--c-danger);
+  background: var(--c-danger-light);
+}
+
+.mypage-danger-card .mypage-security-summary strong {
+  color: var(--c-danger);
+}
+
 .mypage-danger-card .mypage-security-icon {
   background: var(--c-danger-light);
   color: var(--c-danger);
+}
+
+.mypage-danger-card .mypage-security-content {
+  background: var(--c-surface);
 }
 
 .mypage-delete-warning {

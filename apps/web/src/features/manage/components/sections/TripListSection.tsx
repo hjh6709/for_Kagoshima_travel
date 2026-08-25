@@ -106,17 +106,19 @@ export function TripListSection({
                 </div>
                 {typeof ownerTrip.placeCount === "number" && (
                   <div className="owner-trip-stats">
-                    <span aria-label={`장소 ${ownerTrip.placeCount}곳`}>
+                    {/* 아이콘+숫자만으로는 무엇을 세는 값인지 한눈에 안 들어와서
+                        라벨 텍스트를 붙였다 — aria-label은 시각 텍스트와 중복되므로 뺀다. */}
+                    <span>
                       <MapPin aria-hidden="true" size={16} />
-                      {ownerTrip.placeCount}
+                      장소 {ownerTrip.placeCount}
                     </span>
-                    <span aria-label={`일정 ${ownerTrip.scheduleCount ?? 0}개`}>
+                    <span>
                       <CalendarDays aria-hidden="true" size={16} />
-                      {ownerTrip.scheduleCount ?? 0}
+                      일정 {ownerTrip.scheduleCount ?? 0}
                     </span>
-                    <span aria-label={`항공편 ${ownerTrip.flightCount ?? 0}개`}>
+                    <span>
                       <Plane aria-hidden="true" size={16} />
-                      {ownerTrip.flightCount ?? 0}
+                      항공편 {ownerTrip.flightCount ?? 0}
                     </span>
                   </div>
                 )}

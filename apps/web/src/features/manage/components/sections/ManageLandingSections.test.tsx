@@ -157,9 +157,9 @@ describe("여행 카드 하위 개수 스탯", () => {
       flightCount: 2,
     });
 
-    expect(screen.getByLabelText("장소 7곳")).toBeVisible();
-    expect(screen.getByLabelText("일정 12개")).toBeVisible();
-    expect(screen.getByLabelText("항공편 2개")).toBeVisible();
+    expect(screen.getByText("장소 7")).toBeVisible();
+    expect(screen.getByText("일정 12")).toBeVisible();
+    expect(screen.getByText("항공편 2")).toBeVisible();
   });
 
   it("개수를 아직 못 받았으면 스탯 행을 넣지 않는다", () => {
