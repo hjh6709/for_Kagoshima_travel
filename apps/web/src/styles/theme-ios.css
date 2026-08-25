@@ -23,19 +23,22 @@
   padding: calc(14px + env(safe-area-inset-top)) 22px calc(28px + env(safe-area-inset-bottom));
 }
 
+/* margin은 여기서 정하지 않는다 — 이 규칙은 뒤에 로드되는 theme 레이어라
+   layer 우선순위 때문에 명시도(specificity)와 무관하게 features 레이어의
+   모든 컴포넌트별 margin(.next-schedule-card h2, .owner-trip-card h2 등
+   수십 곳)을 조용히 0으로 짓눌러 왔다 — 카드마다 제목이 위 요소에 달라붙어
+   보이던 원인이었다. 폰트 테마만 얹고 여백은 각 컴포넌트가 정한 값을 그대로 쓴다. */
 .screen h1 {
   font-size: var(--type-screen-size);
   font-weight: var(--font-weight-display);
   letter-spacing: var(--tracking-display);
   line-height: 1.2;
-  margin: 0;
 }
 
 .screen h2 {
   font-size: var(--type-section-size);
   font-weight: var(--font-weight-strong);
   letter-spacing: var(--tracking-title);
-  margin: 0;
 }
 
 .screen-intro,
