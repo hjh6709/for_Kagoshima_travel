@@ -289,6 +289,25 @@ textarea[aria-invalid="true"] {
   appearance: none;
 }
 
+/* type="date"는 캘린더 아이콘/피커 팝업까지는 스타일링할 수 없어 브라우저
+   기본값을 쓴다. color-scheme을 명시해 시스템이 다크 모드여도 이 앱의
+   밝은 카드 위에 어두운 네이티브 피커가 튀어나오는 걸 막고, 아이콘 탭
+   영역을 44px 터치 타깃에 맞춰 키운다. */
+.auth-form input[type="date"] {
+  color-scheme: light;
+}
+
+.auth-form input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  padding: 6px;
+  margin-right: -4px;
+  border-radius: var(--radius-control);
+}
+
+.auth-form input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  background: var(--c-page);
+}
+
 .auth-form textarea {
   line-height: 1.5;
   min-height: 92px;
