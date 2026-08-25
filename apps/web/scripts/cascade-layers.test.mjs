@@ -16,12 +16,13 @@ const expectedImports = [
   ["feedback.css", "feedback"],
   ["travel-tools.css", "features"],
   ["theme-ios.css", "theme"],
+  ["ios-alert.css", "alert"],
 ];
 
 test("전역 CSS는 고정된 cascade layer 순서를 선언한다", () => {
   assert.match(
     styleEntry,
-    /^@layer tokens, foundation, features, feedback, theme;$/m,
+    /^@layer tokens, foundation, features, feedback, theme, alert;$/m,
   );
 });
 

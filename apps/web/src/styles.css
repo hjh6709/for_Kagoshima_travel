@@ -2,7 +2,7 @@
  * Map Planner style entry point.
  * Layer order is the global priority contract; source order still resolves ties within a layer.
  */
-@layer tokens, foundation, features, feedback, theme;
+@layer tokens, foundation, features, feedback, theme, alert;
 
 @import "./styles/tokens.css" layer(tokens);
 @import "./styles/foundation.css" layer(foundation);
@@ -15,3 +15,4 @@
 @import "./styles/feedback.css" layer(feedback);
 @import "./styles/travel-tools.css" layer(features);
 @import "./styles/theme-ios.css" layer(theme);
+@import "./styles/ios-alert.css" layer(alert);
