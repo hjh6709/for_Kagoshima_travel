@@ -86,7 +86,7 @@ export function ConciergeTab({
     <section className="screen concierge-screen">
       <div className="screen-title-row">
         <div>
-          <h1>여행 도우미</h1>
+          <h1>긴급</h1>
           <p className="screen-intro">급할 때 필요한 연락처와 현지 도구를 한곳에 모았습니다.</p>
         </div>
         <ProfileShortcutButton onClick={onNavigateToMyPage} />
