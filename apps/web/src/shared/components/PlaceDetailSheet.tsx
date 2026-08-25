@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Check, Copy, Map, Maximize2 } from "lucide-react";
+import { ArrowLeft, Check, Copy, Map, Maximize2, Phone } from "lucide-react";
 import { placeCategoryIcons } from "../../features/trip/placeCategoryIcons";
 import type { Place } from "../../types/travel";
 import { getAmapDirectionsUrl, getGoogleDirectionsUrl, getPlaceMarkerUrl } from "../../utils/mapLinks";
@@ -80,6 +80,15 @@ export function PlaceDetailSheet({ destinationCountry, onClose, place }: PlaceDe
             <span className="place-sheet-address-label">주소</span>
             <p>{displayAddress}</p>
           </div>
+        )}
+
+        {/* 숙소 연락처는 긴급 탭에서도 이 place.phone을 그대로 쓴다 — 지도에서 장소를
+            찾은 김에 바로 전화도 걸 수 있어야 하는데, 이 시트에는 빠져 있었다. */}
+        {place.phone && (
+          <a className="place-sheet-phone" href={`tel:${place.phone}`}>
+            <Phone aria-hidden="true" size={16} />
+            {place.phone}
+          </a>
         )}
 
         <div className="place-sheet-actions">
