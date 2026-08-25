@@ -212,6 +212,8 @@ export type SelectedTripDetailSectionProps = {
   onSubmitTripEdit: (event: FormEvent<HTMLFormElement>) => void;
   onTripEditEndDateChange: (value: string) => void;
   onTripEditMemoChange: (value: string) => void;
+  onTripEditEmergencyContactNameChange: (value: string) => void;
+  onTripEditEmergencyContactPhoneChange: (value: string) => void;
   onTripEditStartDateChange: (value: string) => void;
   onTripEditTitleChange: (value: string) => void;
   onTripEditTravelersChange: (value: string) => void;
@@ -240,6 +242,8 @@ export type SelectedTripDetailSectionProps = {
   tripEditEndDate: string;
   tripEditError: string;
   tripEditMemo: string;
+  tripEditEmergencyContactName: string;
+  tripEditEmergencyContactPhone: string;
   tripEditStartDate: string;
   tripEditSubmitting: boolean;
   tripEditTitle: string;

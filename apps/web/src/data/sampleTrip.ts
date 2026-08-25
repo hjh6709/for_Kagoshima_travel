@@ -302,19 +302,29 @@ export const checklist: ChecklistItem[] = [
 
 export const emergencies: EmergencyInfo[] = [
   {
+    id: "emergency-family",
+    title: "가족 연락 (아빠 휴대폰)",
+    description: "문제가 생기면 가장 먼저 연락하세요.",
+    phone: "010-1234-5678",
+    callable: true,
+  },
+  {
     id: "emergency-hotel",
     title: "숙소 주소 보여주기",
     description: "기사나 현지 직원에게 중국어 숙소 이름과 주소를 보여주세요.",
     address: "上海市黄浦区西藏中路555号",
+    callable: false,
   },
   {
     id: "emergency-passport",
     title: "여권 분실",
     description: "가까운 경찰서에서 분실 신고를 한 뒤 대한민국 영사 안내를 확인하세요.",
+    callable: false,
   },
   {
     id: "emergency-offline",
     title: "데이터 연결 문제",
     description: "숙소·공항의 중국어 주소를 화면에 띄우고 주변 직원에게 도움을 요청하세요.",
+    callable: false,
   },
 ];

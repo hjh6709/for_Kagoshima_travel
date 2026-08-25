@@ -152,7 +152,14 @@ export function useOwnerTripPageAdapter({
     travelStatus.phase === "during" ? focusScheduleDate : undefined,
   );
 
-  const emergencies = useMemo(() => deriveEmergencies(places), [places]);
+  const emergencies = useMemo(
+    () =>
+      deriveEmergencies(places, {
+        name: selectedOwnerTrip.emergencyContactName,
+        phone: selectedOwnerTrip.emergencyContactPhone,
+      }),
+    [places, selectedOwnerTrip.emergencyContactName, selectedOwnerTrip.emergencyContactPhone],
+  );
 
   function getDisplayDate(dateStr: string) {
     return shiftDate(tripDates.startDate, getDateOffset(trip.startDate, dateStr));

@@ -65,7 +65,14 @@ export function useSharedTripPageAdapter(sharedTrip: SharedTripResponse): TripPa
   );
   const completedSchedules = useMemo<Record<string, boolean>>(() => ({}), []);
   const accommodation = useMemo(() => deriveAccommodation(places), [places]);
-  const emergencies = useMemo(() => deriveEmergencies(places), [places]);
+  const emergencies = useMemo(
+    () =>
+      deriveEmergencies(places, {
+        name: sharedTrip.trip.emergencyContactName,
+        phone: sharedTrip.trip.emergencyContactPhone,
+      }),
+    [places, sharedTrip.trip.emergencyContactName, sharedTrip.trip.emergencyContactPhone],
+  );
 
   const dates = useMemo(
     () => getTripDateRange(sharedTrip.trip.startDate, sharedTrip.trip.endDate),

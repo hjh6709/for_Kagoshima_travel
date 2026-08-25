@@ -7,6 +7,8 @@ type TripBasicInfoFormProps = Pick<
   | "onSubmitTripEdit"
   | "onTripEditEndDateChange"
   | "onTripEditMemoChange"
+  | "onTripEditEmergencyContactNameChange"
+  | "onTripEditEmergencyContactPhoneChange"
   | "onTripEditStartDateChange"
   | "onTripEditTitleChange"
   | "onTripEditTravelersChange"
@@ -14,6 +16,8 @@ type TripBasicInfoFormProps = Pick<
   | "tripEditEndDate"
   | "tripEditError"
   | "tripEditMemo"
+  | "tripEditEmergencyContactName"
+  | "tripEditEmergencyContactPhone"
   | "tripEditStartDate"
   | "tripEditSubmitting"
   | "tripEditTitle"
@@ -26,6 +30,8 @@ export function TripBasicInfoForm({
   onSubmitTripEdit,
   onTripEditEndDateChange,
   onTripEditMemoChange,
+  onTripEditEmergencyContactNameChange,
+  onTripEditEmergencyContactPhoneChange,
   onTripEditStartDateChange,
   onTripEditTitleChange,
   onTripEditTravelersChange,
@@ -33,6 +39,8 @@ export function TripBasicInfoForm({
   tripEditEndDate,
   tripEditError,
   tripEditMemo,
+  tripEditEmergencyContactName,
+  tripEditEmergencyContactPhone,
   tripEditStartDate,
   tripEditSubmitting,
   tripEditTitle,
@@ -118,6 +126,37 @@ export function TripBasicInfoForm({
           value={tripEditMemo}
         />
       </label>
+
+      <div className="section-title-row compact-title-row">
+        <div>
+          <h3>긴급 연락처</h3>
+          <p className="section-caption">
+            로그인 없이 공유 링크로 보는 동행자도 이 연락처를 볼 수 있습니다. 여행 중 문제가 생겼을 때
+            가장 먼저 연락할 가족 정보를 남겨 주세요.
+          </p>
+        </div>
+      </div>
+
+      <div className="form-grid-two">
+        <label>
+          비상 연락 대상
+          <input
+            onChange={(event) => onTripEditEmergencyContactNameChange(event.target.value)}
+            placeholder="예: 아빠 휴대폰"
+            type="text"
+            value={tripEditEmergencyContactName}
+          />
+        </label>
+        <label>
+          전화번호
+          <input
+            onChange={(event) => onTripEditEmergencyContactPhoneChange(event.target.value)}
+            placeholder="예: 010-1234-5678"
+            type="tel"
+            value={tripEditEmergencyContactPhone}
+          />
+        </label>
+      </div>
 
       {tripEditError && <p className="form-error">{tripEditError}</p>}
 

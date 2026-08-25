@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { TripPageProps } from "../../tripPageTypes";
 import { ConciergeTab } from "./ConciergeTab";
 
-function createProps(destinationCountry: string): TripPageProps {
+function createProps(destinationCountry: string, overrides: Partial<TripPageProps> = {}): TripPageProps {
   return {
     accommodation: { name: "", address: "" },
     addressCopied: false,
@@ -19,6 +19,7 @@ function createProps(destinationCountry: string): TripPageProps {
       destinationCountry,
     },
     onNavigateToMyPage: vi.fn(),
+    ...overrides,
   } as unknown as TripPageProps;
 }
 
@@ -73,5 +74,50 @@ describe("ConciergeTab 현지 도구", () => {
     await openToolsTab();
 
     expect(screen.getByText("이 목적지에는 준비된 도구가 없습니다")).toBeVisible();
+  });
+});
+
+describe("ConciergeTab 긴급 연락", () => {
+  it("전화번호가 있으면 전화 걸기 버튼을 보여준다", () => {
+    render(
+      <ConciergeTab
+        {...createProps("CN", {
+          emergencies: [
+            { id: "emergency-family", title: "가족 연락", description: "먼저 연락하세요.", phone: "010-1234-5678", callable: true },
+          ],
+        })}
+      />,
+    );
+
+    const callLink = screen.getByRole("link", { name: /가족 연락.*010-1234-5678로 전화/ });
+    expect(callLink).toHaveAttribute("href", "tel:010-1234-5678");
+    expect(screen.queryByText("전화번호가 등록되지 않았습니다")).not.toBeInTheDocument();
+  });
+
+  it("전화 가능한 항목인데 번호가 없으면 미등록 상태를 보여준다", () => {
+    render(
+      <ConciergeTab
+        {...createProps("CN", {
+          emergencies: [{ id: "emergency-family", title: "가족 연락", description: "먼저 연락하세요.", callable: true }],
+        })}
+      />,
+    );
+
+    expect(screen.getByText("전화번호가 등록되지 않았습니다")).toBeVisible();
+  });
+
+  it("원래 전화가 없는 안내형 항목(callable: false)은 전화 줄 자체를 숨긴다", () => {
+    render(
+      <ConciergeTab
+        {...createProps("CN", {
+          emergencies: [
+            { id: "emergency-passport", title: "여권 분실", description: "경찰서와 영사관 안내를 확인하세요.", callable: false },
+          ],
+        })}
+      />,
+    );
+
+    expect(screen.queryByText("전화번호가 등록되지 않았습니다")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /전화/ })).not.toBeInTheDocument();
   });
 });
