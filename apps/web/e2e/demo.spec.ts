@@ -9,7 +9,7 @@ const TABS = [
   { label: "일정", heading: "일정" },
   { label: "지도", heading: "지도" },
   { label: "항공", heading: "항공편" },
-  { label: "긴급", heading: "여행 도우미" },
+  { label: "긴급", heading: "긴급" },
 ] as const;
 
 test("데모 화면이 오늘 탭으로 열린다", async ({ page }) => {
