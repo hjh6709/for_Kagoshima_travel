@@ -895,11 +895,22 @@
   margin-top: 6px;
 }
 
-.emergency-unregistered {
+/* 기본 .emergency-unregistered(위쪽)는 2칸 그리드에서 오른쪽 액션 칸에 들어가는
+   걸 전제로 text-align: right를 쓴다. 여기 긴급 탭 카드는 한 칸 그리드라 그
+   전제가 깨져서, 카드 안에 뜬금없이 오른쪽으로 붙은 문장처럼 보였다. 바로
+   위 전화 버튼과 같은 자리에 오는 자리표시자이므로 버튼처럼 왼쪽 정렬 +
+   같은 폭의 칩으로 맞춘다. */
+.emergency-contact .emergency-unregistered {
+  display: block;
+  width: 100%;
   margin-top: 6px;
+  padding: 9px 11px;
+  border-radius: var(--radius-control);
+  background: var(--c-surface-cool);
   color: var(--c-muted);
   font-size: var(--type-label-size);
   font-weight: var(--font-weight-strong);
+  text-align: left;
 }
 
 .accommodation-subtitle {
