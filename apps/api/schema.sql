@@ -35,6 +35,8 @@ CREATE TABLE trips (
     travelers   TEXT[] NOT NULL DEFAULT '{}',
     destination_country TEXT NOT NULL DEFAULT 'JP',
     memo        TEXT,
+    emergency_contact_name  TEXT,
+    emergency_contact_phone TEXT,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -53,6 +55,7 @@ CREATE TABLE places (
     chinese_address     TEXT,
     subway_exit         TEXT,
     taxi_phrase         TEXT,
+    phone               TEXT,
     recommended_reason  TEXT,
     opening_memo        TEXT,
     budget_memo         TEXT,
