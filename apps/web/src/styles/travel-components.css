@@ -311,6 +311,10 @@
   padding: 2px;
   overflow-x: auto;
   scrollbar-width: none;
+  /* 스크롤 가능한 칩 목록이 화면 끝에서 그냥 잘려 보여서 레이아웃이
+     깨진 것처럼 보였다 — 끝이 자연스럽게 옅어지게 해 "더 있다"는 걸
+     알려준다. */
+  mask-image: linear-gradient(to right, transparent, black 4px, black calc(100% - 20px), transparent);
 }
 
 .checklist-date-filter::-webkit-scrollbar {
