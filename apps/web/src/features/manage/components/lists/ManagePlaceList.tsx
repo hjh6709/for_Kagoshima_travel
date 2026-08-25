@@ -19,6 +19,7 @@ type ManagePlaceListProps = Pick<
   | "editingPlaceChineseAddress"
   | "editingPlaceSubwayExit"
   | "editingPlaceTaxiPhrase"
+  | "editingPlacePhone"
   | "isPlaceListEditing"
   | "onCancelPlaceEdit"
   | "onDeletePlace"
@@ -31,6 +32,7 @@ type ManagePlaceListProps = Pick<
   | "onEditingPlaceChineseAddressChange"
   | "onEditingPlaceSubwayExitChange"
   | "onEditingPlaceTaxiPhraseChange"
+  | "onEditingPlacePhoneChange"
   | "onPlaceListEditingChange"
   | "onStartPlaceEdit"
   | "onSubmitPlaceEdit"
@@ -59,6 +61,7 @@ export function ManagePlaceList({
   editingPlaceChineseAddress,
   editingPlaceSubwayExit,
   editingPlaceTaxiPhrase,
+  editingPlacePhone,
   isPlaceListEditing,
   onCancelPlaceEdit,
   onDeletePlace,
@@ -71,6 +74,7 @@ export function ManagePlaceList({
   onEditingPlaceChineseAddressChange,
   onEditingPlaceSubwayExitChange,
   onEditingPlaceTaxiPhraseChange,
+  onEditingPlacePhoneChange,
   onPlaceListEditingChange,
   onStartPlaceEdit,
   onSubmitPlaceEdit,
@@ -144,6 +148,11 @@ export function ManagePlaceList({
                 {place.address && <p className="section-caption">{place.address}</p>}
                 {destinationCountry === "CN" && place.chineseAddress && (
                   <p className="place-local-address">{place.chineseAddress}</p>
+                )}
+                {place.phone && (
+                  <a className="text-link" href={`tel:${place.phone}`}>
+                    {place.phone}
+                  </a>
                 )}
               </div>
               <div className="owner-linked-actions">
@@ -242,6 +251,16 @@ export function ManagePlaceList({
                       onChange={(event) => onEditingPlaceGoogleMapsURLChange(event.target.value)}
                       type="url"
                       value={editingPlaceGoogleMapsURL}
+                    />
+                  </label>
+
+                  <label>
+                    전화번호
+                    <input
+                      onChange={(event) => onEditingPlacePhoneChange(event.target.value)}
+                      placeholder="예: 010-1234-5678"
+                      type="tel"
+                      value={editingPlacePhone}
                     />
                   </label>
 

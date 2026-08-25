@@ -23,6 +23,7 @@ type PlaceFormState = {
   newPlaceChineseAddress: string;
   newPlaceSubwayExit: string;
   newPlaceTaxiPhrase: string;
+  newPlacePhone: string;
   newPlaceSearchSelection: PlaceSearchSelection | null;
   cancelPlaceEdit: () => void;
   editingPlaceAddress: string;
@@ -35,6 +36,7 @@ type PlaceFormState = {
   editingPlaceChineseAddress: string;
   editingPlaceSubwayExit: string;
   editingPlaceTaxiPhrase: string;
+  editingPlacePhone: string;
   setDeletingPlaceID: Dispatch<SetStateAction<string>>;
   setPlaceEditError: Dispatch<SetStateAction<string>>;
   setPlaceEditSubmitting: Dispatch<SetStateAction<boolean>>;
@@ -46,6 +48,7 @@ type PlaceFormState = {
   setNewPlaceChineseAddress: Dispatch<SetStateAction<string>>;
   setNewPlaceSubwayExit: Dispatch<SetStateAction<string>>;
   setNewPlaceTaxiPhrase: Dispatch<SetStateAction<string>>;
+  setNewPlacePhone: Dispatch<SetStateAction<string>>;
   setNewPlaceSearchSelection: Dispatch<SetStateAction<PlaceSearchSelection | null>>;
   setNewSchedulePlaceID: Dispatch<SetStateAction<string>>;
   setPlaceCreateError: Dispatch<SetStateAction<string>>;
@@ -89,6 +92,7 @@ export function useTripManagePlaceActions({
     const chineseAddress = optionalTrimmedText(placeForm.newPlaceChineseAddress);
     const subwayExit = optionalTrimmedText(placeForm.newPlaceSubwayExit);
     const taxiPhrase = optionalTrimmedText(placeForm.newPlaceTaxiPhrase);
+    const phone = optionalTrimmedText(placeForm.newPlacePhone);
 
     if (!name) {
       placeForm.setPlaceCreateError("장소 이름을 입력해주세요.");
@@ -108,6 +112,7 @@ export function useTripManagePlaceActions({
         chineseAddress,
         subwayExit,
         taxiPhrase,
+        phone,
         latitude: placeForm.newPlaceSearchSelection?.latitude,
         longitude: placeForm.newPlaceSearchSelection?.longitude,
         googlePlaceId: optionalTrimmedText(placeForm.newPlaceSearchSelection?.googlePlaceId ?? ""),
@@ -122,6 +127,7 @@ export function useTripManagePlaceActions({
       placeForm.setNewPlaceChineseAddress("");
       placeForm.setNewPlaceSubwayExit("");
       placeForm.setNewPlaceTaxiPhrase("");
+      placeForm.setNewPlacePhone("");
       placeForm.setNewPlaceSearchSelection(null);
       placeForm.setPlaceCreateError("");
     } catch (error) {
@@ -153,6 +159,7 @@ export function useTripManagePlaceActions({
     const chineseAddress = placeForm.editingPlaceChineseAddress.trim();
     const subwayExit = placeForm.editingPlaceSubwayExit.trim();
     const taxiPhrase = placeForm.editingPlaceTaxiPhrase.trim();
+    const phone = placeForm.editingPlacePhone.trim();
 
     if (!name) {
       placeForm.setPlaceEditError("장소 이름을 입력해주세요.");
@@ -172,6 +179,7 @@ export function useTripManagePlaceActions({
         chineseAddress,
         subwayExit,
         taxiPhrase,
+        phone,
       });
       setOwnerPlaces((currentPlaces) =>
         sortSharedPlaces(currentPlaces.map((item) => (item.id === updatedPlace.id ? updatedPlace : item)))
