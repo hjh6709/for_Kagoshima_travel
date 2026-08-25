@@ -1,8 +1,8 @@
 import { ArrowDown, ArrowUp, Check, Navigation } from "lucide-react";
 import { MaskedText } from "../../../../shared/components/MaskedText";
-import { scheduleTypeLabels } from "../../../../shared/travelOptions";
+import { getScheduleTypeLabel } from "../../../../shared/travelOptions";
 import type { Place, ScheduleItem } from "../../../../types/travel";
-import { scheduleTypeIcons } from "../../scheduleTypeIcons";
+import { getScheduleTypeIcon } from "../../scheduleTypeIcons";
 
 type ScheduleCardProps = {
   index: number;
@@ -32,7 +32,7 @@ export function ScheduleCard({
   place,
   showGuideMemo = false,
 }: ScheduleCardProps) {
-  const TypeIcon = scheduleTypeIcons[item.type];
+  const TypeIcon = getScheduleTypeIcon(item.type);
 
   return (
     <article className={`schedule-card ${isCompleted ? "completed" : ""}`}>
@@ -41,7 +41,7 @@ export function ScheduleCard({
           <span className="time">{item.time}</span>
           <span className="pill subtle schedule-type-pill">
             <TypeIcon aria-hidden="true" size={14} />
-            {scheduleTypeLabels[item.type]}
+            {getScheduleTypeLabel(item.type)}
           </span>
           {isCompleted && <span className="pill completed-pill">완료</span>}
           {!isReadOnly && (
