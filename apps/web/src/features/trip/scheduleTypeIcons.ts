@@ -20,3 +20,11 @@ export const scheduleTypeIcons: Record<ScheduleItem["type"], LucideIcon> = {
   shopping: ShoppingBag,
   etc: MapPin,
 };
+
+// item.type이 알려진 값이 아니면(레거시 데이터, 다른 클라이언트가 보낸 값 등)
+// scheduleTypeIcons[type]이 undefined가 되고, 그대로 렌더하면 "Element type is
+// invalid" 크래시로 화면 전체가 죽는다 — 라벨은 getScheduleTypeLabel처럼 안전하게
+// 폴백하도록 아이콘도 같은 패턴으로 감싼다.
+export function getScheduleTypeIcon(type: string): LucideIcon {
+  return scheduleTypeIcons[type as ScheduleItem["type"]] ?? MapPin;
+}

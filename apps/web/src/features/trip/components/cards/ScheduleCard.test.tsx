@@ -53,6 +53,31 @@ describe("ScheduleCard", () => {
     expect(screen.getByText("예약자••••")).toBeVisible();
     expect(screen.getByRole("button", { name: "민감 정보 보기" })).toBeVisible();
   });
+
+  // scheduleTypeIcons에 없는 type 값이 들어오면(레거시 데이터, 다른 클라이언트가
+  // 보낸 값 등) 아이콘 컴포넌트가 undefined가 되어 "Element type is invalid"
+  // 크래시로 화면 전체가 죽었다 — 실제로 겪은 뒤 추가한 회귀 테스트다.
+  it("알 수 없는 일정 종류여도 크래시 없이 기본 라벨로 표시한다", () => {
+    render(
+      <ScheduleCard
+        index={0}
+        isCompleted={false}
+        isLast
+        item={{
+          id: "schedule-unknown-type",
+          date: "2026-08-14",
+          time: "10:00",
+          type: "visit" as unknown as "etc",
+          title: "알 수 없는 종류의 일정",
+        }}
+        onMove={vi.fn()}
+        onToggleComplete={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("알 수 없는 종류의 일정")).toBeVisible();
+    expect(screen.getByText("일정")).toBeVisible();
+  });
 });
 
 describe("ScheduleCard 구조와 순서 편집", () => {
