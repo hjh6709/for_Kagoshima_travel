@@ -1,5 +1,7 @@
-import { ChevronDown, PlusCircle, Route } from "lucide-react";
-import type { RefObject } from "react";
+import { CalendarRange, ChevronDown, PlusCircle, Route } from "lucide-react";
+import { useState, type RefObject } from "react";
+import { DateRangeCalendar } from "../../../../shared/components/DateRangeCalendar";
+import { formatKoreanDate } from "../../../../shared/date";
 import { destinationCountryOptions } from "../../../../shared/travelOptions";
 import type { TripCreateSectionProps } from "../../manageTypes";
 
@@ -32,11 +34,16 @@ export function TripCreateSection({
   onOpenChange,
   sectionRef,
 }: TripCreateDisclosureProps) {
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const submitLabel = tripCreateSubmitting
     ? "여행 만드는 중"
     : isFirstTrip
       ? "첫 여행 만들기"
       : "새 여행 추가하기";
+
+  const dateRangeLabel = newTripStartDate
+    ? `${formatKoreanDate(newTripStartDate)} ${newTripEndDate ? `- ${formatKoreanDate(newTripEndDate)}` : "(당일)"}`
+    : "여행 날짜를 선택하세요";
 
   const createForm = (
     <form
@@ -74,33 +81,35 @@ export function TripCreateSection({
         </select>
       </label>
 
-      <div className="form-grid-two">
-        <label>
-          시작일
-          <input
-            onChange={(event) => onNewTripStartDateChange(event.target.value)}
-            required
-            type="date"
-            value={newTripStartDate}
-          />
-        </label>
-        <label>
-          <span className="form-label-row">
-            종료일
-            <small>선택</small>
-          </span>
-          <input
-            aria-describedby="trip-end-date-hint"
-            min={newTripStartDate || undefined}
-            onChange={(event) => onNewTripEndDateChange(event.target.value)}
-            type="date"
-            value={newTripEndDate}
-          />
-        </label>
+      <div>
+        <span className="form-label-row">여행 날짜</span>
+        <button
+          aria-describedby="trip-end-date-hint"
+          className="date-range-trigger"
+          onClick={() => setIsCalendarOpen(true)}
+          type="button"
+        >
+          <CalendarRange aria-hidden="true" size={18} />
+          <span>{dateRangeLabel}</span>
+        </button>
       </div>
       <p className="trip-end-date-hint" id="trip-end-date-hint">
         종료일을 비워 두면 당일 여행으로 만듭니다.
       </p>
+
+      {isCalendarOpen && (
+        <DateRangeCalendar
+          ariaLabel="여행 날짜 선택"
+          endDate={newTripEndDate}
+          onClose={() => setIsCalendarOpen(false)}
+          onConfirm={(nextStart, nextEnd) => {
+            onNewTripStartDateChange(nextStart);
+            onNewTripEndDateChange(nextEnd);
+            setIsCalendarOpen(false);
+          }}
+          startDate={newTripStartDate}
+        />
+      )}
 
       <details className="trip-create-optional-fields">
         <summary>여행자와 메모 <span>선택</span></summary>
@@ -129,7 +138,11 @@ export function TripCreateSection({
 
       {tripCreateError && <p className="form-error" role="alert">{tripCreateError}</p>}
 
-      <button className="primary-button" disabled={tripCreateSubmitting} type="submit">
+      <button
+        className="primary-button"
+        disabled={tripCreateSubmitting || !newTripStartDate}
+        type="submit"
+      >
         <PlusCircle aria-hidden="true" size={18} />
         {submitLabel}
       </button>

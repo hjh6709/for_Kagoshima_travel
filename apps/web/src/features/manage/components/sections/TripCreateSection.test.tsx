@@ -64,7 +64,40 @@ it("첫 여행은 접이식 없이 필수 입력을 바로 보여 주고 종료�
   expect(screen.queryByRole("button", { name: "새 여행 추가 열기" })).not.toBeInTheDocument();
   expect(screen.getByLabelText("여행명")).toBeVisible();
   expect(screen.getByLabelText("목적지 국가")).toBeVisible();
-  expect(screen.getByLabelText("시작일")).toBeRequired();
-  expect(screen.getByLabelText(/종료일/)).not.toBeRequired();
+  expect(screen.getByRole("button", { name: /여행 날짜를 선택하세요/ })).toBeVisible();
+  expect(screen.getByRole("button", { name: "첫 여행 만들기" })).toBeDisabled();
   expect(screen.getByText("종료일을 비워 두면 당일 여행으로 만듭니다.")).toBeVisible();
+});
+
+it("시작일 없이는 제출 버튼을 막고, 날짜 트리거를 누르면 커스텀 달력이 뜬다", async () => {
+  const user = userEvent.setup();
+
+  render(
+    <TripCreateSection
+      isFirstTrip={false}
+      isOpen
+      newTripEndDate=""
+      newTripMemo=""
+      newTripStartDate="2026-08-10"
+      newTripTitle="상하이 여행"
+      newTripTravelers=""
+      newTripDestinationCountry=""
+      onNewTripEndDateChange={vi.fn()}
+      onNewTripMemoChange={vi.fn()}
+      onNewTripStartDateChange={vi.fn()}
+      onNewTripTitleChange={vi.fn()}
+      onNewTripTravelersChange={vi.fn()}
+      onNewTripDestinationCountryChange={vi.fn()}
+      onSubmitNewTrip={vi.fn()}
+      onOpenChange={vi.fn()}
+      tripCreateError=""
+      tripCreateSubmitting={false}
+    />,
+  );
+
+  expect(screen.getByRole("button", { name: "새 여행 추가하기" })).toBeEnabled();
+
+  await user.click(screen.getByRole("button", { name: /8월 10일.*당일/ }));
+
+  expect(screen.getByRole("dialog", { name: "여행 날짜 선택" })).toBeVisible();
 });

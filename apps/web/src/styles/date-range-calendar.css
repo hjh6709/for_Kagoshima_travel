@@ -1,0 +1,119 @@
+/*
+ * 브라우저 기본 <input type="date"> 대신 실제로 그린 달력 그리드로 여행 날짜를
+ * 고르는 컴포넌트. BottomSheet 안에 얹혀서 뜬다.
+ */
+
+.date-range-trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: var(--c-surface);
+  color: var(--c-text);
+  font-size: var(--type-body-size);
+  text-align: left;
+}
+
+.date-range-trigger svg {
+  flex-shrink: 0;
+  color: var(--c-route);
+}
+
+.date-range-calendar {
+  display: grid;
+  gap: 14px;
+  padding: 4px 4px 8px;
+}
+
+.date-range-calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.date-range-calendar-header strong {
+  font-size: var(--type-section-size);
+  font-weight: var(--font-weight-strong);
+}
+
+.date-range-calendar-nav {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 999px;
+  background: var(--c-surface-cool);
+  color: var(--c-text);
+}
+
+.date-range-calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  color: var(--c-muted);
+  font-size: var(--type-supporting-size);
+}
+
+.date-range-calendar-grid {
+  display: grid;
+  gap: 6px;
+}
+
+.date-range-calendar-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.date-range-calendar-cell {
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--c-text);
+  font-size: var(--type-body-size);
+}
+
+.date-range-calendar-cell:disabled {
+  color: var(--c-muted);
+  opacity: 0.4;
+}
+
+.date-range-calendar-cell.is-in-range {
+  border-radius: 0;
+  background: var(--c-surface-cool);
+}
+
+.date-range-calendar-cell.is-start,
+.date-range-calendar-cell.is-end {
+  background: var(--c-route);
+  color: #ffffff;
+  font-weight: var(--font-weight-strong);
+}
+
+.date-range-calendar-summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 12px;
+  background: var(--c-surface-cool);
+  font-size: var(--type-supporting-size);
+  color: var(--c-text);
+}
+
+.date-range-calendar-summary-arrow {
+  color: var(--c-muted);
+}
+
+.date-range-calendar-actions {
+  display: grid;
+  gap: 8px;
+}
