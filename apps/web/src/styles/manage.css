@@ -1108,6 +1108,42 @@
   line-height: var(--type-body-line);
 }
 
+.auth-hero-band {
+  padding: 22px 20px 26px;
+  margin-bottom: 20px;
+  border-radius: 24px;
+  background: linear-gradient(155deg, var(--c-route) 0%, var(--c-route-deep) 100%);
+  box-shadow: var(--shadow-hero);
+  color: #ffffff;
+}
+
+.auth-hero-band h1 {
+  color: #ffffff;
+}
+
+.auth-hero-band .muted {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.auth-hero-band .auth-product-link {
+  color: #ffffff;
+}
+
+.auth-hero-band .auth-brand-circle {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+
+.auth-hero-band .auth-hero-icon {
+  color: #ffffff;
+}
+
+.auth-hero-band .pill.subtle {
+  border-color: transparent;
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+
 .auth-brand-row {
   display: flex;
   align-items: center;
