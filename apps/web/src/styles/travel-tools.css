@@ -1,11 +1,3 @@
-.screen-intro {
-  max-width: 28rem;
-  margin: 5px 0 0;
-  color: var(--c-muted);
-  font-size: var(--type-supporting-size);
-  line-height: 1.5;
-}
-
 .china-payment-helper {
   display: grid;
   gap: 16px;

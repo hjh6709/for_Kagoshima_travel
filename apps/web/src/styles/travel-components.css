@@ -653,13 +653,6 @@
   padding-top: 4px;
 }
 
-.flight-screen-intro {
-  margin: 4px 0 0;
-  color: var(--c-muted);
-  font-size: var(--type-supporting-size);
-  line-height: 1.5;
-}
-
 .flight-manage-row {
   display: flex;
   align-items: center;
