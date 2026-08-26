@@ -1107,6 +1107,18 @@
   overflow-wrap: anywhere;
 }
 
+.place-sheet-phone {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  margin-top: 10px;
+  color: var(--c-route);
+  font-size: var(--type-body-size);
+  font-weight: var(--font-weight-display);
+  text-decoration: none;
+}
+
 .place-sheet-actions {
   display: flex;
   flex-wrap: wrap;
