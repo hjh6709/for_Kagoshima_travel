@@ -122,7 +122,12 @@ export function ManageFlightCreateForm({
           </label>
         </div>
 
-        <div className="form-grid-two">
+        {/* 항공사·편명 다음에 출발 6칸, 도착 6칸이 똑같은 모양으로 계속 이어져서
+            어디까지가 출발이고 어디부터가 도착인지 시각적으로 안 갈렸다 — 구분선
+            없이 입력칸만 계속 붙어 있는 게 "덕지덕지" 인상의 실제 원인이었다.
+            fieldset으로 출발/도착을 각각 눈에 보이는 구획으로 나눈다. */}
+        <fieldset className="form-section-fieldset">
+          <legend>출발</legend>
           <label>
             출발 공항
             <input
@@ -133,6 +138,32 @@ export function ManageFlightCreateForm({
               value={newFlightDepartureAirport}
             />
           </label>
+          <div className="form-grid-two">
+            <label>
+              날짜
+              <input
+                max={tripEndDate}
+                min={tripStartDate}
+                onChange={(event) => onNewFlightDepartureDateChange(event.target.value)}
+                required
+                type="date"
+                value={newFlightDepartureDate}
+              />
+            </label>
+            <label>
+              시간
+              <input
+                onChange={(event) => onNewFlightDepartureTimeChange(event.target.value)}
+                required
+                type="time"
+                value={newFlightDepartureTime}
+              />
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset className="form-section-fieldset">
+          <legend>도착</legend>
           <label>
             도착 공항
             <input
@@ -143,52 +174,26 @@ export function ManageFlightCreateForm({
               value={newFlightArrivalAirport}
             />
           </label>
-        </div>
-
-        <div className="form-grid-two">
-          <label>
-            출발 날짜
-            <input
-              max={tripEndDate}
-              min={tripStartDate}
-              onChange={(event) => onNewFlightDepartureDateChange(event.target.value)}
-              required
-              type="date"
-              value={newFlightDepartureDate}
-            />
-          </label>
-          <label>
-            출발 시간
-            <input
-              onChange={(event) => onNewFlightDepartureTimeChange(event.target.value)}
-              placeholder="예: 10:30"
-              required
-              type="text"
-              value={newFlightDepartureTime}
-            />
-          </label>
-        </div>
-
-        <div className="form-grid-two">
-          <label>
-            도착 날짜
-            <input
-              min={newFlightDepartureDate || tripStartDate}
-              onChange={(event) => onNewFlightArrivalDateChange(event.target.value)}
-              type="date"
-              value={newFlightArrivalDate}
-            />
-          </label>
-          <label>
-            도착 시간
-            <input
-              onChange={(event) => onNewFlightArrivalTimeChange(event.target.value)}
-              placeholder="예: 12:45"
-              type="text"
-              value={newFlightArrivalTime}
-            />
-          </label>
-        </div>
+          <div className="form-grid-two">
+            <label>
+              날짜
+              <input
+                min={newFlightDepartureDate || tripStartDate}
+                onChange={(event) => onNewFlightArrivalDateChange(event.target.value)}
+                type="date"
+                value={newFlightArrivalDate}
+              />
+            </label>
+            <label>
+              시간
+              <input
+                onChange={(event) => onNewFlightArrivalTimeChange(event.target.value)}
+                type="time"
+                value={newFlightArrivalTime}
+              />
+            </label>
+          </div>
+        </fieldset>
 
         <label>
           항공 메모
