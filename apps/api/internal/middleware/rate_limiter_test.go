@@ -71,10 +71,35 @@ func TestGetIPTrustsForwardedHeaderOnlyFromLoopbackProxy(t *testing.T) {
 		t.Fatalf("direct request IP = %q, want remote address", got)
 	}
 
+	// Caddy(우리가 실제로 쓰는 reverse proxy)는 X-Forwarded-For를 덮어쓰지 않고
+	// 자신이 관찰한 진짜 클라이언트 IP를 맨 뒤에 "추가"만 한다. 우리가 신뢰할
+	// 수 있는 값은 그 마지막 값뿐이다 — 앞쪽 값은 클라이언트가 원래 요청에
+	// 마음대로 넣어 보낼 수 있다.
 	proxied := httptest.NewRequest(http.MethodGet, "http://example.com", nil)
 	proxied.RemoteAddr = "127.0.0.1:8080"
-	proxied.Header.Set("X-Forwarded-For", "203.0.113.20, 127.0.0.1")
-	if got := getIP(proxied); got != "203.0.113.20" {
-		t.Fatalf("proxied request IP = %q, want first validated forwarded IP", got)
+	proxied.Header.Set("X-Forwarded-For", "203.0.113.20, 198.51.100.99")
+	if got := getIP(proxied); got != "198.51.100.99" {
+		t.Fatalf("proxied request IP = %q, want the last (proxy-appended) forwarded IP", got)
+	}
+}
+
+func TestGetIPIgnoresClientSpoofedLeadingForwardedFor(t *testing.T) {
+	// 공격자가 매 요청마다 X-Forwarded-For 맨 앞을 임의의 값으로 바꿔 보내도,
+	// Caddy가 실제로 관찰해 붙인 마지막 IP가 그대로면 같은 클라이언트로
+	// 인식돼서 레이트리밋 버킷을 우회할 수 없어야 한다.
+	first := httptest.NewRequest(http.MethodGet, "http://example.com", nil)
+	first.RemoteAddr = "127.0.0.1:8080"
+	first.Header.Set("X-Forwarded-For", "1.2.3.4, 198.51.100.99")
+
+	second := httptest.NewRequest(http.MethodGet, "http://example.com", nil)
+	second.RemoteAddr = "127.0.0.1:8080"
+	second.Header.Set("X-Forwarded-For", "9.9.9.9, 198.51.100.99")
+
+	got1, got2 := getIP(first), getIP(second)
+	if got1 != got2 {
+		t.Fatalf("spoofed leading X-Forwarded-For changed the rate-limit key: %q != %q", got1, got2)
+	}
+	if got1 != "198.51.100.99" {
+		t.Fatalf("getIP() = %q, want the trusted proxy-appended IP", got1)
 	}
 }
