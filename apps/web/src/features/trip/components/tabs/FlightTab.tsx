@@ -89,10 +89,7 @@ export function FlightTab({
   return (
     <section className="screen flight-screen">
       <div className="screen-title-row">
-        <div>
-          <h1>항공편</h1>
-          <p className="flight-screen-intro">공항에서 필요한 노선과 예약 정보만 모았습니다.</p>
-        </div>
+        <h1>항공편</h1>
         <ProfileShortcutButton onClick={onNavigateToMyPage} />
       </div>
 

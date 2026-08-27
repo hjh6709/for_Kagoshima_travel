@@ -111,10 +111,7 @@ export function MapTab({
   return (
     <section className="screen map-screen">
       <div className="screen-title-row">
-        <div>
-          <h1>지도</h1>
-          <p className="map-screen-intro">현재 위치와 저장한 장소를 확인하고 길찾기를 이어가세요.</p>
-        </div>
+        <h1>지도</h1>
         <div className="screen-title-actions">
           {editPlacesHref && places.length > 0 && (
             <a className="secondary-button compact-button" href={editPlacesHref}>장소 관리</a>

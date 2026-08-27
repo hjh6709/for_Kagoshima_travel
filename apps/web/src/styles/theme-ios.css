@@ -41,9 +41,7 @@
   letter-spacing: var(--tracking-title);
 }
 
-.screen-intro,
 .section-caption,
-.flight-screen-intro,
 .muted {
   color: var(--c-muted);
   font-size: var(--type-supporting-size);

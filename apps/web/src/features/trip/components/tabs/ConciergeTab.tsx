@@ -85,10 +85,7 @@ export function ConciergeTab({
   return (
     <section className="screen concierge-screen">
       <div className="screen-title-row">
-        <div>
-          <h1>긴급</h1>
-          <p className="screen-intro">급할 때 필요한 연락처와 현지 도구를 한곳에 모았습니다.</p>
-        </div>
+        <h1>긴급</h1>
         <ProfileShortcutButton onClick={onNavigateToMyPage} />
       </div>
 
@@ -116,10 +113,7 @@ export function ConciergeTab({
         <>
           <section className="section-block compact">
             <div className="section-title-row">
-              <div>
-                <h2>긴급 연락</h2>
-                <p className="section-caption">전화 연결 전 번호와 대상을 한 번 더 확인하세요.</p>
-              </div>
+              <h2>긴급 연락</h2>
             </div>
 
             {emergencies.length === 0 ? (
@@ -166,10 +160,7 @@ export function ConciergeTab({
 
           <section className="section-block">
             <div className="section-title-row">
-              <div>
-                <h2>숙소 정보</h2>
-                <p className="section-caption">체크인과 이동 중 바로 꺼내 보는 정보입니다.</p>
-              </div>
+              <h2>숙소 정보</h2>
               {editPlacesHref && <a className="text-link" href={editPlacesHref}>숙소 관리</a>}
             </div>
 
@@ -226,10 +217,7 @@ export function ConciergeTab({
       ) : (
         <section className="section-block">
           <div className="section-title-row">
-            <div>
-              <h2>현지에서 바로</h2>
-              <p className="section-caption">필요한 도구만 눌러서 크게 봅니다.</p>
-            </div>
+            <h2>현지에서 바로</h2>
           </div>
 
           {tools.length === 0 ? (
