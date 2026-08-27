@@ -920,6 +920,27 @@
   padding-top: 18px;
 }
 
+/* 출발/도착처럼 같은 모양 입력칸이 연속되는 폼에서 구획을 눈에 보이게 나눈다.
+   중국 전용 .local-place-fieldset과 같은 fieldset+legend 패턴이지만, 특정
+   목적지 색(destination-orange)이 아니라 어디서나 쓰는 중립 톤을 쓴다. */
+.form-section-fieldset {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: var(--c-surface-cool);
+}
+
+.form-section-fieldset legend {
+  padding: 0 6px;
+  color: var(--c-route);
+  font-size: var(--type-supporting-size);
+  font-weight: var(--font-weight-display);
+}
+
 .shanghai-starter-planner {
   display: grid;
   gap: 12px;
