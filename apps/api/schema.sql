@@ -3,11 +3,13 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 CREATE TABLE users (
-    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email       TEXT NOT NULL UNIQUE,
-    password      TEXT NOT NULL,  -- bcrypt hash
-    token_version INTEGER NOT NULL DEFAULT 0,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    id                     UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email                  TEXT NOT NULL UNIQUE,
+    password               TEXT NOT NULL,  -- bcrypt hash
+    token_version          INTEGER NOT NULL DEFAULT 0,
+    failed_login_attempts  INTEGER NOT NULL DEFAULT 0,  -- 로그인 브루트포스 잠금용
+    locked_until           TIMESTAMPTZ,
+    created_at             TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE auth_verification_challenges (

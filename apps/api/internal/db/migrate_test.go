@@ -64,6 +64,12 @@ func TestRunMigrationsAppliesCurrentSchemaIdempotently(t *testing.T) {
 	if !strings.Contains(joined, "ADD COLUMN IF NOT EXISTS token_version") {
 		t.Error("migration SQL does not add users.token_version for existing databases")
 	}
+	if !strings.Contains(joined, "ADD COLUMN IF NOT EXISTS failed_login_attempts") {
+		t.Error("migration SQL does not add users.failed_login_attempts for existing databases")
+	}
+	if !strings.Contains(joined, "ADD COLUMN IF NOT EXISTS locked_until") {
+		t.Error("migration SQL does not add users.locked_until for existing databases")
+	}
 	for _, trigger := range []string{
 		"schedules_trip_date_guard",
 		"checklists_trip_date_guard",

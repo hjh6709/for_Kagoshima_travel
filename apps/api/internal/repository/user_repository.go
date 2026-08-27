@@ -30,6 +30,11 @@ type UserRepository interface {
 	Save(user model.User) error
 	UpdatePassword(email string, passwordHash string) (model.User, error)
 	DeleteAccount(userID string) error
+	// RecordFailedLogin은 비밀번호 불일치 시도를 원자적으로 1 증가시키고,
+	// maxAttempts에 도달하면 now+lockFor까지 잠근다. 갱신된 사용자를 반환한다.
+	RecordFailedLogin(email string, now time.Time, maxAttempts int, lockFor time.Duration) (model.User, error)
+	// ResetFailedLogins는 로그인 성공 시 실패 횟수와 잠금을 해제한다.
+	ResetFailedLogins(email string) error
 }
 
 type MemoryUserRepository struct {
@@ -86,10 +91,43 @@ func (r *MemoryUserRepository) UpdatePassword(email string, passwordHash string)
 		if u.Email == email {
 			r.users[i].Password = passwordHash
 			r.users[i].TokenVersion++
+			r.users[i].FailedLoginAttempts = 0
+			r.users[i].LockedUntil = nil
 			return r.users[i], nil
 		}
 	}
 	return model.User{}, ErrNotFound
+}
+
+func (r *MemoryUserRepository) RecordFailedLogin(email string, now time.Time, maxAttempts int, lockFor time.Duration) (model.User, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	for i, u := range r.users {
+		if u.Email == email {
+			r.users[i].FailedLoginAttempts++
+			if r.users[i].FailedLoginAttempts >= maxAttempts {
+				lockedUntil := now.Add(lockFor)
+				r.users[i].LockedUntil = &lockedUntil
+			}
+			return r.users[i], nil
+		}
+	}
+	return model.User{}, ErrNotFound
+}
+
+func (r *MemoryUserRepository) ResetFailedLogins(email string) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	for i, u := range r.users {
+		if u.Email == email {
+			r.users[i].FailedLoginAttempts = 0
+			r.users[i].LockedUntil = nil
+			return nil
+		}
+	}
+	return ErrNotFound
 }
 
 func (r *MemoryUserRepository) DeleteAccount(userID string) error {
