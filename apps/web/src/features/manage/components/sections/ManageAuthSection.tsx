@@ -183,22 +183,28 @@ export function ManageAuthSection({
 
   return (
     <article className="info-card auth-card auth-card-premium">
-      <div className="auth-brand-row">
-        <a className="auth-product-link" href="/">
-          <span className="auth-brand-circle">
-            <Compass className="auth-hero-icon" size={23} />
-          </span>
-          <span>Map Planner</span>
-        </a>
-        <span className="pill subtle">{isRegister ? "처음 시작" : "여행 관리"}</span>
-      </div>
+      {/* 로그인 화면 전체가 배경색 위에 텍스트만 나열된 형태라 "대충 만든" 인상을
+          줬다 — 오늘 탭 Next hero 카드와 같은 인디고 그라디언트 문법을 여기도
+          가져와서 화면에 실제 구조와 무게감을 준다. 새 장식이 아니라 브랜드가
+          이미 쓰는 hero 카드 언어를 재사용한 것이다. */}
+      <div className="auth-hero-band">
+        <div className="auth-brand-row">
+          <a className="auth-product-link" href="/">
+            <span className="auth-brand-circle">
+              <Compass className="auth-hero-icon" size={23} />
+            </span>
+            <span>Map Planner</span>
+          </a>
+          <span className="pill subtle">{isRegister ? "처음 시작" : "여행 관리"}</span>
+        </div>
 
-      <h1>{isRegister ? "첫 여행을 시작해 볼까요?" : "내 여행으로 돌아가기"}</h1>
-      <p className="muted">
-        {isRegister
-          ? "이메일을 인증하고 비밀번호를 설정하면 바로 여행을 만들 수 있습니다."
-          : "로그인하면 저장한 여행과 일정을 이어서 관리할 수 있습니다."}
-      </p>
+        <h1>{isRegister ? "첫 여행을 시작해 볼까요?" : "내 여행으로 돌아가기"}</h1>
+        <p className="muted">
+          {isRegister
+            ? "이메일을 인증하고 비밀번호를 설정하면 바로 여행을 만들 수 있습니다."
+            : "로그인하면 저장한 여행과 일정을 이어서 관리할 수 있습니다."}
+        </p>
+      </div>
 
       {isRegister && (
         <ol className="auth-progress" aria-label="회원가입 진행 단계">
