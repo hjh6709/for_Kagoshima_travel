@@ -95,11 +95,14 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	res, err := h.service(r).Login(req)
 	if err != nil {
-		if errors.Is(err, service.ErrInvalidCredentials) {
+		switch {
+		case errors.Is(err, service.ErrInvalidCredentials):
 			httpjson.WriteError(w, http.StatusUnauthorized, "이메일 또는 비밀번호가 올바르지 않습니다.")
-			return
+		case errors.Is(err, service.ErrAccountLocked):
+			httpjson.WriteError(w, http.StatusTooManyRequests, err.Error())
+		default:
+			httpjson.WriteErrorWithContext(r.Context(), w, http.StatusInternalServerError, "서버 오류가 발생했습니다.")
 		}
-		httpjson.WriteErrorWithContext(r.Context(), w, http.StatusInternalServerError, "서버 오류가 발생했습니다.")
 		return
 	}
 
@@ -143,6 +146,9 @@ func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 			httpjson.WriteError(w, http.StatusBadRequest, err.Error())
 		case errors.Is(err, service.ErrInvalidVerificationCode), errors.Is(err, service.ErrInvalidInput):
 			httpjson.WriteError(w, http.StatusBadRequest, "이메일 인증코드가 일치하지 않거나 만료되었습니다.")
+		case errors.Is(err, service.ErrEmailDelivery):
+			observability.LoggerFromContext(r.Context()).Error("send temporary password email failed", slog.Any("error", err))
+			httpjson.WriteError(w, http.StatusBadGateway, "임시 비밀번호 메일을 보내지 못했습니다. 잠시 후 다시 시도해 주세요.")
 		default:
 			observability.LoggerFromContext(r.Context()).Error("reset password failed", slog.Any("error", err))
 			httpjson.WriteErrorWithContext(r.Context(), w, http.StatusInternalServerError, "비밀번호 재설정을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.")
@@ -152,6 +158,7 @@ func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 
 	httpjson.Write(w, http.StatusOK, dto.ForgotPasswordResponse{
 		TemporaryPassword: tempPass,
+		Delivered:         tempPass == "",
 	})
 }
 

@@ -73,7 +73,7 @@ describe("ForgotPasswordModal", () => {
 
   it("숫자 6자리 인증코드로 임시 비밀번호를 발급하고 표시한다", async () => {
     const user = userEvent.setup();
-    vi.mocked(forgotPassword).mockResolvedValue({ temporaryPassword: "Ab12!xyz" });
+    vi.mocked(forgotPassword).mockResolvedValue({ temporaryPassword: "Ab12!xyz", delivered: false });
     render(<ForgotPasswordModal onClose={vi.fn()} onSuccessToast={vi.fn()} />);
 
     await user.type(screen.getByLabelText("계정 이메일"), "traveler@example.com");
@@ -87,7 +87,7 @@ describe("ForgotPasswordModal", () => {
   it("클립보드를 지원하지 않으면 임시 비밀번호를 유지하고 직접 복사를 안내한다", async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
-    vi.mocked(forgotPassword).mockResolvedValue({ temporaryPassword: "Ab12!xyz" });
+    vi.mocked(forgotPassword).mockResolvedValue({ temporaryPassword: "Ab12!xyz", delivered: false });
     render(<ForgotPasswordModal onClose={onClose} onSuccessToast={vi.fn()} />);
 
     await user.type(screen.getByLabelText("계정 이메일"), "traveler@example.com");
@@ -108,5 +108,22 @@ describe("ForgotPasswordModal", () => {
       "임시 비밀번호를 직접 복사해 주세요",
     );
     expect(screen.getByText("Ab12!xyz")).toBeInTheDocument();
+  });
+
+  it("이메일로 발송됐으면 임시 비밀번호를 화면에 노출하지 않는다", async () => {
+    const user = userEvent.setup();
+    vi.mocked(forgotPassword).mockResolvedValue({ temporaryPassword: "", delivered: true });
+    const onSuccessToast = vi.fn();
+    render(<ForgotPasswordModal onClose={vi.fn()} onSuccessToast={onSuccessToast} />);
+
+    await user.type(screen.getByLabelText("계정 이메일"), "traveler@example.com");
+    await user.type(screen.getByLabelText("6자리 인증코드"), "123456");
+    await user.click(screen.getByRole("button", { name: "임시 비밀번호 생성" }));
+
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "이메일로 임시 비밀번호를 보내드렸습니다",
+    );
+    expect(onSuccessToast).toHaveBeenCalledWith("임시 비밀번호를 이메일로 보냈습니다!");
+    expect(screen.queryByText("새로 발급된 임시 비밀번호")).not.toBeInTheDocument();
   });
 });

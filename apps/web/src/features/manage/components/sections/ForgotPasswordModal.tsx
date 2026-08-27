@@ -11,6 +11,7 @@ export function ForgotPasswordModal({ onClose, onSuccessToast }: ForgotPasswordM
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [tempPassword, setTempPassword] = useState("");
+  const [delivered, setDelivered] = useState(false);
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
   const [developmentCode, setDevelopmentCode] = useState("");
@@ -59,8 +60,13 @@ export function ForgotPasswordModal({ onClose, onSuccessToast }: ForgotPasswordM
 
     try {
       const response = await forgotPassword(email.trim(), normalizedCode);
-      setTempPassword(response.temporaryPassword);
-      onSuccessToast("임시 비밀번호가 성공적으로 발급되었습니다!");
+      setDelivered(response.delivered);
+      if (response.delivered) {
+        onSuccessToast("임시 비밀번호를 이메일로 보냈습니다!");
+      } else {
+        setTempPassword(response.temporaryPassword);
+        onSuccessToast("임시 비밀번호가 성공적으로 발급되었습니다!");
+      }
     } catch (requestError: unknown) {
       setError(
         requestError instanceof Error
@@ -123,7 +129,16 @@ export function ForgotPasswordModal({ onClose, onSuccessToast }: ForgotPasswordM
           </p>
         )}
 
-        {!tempPassword ? (
+        {delivered ? (
+          <div className="forgot-password-result">
+            <p className="forgot-password-status" role="status">
+              가입하신 이메일로 임시 비밀번호를 보내드렸습니다. 메일함을 확인한 뒤 로그인해 주세요.
+            </p>
+            <button className="primary-button" onClick={onClose} type="button">
+              닫기
+            </button>
+          </div>
+        ) : !tempPassword ? (
           <form className="auth-form forgot-password-form" onSubmit={handleSubmit}>
             <label className="auth-field-label">
               <span>계정 이메일</span>

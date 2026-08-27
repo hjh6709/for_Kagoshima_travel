@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/model"
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/repository"
@@ -33,6 +34,14 @@ func (r failingUserRepository) UpdatePassword(string, string) (model.User, error
 }
 
 func (r failingUserRepository) DeleteAccount(string) error {
+	return nil
+}
+
+func (r failingUserRepository) RecordFailedLogin(string, time.Time, int, time.Duration) (model.User, error) {
+	return model.User{}, repository.ErrNotFound
+}
+
+func (r failingUserRepository) ResetFailedLogins(string) error {
 	return nil
 }
 

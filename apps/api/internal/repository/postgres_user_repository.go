@@ -33,10 +33,11 @@ func NewPostgresUserRepository(pool *pgxpool.Pool) *PostgresUserRepository {
 
 func (r *PostgresUserRepository) FindByEmail(email string) (model.User, error) {
 	row := r.pool.QueryRow(r.context(),
-		`SELECT id, email, password, token_version, created_at FROM users WHERE email = $1`, email)
+		`SELECT id, email, password, token_version, failed_login_attempts, locked_until, created_at
+		 FROM users WHERE email = $1`, email)
 
 	var u model.User
-	if err := row.Scan(&u.ID, &u.Email, &u.Password, &u.TokenVersion, &u.CreatedAt); err != nil {
+	if err := row.Scan(&u.ID, &u.Email, &u.Password, &u.TokenVersion, &u.FailedLoginAttempts, &u.LockedUntil, &u.CreatedAt); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return model.User{}, ErrNotFound
 		}
@@ -47,10 +48,11 @@ func (r *PostgresUserRepository) FindByEmail(email string) (model.User, error) {
 
 func (r *PostgresUserRepository) FindByID(id string) (model.User, error) {
 	row := r.pool.QueryRow(r.context(),
-		`SELECT id, email, password, token_version, created_at FROM users WHERE id = $1`, id)
+		`SELECT id, email, password, token_version, failed_login_attempts, locked_until, created_at
+		 FROM users WHERE id = $1`, id)
 
 	var u model.User
-	if err := row.Scan(&u.ID, &u.Email, &u.Password, &u.TokenVersion, &u.CreatedAt); err != nil {
+	if err := row.Scan(&u.ID, &u.Email, &u.Password, &u.TokenVersion, &u.FailedLoginAttempts, &u.LockedUntil, &u.CreatedAt); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return model.User{}, ErrNotFound
 		}
@@ -107,19 +109,52 @@ func (r *PostgresUserRepository) SaveVerifiedUser(user model.User, purpose, code
 func (r *PostgresUserRepository) UpdatePassword(email string, passwordHash string) (model.User, error) {
 	row := r.pool.QueryRow(r.context(), `
 		UPDATE users
-		SET password = $1, token_version = token_version + 1
+		SET password = $1, token_version = token_version + 1,
+		    failed_login_attempts = 0, locked_until = NULL
 		WHERE email = $2
-		RETURNING id, email, password, token_version, created_at
+		RETURNING id, email, password, token_version, failed_login_attempts, locked_until, created_at
 	`, passwordHash, email)
 
 	var u model.User
-	if err := row.Scan(&u.ID, &u.Email, &u.Password, &u.TokenVersion, &u.CreatedAt); err != nil {
+	if err := row.Scan(&u.ID, &u.Email, &u.Password, &u.TokenVersion, &u.FailedLoginAttempts, &u.LockedUntil, &u.CreatedAt); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return model.User{}, ErrNotFound
 		}
 		return model.User{}, err
 	}
 	return u, nil
+}
+
+// RecordFailedLogin은 비밀번호 불일치 시도를 원자적으로 1 증가시키고,
+// maxAttempts에 도달하면 now+lockFor까지 잠근다. 동시 요청이 몰려도
+// UPDATE 한 번으로 처리해 레이스 없이 정확한 시도 횟수를 유지한다.
+func (r *PostgresUserRepository) RecordFailedLogin(email string, now time.Time, maxAttempts int, lockFor time.Duration) (model.User, error) {
+	row := r.pool.QueryRow(r.context(), `
+		UPDATE users
+		SET failed_login_attempts = failed_login_attempts + 1,
+		    locked_until = CASE
+		        WHEN failed_login_attempts + 1 >= $2 THEN $3
+		        ELSE locked_until
+		    END
+		WHERE email = $1
+		RETURNING id, email, password, token_version, failed_login_attempts, locked_until, created_at
+	`, email, maxAttempts, now.Add(lockFor))
+
+	var u model.User
+	if err := row.Scan(&u.ID, &u.Email, &u.Password, &u.TokenVersion, &u.FailedLoginAttempts, &u.LockedUntil, &u.CreatedAt); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return model.User{}, ErrNotFound
+		}
+		return model.User{}, err
+	}
+	return u, nil
+}
+
+func (r *PostgresUserRepository) ResetFailedLogins(email string) error {
+	_, err := r.pool.Exec(r.context(), `
+		UPDATE users SET failed_login_attempts = 0, locked_until = NULL WHERE email = $1
+	`, email)
+	return err
 }
 
 func (r *PostgresUserRepository) ResetVerifiedPassword(
@@ -149,10 +184,11 @@ func (r *PostgresUserRepository) ResetVerifiedPassword(
 	var user model.User
 	if err := tx.QueryRow(ctx, `
 		UPDATE users
-		SET password = $1, token_version = token_version + 1
+		SET password = $1, token_version = token_version + 1,
+		    failed_login_attempts = 0, locked_until = NULL
 		WHERE email = $2
-		RETURNING id, email, password, token_version, created_at
-	`, passwordHash, email).Scan(&user.ID, &user.Email, &user.Password, &user.TokenVersion, &user.CreatedAt); err != nil {
+		RETURNING id, email, password, token_version, failed_login_attempts, locked_until, created_at
+	`, passwordHash, email).Scan(&user.ID, &user.Email, &user.Password, &user.TokenVersion, &user.FailedLoginAttempts, &user.LockedUntil, &user.CreatedAt); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return model.User{}, ErrNotFound
 		}

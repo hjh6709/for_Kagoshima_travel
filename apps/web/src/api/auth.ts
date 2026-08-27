@@ -125,7 +125,7 @@ export function verifyCode(
 }
 
 export function forgotPassword(email: string, code: string) {
-  return apiRequest<{ temporaryPassword: string }>(
+  return apiRequest<{ temporaryPassword: string; delivered: boolean }>(
     "/api/auth/forgot-password",
     {
       method: "POST",
