@@ -141,7 +141,14 @@ jobs:
         env:
           TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/kagoshima_travel?sslmode=disable
           JWT_SECRET: test-secret
-        run: go test ./... -count=1
+        # -p 1: internal/db, internal/repository, internal/server 세 패키지가
+        # 전부 같은 TEST_DATABASE_URL 하나를 공유한다. go test의 기본 패키지
+        # 병렬 실행 때문에 한 패키지의 idempotent 마이그레이션(ALTER TABLE
+        # trips ...)이 다른 패키지의 동시 INSERT(trips를 FK로 참조하는
+        # places 등)와 같은 릴레이션에서 락이 엇갈려 deadlock detected로
+        # 죽는 사례가 나왔다. 공유 자원이 하나뿐이니 패키지를 순차 실행해서
+        # 근본적으로 막는다.
+        run: go test -p 1 ./... -count=1
 
   pr-check-doctor:
     name: pr check doctor
