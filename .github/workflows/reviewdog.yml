@@ -46,7 +46,7 @@ jobs:
           cache-dependency-path: apps/api/go.sum
 
       - name: Review Go code with staticcheck
-        uses: reviewdog/action-staticcheck@d56bb1c67a1d68a29d5d4227a0b8ff4faceba310
+        uses: reviewdog/action-staticcheck@8a5a935620ac73e5d4db95c8dc952108a885a748
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           workdir: apps/api
