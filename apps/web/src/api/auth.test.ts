@@ -45,6 +45,31 @@ describe("apiRequest mutation tracking", () => {
     expect(new Headers(options.headers).has("Authorization")).toBe(false);
   });
 
+  it("성공 상태라도 JSON이 아닌 응답(예: API 대신 받은 index.html)은 성공으로 넘기지 않는다", async () => {
+    // VITE_API_BASE_URL 없이 개발 서버를 띄우면 /api/auth/me를 Vite가 받아
+    // 200 + index.html을 돌려준다. 예전에는 이걸 {}로 삼켜 "로그인됨"으로 보고
+    // ManageHeader가 auth.user.email에서 크래시해 화면 전체가 하얘졌다.
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response("<!doctype html><html></html>", {
+          status: 200,
+          headers: { "Content-Type": "text/html" },
+        }),
+      ),
+    );
+
+    await expect(apiRequest("/api/auth/me")).rejects.toEqual(
+      expect.objectContaining<Partial<ApiError>>({ name: "ApiError", status: 200 }),
+    );
+  });
+
+  it("본문이 없는 204 응답은 그대로 성공으로 처리한다", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 204 })));
+
+    await expect(apiRequest("/api/auth/logout", { method: "POST" })).resolves.toBeDefined();
+  });
+
   it("연결 실패의 브라우저 원문 대신 사용자가 이해할 수 있는 안내를 제공한다", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("Failed to fetch")));
 
