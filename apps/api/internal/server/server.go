@@ -67,7 +67,10 @@ func New() (*Server, error) {
 
 	var pool *pgxpool.Pool
 	if dbURL != "" {
-		pool, err := db.NewPool(dbURL)
+		// `:=`를 쓰면 바깥 pool을 가려서 s.pool이 nil로 남고 /readyz가 DB를
+		// 전혀 확인하지 않게 된다. 반드시 바깥 변수에 대입한다.
+		var err error
+		pool, err = db.NewPool(dbURL)
 		if err != nil {
 			return nil, fmt.Errorf("DB 연결 실패: %w", err)
 		}
