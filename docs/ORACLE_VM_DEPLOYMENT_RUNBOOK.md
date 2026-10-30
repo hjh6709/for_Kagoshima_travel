@@ -58,7 +58,7 @@ flowchart LR
 ```env
 APP_ENV=production
 PORT=8080
-DATABASE_URL=<Supabase PostgreSQL TLS URL>
+DATABASE_URL=<VM 로컬 PostgreSQL 연결 문자열; localhost:5432/travel_db>
 JWT_SECRET=<32자 이상의 무작위 값>
 ALLOWED_ORIGINS=https://kagoshima.hjh-dev.site
 GOOGLE_MAPS_API_KEY=<Places API 서버 키>
@@ -121,7 +121,7 @@ sudo journalctl -u travel-api -n 150 --no-pager
 
 1. `systemctl status`와 `journalctl`
 2. `.env` 권한과 필수 환경변수 이름
-3. Supabase 연결과 TLS
+3. VM 로컬 PostgreSQL 연결과 백업 상태
 4. 8080 포트 점유
 5. Caddy upstream과 인증서
 

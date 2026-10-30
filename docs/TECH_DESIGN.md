@@ -8,7 +8,7 @@
 flowchart LR
   User["모바일·데스크톱 브라우저"] -->|HTTPS| Web["Vercel · React PWA"]
   Web -->|HTTPS /api| API["OCI VM · Caddy → Go API"]
-  API -->|TLS PostgreSQL| DB["Supabase PostgreSQL"]
+  API -->|localhost:5432| DB["OCI VM · PostgreSQL"]
   API -->|서버 키| Places["Google Places API (New)"]
   Web -->|제한된 브라우저 키| Maps["Google Maps JavaScript API"]
   Web -->|외부 링크| Directions["Google 지도 · 고덕지도"]

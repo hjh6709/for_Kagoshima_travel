@@ -70,6 +70,12 @@ func TestRunMigrationsAppliesCurrentSchemaIdempotently(t *testing.T) {
 	if !strings.Contains(joined, "ADD COLUMN IF NOT EXISTS locked_until") {
 		t.Error("migration SQL does not add users.locked_until for existing databases")
 	}
+	if !strings.Contains(joined, "CREATE TABLE IF NOT EXISTS flights") {
+		t.Error("migration SQL does not create flights for existing databases")
+	}
+	if !strings.Contains(joined, "RENAME COLUMN parent_memo TO guide_memo") {
+		t.Error("migration SQL does not rename schedules.parent_memo for existing databases")
+	}
 	for _, trigger := range []string{
 		"schedules_trip_date_guard",
 		"checklists_trip_date_guard",
@@ -263,5 +269,80 @@ func TestTripDateInvariantTriggersRejectInvalidWrites(t *testing.T) {
 				t.Fatalf("constraint = %q, want %q", postgresError.ConstraintName, tt.wantConstraint)
 			}
 		})
+	}
+}
+
+// schema.sql에서 바뀌었지만 마이그레이션이 없던 부분(flights 테이블, schedules.parent_memo
+// → guide_memo 이름 변경)을 예전 DB에서도 맞춰 주는지 확인한다.
+func TestRunMigrationsReconcilesLegacyFlightsAndGuideMemo(t *testing.T) {
+	databaseURL := os.Getenv("TEST_DATABASE_URL")
+	if databaseURL == "" {
+		t.Skip("TEST_DATABASE_URL is not set")
+	}
+
+	ctx := context.Background()
+	pool, err := NewPool(databaseURL)
+	if err != nil {
+		t.Fatalf("NewPool() error = %v", err)
+	}
+	defer pool.Close()
+
+	tx, err := pool.Begin(ctx)
+	if err != nil {
+		t.Fatalf("Begin() error = %v", err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	schemaName := fmt.Sprintf("drift_test_%d", time.Now().UnixNano())
+	quotedSchema := pgx.Identifier{schemaName}.Sanitize()
+	for _, statement := range []string{
+		"CREATE SCHEMA " + quotedSchema,
+		"SET LOCAL search_path TO " + quotedSchema,
+		"CREATE TABLE trips (id UUID PRIMARY KEY)",
+		"CREATE TABLE places (id UUID PRIMARY KEY)",
+		`CREATE TABLE schedules (
+			id UUID PRIMARY KEY,
+			trip_id UUID NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
+			parent_memo TEXT
+		)`,
+		"INSERT INTO trips (id) VALUES ('00000000-0000-0000-0000-000000000001')",
+		`INSERT INTO schedules (id, trip_id, parent_memo)
+		 VALUES ('00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', '공항 리무진 3번')`,
+	} {
+		if _, err := tx.Exec(ctx, statement); err != nil {
+			t.Fatalf("prepare legacy schema %q: %v", statement, err)
+		}
+	}
+
+	for run := 1; run <= 2; run++ {
+		if err := RunMigrations(ctx, tx); err != nil {
+			t.Fatalf("RunMigrations() run %d error = %v", run, err)
+		}
+	}
+
+	var guideMemo string
+	if err := tx.QueryRow(ctx, "SELECT guide_memo FROM schedules").Scan(&guideMemo); err != nil {
+		t.Fatalf("select guide_memo: %v", err)
+	}
+	if guideMemo != "공항 리무진 3번" {
+		t.Fatalf("guide_memo = %q, want legacy parent_memo value preserved", guideMemo)
+	}
+
+	var parentMemoCount int
+	if err := tx.QueryRow(ctx, `
+		SELECT COUNT(*) FROM information_schema.columns
+		WHERE table_schema = $1 AND table_name = 'schedules' AND column_name = 'parent_memo'
+	`, schemaName).Scan(&parentMemoCount); err != nil {
+		t.Fatalf("query parent_memo column: %v", err)
+	}
+	if parentMemoCount != 0 {
+		t.Fatalf("parent_memo column still exists after rename")
+	}
+
+	if _, err := tx.Exec(ctx, `
+		INSERT INTO flights (trip_id, direction, label, departure_airport, arrival_airport, departure_date, departure_time)
+		VALUES ('00000000-0000-0000-0000-000000000001', 'departure', '출국', 'ICN', 'KOJ', '2027-01-10', '09:00')
+	`); err != nil {
+		t.Fatalf("insert into migrated flights table: %v", err)
 	}
 }
