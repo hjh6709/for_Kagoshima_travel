@@ -52,7 +52,21 @@ export async function apiRequest<T>(
       headers,
     });
 
-    const body = await response.json().catch(() => ({}));
+    // 본문이 비어 있으면(204 등) 빈 객체로 둔다. 본문이 있는데 JSON이 아니면
+    // (예: API 주소 설정이 빠져 개발 서버의 index.html을 받은 경우) 성공 상태라도
+    // 성공으로 넘기지 않는다 — 예전엔 {}로 삼켜서 호출부가 존재하지 않는
+    // 필드(auth.user.email 등)를 읽다가 화면 전체가 크래시했다.
+    const text = await response.text().catch(() => "");
+    let body: { error?: unknown } = {};
+    if (text.trim() !== "") {
+      try {
+        body = JSON.parse(text);
+      } catch {
+        if (response.ok) {
+          throw new ApiError("서버 응답을 해석하지 못했습니다. 잠시 후 다시 시도해주세요.", response.status);
+        }
+      }
+    }
     if (!response.ok) {
       const message =
         typeof body?.error === "string"
