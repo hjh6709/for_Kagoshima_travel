@@ -8,6 +8,7 @@ const expectedImports = [
   ["tokens.css", "tokens"],
   ["foundation.css", "foundation"],
   ["manage.css", "features"],
+  ["date-range-calendar.css", "features"],
   ["place-search.css", "features"],
   ["share.css", "features"],
   ["trip.css", "features"],
