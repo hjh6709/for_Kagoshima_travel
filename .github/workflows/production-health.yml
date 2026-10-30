@@ -1,0 +1,52 @@
+name: production public health
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+    # Backup timer runs at 18:00-18:15 UTC; check after it has finished.
+    - cron: '30 19 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  public-endpoints:
+    name: web and API readiness
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Check production endpoints
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --max-time 10 --retry 2 --retry-delay 2 \
+            --output /dev/null https://kagoshima.hjh-dev.site/
+          curl --fail --silent --show-error --max-time 10 --retry 2 --retry-delay 2 \
+            --output /dev/null https://api.hjh-dev.site/healthz
+          curl --fail --silent --show-error --max-time 10 --retry 2 --retry-delay 2 \
+            --output /dev/null https://api.hjh-dev.site/readyz
+
+  backup-freshness:
+    name: off-VM backup freshness
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.schedule == '30 19 * * *' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Check backup timer and latest verified upload
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+        with:
+          host: ${{ secrets.OCI_VM_IP }}
+          username: ${{ secrets.OCI_VM_USER }}
+          key: ${{ secrets.OCI_SSH_KEY }}
+          script: |
+            set -eu
+            test "$(systemctl is-active travel-api-backup.timer)" = active
+            test "$(systemctl show travel-api-backup.service --property=Result --value)" = success
+            test "$(systemctl show travel-api-backup.service --property=ActiveState --value)" = inactive
+            backup_window=$(date -u -d 'today 18:00' +%s)
+            backup_deadline=$(date -u -d 'today 19:30' +%s)
+            if [ "$(date -u +%s)" -lt "$backup_deadline" ]; then
+              backup_window=$((backup_window - 86400))
+            fi
+            sudo -n -u postgres find /var/backups/travel-api -maxdepth 1 -type f \
+              -name 'travel_db_*.dump' -newermt "@$backup_window" -print -quit | grep -q .

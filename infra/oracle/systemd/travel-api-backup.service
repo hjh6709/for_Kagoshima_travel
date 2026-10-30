@@ -1,0 +1,23 @@
+[Unit]
+Description=Travel API PostgreSQL backup to OCI Object Storage
+Wants=network-online.target
+After=postgresql-16.service network-online.target
+
+[Service]
+Type=oneshot
+User=postgres
+Group=postgres
+UMask=0077
+Environment=TRAVEL_API_BACKUP_DB=travel_db
+Environment=TRAVEL_API_BACKUP_DIR=/var/backups/travel-api
+Environment=TRAVEL_API_BACKUP_RETENTION_DAYS=14
+Environment=TRAVEL_API_BACKUP_BUCKET=travel-api-backups
+Environment=TRAVEL_API_BACKUP_NAMESPACE=nrtdpzzicnnc
+ExecStart=/usr/local/libexec/travel-api-backup.sh
+TimeoutStartSec=1h
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/backups/travel-api
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
