@@ -137,6 +137,26 @@ jobs:
           docker cp schema.sql "${{ job.services.postgres.id }}:/tmp/schema.sql"
           docker exec "${{ job.services.postgres.id }}" psql -U postgres -d kagoshima_travel -f /tmp/schema.sql
 
+      - name: Verify backup script against PostgreSQL and restore
+        working-directory: .
+        run: |
+          set -euo pipefail
+          container_id="${{ job.services.postgres.id }}"
+          docker cp infra/oracle/scripts/backup-postgres.sh "$container_id:/tmp/backup-postgres.sh"
+          docker exec --user root "$container_id" apk add --no-cache bash >/dev/null
+          docker exec --user postgres \
+            --env TRAVEL_API_BACKUP_DB=kagoshima_travel \
+            --env TRAVEL_API_BACKUP_DIR=/tmp/travel-api-backups \
+            "$container_id" bash /tmp/backup-postgres.sh
+          docker exec --user postgres "$container_id" sh -c '
+            set -- /tmp/travel-api-backups/*.dump
+            test "$#" -eq 1
+            pg_restore --list "$1" >/dev/null
+            createdb backup_restore_check
+            pg_restore --single-transaction --no-owner --dbname=backup_restore_check "$1"
+            psql -d backup_restore_check -Atc "SELECT COUNT(*) FROM pg_tables WHERE schemaname = current_schema()" | grep -Eq "^[1-9][0-9]*$"
+          '
+
       - name: Run Go tests with PostgreSQL
         env:
           TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/kagoshima_travel?sslmode=disable

@@ -2,10 +2,12 @@ package middleware
 
 import (
 	"bytes"
+	"encoding/json"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/observability"
 )
@@ -24,6 +26,35 @@ func TestDiscordAlertPanicRecovery(t *testing.T) {
 
 	if rec.Code != http.StatusInternalServerError {
 		t.Errorf("기대값 500 Internal Server Error, 결과값 %d", rec.Code)
+	}
+}
+
+func TestDiscordAlertWebhookRedactsSharedTripToken(t *testing.T) {
+	paths := make(chan string, 1)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var payload discordPayload
+		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		for _, field := range payload.Embeds[0].Fields {
+			if field.Name == "URL" {
+				paths <- field.Value
+				return
+			}
+		}
+	}))
+	defer server.Close()
+
+	request := httptest.NewRequest(http.MethodGet, "/api/share/sensitive-share-token", nil)
+	sendDiscordAlert(server.URL, request, "500", "stack", "req-1")
+	select {
+	case path := <-paths:
+		if path != "/api/share/{token}" {
+			t.Errorf("webhook path = %q, want token-free route template", path)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("webhook was not sent")
 	}
 }
 
@@ -67,5 +98,21 @@ func TestDiscordAlertLogsPanicEvenWithoutWebhook(t *testing.T) {
 	}
 	if !bytes.Contains(buf.Bytes(), []byte("boom")) {
 		t.Errorf("panic log must carry the panic value: %q", buf.String())
+	}
+}
+
+func TestDiscordAlertRedactsSharedTripTokenFromPanicLog(t *testing.T) {
+	t.Setenv("DISCORD_WEBHOOK_URL", "")
+	var buf bytes.Buffer
+	logger := slog.New(slog.NewJSONHandler(&buf, nil))
+	handler := DiscordAlert(http.HandlerFunc(func(http.ResponseWriter, *http.Request) { panic("boom") }))
+	request := httptest.NewRequest(http.MethodGet, "/api/share/sensitive-share-token", nil)
+	request = request.WithContext(observability.WithLogger(request.Context(), logger))
+	handler.ServeHTTP(httptest.NewRecorder(), request)
+	if bytes.Contains(buf.Bytes(), []byte("sensitive-share-token")) {
+		t.Errorf("share token reached the panic log: %s", buf.String())
+	}
+	if !bytes.Contains(buf.Bytes(), []byte("/api/share/{token}")) {
+		t.Errorf("redacted route template missing from panic log: %s", buf.String())
 	}
 }

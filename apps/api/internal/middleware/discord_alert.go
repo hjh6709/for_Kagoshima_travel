@@ -49,7 +49,7 @@ func DiscordAlert(next http.Handler) http.Handler {
 				observability.LoggerFromContext(r.Context()).Error("panic recovered",
 					slog.String("panic", errMsg),
 					slog.String("method", r.Method),
-					slog.String("path", r.URL.Path),
+					slog.String("path", redactRequestPath(r.URL.Path)),
 					slog.String("stack", string(stack)),
 				)
 
@@ -104,7 +104,7 @@ func sendDiscordAlert(url string, r *http.Request, errMsg string, stack string, 
 		Fields: []discordEmbedField{
 			{Name: "Request ID", Value: requestID, Inline: true},
 			{Name: "Method", Value: r.Method, Inline: true},
-			{Name: "URL", Value: r.URL.Path, Inline: true},
+			{Name: "URL", Value: redactRequestPath(r.URL.Path), Inline: true},
 			{Name: "Client IP", Value: getIP(r), Inline: true},
 			{Name: "Stack Trace", Value: fmt.Sprintf("```go\n%s\n```", stack), Inline: false},
 		},

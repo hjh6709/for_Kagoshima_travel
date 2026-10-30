@@ -139,7 +139,9 @@ sudo TRAVEL_API_DOMAIN=api.hjh-dev.site \
 
 ## PostgreSQL 백업
 
-백업 스크립트는 `DATABASE_URL` 환경변수를 읽어 `pg_dump`를 실행합니다.
+현재 production의 자동 백업은 [`../../docs/ORACLE_VM_DEPLOYMENT_RUNBOOK.md`](../../docs/ORACLE_VM_DEPLOYMENT_RUNBOOK.md)의 systemd timer와 OCI Object Storage 구성을 사용합니다. 아래 내용은 별도 VM을 수동 초기화할 때만 쓰는 예시입니다.
+
+백업 스크립트는 `DATABASE_URL` 환경변수를 읽어 PostgreSQL custom-format 덤프를 생성합니다. 로컬 DB 계정으로 실행할 때는 `TRAVEL_API_BACKUP_DB`에 DB 이름을 줄 수도 있습니다.
 
 ```bash
 DATABASE_URL='postgres://travel_app:<STRONG_DB_PASSWORD>@localhost:5432/travel_app?sslmode=disable' \
