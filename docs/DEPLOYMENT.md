@@ -7,12 +7,12 @@ flowchart LR
   Browser["사용자 브라우저"] -->|HTTPS| Vercel["Vercel · kagoshima.hjh-dev.site"]
   Vercel -->|HTTPS /api| Caddy["OCI VM · api.hjh-dev.site · Caddy"]
   Caddy -->|127.0.0.1:8080| API["Go API · systemd"]
-  API -->|TLS| DB["Supabase PostgreSQL · Seoul"]
+  API -->|localhost:5432| DB["OCI VM · PostgreSQL"]
   API -->|HTTPS| Places["Google Places API (New)"]
   Browser -->|HTTPS| Maps["Google Maps JavaScript API"]
 ```
 
-프런트엔드만 Supabase에 직접 연결하는 경로는 없습니다. 모든 사용자·여행·체크리스트 데이터는 Go API의 인증·소유권 검사를 통과한 뒤 PostgreSQL에 접근합니다.
+프런트엔드는 PostgreSQL에 직접 연결하지 않습니다. 모든 사용자·여행·체크리스트 데이터는 Go API의 인증·소유권 검사를 통과한 뒤 PostgreSQL에 접근합니다.
 
 ## 프런트엔드: Vercel
 
@@ -46,15 +46,15 @@ API 변경이 main에 병합되면 `.github/workflows/api-release-build.yml`이 
 
 운영 환경변수와 GitHub Secrets의 실제 값은 저장소에 기록하지 않습니다. 이름과 등록 위치는 [`ORACLE_VM_DEPLOYMENT_RUNBOOK.md`](./ORACLE_VM_DEPLOYMENT_RUNBOOK.md)를 기준으로 합니다.
 
-## 데이터베이스: Supabase PostgreSQL
+## 데이터베이스: OCI VM 로컬 PostgreSQL
 
-- 운영 데이터는 VM 로컬 디스크가 아니라 Supabase PostgreSQL에 저장합니다.
+- 2026-10-30 VM의 systemd `EnvironmentFile`과 `DATABASE_URL` 호스트를 읽기 전용으로 확인한 결과, 운영 API는 같은 VM의 `localhost:5432` PostgreSQL 데이터베이스 `travel_db`를 사용합니다.
 - 초기 스키마: `apps/api/schema.sql`
 - 증분 마이그레이션: `apps/api/internal/db/migrations/*.sql`
 - API 시작 시 증분 마이그레이션을 파일명 순서로 반복 적용합니다.
-- `DATABASE_URL`은 TLS가 적용된 운영 연결 문자열을 사용합니다.
+- `DATABASE_URL`은 VM의 `/home/opc/travel-api/.env`에 보관합니다. 비밀번호나 전체 URL은 문서와 로그에 기록하지 않습니다.
 
-VM을 다시 만들더라도 Supabase 데이터는 유지되지만, 별도 백업과 복구 검증은 계속 필요합니다. 스키마 변경 PR은 기존 데이터 호환성과 롤백 방법을 함께 설명합니다.
+VM 자체가 손실되면 데이터도 영향을 받을 수 있으므로, VM과 분리된 백업 위치 및 복구 절차를 확인해야 합니다. 현재 백업 상태는 확인되지 않았습니다. 스키마 변경 PR은 기존 데이터 호환성과 롤백 방법을 함께 설명합니다.
 
 ## 배포 후 확인
 

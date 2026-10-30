@@ -24,7 +24,7 @@ scripts    현재 OCI 자동 배포와 검증 스크립트
 docs       제품·기술·운영 문서
 ```
 
-운영 환경은 Vercel의 정적 PWA, Oracle Cloud VM의 Go API와 Caddy, Supabase PostgreSQL로 구성됩니다. 웹 브라우저는 데이터베이스에 직접 연결하지 않고 Go API를 통해서만 데이터를 읽고 변경합니다.
+운영 환경은 Vercel의 정적 PWA, Oracle Cloud VM의 Go API와 Caddy, 같은 VM의 PostgreSQL로 구성됩니다. 웹 브라우저는 데이터베이스에 직접 연결하지 않고 Go API를 통해서만 데이터를 읽고 변경합니다.
 
 ## 빠른 시작
 
