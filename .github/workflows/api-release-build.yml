@@ -25,6 +25,45 @@ permissions:
   contents: read
 
 jobs:
+  backup-verify:
+    name: verify PostgreSQL backup and restore before release
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: kagoshima_travel
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd "pg_isready -U postgres -d kagoshima_travel"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v7
+      - name: Create and restore a real PostgreSQL backup
+        run: |
+          set -euo pipefail
+          container_id="${{ job.services.postgres.id }}"
+          docker cp apps/api/schema.sql "$container_id:/tmp/schema.sql"
+          docker exec "$container_id" psql -U postgres -d kagoshima_travel -v ON_ERROR_STOP=1 -f /tmp/schema.sql
+          docker cp infra/oracle/scripts/backup-postgres.sh "$container_id:/tmp/backup-postgres.sh"
+          docker exec --user root "$container_id" apk add --no-cache bash >/dev/null
+          docker exec --user postgres \
+            --env TRAVEL_API_BACKUP_DB=kagoshima_travel \
+            --env TRAVEL_API_BACKUP_DIR=/tmp/travel-api-backups \
+            "$container_id" bash /tmp/backup-postgres.sh
+          docker exec --user postgres "$container_id" sh -c '
+            set -e
+            set -- /tmp/travel-api-backups/*.dump
+            test "$#" -eq 1
+            createdb backup_restore_check
+            pg_restore --single-transaction --no-owner --dbname=backup_restore_check "$1"
+            psql -d backup_restore_check -Atc "SELECT COUNT(*) FROM pg_tables WHERE schemaname = current_schema()" | grep -Eq "^[1-9][0-9]*$"
+          '
+
   build:
     name: api linux build (${{ matrix.goarch }})
     runs-on: ubuntu-latest
@@ -68,7 +107,7 @@ jobs:
 
   deploy:
     name: OCI VM 검증·롤백 자동 배포 (CD)
-    needs: build
+    needs: [build, backup-verify]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:

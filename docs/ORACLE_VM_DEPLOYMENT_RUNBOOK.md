@@ -170,7 +170,7 @@ ssh -i <SSH_KEY> opc@<OCI_VM_IP> '/home/opc/travel-api/deploy-api-on-vm.sh /home
 
 운영 PostgreSQL의 `travel_db`는 VM 로컬에 있습니다. `/var/backups/travel-api`의 로컬 덤프만으로는 VM 손실에 대응할 수 없으므로, `travel-api-backup.timer`가 매일 03:00~03:15 KST(18:00~18:15 UTC)에 custom-format 덤프를 생성하고 OCI Object Storage의 비공개 `travel-api-backups/db/` 경로로 업로드합니다. 로컬 파일은 최소 14일, 버킷 객체는 수명 주기 정책으로 30일 보관합니다. VM의 instance principal은 이 버킷 경로에 새 객체를 생성할 수 있을 뿐 기존 객체를 읽거나 덮어쓰거나 삭제할 수 없습니다.
 
-새 VM에서는 OCI CLI와 PostgreSQL client를 설치하고, VM 인스턴스 ID만 포함하는 dynamic group 및 위 버킷 `db/*`의 `OBJECT_CREATE`만 허용하는 IAM 정책을 먼저 적용합니다. 그런 다음 `infra/oracle/scripts/backup-postgres.sh`를 `/usr/local/libexec/travel-api-backup.sh`로, `infra/oracle/systemd/travel-api-backup.{service,timer}`를 `/etc/systemd/system/`에 설치하고 `systemctl daemon-reload`, `systemctl enable --now travel-api-backup.timer`를 실행합니다. 실제 업로드가 성공하기 전에는 자동 배포를 다시 켜지 않습니다.
+새 VM에서는 OCI CLI와 PostgreSQL client를 설치하고, VM 인스턴스 ID만 포함하는 dynamic group 및 위 버킷 `db/*`의 `OBJECT_CREATE`만 허용하는 IAM 정책을 먼저 적용합니다. `sudo install -d -o postgres -g postgres -m 700 /var/backups/travel-api`로 백업 디렉터리를 먼저 생성합니다. 그런 다음 `infra/oracle/scripts/backup-postgres.sh`를 `/usr/local/libexec/travel-api-backup.sh`로, `infra/oracle/systemd/travel-api-backup.{service,timer}`를 `/etc/systemd/system/`에 설치하고 `systemctl daemon-reload`, `systemctl enable --now travel-api-backup.timer`를 실행합니다. 실제 업로드가 성공하기 전에는 자동 배포를 다시 켜지 않습니다.
 
 ```bash
 sudo systemctl list-timers travel-api-backup.timer --no-pager
@@ -185,7 +185,7 @@ OCI 계정 관리 권한이 있는 환경에서 `oci os object list --bucket-nam
 
 `pg_dump`에는 PostgreSQL 클러스터의 역할과 VM의 `.env` 비밀값이 포함되지 않습니다. 새 VM 복구 시 DB 계정 및 서비스 비밀값은 별도 보관된 운영 기록에서 재구성해야 합니다. 이 별도 보관 상태는 이번 백업 검증 범위에 포함되지 않았습니다.
 
-`.github/workflows/production-health.yml`은 공개 웹·API를 15분마다 확인하고, 매일 백업 타이머 상태 및 26시간 이내에 생성된 덤프를 확인합니다. 업로드 실패 시 백업 서비스가 실패하므로 후자의 검사도 실패합니다. GitHub Actions의 예약 실행은 지연될 수 있고 워크플로 실패가 자동 호출·문자 알림을 보장하지 않으므로, 저장소의 Actions 실패 알림을 받을 담당자와 대체 연락 경로를 별도로 정해야 합니다.
+`.github/workflows/production-health.yml`은 공개 웹·API를 15분마다 확인하고, 매일 04:30 KST에 백업 타이머 상태 및 해당 백업 창(03:00 KST) 이후 생성된 덤프를 확인합니다. 수동 실행은 아직 점검 마감이 지나지 않았다면 직전 백업 창을 기준으로 합니다. 이 기준으로 어제 덤프가 오늘 백업 누락을 가리지 못하게 합니다. 업로드 실패 시 백업 서비스가 실패하므로 후자의 검사도 실패합니다. GitHub Actions의 예약 실행은 지연될 수 있고 워크플로 실패가 자동 호출·문자 알림을 보장하지 않으므로, 저장소의 Actions 실패 알림을 받을 담당자와 대체 연락 경로를 별도로 정해야 합니다.
 
 ## 11. 로그 보존
 

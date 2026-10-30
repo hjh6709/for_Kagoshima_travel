@@ -92,9 +92,17 @@ func TestRequestLogNeverRecordsQueryString(t *testing.T) {
 
 func TestRequestLogRedactsSharedTripToken(t *testing.T) {
 	const token = "valid-share-token-secret"
-	entry := serveWithLog(t, http.StatusOK, "/api/share/"+token)
-	if entry["path"] != "/api/share/{token}" {
-		t.Errorf("path = %v, want token-free route template", entry["path"])
+	for _, target := range []string{
+		"/api/share/" + token, "//api/share/" + token, "/api//share/" + token,
+		"/api/share/" + token + "/../../readyz",
+		"/api/./share/" + token + "/../../readyz",
+	} {
+		t.Run(target, func(t *testing.T) {
+			entry := serveWithLog(t, http.StatusOK, target)
+			if entry["path"] != "/api/share/{token}" {
+				t.Errorf("path = %v, want token-free route template", entry["path"])
+			}
+		})
 	}
 }
 

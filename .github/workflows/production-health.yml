@@ -42,5 +42,11 @@ jobs:
             set -eu
             test "$(systemctl is-active travel-api-backup.timer)" = active
             test "$(systemctl show travel-api-backup.service --property=Result --value)" = success
+            test "$(systemctl show travel-api-backup.service --property=ActiveState --value)" = inactive
+            backup_window=$(date -u -d 'today 18:00' +%s)
+            backup_deadline=$(date -u -d 'today 19:30' +%s)
+            if [ "$(date -u +%s)" -lt "$backup_deadline" ]; then
+              backup_window=$((backup_window - 86400))
+            fi
             sudo -n -u postgres find /var/backups/travel-api -maxdepth 1 -type f \
-              -name 'travel_db_*.dump' -mmin -1560 -print -quit | grep -q .
+              -name 'travel_db_*.dump' -newermt "@$backup_window" -print -quit | grep -q .

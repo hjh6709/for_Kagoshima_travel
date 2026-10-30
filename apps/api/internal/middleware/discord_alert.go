@@ -41,8 +41,8 @@ func DiscordAlert(next http.Handler) http.Handler {
 
 		defer func() {
 			if err := recover(); err != nil {
-				stack := debug.Stack()
-				errMsg := fmt.Sprintf("%v", err)
+				stack := redactRequestDiagnostic(r.URL.Path, string(debug.Stack()))
+				errMsg := redactRequestDiagnostic(r.URL.Path, fmt.Sprintf("%v", err))
 				requestID := observability.RequestIDFromContext(r.Context())
 
 				// 웹훅이 없거나 실패해도 흔적은 반드시 남긴다.
@@ -50,10 +50,10 @@ func DiscordAlert(next http.Handler) http.Handler {
 					slog.String("panic", errMsg),
 					slog.String("method", r.Method),
 					slog.String("path", redactRequestPath(r.URL.Path)),
-					slog.String("stack", string(stack)),
+					slog.String("stack", stack),
 				)
 
-				sendDiscordAlert(webhookURL, r, errMsg, string(stack), requestID)
+				sendDiscordAlert(webhookURL, r, errMsg, stack, requestID)
 
 				w.Header().Set("Content-Type", "application/json; charset=utf-8")
 				w.WriteHeader(http.StatusInternalServerError)
@@ -92,6 +92,8 @@ func sendDiscordAlert(url string, r *http.Request, errMsg string, stack string, 
 	if url == "" {
 		return
 	}
+	errMsg = redactRequestDiagnostic(r.URL.Path, errMsg)
+	stack = redactRequestDiagnostic(r.URL.Path, stack)
 
 	if len(stack) > 1000 {
 		stack = stack[:1000] + "\n...[truncated]"

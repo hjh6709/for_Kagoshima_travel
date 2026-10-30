@@ -149,6 +149,7 @@ jobs:
             --env TRAVEL_API_BACKUP_DIR=/tmp/travel-api-backups \
             "$container_id" bash /tmp/backup-postgres.sh
           docker exec --user postgres "$container_id" sh -c '
+            set -e
             set -- /tmp/travel-api-backups/*.dump
             test "$#" -eq 1
             pg_restore --list "$1" >/dev/null

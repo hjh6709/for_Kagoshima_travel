@@ -30,28 +30,27 @@ func TestDiscordAlertPanicRecovery(t *testing.T) {
 }
 
 func TestDiscordAlertWebhookRedactsSharedTripToken(t *testing.T) {
-	paths := make(chan string, 1)
+	payloads := make(chan discordPayload, 1)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var payload discordPayload
 		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		for _, field := range payload.Embeds[0].Fields {
-			if field.Name == "URL" {
-				paths <- field.Value
-				return
-			}
-		}
+		payloads <- payload
 	}))
 	defer server.Close()
 
 	request := httptest.NewRequest(http.MethodGet, "/api/share/sensitive-share-token", nil)
-	sendDiscordAlert(server.URL, request, "500", "stack", "req-1")
+	sendDiscordAlert(server.URL, request, "panic in "+request.URL.Path, "stack", "req-1")
 	select {
-	case path := <-paths:
-		if path != "/api/share/{token}" {
-			t.Errorf("webhook path = %q, want token-free route template", path)
+	case payload := <-payloads:
+		encoded, err := json.Marshal(payload)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if bytes.Contains(encoded, []byte("sensitive-share-token")) {
+			t.Errorf("share token reached webhook payload: %s", encoded)
 		}
 	case <-time.After(2 * time.Second):
 		t.Fatal("webhook was not sent")
@@ -105,7 +104,9 @@ func TestDiscordAlertRedactsSharedTripTokenFromPanicLog(t *testing.T) {
 	t.Setenv("DISCORD_WEBHOOK_URL", "")
 	var buf bytes.Buffer
 	logger := slog.New(slog.NewJSONHandler(&buf, nil))
-	handler := DiscordAlert(http.HandlerFunc(func(http.ResponseWriter, *http.Request) { panic("boom") }))
+	handler := DiscordAlert(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+		panic("panic in " + r.URL.Path)
+	}))
 	request := httptest.NewRequest(http.MethodGet, "/api/share/sensitive-share-token", nil)
 	request = request.WithContext(observability.WithLogger(request.Context(), logger))
 	handler.ServeHTTP(httptest.NewRecorder(), request)
