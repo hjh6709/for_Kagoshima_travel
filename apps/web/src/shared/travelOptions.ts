@@ -68,6 +68,10 @@ export const placeCategoryLabels = {
 
 export const placeCategoryOptions = Object.entries(placeCategoryLabels) as Array<[PlaceCategory, string]>;
 
+export function getPlaceCategoryLabel(category: string) {
+  return placeCategoryLabels[category as PlaceCategory] ?? "장소";
+}
+
 export const flightDirectionLabels = {
   departure: "출국",
   return: "입국",

@@ -75,6 +75,15 @@ export function ManageScheduleCreateForm({
     requestAnimationFrame(() => document.getElementById("schedule-create-form")?.scrollIntoView({ behavior: "smooth" }));
   };
 
+  // 장소를 고르면 대부분 그 장소 이름이 곧 일정 제목이므로, 비어 있을 때만 채워 한 번 더 입력하지 않게 한다.
+  const handleSchedulePlaceChange = (placeID: string) => {
+    onNewSchedulePlaceIDChange(placeID);
+    const place = ownerPlaces.find((item) => item.id === placeID);
+    if (place && newScheduleTitle.trim() === "") {
+      onNewScheduleTitleChange(place.name);
+    }
+  };
+
   return (
     <section className="owner-linked-data-section">
       <div className="section-title-row compact-title-row">
@@ -128,7 +137,7 @@ export function ManageScheduleCreateForm({
           </label>
           <label>
             연결 장소
-            <select onChange={(event) => onNewSchedulePlaceIDChange(event.target.value)} value={newSchedulePlaceID}>
+            <select onChange={(event) => handleSchedulePlaceChange(event.target.value)} value={newSchedulePlaceID}>
               <option value="">장소 연결 안 함</option>
               {ownerPlaces.map((place) => (
                 <option key={place.id} value={place.id}>
