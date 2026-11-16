@@ -48,7 +48,7 @@ func DiscordAlert(next http.Handler) http.Handler {
 				// 웹훅이 없거나 실패해도 흔적은 반드시 남긴다.
 				observability.LoggerFromContext(r.Context()).Error("panic recovered",
 					slog.String("panic", errMsg),
-					slog.String("method", stripLineBreaks(r.Method)),
+					slog.String("method", r.Method),
 					slog.String("path", redactRequestPath(r.URL.Path)),
 					slog.String("stack", stack),
 				)

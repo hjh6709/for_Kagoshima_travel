@@ -30,15 +30,7 @@ func redactRequestPath(requestPath string) string {
 	if isShareRoute(requestPath) {
 		return "/api/share/{token}"
 	}
-	return stripLineBreaks(requestPath)
-}
-
-// stripLineBreaks removes CR/LF from request-controlled values before they are
-// logged, so a crafted URL or method cannot forge extra log lines in sinks that
-// do not escape them.
-func stripLineBreaks(value string) string {
-	value = strings.ReplaceAll(value, "\n", "")
-	return strings.ReplaceAll(value, "\r", "")
+	return requestPath
 }
 
 func redactRequestDiagnostic(requestPath, diagnostic string) string {
