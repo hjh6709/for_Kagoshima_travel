@@ -1,7 +1,7 @@
 import { useEffect } from "react";
-import { Compass } from "lucide-react";
+import { ChevronLeft, Compass } from "lucide-react";
 import { formatKoreanDate } from "../../shared/date";
-import { getManageTripReturnPath, type EditSection } from "../../shared/manageRoute";
+import { getManageTripEditorPath, getManageTripReturnPath, type EditSection } from "../../shared/manageRoute";
 import {
   ManageAuthSection,
   ManageChecklistSection,
@@ -14,6 +14,7 @@ import {
   ManageShareActions,
   TripBasicInfoForm,
 } from "./components";
+import { TripEditSectionNextStep } from "./components/TripEditSectionNextStep";
 import { useTripManageController } from "./useTripManageController";
 
 type TripEditSectionPageProps = {
@@ -95,6 +96,11 @@ export function TripEditSectionPage({ tripId, section }: TripEditSectionPageProp
       <section className="phone-frame owner-frame">
         <div className="content">
           <section className="screen owner-screen">
+            <a className="edit-hub-back-link" href={getManageTripEditorPath(selectedOwnerTrip.id)}>
+              <ChevronLeft aria-hidden="true" size={18} />
+              편집 목록
+            </a>
+
             <div className="section-title-row">
               <div>
                 <span className="pill">편집 · {sectionLabels[section]}</span>
@@ -113,6 +119,14 @@ export function TripEditSectionPage({ tripId, section }: TripEditSectionPageProp
             {section === "places" && (
               <>
                 <ManagePlaceCreateForm {...manage} destinationCountry={selectedOwnerTrip.destinationCountry} />
+                {manage.ownerDetailDataTripID === selectedOwnerTrip.id && !manage.ownerDetailDataLoading && (
+                  <TripEditSectionNextStep
+                    placeCount={manage.ownerPlaces.length}
+                    scheduleCount={manage.ownerSchedules.length}
+                    section={section}
+                    tripId={selectedOwnerTrip.id}
+                  />
+                )}
                 <ManagePlaceList {...manage} destinationCountry={selectedOwnerTrip.destinationCountry} />
               </>
             )}
@@ -136,6 +150,14 @@ export function TripEditSectionPage({ tripId, section }: TripEditSectionPageProp
                   tripEndDate={selectedOwnerTrip.endDate}
                   tripStartDate={selectedOwnerTrip.startDate}
                 />
+                {manage.ownerDetailDataTripID === selectedOwnerTrip.id && !manage.ownerDetailDataLoading && (
+                  <TripEditSectionNextStep
+                    placeCount={manage.ownerPlaces.length}
+                    scheduleCount={manage.ownerSchedules.length}
+                    section={section}
+                    tripId={selectedOwnerTrip.id}
+                  />
+                )}
                 <ManageScheduleList {...manage} />
               </>
             )}

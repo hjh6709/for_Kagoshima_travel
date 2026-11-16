@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Check, Copy, Edit3, ExternalLink, Maximize2, Save, Trash2, X } from "lucide-react";
 import { MapDirectionsChoice } from "../../../../shared/components/MapDirectionsChoice";
-import { placeCategoryOptions } from "../../../../shared/travelOptions";
+import { getPlaceCategoryLabel, placeCategoryOptions } from "../../../../shared/travelOptions";
 import type { PlaceCategory } from "../../../../types/travel";
 import { getPlaceCopyText } from "../../../../utils/mapLinks";
 import type { TripManagePageProps } from "../../manageTypes";
@@ -142,7 +142,7 @@ export function ManagePlaceList({
           {ownerPlaces.map((place) => (
             <article className="owner-linked-card" key={place.id}>
               <div>
-                <span className="muted-label">{place.category}</span>
+                <span className="muted-label">{getPlaceCategoryLabel(place.category)}</span>
                 <h2>{place.name}</h2>
                 {destinationCountry === "CN" && place.chineseName && <p className="place-local-name">{place.chineseName}</p>}
                 {place.address && <p className="section-caption">{place.address}</p>}

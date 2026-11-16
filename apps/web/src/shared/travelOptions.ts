@@ -68,6 +68,15 @@ export const placeCategoryLabels = {
 
 export const placeCategoryOptions = Object.entries(placeCategoryLabels) as Array<[PlaceCategory, string]>;
 
+// 장소 분류는 API가 빈 값만 거르는 자유 문자열이다. 일반 객체 인덱싱은 "__proto__"·"constructor"
+// 같은 이름에서 상속 속성(객체·함수)을 돌려주고, 이를 React가 렌더하면 화면 전체가 죽는다.
+// 자기 속성일 때만 라벨을 쓰고 나머지는 모두 "장소"로 둔다. 저장된 값 자체는 바꾸지 않는다.
+export function getPlaceCategoryLabel(category: string): string {
+  return Object.prototype.hasOwnProperty.call(placeCategoryLabels, category)
+    ? placeCategoryLabels[category as PlaceCategory]
+    : "장소";
+}
+
 export const flightDirectionLabels = {
   departure: "출국",
   return: "입국",
