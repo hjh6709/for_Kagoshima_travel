@@ -58,13 +58,13 @@ flowchart LR
 ```env
 APP_ENV=production
 PORT=8080
-DATABASE_URL=<Supabase PostgreSQL TLS URL>
+DATABASE_URL=<VM localhost PostgreSQL URL for travel_db>
 JWT_SECRET=<32자 이상의 무작위 값>
 ALLOWED_ORIGINS=https://kagoshima.hjh-dev.site
 GOOGLE_MAPS_API_KEY=<Places API 서버 키>
 ```
 
-메일 발송을 사용하는 production에서는 저장소의 `apps/api/.env.example`에 선언된 SMTP 환경변수도 설정합니다.
+메일 발송을 사용하는 production에서는 `RESEND_API_KEY` 또는 저장소의 `apps/api/.env.example`에 선언된 SMTP 환경변수를 설정합니다. 현재 운영은 Resend 경로를 사용합니다.
 
 금지 사항:
 
@@ -121,7 +121,7 @@ sudo journalctl -u travel-api -n 150 --no-pager
 
 1. `systemctl status`와 `journalctl`
 2. `.env` 권한과 필수 환경변수 이름
-3. Supabase 연결과 TLS
+3. VM 로컬 PostgreSQL 연결과 DB 상태
 4. 8080 포트 점유
 5. Caddy upstream과 인증서
 
@@ -165,3 +165,28 @@ ssh -i <SSH_KEY> opc@<OCI_VM_IP> '/home/opc/travel-api/deploy-api-on-vm.sh /home
 - 변경된 대표 API 흐름 확인
 - 새 migration 적용 오류가 없는지 로그 확인
 - 롤백 임시 파일이 정상 정리됐는지 확인
+
+## 10. 운영 DB 백업과 복원
+
+운영 PostgreSQL의 `travel_db`는 VM 로컬에 있습니다. `/var/backups/travel-api`의 로컬 덤프만으로는 VM 손실에 대응할 수 없으므로, `travel-api-backup.timer`가 매일 03:00~03:15 KST(18:00~18:15 UTC)에 custom-format 덤프를 생성하고 OCI Object Storage의 비공개 `travel-api-backups/db/` 경로로 업로드합니다. 로컬 파일은 최소 14일, 버킷 객체는 수명 주기 정책으로 30일 보관합니다. VM의 instance principal은 이 버킷 경로에 새 객체를 생성할 수 있을 뿐 기존 객체를 읽거나 덮어쓰거나 삭제할 수 없습니다.
+
+새 VM에서는 OCI CLI와 PostgreSQL client를 설치하고, VM 인스턴스 ID만 포함하는 dynamic group 및 위 버킷 `db/*`의 `OBJECT_CREATE`만 허용하는 IAM 정책을 먼저 적용합니다. `sudo install -d -o postgres -g postgres -m 700 /var/backups/travel-api`로 백업 디렉터리를 먼저 생성합니다. 그런 다음 `infra/oracle/scripts/backup-postgres.sh`를 `/usr/local/libexec/travel-api-backup.sh`로, `infra/oracle/systemd/travel-api-backup.{service,timer}`를 `/etc/systemd/system/`에 설치하고 `systemctl daemon-reload`, `systemctl enable --now travel-api-backup.timer`를 실행합니다. 실제 업로드가 성공하기 전에는 자동 배포를 다시 켜지 않습니다.
+
+```bash
+sudo systemctl list-timers travel-api-backup.timer --no-pager
+sudo systemctl start travel-api-backup.service
+sudo systemctl show travel-api-backup.service -p Result -p ExecMainStatus
+sudo journalctl -u travel-api-backup.service -n 50 --no-pager
+```
+
+배포 스크립트는 새 바이너리로 교체하기 전에 동일한 백업 서비스를 실행하고, 백업 실패 시 배포를 중단합니다. DB 마이그레이션은 아직 API 시작 시 실행됩니다. **바이너리 롤백은 DB 스키마를 되돌리지 않으므로**, 스키마 변경은 이전·새 바이너리 모두에서 동작하는 추가형 변경으로 배포하고, 호환되지 않는 변경은 별도 변경 절차와 복원 계획을 세워야 합니다.
+
+OCI 계정 관리 권한이 있는 환경에서 `oci os object list --bucket-name travel-api-backups --prefix db/`로 원격 객체를 확인합니다. VM의 최소 권한 계정에서는 목록 조회가 의도적으로 거부됩니다. 실제 복원은 원본 `travel_db`에 바로 적용하지 말고 격리된 DB에 `pg_restore --single-transaction --no-owner`로 수행한 뒤 테이블·행 수와 대표 조회를 비교합니다. 2026-10-30에는 원격 객체를 격리 DB에 복원해 사용자·여행·장소·일정·항공편·체크리스트 건수가 원본과 일치함을 확인했습니다. 이 시험만으로 장래의 복구 시간이나 무손실 복구를 보장하지는 않습니다.
+
+`pg_dump`에는 PostgreSQL 클러스터의 역할과 VM의 `.env` 비밀값이 포함되지 않습니다. 새 VM 복구 시 DB 계정 및 서비스 비밀값은 별도 보관된 운영 기록에서 재구성해야 합니다. 이 별도 보관 상태는 이번 백업 검증 범위에 포함되지 않았습니다.
+
+`.github/workflows/production-health.yml`은 공개 웹·API를 15분마다 확인하고, 매일 04:30 KST에 백업 타이머 상태 및 해당 백업 창(03:00 KST) 이후 생성된 덤프를 확인합니다. 수동 실행은 아직 점검 마감이 지나지 않았다면 직전 백업 창을 기준으로 합니다. 이 기준으로 어제 덤프가 오늘 백업 누락을 가리지 못하게 합니다. 업로드 실패 시 백업 서비스가 실패하므로 후자의 검사도 실패합니다. GitHub Actions의 예약 실행은 지연될 수 있고 워크플로 실패가 자동 호출·문자 알림을 보장하지 않으므로, 저장소의 Actions 실패 알림을 받을 담당자와 대체 연락 경로를 별도로 정해야 합니다.
+
+## 11. 로그 보존
+
+공유 링크는 URL 경로에 접근 토큰을 담으므로, API의 요청 로그와 오류 알림이 `/api/share/{token}` 형태로 마스킹된 버전을 **먼저 배포**합니다. 그 후 `infra/oracle/systemd/journald-travel-api.conf`를 VM의 `/etc/systemd/journald.conf.d/50-travel-api.conf`로 설치하고 journald를 재시작·flush해 영구 로그를 활성화합니다. 설정은 최대 256 MiB 또는 14일 중 먼저 도달하는 범위로 로그를 제한합니다. 기존 휘발성 로그에는 마스킹 전 URL이 남아 있을 수 있으므로 접근 권한을 제한하고 불필요하게 외부로 복사하지 않습니다. 로그의 VM 외부 보관은 별도 과제입니다.

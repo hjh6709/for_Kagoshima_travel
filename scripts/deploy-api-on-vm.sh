@@ -83,6 +83,10 @@ validate_production_config
 [ -f "$NEXT_BINARY" ] || fail "missing staged binary $NEXT_BINARY"
 [ -f "$SERVICE_FILE" ] || fail "missing $SERVICE_FILE"
 
+# server.New runs DB migrations during startup. Take and verify an off-VM
+# backup before swapping the binary so a failed migration has a restore point.
+sudo systemctl start travel-api-backup.service || fail "pre-deploy off-VM backup failed"
+
 chmod 600 "$ENV_FILE"
 chmod 750 "$NEXT_BINARY"
 sudo cp "$SERVICE_FILE" "/etc/systemd/system/$SERVICE_NAME.service"
