@@ -21,7 +21,7 @@ func RequestLog(next http.Handler) http.Handler {
 
 		logger := observability.LoggerFromContext(r.Context())
 		logger.LogAttrs(r.Context(), levelForStatus(wrapper.statusCode), "http request",
-			slog.String("method", r.Method),
+			slog.String("method", stripLineBreaks(r.Method)),
 			slog.String("path", redactRequestPath(r.URL.Path)),
 			slog.Int("status", wrapper.statusCode),
 			slog.Int64("durationMs", time.Since(started).Milliseconds()),

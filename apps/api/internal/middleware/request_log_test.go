@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/hanjeonghyun/for-kagoshima-travel/apps/api/internal/observability"
@@ -130,5 +131,18 @@ func TestRequestLogCannotBeForgedThroughPath(t *testing.T) {
 	entry := decodeLogEntry(t, &buf)
 	if entry["path"] != evilPath {
 		t.Errorf("path = %q, want the raw value %q (이스케이프는 저장 형식일 뿐 값은 보존돼야 한다)", entry["path"], evilPath)
+	}
+}
+
+func TestRedactRequestPathStripsLineBreaks(t *testing.T) {
+	got := redactRequestPath("/api/trips\r\nlevel=ERROR msg=forged")
+	if strings.ContainsAny(got, "\r\n") {
+		t.Fatalf("path still contains a line break: %q", got)
+	}
+	if got != "/api/tripslevel=ERROR msg=forged" {
+		t.Fatalf("unexpected sanitized path: %q", got)
+	}
+	if got := redactRequestPath("/api/share/secret\ntoken"); got != "/api/share/{token}" {
+		t.Fatalf("share route must stay redacted, got %q", got)
 	}
 }
