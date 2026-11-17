@@ -1,6 +1,6 @@
 # Map Planner Go API
 
-사용자 인증과 여행·장소·일정·항공편·체크리스트·공유 데이터를 관리하는 REST API입니다. production은 Supabase PostgreSQL을 사용하고 Oracle Cloud VM에서 systemd로 실행됩니다.
+사용자 인증과 여행·장소·일정·항공편·체크리스트·공유 데이터를 관리하는 REST API입니다. 현재 production은 Oracle Cloud VM의 로컬 PostgreSQL을 사용하고 같은 VM에서 systemd로 실행됩니다.
 
 ## 로컬 실행
 
