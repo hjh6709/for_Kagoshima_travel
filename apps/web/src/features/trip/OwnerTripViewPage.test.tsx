@@ -137,4 +137,38 @@ describe("OwnerTripViewPage management flow", () => {
     );
     expect(screen.getByRole("link", { name: "여행 목록으로" })).toHaveAttribute("href", "/manage");
   });
+  it("일정에서 고른 날짜를 지도 왕복에도 유지하고 오늘에서 시작하면 오늘로 초기화한다", async () => {
+    vi.mocked(useTripManageController).mockReturnValue(
+      createManageResult({
+        selectedOwnerTrip: {
+          id: "trip-1",
+          title: "상하이 여행",
+          startDate: "2026-07-30",
+          endDate: "2026-08-03",
+          travelers: ["나"],
+          destinationCountry: "CN",
+        },
+      }),
+    );
+
+    render(<OwnerTripViewPage tripId="trip-1" />);
+
+    // Today (8/1) -> schedule initially uses the trip's current travel day.
+    await userEvent.click(screen.getByRole("button", { name: "일정" }));
+    expect(screen.getByRole("button", { name: "8/1(토)" })).toHaveAttribute("aria-pressed", "true");
+
+    await userEvent.click(screen.getByRole("button", { name: "8/2(일)" }));
+    expect(screen.getByRole("button", { name: "8/2(일)" })).toHaveAttribute("aria-pressed", "true");
+
+    await userEvent.click(screen.getByRole("button", { name: "지도" }));
+    expect(screen.getByText("선택한 날짜 동선이 비어 있습니다")).toBeVisible();
+
+    await userEvent.click(screen.getByRole("button", { name: "일정 보기" }));
+    expect(screen.getByRole("button", { name: "8/2(일)" })).toHaveAttribute("aria-pressed", "true");
+
+    await userEvent.click(screen.getByRole("button", { name: "오늘" }));
+    await userEvent.click(screen.getByRole("button", { name: "지도" }));
+    expect(screen.getByText("오늘 동선이 비어 있습니다")).toBeVisible();
+  });
+
 });
