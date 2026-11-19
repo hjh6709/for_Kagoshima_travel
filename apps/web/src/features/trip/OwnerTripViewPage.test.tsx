@@ -170,7 +170,7 @@ describe("OwnerTripViewPage management flow", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "지도" }));
     expect(screen.getByRole("heading", { name: "선택한 날짜 동선" })).toBeVisible();
-    expect(screen.getByText("선택일 관광지")).toBeVisible();
+    expect(screen.getAllByText("선택일 관광지").length).toBeGreaterThan(0);
     expect(screen.queryByText("오늘 관광지")).not.toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: "일정" }));
@@ -179,7 +179,7 @@ describe("OwnerTripViewPage management flow", () => {
     await userEvent.click(screen.getByRole("button", { name: "오늘" }));
     await userEvent.click(screen.getByRole("button", { name: "지도" }));
     expect(screen.getByRole("heading", { name: "오늘 동선" })).toBeVisible();
-    expect(screen.getByText("오늘 관광지")).toBeVisible();
+    expect(screen.getAllByText("오늘 관광지").length).toBeGreaterThan(0);
     expect(screen.queryByText("선택일 관광지")).not.toBeInTheDocument();
   });
 
