@@ -50,11 +50,12 @@ export function MapTab({
   editPlacesHref,
   editSchedulesHref,
   focusDate,
-  focusSchedules,
   getDisplayDate,
   getPlace,
   isReadOnly,
   places,
+  selectedDate,
+  selectedSchedules,
   setActiveTab,
   setSelectedDate,
   setScheduleView,
@@ -67,13 +68,19 @@ export function MapTab({
   const [selectedPlaceID, setSelectedPlaceID] = useState("");
   const [sheetPlace, setSheetPlace] = useState<Place | null>(null);
   const routeLabel =
-    travelStatus.phase === "before" ? "첫날 동선" : travelStatus.phase === "during" ? "오늘 동선" : "마지막 날 동선";
-  const routeDate = formatKoreanDate(getDisplayDate(focusDate));
+    selectedDate !== focusDate
+      ? "선택한 날짜 동선"
+      : travelStatus.phase === "before"
+        ? "첫날 동선"
+        : travelStatus.phase === "during"
+          ? "오늘 동선"
+          : "마지막 날 동선";
+  const routeDate = formatKoreanDate(getDisplayDate(selectedDate));
 
-  const timelineItems: RouteItem[] = focusSchedules
+  const timelineItems: RouteItem[] = selectedSchedules
     .map((schedule) => ({ schedule, place: getPlace(schedule.placeId) }))
     .filter((item): item is RouteItem => item.place !== undefined);
-  const missingPlaceCount = focusSchedules.length - timelineItems.length;
+  const missingPlaceCount = selectedSchedules.length - timelineItems.length;
   const nextRouteItem =
     travelStatus.phase === "after"
       ? undefined
@@ -82,17 +89,20 @@ export function MapTab({
     timelineItems.find(({ schedule }) => schedule.id === selectedScheduleID) ?? nextRouteItem ?? timelineItems[0];
   const selectedLabel =
     selectedRouteItem?.schedule.id === nextRouteItem?.schedule.id
-      ? travelStatus.phase === "before"
+      ? selectedDate !== focusDate
+        ? "선택한 날짜의 목적지"
+        : travelStatus.phase === "before"
         ? "첫 목적지"
         : "다음 목적지"
       : "선택한 정류장";
   const selectedMapPlaceID =
-    selectedPlaceID ||
-    (subTab === "timeline" ? selectedRouteItem?.place.id : places[0]?.id) ||
-    "";
+    (subTab === "timeline"
+      ? timelineItems.some(({ place }) => place.id === selectedPlaceID)
+        ? selectedPlaceID
+        : selectedRouteItem?.place.id
+      : selectedPlaceID || places[0]?.id) || "";
 
   const openSchedule = () => {
-    setSelectedDate(focusDate);
     setScheduleView("itinerary");
     setActiveTab("schedule");
   };
@@ -153,9 +163,9 @@ export function MapTab({
           <article className="empty-state-card list-card map-empty-state">
             <MapPin aria-hidden="true" size={24} />
             <div>
-              <strong>{focusSchedules.length > 0 ? "일정에 연결된 장소가 없습니다" : `${routeLabel}이 비어 있습니다`}</strong>
+              <strong>{selectedSchedules.length > 0 ? "일정에 연결된 장소가 없습니다" : `${routeLabel}이 비어 있습니다`}</strong>
               <p>
-                {focusSchedules.length > 0
+                {selectedSchedules.length > 0
                   ? isReadOnly
                     ? "공유된 일정에 연결된 장소 정보가 없습니다."
                     : "여행 관리에서 각 일정에 장소를 연결해 주세요."
