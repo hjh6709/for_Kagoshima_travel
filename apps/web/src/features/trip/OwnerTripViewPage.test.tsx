@@ -148,6 +148,14 @@ describe("OwnerTripViewPage management flow", () => {
           travelers: ["나"],
           destinationCountry: "CN",
         },
+        ownerPlaces: [
+          { id: "place-1", name: "오늘 관광지", category: "sightseeing" },
+          { id: "place-2", name: "선택일 관광지", category: "sightseeing" },
+        ],
+        ownerSchedules: [
+          { id: "schedule-1", placeId: "place-1", date: "2026-08-01", time: "10:00", type: "sightseeing", title: "오늘 일정" },
+          { id: "schedule-2", placeId: "place-2", date: "2026-08-02", time: "11:00", type: "sightseeing", title: "선택일 일정" },
+        ],
       }),
     );
 
@@ -161,14 +169,18 @@ describe("OwnerTripViewPage management flow", () => {
     expect(screen.getByRole("button", { name: "8/2(일)" })).toHaveAttribute("aria-pressed", "true");
 
     await userEvent.click(screen.getByRole("button", { name: "지도" }));
-    expect(screen.getByText("선택한 날짜 동선이 비어 있습니다")).toBeVisible();
+    expect(screen.getByRole("heading", { name: "선택한 날짜 동선" })).toBeVisible();
+    expect(screen.getByText("선택일 관광지")).toBeVisible();
+    expect(screen.queryByText("오늘 관광지")).not.toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole("button", { name: "일정 보기" }));
+    await userEvent.click(screen.getByRole("button", { name: "일정" }));
     expect(screen.getByRole("button", { name: "8/2(일)" })).toHaveAttribute("aria-pressed", "true");
 
     await userEvent.click(screen.getByRole("button", { name: "오늘" }));
     await userEvent.click(screen.getByRole("button", { name: "지도" }));
-    expect(screen.getByText("오늘 동선이 비어 있습니다")).toBeVisible();
+    expect(screen.getByRole("heading", { name: "오늘 동선" })).toBeVisible();
+    expect(screen.getByText("오늘 관광지")).toBeVisible();
+    expect(screen.queryByText("선택일 관광지")).not.toBeInTheDocument();
   });
 
 });
