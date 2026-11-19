@@ -42,6 +42,32 @@ test("일정 화면의 fit·subtle modifier는 테마 기본값보다 우선한�
   await expect(scheduleType).toHaveCSS("background-color", "rgb(241, 239, 234)");
 });
 
+
+test("일정에서 선택한 날짜의 장소가 지도 동선에 유지되고 오늘을 거치면 첫날로 돌아간다", async ({ page }) => {
+  await page.goto("/demo");
+
+  await page.getByRole("button", { name: "일정", exact: true }).click();
+  const datePills = page.locator(".date-tabs button");
+  await expect(datePills.first()).toHaveAttribute("aria-pressed", "true");
+
+  await datePills.nth(1).click();
+  await expect(datePills.nth(1)).toHaveAttribute("aria-pressed", "true");
+
+  await page.getByRole("button", { name: "지도", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "선택한 날짜 동선" })).toBeVisible();
+  await expect(page.locator(".map-stop-list").getByText("예원", { exact: true })).toBeVisible();
+  await expect(page.locator(".map-stop-list").getByText("상하이 푸둥 국제공항")).toHaveCount(0);
+
+  await page.getByRole("button", { name: "일정", exact: true }).click();
+  await expect(page.locator(".date-tabs button").nth(1)).toHaveAttribute("aria-pressed", "true");
+
+  await page.getByRole("button", { name: "오늘", exact: true }).click();
+  await page.getByRole("button", { name: "지도", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "첫날 동선" })).toBeVisible();
+  await expect(page.locator(".map-stop-list").getByText("상하이 푸둥 국제공항")).toBeVisible();
+  await expect(page.locator(".map-stop-list").getByText("예원", { exact: true })).toHaveCount(0);
+});
+
 for (const tab of TABS) {
   test(`${tab.label} 탭이 에러 없이 열린다`, async ({ page }) => {
     const consoleWatch = watchConsole(page);
