@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { AuthResponse } from "../../api/auth";
 import {
   BottomTabs,
@@ -33,13 +33,23 @@ export function TripPage(props: TripPageComponentProps) {
     ? undefined
     : () => setActiveTab("mypage");
   const [hasVisitedMap, setHasVisitedMap] = useState(activeTab === "map");
+  const previousTabRef = useRef<TripPageProps["activeTab"] | null>(null);
 
   useEffect(() => {
     if (activeTab === "map") setHasVisitedMap(true);
   }, [activeTab]);
 
+  // 오늘에서 진입하거나 해시로 바로 열 때는 여행 기준일을 사용한다.
+  // 일정↔지도 이동에서는 사용자가 골랐던 날짜를 그대로 유지한다.
   useEffect(() => {
-    if (activeTab === "schedule") props.setSelectedDate(props.focusDate);
+    const previousTab = previousTabRef.current;
+    if (
+      (activeTab === "schedule" || activeTab === "map") &&
+      (previousTab === null || previousTab === "today")
+    ) {
+      props.setSelectedDate(props.focusDate);
+    }
+    previousTabRef.current = activeTab;
   }, [activeTab, props.focusDate, props.setSelectedDate]);
 
   useEffect(() => {
